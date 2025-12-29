@@ -1,0 +1,22 @@
+name: Cypress Tests
+
+# 언제 실행할까요? (코드가 push 될 때마다)
+on: [push]
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest # 리눅스 서버 대여
+    steps:
+      - name: Checkout # 내 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: Cypress Run # 사이프러스 실행
+        uses: cypress-io/github-action@v6
+        with:
+          # Cypress Cloud로 기록 전송 (그래야 대시보드에서 볼 수 있음)
+          record: true
+        env:
+          # 아까 3단계에서 저장한 비밀키를 여기서 몰래 가져옵니다
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          # 깃허브 토큰은 자동으로 제공됩니다 (따로 설정 안 해도 됨)
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
