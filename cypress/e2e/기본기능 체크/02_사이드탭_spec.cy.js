@@ -93,7 +93,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
     // 컨텍스트 메뉴 제거거
     cy.get('body').type('{esc}');
-    cy.wait(500);
+    cy.wait(1000);
     
     // button 태그이면서 '현황'이라는 글자를 포함한 요소를 클릭
     cy.contains('button', '현황').click({ force: true });

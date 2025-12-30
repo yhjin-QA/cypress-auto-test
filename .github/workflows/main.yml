@@ -21,3 +21,16 @@ jobs:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           # 깃허브 토큰은 자동으로 제공됩니다 (따로 설정 안 해도 됨)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # ▼▼▼ 기존 코드 아래에 이어서 붙여넣으세요 ▼▼▼
+
+      - name: Send Google Chat Notification
+        if: always() # 중요: 테스트가 실패해도 알림은 가야 하므로 항상 실행
+        run: |
+          $status = "${{ job.status }}"
+          $emoji = if ($status -eq 'success') { "✅" } else { "❌" }
+          $message = "$emoji Cypress 테스트 결과: $status`n👉 결과 보기: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
+          $payload = @{ text = $message } | ConvertTo-Json -Compress
+          
+          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json" -Body $payload
