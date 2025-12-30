@@ -19,6 +19,7 @@ jobs:
         with:
           # Cypress Cloud로 기록 전송 (그래야 대시보드에서 볼 수 있음)
           record: true
+          browser: chrome   # 👈 [추가] 이 줄을 넣어주세요!
         env:
           # 아까 3단계에서 저장한 비밀키를 여기서 몰래 가져옵니다
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
