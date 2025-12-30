@@ -25,12 +25,20 @@ jobs:
           # ▼▼▼ 기존 코드 아래에 이어서 붙여넣으세요 ▼▼▼
 
       - name: Send Google Chat Notification
-        if: always() # 중요: 테스트가 실패해도 알림은 가야 하므로 항상 실행
+        if: always()
         run: |
           $status = "${{ job.status }}"
-          $emoji = if ($status -eq 'success') { "✅" } else { "❌" }
-          $message = "$emoji Cypress 테스트 결과: $status`n👉 결과 보기: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
+          # 이모지 대신 안전한 텍스트 사용
+          if ($status -eq 'success') { 
+            $resultTitle = "[SUCCESS]" 
+          } else { 
+            $resultTitle = "[FAIL]" 
+          }
+          
+          # 메시지 내용 구성
+          $message = "$resultTitle Cypress Test Result: $status`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
+          # JSON 변환 및 전송
           $payload = @{ text = $message } | ConvertTo-Json -Compress
-          
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json" -Body $payload
