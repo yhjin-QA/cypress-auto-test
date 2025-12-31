@@ -6,6 +6,7 @@ on:
   schedule:
     - cron: '0 1 * * 1-5'  # 월~금 아침 10시(한국시간)에 자동 실행
   # - cron: '0 1 * * *'    # 매일 한국 오전 10시 (UTC 01시)
+  workflow_dispatch:      # 이 한 줄만 추가하세요!
 jobs:
   cypress-run:
     #runs-on: ubuntu-latest # 리눅스 서버 대여
