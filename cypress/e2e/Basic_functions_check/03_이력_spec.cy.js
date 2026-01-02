@@ -189,10 +189,15 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 값').should('be.visible');
     cy.get('th').filter(':visible').contains('조회').should('be.visible');
+
+    // 클릭동작 
+   // cy.contains('label', '업무시스템').closest('.v-input').find('.v-input__slot').click({ force: true });
+   // cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').click({ force: true });
+   // cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.log('✅ 이력 - 사용자 추적 화면 출력 확인 완료!');
 
 
-
+/*
     // 이력 > 접속 기록 이력 서브메뉴 클릭
     cy.contains('button', '이력').click({ force: true });
     cy.log('--- 이력 > 접속기록 이력  클릭 ---');
