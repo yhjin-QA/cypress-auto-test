@@ -366,17 +366,16 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('처리').should('be.visible');
     cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
 
-
+/*
 
     // ==========================================
     // STEP 4: 현황서브메뉴 
     // ==========================================
     cy.wait(3000);
     cy.contains('button', '현황').click({ force: true });
-    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
+    cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
     cy.log('--- 현황 > 정보사용자별 탭 클릭  ---');
-    //디폴트 화면으로 주석처리
-    //cy.get('.tab-btn').contains('정보사용자 별').should('be.visible').click({ force: true });
+    cy.get('.tab-btn').contains('정보사용자 별').should('be.visible').click({ force: true });
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘확인
@@ -1535,7 +1534,6 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('th').filter(':visible').contains('파일 이름').should('be.visible');
      cy.get('th').filter(':visible').contains('파일 크기').should('be.visible');
      cy.log('✅ 운영 - 태스크 - [로그 다운로드] 탭 화면 출력 확인 완료 ');
-     cy.wait(3000);
 
     
       // 운영 > 태스크  > "패키지 관리" 탭을 클릭
