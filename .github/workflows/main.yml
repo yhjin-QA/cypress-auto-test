@@ -36,7 +36,7 @@ jobs:
 
           # ▼▼▼ 기존 코드 아래에 이어서 붙여넣으세요 ▼▼▼
 
-    - name: Send Google Chat Notification
+      - name: Send Google Chat Notification
         if: always()
         env:
           # [핵심] 한글 깨짐 방지를 위해 텍스트를 환경변수로 분리
