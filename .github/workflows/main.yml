@@ -7,6 +7,7 @@ env:
 # 언제 실행할까요? (코드가 push 될 때마다)
 on:
   push:             # 코드가 올라올 때 실행
+      #branches: [ "master" ]  # 👈 [핵심] master 브랜치에 올릴 때만 자동 실행!
   schedule:
     - cron: '0 1 * * 1-5'  # 월~금 오전 10시(한국시간)에 자동 실행
   # - cron: '25 2 * * 1-5'  # 월~금 오전 11:25(한국 11:25 = UTC 02:25)
@@ -38,6 +39,9 @@ jobs:
       - name: Send Google Chat Notification
         if: always()
         run: |
+          # 1. [중요] 한글 깨짐 방지를 위한 인코딩 강제 설정
+          [Console]::OutputEncoding = [Text.UTF8Encoding]::UTF8
+
           $status = "${{ job.status }}"
           
           # 이모지 대신 안전한 텍스트 사용
@@ -52,5 +56,9 @@ jobs:
           $message = "$resultTitle $env:PRODUCT_NAME UI확인 결과`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
           # JSON 변환 및 구글챗 전송
+          # 2. [핵심 변경] JSON 텍스트를 "UTF-8 바이트 배열"로 강제 변환
           $payload = @{ text = $message } | ConvertTo-Json -Compress
-          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json" -Body $payload
+          $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
+
+          # 2. [핵심] 한글 전송할 때 UTF-8임을 명시 (여기가 수정되었습니다!)
+          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payload
