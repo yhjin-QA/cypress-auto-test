@@ -26,7 +26,7 @@ jobs:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Send Google Chat Notification
+      - name: Send Google Chat Notification
         if: always()
         env:
           # [핵심] 한글 깨짐 방지를 위해 텍스트를 환경변수로 분리
