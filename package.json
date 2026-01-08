@@ -4,7 +4,8 @@
   "description": "",
   "main": "01_normal mode_spec.cy.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cy:local": "cypress run --headed --no-exit --browser chrome --config-file cypress.local.config.js"
   },
   "keywords": [],
   "author": "",

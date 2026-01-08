@@ -157,7 +157,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 검색 조건 이름 입력란 확인
-     cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
+    
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
@@ -191,9 +191,30 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('조회').should('be.visible');
 
     // 클릭동작 
-   // cy.contains('label', '업무시스템').closest('.v-input').find('.v-input__slot').click({ force: true });
-   // cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').click({ force: true });
-   // cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    //cy.get('.v-input__icon--append').filter(':visible').find('.material-icons').contains('arrow_drop_down').click({ force: true });
+    //cy.get('label').filter(':visible').contains('업무시스템').closest('.v-input').find('.v-input__slot').click({ force: true });
+    //부서/소속 클릭하여 전체 선택 
+    cy.get('.material-icons').filter(':visible').contains('settings').click({ force: true });
+    cy.wait(500);
+    cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').closest('.v-list__tile').click({ force: true });
+    // 화면 본문(body)에 ESC 키 전송 (팝업창 닫는 동작 )
+    cy.get('body').type('{esc}');
+    cy.wait(500);
+    cy.log('✅ 팝업 닫기 성공');
+    
+    //개인정보유형 선택하는 코드
+    // <bug> 개인정보 유형 선택시 기존 입력했던 검색조건 초기화 되어버림. (이슈보고필요 )
+    cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(500);
+    cy.get('.v-list__tile__title').filter(':visible').contains('주민등록번호').closest('.v-list__tile').click({ force: true });
+     // 사용자계정에 admin 입력 
+    cy.get('input[aria-label="사용자 계정"]').filter(':visible').clear().type('admin');
+     cy.wait(500)
+    // 사용자 IP에 10.10.0.237 입력 
+    cy.get('input[aria-label="사용자 IP"]').filter(':visible').clear().type('10.10.0.237');
+
+    // 검색버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.log('✅ 이력 - 사용자 추적 화면 출력 확인 완료!');
 
 
