@@ -39,31 +39,40 @@ jobs:
      - name: Send Google Chat Notification
         if: always()
         env:
-          # [핵심] 한글 깨짐 방지를 위해 텍스트를 환경변수로 분리
+          # [핵심] 한글을 여기에 정의하면 깨지지 않습니다 (YAML은 UTF-8 보장)
           MSG_SUCCESS: "[성공]"
           MSG_FAIL: "[실패]"
-          MSG_TITLE: "UI 확인 "
+          MSG_Title: "UI확인 결과"
         run: |
-          # 1. PowerShell 인코딩 안전장치
+          # 1. 인코딩 설정 (안전장치)
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-          # 2. 성공/실패 여부에 따라 제목 설정 (환경변수 사용)
-          if ("${{ job.status }}" -eq 'success') { 
+          $status = "${{ job.status }}"
+          
+          # 환경변수에서 한글 가져오기
+          if ($status -eq 'success') { 
             $resultTitle = $env:MSG_SUCCESS
           } else { 
             $resultTitle = $env:MSG_FAIL
           }
           
-          # 3. 메시지 조합 (한글 직접 입력 X -> 변수 사용 O)
-          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # 메시지 조립 (한글을 직접 타이핑하지 않고 변수로 사용)
+          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_Title`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # 로그 확인용 (선택사항)
+          # 디버깅 로그 확인
           Write-Host "생성된 메시지: $message"
           
-          # 4. JSON 변환 및 바이트 배열화 (전송 시 깨짐 완전 차단)
+          # 2. JSON 변환 (괄호로 감싸기)
           $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
+          
+          if ([string]::IsNullOrWhiteSpace($payloadJson)) {
+            Write-Error "JSON 변환 실패"
+            exit 1
+          }
+
+          # 3. 바이트 변환 (UTF-8)
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
 
-          # 5. 구글챗 전송
+          # 4. 전송
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
