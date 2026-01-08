@@ -56,6 +56,9 @@ jobs:
           $message = "$resultTitle $env:PRODUCT_NAME UI확인 결과`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
           # JSON 변환 및 구글챗 전송
+          # 2. [핵심 변경] JSON 텍스트를 "UTF-8 바이트 배열"로 강제 변환
           $payload = @{ text = $message } | ConvertTo-Json -Compress
+          $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
+
           # 2. [핵심] 한글 전송할 때 UTF-8임을 명시 (여기가 수정되었습니다!)
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payload
