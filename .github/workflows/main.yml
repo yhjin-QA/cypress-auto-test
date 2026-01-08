@@ -38,35 +38,41 @@ jobs:
 
       - name: Send Google Chat Notification
         if: always()
+        env:
+          # [핵심] 한글을 여기에 정의하면 깨지지 않습니다 (YAML은 UTF-8 보장)
+          MSG_SUCCESS: "[성공]"
+          MSG_FAIL: "[실패]"
+          MSG_Title: "UI확인 결과"
         run: |
-          # 1. 인코딩 설정
+          # 1. 인코딩 설정 (안전장치)
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
           $status = "${{ job.status }}"
           
+          # 환경변수에서 한글 가져오기
           if ($status -eq 'success') { 
-            $resultTitle = "[성공]" 
+            $resultTitle = $env:MSG_SUCCESS
           } else { 
-            $resultTitle = "[실패]" 
+            $resultTitle = $env:MSG_FAIL
           }
           
-          $message = "$resultTitle $env:PRODUCT_NAME UI확인 결과`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # 메시지 조립 (한글을 직접 타이핑하지 않고 변수로 사용)
+          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_Title`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # 디버깅 로그
+          # 디버깅 로그 확인
           Write-Host "생성된 메시지: $message"
           
-          # 2. JSON 변환 (괄호로 감싸서 변수 $payloadJson에 담기)
+          # 2. JSON 변환 (괄호로 감싸기)
           $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
           
-          # 빈 값 체크 (에러 방지)
           if ([string]::IsNullOrWhiteSpace($payloadJson)) {
-            Write-Error "JSON 변환 실패: 메시지 내용이 비어있습니다."
+            Write-Error "JSON 변환 실패"
             exit 1
           }
 
-          # 3. 바이트 변환 ($payloadJson을 변환)
+          # 3. 바이트 변환 (UTF-8)
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
 
-          # 4. 전송 (핵심: $payloadBytes를 전송)
+          # 4. 전송
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
