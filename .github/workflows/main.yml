@@ -42,7 +42,7 @@ jobs:
           # [핵심] 한글 깨짐 방지를 위해 텍스트를 환경변수로 분리
           MSG_SUCCESS: "[성공]"
           MSG_FAIL: "[실패]"
-          MSG_TITLE: "UI확인 결과"
+          MSG_TITLE: "UI확인"
         run: |
           # 1. PowerShell 인코딩 안전장치
           $OutputEncoding = [System.Text.Encoding]::UTF8
