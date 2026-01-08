@@ -38,6 +38,9 @@ jobs:
       - name: Send Google Chat Notification
         if: always()
         run: |
+          # 1. [중요] 한글 깨짐 방지를 위한 인코딩 강제 설정
+          [Console]::OutputEncoding = [Text.UTF8Encoding]::UTF8
+
           $status = "${{ job.status }}"
           
           # 이모지 대신 안전한 텍스트 사용
@@ -53,4 +56,5 @@ jobs:
           
           # JSON 변환 및 구글챗 전송
           $payload = @{ text = $message } | ConvertTo-Json -Compress
-          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json" -Body $payload
+          # 2. [핵심] 한글 전송할 때 UTF-8임을 명시 (여기가 수정되었습니다!)
+          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payload
