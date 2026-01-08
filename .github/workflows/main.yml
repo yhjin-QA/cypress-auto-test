@@ -39,26 +39,34 @@ jobs:
       - name: Send Google Chat Notification
         if: always()
         run: |
-          # 1. [중요] 한글 깨짐 방지를 위한 인코딩 강제 설정
-          [Console]::OutputEncoding = [Text.UTF8Encoding]::UTF8
+          # 1. 인코딩 설정
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
           $status = "${{ job.status }}"
           
-          # 이모지 대신 안전한 텍스트 사용
           if ($status -eq 'success') { 
             $resultTitle = "[성공]" 
           } else { 
             $resultTitle = "[실패]" 
           }
           
-          # 기존: "$resultTitle Cypress Test Result: $status`nLink: ..."
-          # 변경: "$resultTitle 로그캐치UI확인 결과`nLink: ..."
           $message = "$resultTitle $env:PRODUCT_NAME UI확인 결과`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # JSON 변환 및 구글챗 전송
-          # 2. [핵심 변경] JSON 텍스트를 "UTF-8 바이트 배열"로 강제 변환
-          $payload = @{ text = $message } | ConvertTo-Json -Compress
+          # 디버깅 로그
+          Write-Host "생성된 메시지: $message"
+          
+          # 2. JSON 변환 (괄호로 감싸서 변수 $payloadJson에 담기)
+          $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
+          
+          # 빈 값 체크 (에러 방지)
+          if ([string]::IsNullOrWhiteSpace($payloadJson)) {
+            Write-Error "JSON 변환 실패: 메시지 내용이 비어있습니다."
+            exit 1
+          }
+
+          # 3. 바이트 변환 ($payloadJson을 변환)
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
 
-          # 2. [핵심] 한글 전송할 때 UTF-8임을 명시 (여기가 수정되었습니다!)
-          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payload
+          # 4. 전송 (핵심: $payloadBytes를 전송)
+          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
