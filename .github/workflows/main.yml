@@ -1,40 +1,44 @@
 name: Cypress Tests
 
-# 여기에 제품 이름을 적어두면, 아래 모든 단계에서 이 이름을 갖다 씁니다.
 env:
-  PRODUCT_NAME: "로그캐치"  # 나중에 "다른제품"으로 여기만 바꾸면 됩니다.
+  PRODUCT_NAME: "로그캐치"
 
-# 언제 실행할까요? (코드가 push 될 때마다)
 on:
+<<<<<<< HEAD
   push:             # 코드가 올라올 때 실행
       #branches: [ "master" ]  #  [핵심] master 브랜치에 올릴 때만 자동 실행!
+=======
+  push:
+    # branches: [ "master" ]  # 👈 주석(#)을 지우면 Master 브랜치에서만 자동 실행됩니다.
+>>>>>>> local-test-yhjin
   schedule:
-    - cron: '0 1 * * 1-5'  # 월~금 오전 10시(한국시간)에 자동 실행
-  # - cron: '25 2 * * 1-5'  # 월~금 오전 11:25(한국 11:25 = UTC 02:25)
-  # - cron: '0 7 * * 1-5'   # 월~금 오후 16:00 (UTC 08:00) 
-  # - cron: '0 1 * * *'    # 매일 한국 오전 10시 (UTC 01시)
-  workflow_dispatch:      # 이 한 줄만 추가하세요!
+    - cron: '0 1 * * 1-5'
+  workflow_dispatch:
+
 jobs:
   cypress-run:
+<<<<<<< HEAD
     #runs-on: ubuntu-latest # 리눅스 서버 대여
     runs-on: self-hosted    # <--- 내 컴퓨터 (회사망 접속 가능 )
+=======
+    runs-on: self-hosted
+>>>>>>> local-test-yhjin
     steps:
-      - name: Checkout # 내 코드 가져오기
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Cypress Run # 사이프러스 실행
+      - name: Cypress Run
         uses: cypress-io/github-action@v6
         with:
-          # Cypress Cloud로 기록 전송 (그래야 대시보드에서 볼 수 있음)
           record: true
+<<<<<<< HEAD
           browser: chrome   #  [추가] 이 줄을 넣어주세요!
+=======
+          browser: chrome
+>>>>>>> local-test-yhjin
         env:
-          # 아까 3단계에서 저장한 비밀키를 여기서 몰래 가져옵니다
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          # 깃허브 토큰은 자동으로 제공됩니다 (따로 설정 안 해도 됨)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          # ▼▼▼ 기존 코드 아래에 이어서 붙여넣으세요 ▼▼▼
 
       - name: Send Google Chat Notification
         if: always()
@@ -44,6 +48,7 @@ jobs:
           MSG_FAIL: "[실패]"
           MSG_TITLE: "UI 확인결과"
         run: |
+<<<<<<< HEAD
           # 1. PowerShell 인코딩 안전장치
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -51,10 +56,21 @@ jobs:
           # 2. 성공/실패 여부에 따라 제목 설정 (환경변수 사용)
           if ("${{ job.status }}" -eq 'success') { 
             $resultTitle = $env:MSG_SUCCESS
+=======
+          # 1. 인코딩 설정
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          $status = "${{ job.status }}"
+          
+          if ($status -eq 'success') { 
+            $resultTitle = "[성공]" 
+>>>>>>> local-test-yhjin
           } else { 
             $resultTitle = $env:MSG_FAIL
           }
           
+<<<<<<< HEAD
           # 3. 메시지 조합 (한글 직접 입력 X -> 변수 사용 O)
           $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
@@ -67,3 +83,23 @@ jobs:
 
           # 5. 구글챗 전송
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
+=======
+          $message = "$resultTitle $env:PRODUCT_NAME UI확인 결과`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
+          # 디버깅 로그
+          Write-Host "생성된 메시지: $message"
+          
+          # 2. JSON 변환 (괄호로 감싸기)
+          $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
+          
+          if ([string]::IsNullOrWhiteSpace($payloadJson)) {
+            Write-Error "JSON 변환 실패: 메시지 내용이 비어있습니다."
+            exit 1
+          }
+
+          # 3. 바이트 변환
+          $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
+
+          # 4. 전송 (수정됨: $payload -> $payloadBytes)
+          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
+>>>>>>> local-test-yhjin
