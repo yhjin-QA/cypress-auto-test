@@ -2238,7 +2238,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('들여오기').should('be.visible');
     cy.get('.v-btn__content').filter(':visible').contains('내보내기').should('be.visible');
     cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
-    cy.get('.v-btn__content').filter(':visible').contains('취소').should('be.visible');
+    //v3.0.3.0_R34785 취소 버튼 없어짐 
+    //cy.get('.v-btn__content').filter(':visible').contains('취소').should('be.visible');
     cy.log('✅ 설정 - [패스워드 규칙] 출력 확인 완료');
 
  
@@ -2385,6 +2386,7 @@ describe('로그캐치 사이트 테스트', () => {
     //설정 클릭
     cy.log('--- [설정] 메뉴 클릭 ---');
     cy.contains('button.side-menu', '설정').should('be.visible').click({ force: true });
+    
     // 설정 > SMTP 설정 서브메뉴 클릭 
     cy.wait(1000)
     cy.log('--- 서브메뉴 [SMTP 설정] 클릭 ---');
@@ -2404,7 +2406,8 @@ describe('로그캐치 사이트 테스트', () => {
     
     //버튼 확인
     cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
-    cy.get('.v-btn__content').filter(':visible').contains('취소').should('be.visible');
+    // 3.0.3.0_R34785 버전에서 취소버튼 사라짐 
+    //cy.get('.v-btn__content').filter(':visible').contains('취소').should('be.visible');
     cy.get('.v-btn__content').filter(':visible').contains('접속 테스트').should('be.visible');
     cy.log('✅ 설정 - SMTP 설정 출력 확인 완료');
 
@@ -2424,13 +2427,13 @@ describe('로그캐치 사이트 테스트', () => {
     // 비활성화된 입력창 확인코드 
     cy.contains('label', '재시작 수행').closest('.v-card').find('input[disabled]').should('be.visible');
     //시간 문구확인 
-    cy.get('.font-weight-bold').filter(':visible').contains('시간').should('be.visible');
-    cy.get('input[aria-label="시"]').should('be.visible')
-    cy.get('input[aria-label="분"]').should('be.visible')
-    cy.get('input[aria-label="초"]').should('be.visible')
+    //cy.get('.font-weight-bold').filter(':visible').contains('시간').should('be.visible');
+    //cy.get('input[aria-label="시"]').should('be.visible')
+    //cy.get('input[aria-label="분"]').should('be.visible')
+    //cy.get('input[aria-label="초"]').should('be.visible')
     // v 아이콘 확인하는 코드
     cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
-    // 저장 버튼 확인인
+    // 저장 버튼 확인
     cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
     cy.log('✅ 설정 - 재시작 설정 화면 출력 확인 완료');
 

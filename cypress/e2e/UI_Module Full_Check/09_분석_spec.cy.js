@@ -877,7 +877,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('button.has-child', '분석').click({ force: true });
     cy.wait(2000); // 메뉴 펼쳐짐 대기
     cy.log('--- 화면 검증 시작 ---');
-    cy.get('.v-btn__content').contains('실시간').closest('button').should('not.have.class', 'inactive');
+    // 3.0.3.0_R34785 버전 실시간 탭 -> 이상행위 정책 탭 문구 변경됨
+    cy.get('.v-btn__content').contains('이상행위 정책').closest('button').should('not.have.class', 'inactive');
     cy.contains('.c-headline', '정책 유형').should('exist');
     cy.contains('.c-headline', '개인정보 과다조회 정책 목록').should('exist');
     // 표 문구열 확인

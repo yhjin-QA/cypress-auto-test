@@ -994,8 +994,13 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 10: 검출 서브메뉴 
     // ==========================================
     cy.log('🚀 검출 탭 클릭 및 알림창 처리');
+    //3.0.3.0_r34785 버전에서 검출 > 개인정보의심 메뉴 제외
+    /*
     cy.contains('button', '검출').click({ force: true });
     cy.wait(2000);
+
+    
+    
     cy.log('---검출 - 개인정보 의심 확정처리 서브메뉴 클릭 ---');
     cy.get('.v-list__tile__title').filter(':contains("개인정보 의심 확정 처리")').filter(':visible').click({ force: true });
     cy.wait(5000); 
@@ -1126,7 +1131,7 @@ describe('로그캐치 사이트 테스트', () => {
        cy.log('✅ 검출 - 개인정보 의심확정처리 - [개인정보 의심 데이터 설정] 출력 확인 완료! ');
 
 
-
+        */
 
         // 검출탭 > 필터  서브메뉴 선택 
         cy.log('🚀 검출탭 > 필터  서브메뉴 선택 ');
@@ -1397,10 +1402,15 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
        cy.get('.v-label').filter(':visible').contains('메뉴 등록 필요').should('be.visible');
        cy.get('.v-label').filter(':visible').contains('오탐/확정').should('be.visible');
+       
+       //3.0.3.0_R34785 에서 파일 선택 버튼식으로 변경 
        // 파일선택 확인
-       cy.get('input[type="file"][accept=".xls, .xlsx"]').filter(':visible').should('be.visible');
+       //cy.get('input[type="file"][accept=".xls, .xlsx"]').filter(':visible').should('be.visible');
+       
        // 버튼 확인 
        cy.get('.v-btn__content').filter(':visible').contains('들여오기').should('be.visible');
+       //3.0.3.0_R34785 에서 파일선택 버튼식으로 변경 
+       cy.get('.v-btn__content').filter(':visible').contains('파일 선택').should('be.visible');
        cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').should('be.visible');
        cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
        // 표 컬럼 확인
@@ -1431,7 +1441,8 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('th').filter(':visible').contains('HTTP Method').should('be.visible');
        cy.get('th').filter(':visible').contains('수집된 URI').should('be.visible');
        cy.get('th').filter(':visible').contains('등록된 URI').should('be.visible');
-       cy.get('th').filter(':visible').contains('처리').should('be.visible');
+       // //3.0.3.0_R34785 표 처리 컬럼 없어짐 
+       //cy.get('th').filter(':visible').contains('처리').should('be.visible');
        cy.get('th').filter(':visible').contains('수집 제외').should('be.visible');
        cy.log('✅ 검출 - 검출메뉴관리 - [URI 관리] 출력 확인 완료 ');
 
