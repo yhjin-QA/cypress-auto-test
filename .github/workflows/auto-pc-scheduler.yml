@@ -1,4 +1,4 @@
-name: Cypress Tests
+name: Auto-PC Work (Daily)
 
 env:
   PRODUCT_NAME: "로그캐치"
@@ -7,12 +7,12 @@ on:
   push:
     branches: [ "master" ]  # 주석(#)을 지우면 Master 브랜치에서만 자동 실행됩니다.
   schedule:
-    - cron: '0 1 * * 1-5'
+    - cron: '0 1,6 * * *'
   workflow_dispatch:
 
 jobs:
   cypress-run:
-    runs-on: [self-hosted, PC-YHJIN]
+    runs-on: [self-hosted, PC-Auto]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
