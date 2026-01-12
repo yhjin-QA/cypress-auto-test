@@ -7,12 +7,12 @@ on:
   push:
     branches: [ "master" ]  # 주석(#)을 지우면 Master 브랜치에서만 자동 실행됩니다.
   schedule:
-    - cron: '0 1 * * 1-5'
+    - cron: '0 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
   cypress-run:
-    runs-on: self-hosted
+    runs-on: [self-hosted, PC-YHJIN]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,3 +57,35 @@ jobs:
 
           # 5. 구글챗 전송
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
+
+          # ... (기존 Cypress 테스트 스텝들 아래에 추가) ...
+
+      - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
+        if: failure()  # <--- 중요: 테스트가 실패했을 때만 실행됨
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+        
+          subject: 🚨 [긴급/실패] Cypress UI 테스트 실패 알림
+        
+          # 수신자 목록 (쉼표로 구분, 띄어쓰기 없이)
+          to: yhjin@warevalley.com
+        
+          from: Cypress 알림 봇 <noreply@warevalley.com>
+        
+          body: |
+            [긴급] 로그캐치 UI 자동화 테스트가 실패했습니다.
+          
+            ---------------------------------------------------
+            상태: ❌ FAILED (실패)
+            리포지토리: ${{ github.repository }}
+          
+             상세 로그 확인 (Link):
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            ---------------------------------------------------
+          
+            담당자분들은 위 링크를 클릭하여 실패 원인을 확인해 주세요.
