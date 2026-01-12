@@ -1,0 +1,59 @@
+name: Auto-PC Work (Daily)
+
+env:
+  PRODUCT_NAME: "로그캐치"
+
+on:
+  push:
+    branches: [ "master" ]  # 주석(#)을 지우면 Master 브랜치에서만 자동 실행됩니다.
+  schedule:
+    - cron: '0 1,6 * * *'
+  workflow_dispatch:
+
+jobs:
+  cypress-run:
+    runs-on: [self-hosted, PC-Auto]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cypress Run
+        uses: cypress-io/github-action@v6
+        with:
+          record: true
+          browser: chrome
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Send Google Chat Notification
+        if: always()
+        env:
+          # [핵심] 한글 깨짐 방지를 위해 텍스트를 환경변수로 분리
+          MSG_SUCCESS: "[성공][Auto-PC]"
+          MSG_FAIL: "[실패][Auto-PC]"
+          MSG_TITLE: "UI 확인결과"
+        run: |
+          # 1. PowerShell 인코딩 안전장치
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          # 2. 성공/실패 여부에 따라 제목 설정 (환경변수 사용)
+          if ("${{ job.status }}" -eq 'success') { 
+            $resultTitle = $env:MSG_SUCCESS
+          } else { 
+            $resultTitle = $env:MSG_FAIL
+          }
+          
+          # 3. 메시지 조합 (한글 직접 입력 X -> 변수 사용 O)
+          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
+          # 로그 확인용 (선택사항)
+          Write-Host "생성된 메시지: $message"
+          
+          # 4. JSON 변환 및 바이트 배열화 (전송 시 깨짐 완전 차단)
+          $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
+          $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
+
+          # 5. 구글챗 전송
+          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
