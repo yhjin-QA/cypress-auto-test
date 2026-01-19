@@ -47,13 +47,39 @@ jobs:
 
           # 👇 [추가] Cypress 실행 파일이 없으면 강제로 설치하는 명령어
           npx cypress install
+          
+          #3. 테스트실행
+          # [수정됨] 실행 결과를 화면에도 보여주고(Tee-Object), 파일(cypress.log)로도 저장합니다.
+          npx cy2 run --record --browser chrome --parallel --ci-build-id "${{ github.ref_name }}-${{ github.run_id }}" 2>&1 | Tee-Object -FilePath "cypress.log"
+          # 👇 [새로 추가] 로그 파일에서 진짜 대시보드 URL(랜덤코드)을 찾아내는 단계
+      - name: Extract Real Dashboard URL
+        if: always() 
+        shell: powershell
+        run: |
+          $logPath = "cypress.log"
+          if (Test-Path $logPath) {
+            $content = Get-Content $logPath -Raw
+            # 로그에서 "Run URL: http://.../run/랜덤코드" 패턴을 찾습니다.
+            if ($content -match "Run URL:\s+http.+/run/(?<id>[a-f0-9]+)") {
+                $realRunId = $matches['id']
+                # 내 PC IP로 진짜 주소를 조립합니다.
+                $realUrl = "http://10.10.54.1:8080/run/$realRunId"
+                
+                # 다음 단계(알림)에서 쓸 수 있도록 환경변수에 저장합니다.
+                echo "REAL_DASHBOARD_URL=$realUrl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+                Write-Host "✅ 진짜 대시보드 주소를 찾았습니다: $realUrl"
+            } else {
+                Write-Host "⚠️ 로그에서 주소를 찾지 못했습니다."
+            }
+          }
+          
 
           # 3. 테스트 실행 (중복 실행 방지를 위해 Build ID에 실행 번호 포함)
           # npx cy2 run --record --browser chrome --ci-build-id "github-run-${{ github.run_id }}"
           # 👇 중간에 --parallel 옵션이 추가되었습니다.
           #npx cy2 run --record --browser chrome --parallel --ci-build-id "github-run-${{ github.run_id }}"
           # 👇 "github-run" 대신 "${{ github.ref_name }}"을 사용
-          npx cy2 run --record --browser chrome --parallel --ci-build-id "${{ github.ref_name }}-${{ github.run_id }}"
+          #npx cy2 run --record --browser chrome --parallel --ci-build-id "${{ github.ref_name }}-${{ github.run_id }}"
 
       - name: Send Google Chat Notification
         if: always()
@@ -65,6 +91,9 @@ jobs:
           # 👇 [추가됨] 한글 깨짐 방지를 위해 여기서 변수로 선언
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub"
+          # 👇 [여기!] 이 줄이 꼭 있어야 앞 단계에서 찾은 진짜 주소를 받아옵니다.
+          REAL_URL: ${{ env.REAL_DASHBOARD_URL }}
+
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -74,9 +103,16 @@ jobs:
           } else { 
             $resultTitle = $env:MSG_FAIL
           }
+          
+          # 진짜 주소가 있으면(성공적으로 추출했으면) 그것을 쓰고, 없으면 프로젝트 목록으로
+          if ($env:REAL_URL) {
+            $dashboardUrl = $env:REAL_URL
+          } else {
+            $dashboardUrl = "http://10.10.54.1:8080/projects"
+          }
 
           # 1. 대시보드 링크 생성
-          $dashboardUrl = "$env:DASH_BASE/run/${{ github.ref_name }}-${{ github.run_id }}"
+          # $dashboardUrl = "$env:DASH_BASE/run/${{ github.ref_name }}-${{ github.run_id }}"
           
           # 2. 메시지 생성 (한글/이모지를 직접 쓰지 않고 변수 $env:LABEL_... 사용)
           $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n${env:LABEL_DASH}: $dashboardUrl`n${env:LABEL_GIT}: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
