@@ -56,26 +56,36 @@ jobs:
           Get-Content cypress.log
 
           # 👇 [새로 추가] 로그 파일에서 진짜 대시보드 URL(랜덤코드)을 찾아내는 단계
+          # 👇 [수정됨] 더 강력한 정규표현식으로 교체
       - name: Extract Real Dashboard URL
         if: always() 
         shell: powershell
         run: |
           $logPath = "cypress.log"
           if (Test-Path $logPath) {
+            # 로그 파일을 읽어옵니다.
             $content = Get-Content $logPath -Raw
-            # 로그에서 "Run URL: http://.../run/랜덤코드" 패턴을 찾습니다.
-            if ($content -match "Run URL:\s+http.+/run/(?<id>[a-f0-9]+)") {
+            
+            # [디버깅용] 로그 내용의 일부를 화면에 뿌려봅니다 (나중에 문제 생기면 확인용)
+            Write-Host "--- LOG START ---"
+            $content | Select-Object -First 2000
+            Write-Host "--- LOG END ---"
+
+            # 👇 [핵심 변경] "Run URL:" 글씨 상관없이 "/run/아이디" 패턴만 있으면 찾아냅니다.
+            if ($content -match "/run/(?<id>[a-f0-9]+)") {
                 $realRunId = $matches['id']
-                # 내 PC IP로 진짜 주소를 조립합니다.
+                
+                # 찾아낸 ID로 진짜 주소 조립
                 $realUrl = "http://10.10.54.1:8080/run/$realRunId"
                 
-                # 다음 단계(알림)에서 쓸 수 있도록 환경변수에 저장합니다.
+                # 환경변수 저장
                 echo "REAL_DASHBOARD_URL=$realUrl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-                Write-Host "✅ 진짜 대시보드 주소를 찾았습니다: $realUrl"
+                Write-Host "✅ 진짜 대시보드 주소 발견! -> $realUrl"
             } else {
-                Write-Host "⚠️ 로그에서 주소를 찾지 못했습니다."
+                Write-Host "⚠️ 로그 분석 결과: ID 패턴(/run/xxxx)을 찾지 못했습니다."
             }
           }
+      
           
 
           # 3. 테스트 실행 (중복 실행 방지를 위해 Build ID에 실행 번호 포함)
