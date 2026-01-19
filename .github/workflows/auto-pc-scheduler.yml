@@ -9,7 +9,7 @@ on:
     branches: [ "master" ]
   schedule:
     # 10:15 AM, 03:15 PM (KST)
-    - cron: '15 1,6 * * 1-5'
+    - cron: '15 6 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -34,6 +34,11 @@ jobs:
           CYPRESS_API_URL: "http://10.10.54.1:1234/"
           CYPRESS_RECORD_KEY: "my-secret-key" # 아무거나 입력
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 👇 [추가됨] 대시보드에 커밋 정보를 표시하기 위한 설정 (여기 4줄 추가!)
+          COMMIT_INFO_MESSAGE: ${{ github.event.head_commit.message }}
+          COMMIT_INFO_AUTHOR: ${{ github.actor }}
+          COMMIT_INFO_SHA: ${{ github.sha }}
+          COMMIT_INFO_BRANCH: ${{ github.ref_name }}
         run: |
           # 1. 의존성 설치
           npm install
