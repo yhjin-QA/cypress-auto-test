@@ -51,7 +51,12 @@ jobs:
 
           #3. 테스트실행
           # [수정됨] 실행 결과를 화면에도 보여주고(Tee-Object), 파일(cypress.log)로도 저장합니다.
-          npx cy2 run --record --browser chrome --parallel --ci-build-id "${{ github.ref_name }}-${{ github.run_id }}" 2>&1 | Tee-Object -FilePath "cypress.log"
+          # (PowerShell이 경고 메시지를 에러로 오인하여 멈추는 현상을 방지)
+          cmd /c "npx cy2 run --record --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }} > cypress.log 2>&1"
+          
+          # 👇 [추가] 저장된 로그 내용을 화면에도 출력해 줍니다.
+          Get-Content cypress.log
+
           # 👇 [새로 추가] 로그 파일에서 진짜 대시보드 URL(랜덤코드)을 찾아내는 단계
       - name: Extract Real Dashboard URL
         if: always() 
