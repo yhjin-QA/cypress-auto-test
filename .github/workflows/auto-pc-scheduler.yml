@@ -65,6 +65,9 @@ jobs:
           MSG_TITLE: "UI 확인결과"
           #  [중요] 대시보드 기본 주소 (사용자 PC IP)
           DASH_BASE: "http://10.10.54.1:8080"
+          # 👇 [추가됨] 한글 깨짐 방지를 위해 여기서 변수로 선언
+          LABEL_DASH: "대시보드"
+          LABEL_GIT: "GitHub"
 
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
@@ -75,13 +78,12 @@ jobs:
           } else { 
             $resultTitle = $env:MSG_FAIL
           }
-          # [추가됨] 대시보드 상세 링크 생성
-          # 규칙: 기본주소/run/브랜치명-RunID (아까 ci-build-id 설정과 동일하게 맞춤)
+
+          # 1. 대시보드 링크 생성
           $dashboardUrl = "$env:DASH_BASE/run/${{ github.ref_name }}-${{ github.run_id }}"
-          # [수정됨] 메시지에 대시보드 링크 추가
-          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n 대시보드: $dashboardUrl`n🔗 GitHub: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          #기존
-          #$message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
+          # 2. 메시지 생성 (한글직접 쓰지 않고 변수 $env:LABEL_... 사용)
+          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n$env:LABEL_DASH: $dashboardUrl`n$env:LABEL_GIT: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
           Write-Host "생성된 메시지: $message"
           
