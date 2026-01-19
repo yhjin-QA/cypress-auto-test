@@ -40,6 +40,9 @@ jobs:
           # 2. cy2 도구 설치 (안전장치)
           npm install cy2 --save-dev
 
+          # 👇 [추가] Cypress 실행 파일이 없으면 강제로 설치하는 명령어
+          npx cypress install
+
           # 3. 테스트 실행 (중복 실행 방지를 위해 Build ID에 실행 번호 포함)
           npx cy2 run --record --browser chrome --ci-build-id "github-run-${{ github.run_id }}"
 
