@@ -38,6 +38,10 @@ jobs:
           COMMIT_INFO_AUTHOR: ${{ github.actor }}
           COMMIT_INFO_SHA: ${{ github.sha }}
           COMMIT_INFO_BRANCH: ${{ github.ref_name }}
+          # 👇 [추가됨] 로그를 깨끗하게 만들기 위한 핵심 설정
+          NO_COLOR: 1             # 색상 코드 제거 (??[39m 삭제)
+          FORCE_COLOR: 0          # 색상 강제 비활성화
+          TERM: dumb              # 터미널 특수문자 제거
         run: |
           # 👇 [추가] PowerShell 자체의 인코딩을 UTF-8로 고정
           $OutputEncoding = [System.Text.Encoding]::UTF8
@@ -52,7 +56,8 @@ jobs:
           npx cypress install
           
           #3. 테스트실행
-          # 👇 [수정] "chcp 65001 &" 를 추가하여 CMD 창의 언어를 UTF-8로 변경 후 실행
+          # 👇 [수정됨] 색상을 뺀 순수 텍스트로 실행
+          # chcp 65001로 UTF-8 설정 후 실행
           cmd /c "chcp 65001 & npx cy2 run --record --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }} > cypress.log 2>&1"
           
           # 👇 [수정] 로그 파일을 읽을 때도 UTF-8임을 명시
