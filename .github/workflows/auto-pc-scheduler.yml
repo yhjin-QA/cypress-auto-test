@@ -43,6 +43,8 @@ jobs:
           NO_COLOR: 1             # 색상 코드 제거 (??[39m 삭제)
           FORCE_COLOR: 0          # 색상 강제 비활성화
           TERM: dumb              # 터미널 특수문자 제거
+          # 👇 [추가] Cypress에게 "CI 환경임"을 알려주어 특수문자 사용을 줄이게 함
+          CI: true
         run: |
           # 👇 [추가] PowerShell 자체의 인코딩을 UTF-8로 고정
           $OutputEncoding = [System.Text.Encoding]::UTF8
@@ -60,8 +62,8 @@ jobs:
           #3. 테스트실행
           # [수정됨] 실행 결과를 화면에도 보여주고(Tee-Object), 파일(cypress.log)로도 저장합니다.
           # 👇 [수정됨] 색상을 뺀 순수 텍스트로 실행
-          # chcp 65001로 UTF-8 설정 후 실행
-          cmd /c "chcp 65001 & npx cy2 run --record --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }} > cypress.log 2>&1"
+          # 3. Out-File -Encoding UTF8 명령어로 파일 저장 시 인코딩을 '확실하게' 지정합니다.
+          cmd /c "chcp 65001 & npx cy2 run --record --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }} 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           # 👇 [수정] 로그 파일을 읽을 때도 UTF-8임을 명시
           Get-Content cypress.log -Encoding UTF8
