@@ -40,6 +40,10 @@ jobs:
           COMMIT_INFO_SHA: ${{ github.sha }}
           COMMIT_INFO_BRANCH: ${{ github.ref_name }}
         run: |
+          # 👇 [추가] PowerShell 자체의 인코딩을 UTF-8로 고정
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
           # 1. 의존성 설치
           npm install
           
@@ -51,9 +55,11 @@ jobs:
 
           #3. 테스트실행
           # [수정됨] 실행 결과를 화면에도 보여주고(Tee-Object), 파일(cypress.log)로도 저장합니다.
-          # (PowerShell이 경고 메시지를 에러로 오인하여 멈추는 현상을 방지)
-          cmd /c "npx cy2 run --record --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }} > cypress.log 2>&1"
+          # 👇 [수정] "chcp 65001 &" 를 추가하여 CMD 창의 언어를 UTF-8로 변경 후 실행
+          cmd /c "chcp 65001 & npx cy2 run --record --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }} > cypress.log 2>&1"
           
+          # 👇 [수정] 로그 파일을 읽을 때도 UTF-8임을 명시
+          Get-Content cypress.log -Encoding UTF8
           # 👇 [추가] 저장된 로그 내용을 화면에도 출력해 줍니다.
           Get-Content cypress.log
 
@@ -67,11 +73,6 @@ jobs:
           if (Test-Path $logPath) {
             # 로그 파일을 읽어옵니다.
             $content = Get-Content $logPath -Raw
-            
-            # [디버깅용] 로그 내용의 일부를 화면에 뿌려봅니다 (나중에 문제 생기면 확인용)
-            Write-Host "--- LOG START ---"
-            $content | Select-Object -First 2000
-            Write-Host "--- LOG END ---"
 
             # 👇 [핵심 변경] "Run URL:" 글씨 상관없이 "/run/아이디" 패턴만 있으면 찾아냅니다.
             if ($content -match "/run/(?<id>[a-f0-9]+)") {
@@ -88,14 +89,6 @@ jobs:
             }
           }
       
-
-          # 3. 테스트 실행 (중복 실행 방지를 위해 Build ID에 실행 번호 포함)
-          # --ci-build-id: 매번 다른 ID를 부여해서 "이미 한거네?" 하고 건너뛰는 문제 해결
-          # npx cy2 run --record --browser chrome --ci-build-id "github-run-${{ github.run_id }}"
-          # 👇 중간에 --parallel 옵션이 추가되었습니다.
-          #npx cy2 run --record --browser chrome --parallel --ci-build-id "github-run-${{ github.run_id }}"
-          # 👇 "github-run" 대신 "${{ github.ref_name }}"을 사용
-          #npx cy2 run --record --browser chrome --parallel --ci-build-id "${{ github.ref_name }}-${{ github.run_id }}"
 
       - name: Send Google Chat Notification
         if: always()
