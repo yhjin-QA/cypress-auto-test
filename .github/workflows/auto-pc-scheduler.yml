@@ -46,7 +46,9 @@ jobs:
 
           # 3. 테스트 실행 (중복 실행 방지를 위해 Build ID에 실행 번호 포함)
           # --ci-build-id: 매번 다른 ID를 부여해서 "이미 한거네?" 하고 건너뛰는 문제 해결
-          npx cy2 run --record --browser chrome --ci-build-id "github-run-${{ github.run_id }}"
+          # npx cy2 run --record --browser chrome --ci-build-id "github-run-${{ github.run_id }}"
+          # 👇 중간에 --parallel 옵션이 추가되었습니다.
+          npx cy2 run --record --browser chrome --parallel --ci-build-id "github-run-${{ github.run_id }}"
 
       - name: Send Google Chat Notification
         if: always()
