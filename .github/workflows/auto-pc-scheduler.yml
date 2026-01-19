@@ -53,7 +53,9 @@ jobs:
           # --ci-build-id: 매번 다른 ID를 부여해서 "이미 한거네?" 하고 건너뛰는 문제 해결
           # npx cy2 run --record --browser chrome --ci-build-id "github-run-${{ github.run_id }}"
           # 👇 중간에 --parallel 옵션이 추가되었습니다.
-          npx cy2 run --record --browser chrome --parallel --ci-build-id "github-run-${{ github.run_id }}"
+          #npx cy2 run --record --browser chrome --parallel --ci-build-id "github-run-${{ github.run_id }}"
+          # 👇 "github-run" 대신 "${{ github.ref_name }}"을 사용
+          npx cy2 run --record --browser chrome --parallel --ci-build-id "${{ github.ref_name }}-${{ github.run_id }}"
 
       - name: Send Google Chat Notification
         if: always()
@@ -61,6 +63,9 @@ jobs:
           MSG_SUCCESS: "[성공][Auto-PC]"
           MSG_FAIL: "[실패][Auto-PC]"
           MSG_TITLE: "UI 확인결과"
+          #  [중요] 대시보드 기본 주소 (사용자 PC IP)
+          DASH_BASE: "http://10.10.54.1:8080"
+
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -70,8 +75,13 @@ jobs:
           } else { 
             $resultTitle = $env:MSG_FAIL
           }
-          
-          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # [추가됨] 대시보드 상세 링크 생성
+          # 규칙: 기본주소/run/브랜치명-RunID (아까 ci-build-id 설정과 동일하게 맞춤)
+          $dashboardUrl = "$env:DASH_BASE/run/${{ github.ref_name }}-${{ github.run_id }}"
+          # [수정됨] 메시지에 대시보드 링크 추가
+          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n 대시보드: $dashboardUrl`n🔗 GitHub: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          #기존
+          #$message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
           Write-Host "생성된 메시지: $message"
           
