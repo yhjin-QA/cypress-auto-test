@@ -73,6 +73,10 @@ jobs:
         if: always() 
         shell: powershell
         run: |
+          # 👇 [추가] 이 단계도 "새 창"이므로 UTF-8 설정을 다시 해줘야 합니다.
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          
           $logPath = "cypress.log"
           if (Test-Path $logPath) {
             # 로그 파일을 읽어옵니다.
