@@ -91,9 +91,9 @@ jobs:
                 
                 # 환경변수 저장
                 echo "REAL_DASHBOARD_URL=$realUrl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-                Write-Host "✅ 진짜 대시보드 주소 발견! -> $realUrl"
+                Write-Host "DashBoard URL! -> $realUrl"
             } else {
-                Write-Host "⚠️ 로그 분석 결과: ID 패턴(/run/xxxx)을 찾지 못했습니다."
+                Write-Host "Log Analysis Result: ID pattern (/run/xxxx) was not found."
             }
           }
       
