@@ -76,11 +76,11 @@ jobs:
           # 👇 [추가] 이 단계도 "새 창"이므로 UTF-8 설정을 다시 해줘야 합니다.
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-          
+
           $logPath = "cypress.log"
           if (Test-Path $logPath) {
             # 로그 파일을 읽어옵니다.
-            $content = Get-Content $logPath -Raw
+            $content = Get-Content $logPath -Raw -Encoding UTF8
 
             # 👇 [핵심 변경] "Run URL:" 글씨 상관없이 "/run/아이디" 패턴만 있으면 찾아냅니다.
             if ($content -match "/run/(?<id>[a-f0-9]+)") {
@@ -134,7 +134,7 @@ jobs:
           # 2. 메시지 생성 (한글/이모지를 직접 쓰지 않고 변수 $env:LABEL_... 사용)
           $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n${env:LABEL_DASH}: $dashboardUrl`n${env:LABEL_GIT}: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          Write-Host "생성된 메시지: $message"
+          Write-Host "Create Message: $message"
           
           $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
