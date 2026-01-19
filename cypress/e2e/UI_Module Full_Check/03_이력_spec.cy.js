@@ -265,7 +265,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="경보 등급"]').filter(':visible').should('be.visible');
     //토글문구확인 
     cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
-    //검색버튼 존재확인인
+    //검색버튼 존재확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 문구확인 
     cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');

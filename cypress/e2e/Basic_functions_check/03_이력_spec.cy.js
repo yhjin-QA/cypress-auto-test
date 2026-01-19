@@ -203,7 +203,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 팝업 닫기 성공');
     
     //개인정보유형 선택하는 코드
-    // <bug> 개인정보 유형 선택시 기존 입력했던 검색조건 초기화 되어버림. (이슈보고필요 )
+    // <bug> 개인정보 유형 선택시 기존 입력했던 검색조건 초기화 되어버림. (맨티스 이슈보고 : 37120))
     cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
     cy.get('.v-list__tile__title').filter(':visible').contains('주민등록번호').closest('.v-list__tile').click({ force: true });
@@ -348,7 +348,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('검출 건수').should('be.visible'); 
     cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
 
-
+    //이력 > 접속기록 이력 > 통합 
     cy.get('.tab-btn').contains('통합').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
@@ -362,7 +362,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
-     //왜 2개 정보사용자??
+     //왜 2개 정보사용자?? (맨티스 이슈보고 : 37121 )
      cy.get('input[aria-label="정보 사용자"][role="combobox"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]:not([role="combobox"])').filter(':visible').should('be.visible');
      //cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');

@@ -1,7 +1,8 @@
 const { defineConfig } = require("cypress");
 
 module.exports = defineConfig({
-  projectId: "7yuixr",
+  //projectId: "7yuixr",
+  projectId: "Cypress-auto",
   e2e: {
     excludeSpecPattern: [    
        "**/UI_Check/**",

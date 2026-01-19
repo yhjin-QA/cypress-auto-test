@@ -8,7 +8,7 @@ on:
   push:
     branches: [ "master" ]
   schedule:
-    - cron: '15 2 * * 1-5' # 월~금 오전 09:15 (KST)
+    - cron: '15 2 * * 1-5' # 월~금 오전 11:15 (KST)
   workflow_dispatch:
 
 jobs:
@@ -18,21 +18,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 👇 [추가됨] 1. 한국 시간 구해서 환경변수(NOW)에 저장
+      # 1. 한국 시간 구해서 환경변수(NOW)에 저장
       - name: Get Current Time (KST)
         shell: powershell
         run: |
           $korea_time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
           echo "NOW=$korea_time" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Cypress Run
-        uses: cypress-io/github-action@v6
-        with:
-          record: true
-          browser: chrome
+      # 👇 [핵심 변경] 공식 액션 대신 'cy2' 명령어로 직접 실행 (로컬 대시보드 전송)
+      - name: Cypress Run (Self-Hosted Dashboard)
+        shell: powershell
         env:
-          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          # PC-YHJIN(현재 PC)에 대시보드가 있으므로 localhost 사용
+          CYPRESS_API_URL: "http://10.10.54.1:1234/"
+          CYPRESS_RECORD_KEY: "my-secret-key" # 아무거나 입력
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 1. 의존성 설치
+          npm install
+          
+          # 2. cy2 도구 설치 (안전장치)
+          npm install cy2 --save-dev
+
+          # 3. 테스트 실행 (중복 실행 방지를 위해 Build ID에 실행 번호 포함)
+          npx cy2 run --record --browser chrome --ci-build-id "github-run-${{ github.run_id }}"
 
       - name: Send Google Chat Notification
         if: always()
@@ -41,29 +50,23 @@ jobs:
           MSG_FAIL: "[실패]"
           MSG_TITLE: "UI 확인결과"
         run: |
-          # 1. PowerShell 인코딩 안전장치
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-          # 2. 성공/실패 여부에 따라 제목 설정
           if ("${{ job.status }}" -eq 'success') { 
             $resultTitle = $env:MSG_SUCCESS
           } else { 
             $resultTitle = $env:MSG_FAIL
           }
           
-          # 👇 [수정됨] 3. 메시지에 시간($env:NOW) 추가
-          # 예: [성공] 로그캐치 UI 확인결과 (2025-01-20 14:00:00)
+          # 메시지에 시간($env:NOW) 추가
           $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`nLink: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # 로그 확인용
           Write-Host "생성된 메시지: $message"
           
-          # 4. JSON 변환 및 바이트 배열화
           $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
 
-          # 5. 구글챗 전송
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
 
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
@@ -75,21 +78,17 @@ jobs:
           secure: true
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          
           subject: 🚨 [긴급/실패] Cypress UI 테스트 실패 알림
-          
-          # 수신자 목록
           to: yhjin@warevalley.com
-          
           from: Cypress 알림 봇 <noreply@warevalley.com>
-          
-          # 👇 [수정됨] 이메일 본문에도 시간 추가
           body: |
             [긴급] 로그캐치 UI 자동화 테스트가 실패했습니다.
             
             ---------------------------------------------------
             발생 시간: ${{ env.NOW }}
             상태: ❌ FAILED (실패)
+            Runner: PC-YHJIN
+            대시보드: Local (Sorry-Cypress)
             리포지토리: ${{ github.repository }}
             
             👉 상세 로그 확인 (Link):

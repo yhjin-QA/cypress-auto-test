@@ -7,13 +7,13 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "cy:local_T": "cypress run --headed --no-exit --browser chrome --config-file cypress.local.config.js",
     "cy:local": "cypress run --headed --no-exit --browser chrome --config-file cypress.config.js"
-
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "cy2": "^4.0.9",
     "cypress": "^15.8.1"
   }
 }
