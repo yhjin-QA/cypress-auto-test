@@ -347,6 +347,9 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="접속 메뉴"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
+     //3.0.3.0_R34785에서 해당목 추가됨 
+     cy.get('input[aria-label="개인정보 건수"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="개인정보 건수"]').parents('.v-input').find('.v-chip__content').contains('≥').should('be.visible');
 
     //검색 버튼 존재확인 
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');

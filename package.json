@@ -15,5 +15,9 @@
   "devDependencies": {
     "cy2": "^4.0.9",
     "cypress": "^15.8.1"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "xlsx": "^0.18.5"
   }
 }

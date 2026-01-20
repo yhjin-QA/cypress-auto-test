@@ -83,68 +83,11 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(3000);
     
     //로그인 성공
-
-/*
-    // ==========================================
-    // STEP 2: 왼쪽 사이드 메뉴뉴탭 클릭
-    // ==========================================
-    // button 태그 중에서 '이력'이라는 글자를 가진 녀석을 클릭
-    cy.contains('button', '이력').click({ force: true });
-    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    // 컨텍스트 메뉴 제거거
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-    
-    // button 태그이면서 '현황'이라는 글자를 포함한 요소를 클릭
-    cy.contains('button', '현황').click({ force: true });
-    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    cy.contains('button', '소명').click({ force: true });
-    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-    
-    cy.contains('button', '자산').click({ force: true });
-    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    cy.contains('button', '보고').click({ force: true });
-    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    cy.contains('button', '보관').click({ force: true });
-    cy.wait(3000);
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    cy.contains('button', '분석').click({ force: true });
-    cy.wait(3000); 
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    cy.contains('button', '검출').click({ force: true });
-    cy.wait(3000); 
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    cy.contains('button', '운영').click({ force: true });
-    cy.wait(3000); 
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    cy.contains('button', '점검').click({ force: true });
-    cy.wait(3000); 
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-  */
   
   
     // ==========================================
-    // STEP 3: 이력 서브메뉴 
+    // 테스트 자동화시나리오
+    // 이력 - 시니라오 테스트 
     // ==========================================
     cy.contains('button', '이력').should('be.visible').click({ force: true });
     cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
@@ -218,7 +161,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 이력 - 사용자 추적 화면 출력 확인 완료!');
 
 
-/*
+
     // 이력 > 접속 기록 이력 서브메뉴 클릭
     cy.contains('button', '이력').click({ force: true });
     cy.log('--- 이력 > 접속기록 이력  클릭 ---');
@@ -228,7 +171,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     // 'tab-btn' 클래스를 가진 요소 안에서 '  ' 글자를 찾아 클릭
     
-
+    /*
     // 이력 > 접속기록 이력 > [파일 다운로드] 탭 선택
     cy.get('.tab-btn').contains('파일 다운로드').should('be.visible').click({ force: true });
     cy.wait(3000);
@@ -275,7 +218,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('받기').should('be.visible');
     cy.log('✅ 이력 - 파일 다운로드 탭 진입 및 데이터 출력 확인 완료!');
 
-    
+    // 이력 > 접속기록 이력 > [이상행위] 탭 선택
     cy.get('.tab-btn').contains('이상행위').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
@@ -306,6 +249,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('조회').should('be.visible'); 
     cy.log('✅ 이력 - 이상행위 탭 진입 및 데이터 출력 확인 완료!');
 
+      // 이력 > 접속기록 이력 > [검출] 탭 선택
     cy.get('.tab-btn').contains('검출').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
@@ -348,7 +292,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('검출 건수').should('be.visible'); 
     cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
 
-    //이력 > 접속기록 이력 > 통합 
+ */   
+    //이력 > 접속기록 이력 > [통합]탭 선택
     cy.get('.tab-btn').contains('통합').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
@@ -370,6 +315,8 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="접속 메뉴"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="개인정보 건수"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="개인정보 건수"]').parents('.v-input').find('.v-chip__content').contains('≥').should('be.visible');
 
     //검색 버튼 존재확인 
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
