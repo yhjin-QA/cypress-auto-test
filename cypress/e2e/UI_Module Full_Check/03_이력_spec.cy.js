@@ -350,27 +350,29 @@ describe('로그캐치 사이트 테스트', () => {
      //3.0.3.0_R34785에서 해당목 추가됨 
      cy.get('input[aria-label="개인정보 건수"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="개인정보 건수"]').parents('.v-input').find('.v-chip__content').contains('≥').should('be.visible');
-
-    //검색 버튼 존재확인 
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // 전체 건수 버튼 존재확인 
-    cy.get('.v-btn__content').filter(':visible').contains('전체 건수').should('be.visible');
-    //토글 문구 확인
-    cy.get('label').filter(':visible').contains('개인정보').should('be.visible');
-    cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
-    //표열 문구확인
-    cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
-    cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
-    cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
-    cy.get('th').filter(':visible').contains('부서/소속').should('be.visible');
-    cy.get('th').filter(':visible').contains('접속 IP 주소').should('be.visible');
-    cy.get('th').filter(':visible').contains('접속 메뉴').should('be.visible');
-    cy.get('th').filter(':visible').contains('행위 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('건수').should('be.visible');
-    cy.get('th').filter(':visible').contains('상세 접속기록 정보').should('be.visible');
-    cy.get('th').filter(':visible').contains('처리').should('be.visible');
-    cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
+     //3.0.3.0_R34785에서 해당목 추가됨 
+     //엑셀다운로드 버튼 존재 확인
+     cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').should('be.visible');
+     // 검색버튼 존재 확인
+     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+     // 전체 건수 버튼 존재확인 
+     cy.get('.v-btn__content').filter(':visible').contains('전체 건수').should('be.visible');
+     //토글 문구 확인
+     cy.get('label').filter(':visible').contains('개인정보').should('be.visible');
+     cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
+     //표열 문구확인
+     cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
+     cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
+     cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
+     cy.get('th').filter(':visible').contains('부서/소속').should('be.visible');
+     cy.get('th').filter(':visible').contains('접속 IP 주소').should('be.visible');
+     cy.get('th').filter(':visible').contains('접속 메뉴').should('be.visible');
+     cy.get('th').filter(':visible').contains('행위 유형').should('be.visible');
+     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
+     cy.get('th').filter(':visible').contains('건수').should('be.visible');
+     cy.get('th').filter(':visible').contains('상세 접속기록 정보').should('be.visible');
+     cy.get('th').filter(':visible').contains('처리').should('be.visible');
+     cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
 
 /*
 

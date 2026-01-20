@@ -161,7 +161,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 이력 - 사용자 추적 화면 출력 확인 완료!');
 
 
-
+/*
     // 이력 > 접속 기록 이력 서브메뉴 클릭
     cy.contains('button', '이력').click({ force: true });
     cy.log('--- 이력 > 접속기록 이력  클릭 ---');
@@ -171,7 +171,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     // 'tab-btn' 클래스를 가진 요소 안에서 '  ' 글자를 찾아 클릭
     
-    /*
+    
     // 이력 > 접속기록 이력 > [파일 다운로드] 탭 선택
     cy.get('.tab-btn').contains('파일 다운로드').should('be.visible').click({ force: true });
     cy.wait(3000);
@@ -292,7 +292,10 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('검출 건수').should('be.visible'); 
     cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
 
- */   
+  
+    //임시 
+    //cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
+    //cy.wait(3000); 
     //이력 > 접속기록 이력 > [통합]탭 선택
     cy.get('.tab-btn').contains('통합').should('be.visible').click({ force: true });
     cy.wait(3000);
@@ -337,8 +340,25 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('건수').should('be.visible');
     cy.get('th').filter(':visible').contains('상세 접속기록 정보').should('be.visible');
     cy.get('th').filter(':visible').contains('처리').should('be.visible');
-    cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
 
+    // 엑셀 다운로드 클릭하는 코드 
+    cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
+    cy.wait(500);
+    // 엑셀 파일 다운로드 확인창 진행
+    // 파일다운로드 그룹 선택 (팝업창에서찾기 )
+    cy.get('.v-dialog--active').find('.v-select__selections').first().click({ force: true });
+    
+    cy.wait(500);
+    cy.get('.v-list__tile__title').filter(':visible').contains('접속이력 조회 화면 결과 파일').closest('.v-list__tile').click({ force: true });
+    // 다운로드 유형 선택
+    cy.get('.v-dialog--active').find('.v-select__selections').eq(1).click({ force: true });
+    cy.get('.v-list__tile__title').filter(':visible').contains('날짜별').closest('.v-list__tile').click({ force: true });
+    //개인정보 유형별 상세내역 포함 클릭 
+    cy.get('.v-dialog--active').contains('label', '개인정보 유형별 상세 내역 포함').click({ force: true });
+    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+    
+    cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
+*/
 /*
 
     // ==========================================
