@@ -103,9 +103,9 @@ jobs:
       - name: Send Google Chat Notification
         if: always()
         env:
-          MSG_SUCCESS: "[성공]"
-          MSG_FAIL: "[실패]"
-          MSG_TITLE: "기능 시나리오 확인결과"
+          MSG_SUCCESS: "*[성공]*"
+          MSG_FAIL: "*[실패]*"
+          MSG_TITLE: "기능(Basic) 시나리오 확인결과"
           DASH_BASE: "http://10.10.54.1:8080"  # 👈 이 부분이 추가된 버전이어야 합니다.
           # 👇 [추가됨] 한글 깨짐 방지를 위해 여기서 변수로 선언
           LABEL_DASH: "대시보드"

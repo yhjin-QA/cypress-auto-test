@@ -104,8 +104,8 @@ jobs:
       - name: Send Google Chat Notification
         if: always()
         env:
-          MSG_SUCCESS: "[성공][Auto-PC]"
-          MSG_FAIL: "[실패][Auto-PC]"
+          MSG_SUCCESS: "*[성공]*[Auto-PC]"
+          MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "UI 확인결과"
           #  [중요] 대시보드 기본 주소 (사용자 PC IP)
           DASH_BASE: "http://10.10.54.1:8080"
