@@ -1,0 +1,174 @@
+name: Auto-PC Work (Daily)
+
+env:
+  PRODUCT_NAME: "로그캐치"
+  TZ: Asia/Seoul
+
+on:
+  push:
+    branches: [ "master" ]
+  schedule:
+    # 10:15 AM, 03:15 PM (KST)
+    - cron: '15 6 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  cypress-run:
+    runs-on: [self-hosted, PC-Auto]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1. 한국 시간 구해서 환경변수(NOW)에 저장
+      - name: Get Current Time (KST)
+        shell: powershell
+        run: |
+          $korea_time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+          echo "NOW=$korea_time" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      # 👇 [핵심 변경] 공식 액션 대신 'cy2' 명령어로 직접 실행
+      - name: Cypress Run (Self-Hosted Dashboard)
+        shell: powershell
+        env:
+          # 내 대시보드 서버 주소 (같은 PC면 localhost, 다른 PC면 IP 입력)
+          CYPRESS_API_URL: "http://10.10.54.1:1234/"
+          CYPRESS_RECORD_KEY: "my-secret-key" # 아무거나 입력
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 👇 [추가됨] 대시보드에 커밋 정보를 표시하기 위한 설정 (여기 4줄 추가!)
+          COMMIT_INFO_MESSAGE: ${{ github.event.head_commit.message }}
+          COMMIT_INFO_AUTHOR: ${{ github.actor }}
+          COMMIT_INFO_SHA: ${{ github.sha }}
+          COMMIT_INFO_BRANCH: ${{ github.ref_name }}
+          # 👇 [추가됨] 로그를 깨끗하게 만들기 위한 핵심 설정
+          NO_COLOR: 1             # 색상 코드 제거 (??[39m 삭제)
+          FORCE_COLOR: 0          # 색상 강제 비활성화
+          TERM: dumb              # 터미널 특수문자 제거
+          # 👇 [추가] Cypress에게 "CI 환경임"을 알려주어 특수문자 사용을 줄이게 함
+          CI: true
+        run: |
+          # 👇 [추가] PowerShell 자체의 인코딩을 UTF-8로 고정
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          # 1. 의존성 설치
+          npm install
+          
+          # 2. cy2 도구 설치 (혹시 없을까봐 안전장치)
+          npm install cy2 --save-dev
+
+          # [추가] Cypress 실행 파일이 없으면 강제로 설치하는 명령어
+          npx cypress install
+
+          #3. 테스트실행
+          # [수정됨] 실행 결과를 화면에도 보여주고(Tee-Object), 파일(cypress.log)로도 저장합니다.
+          # 👇 [수정됨] 색상을 뺀 순수 텍스트로 실행
+          # 3. Out-File -Encoding UTF8 명령어로 파일 저장 시 인코딩을 '확실하게' 지정합니다.
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module Full_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }} 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          
+          # 👇 [수정] 로그 파일을 읽을 때도 UTF-8임을 명시
+          Get-Content cypress.log -Encoding UTF8
+          # 👇 [추가] 저장된 로그 내용을 화면에도 출력해 줍니다.
+          Get-Content cypress.log
+
+          # 👇 [새로 추가] 로그 파일에서 진짜 대시보드 URL(랜덤코드)을 찾아내는 단계
+          # 👇 [수정됨] 더 강력한 정규표현식으로 교체
+      - name: Extract Real Dashboard URL
+        if: always() 
+        shell: powershell
+        run: |
+          # 👇 [추가] 이 단계도 "새 창"이므로 UTF-8 설정
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          $logPath = "cypress.log"
+          if (Test-Path $logPath) {
+            # 로그 파일을 읽어옵니다.
+            $content = Get-Content $logPath -Raw -Encoding UTF8
+
+            # 👇 [핵심 변경] "Run URL:" 글씨 상관없이 "/run/아이디" 패턴만 있으면 찾아냅니다.
+            if ($content -match "/run/(?<id>[a-f0-9]+)") {
+                $realRunId = $matches['id']
+                
+                # 찾아낸 ID로 진짜 주소 조립
+                $realUrl = "http://10.10.54.1:8080/run/$realRunId"
+                
+                # 환경변수 저장
+                echo "REAL_DASHBOARD_URL=$realUrl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+                Write-Host "DashBoard URL! -> $realUrl"
+            } else {
+                Write-Host "Log Analysis Result: ID pattern (/run/xxxx) was not found."
+            }
+          }
+      
+
+      - name: Send Google Chat Notification
+        if: always()
+        env:
+          MSG_SUCCESS: "[성공][Auto-PC]"
+          MSG_FAIL: "[실패][Auto-PC]"
+          MSG_TITLE: "UI 확인결과"
+          #  [중요] 대시보드 기본 주소 (사용자 PC IP)
+          DASH_BASE: "http://10.10.54.1:8080"
+          # 👇 [추가됨] 한글 깨짐 방지를 위해 여기서 변수로 선언
+          LABEL_DASH: "대시보드"
+          LABEL_GIT: "GitHub"
+          # 👇 [여기!] 이 줄이 꼭 있어야 앞 단계에서 찾은 진짜 주소를 받아옵니다.
+          REAL_URL: ${{ env.REAL_DASHBOARD_URL }}
+
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          if ("${{ job.status }}" -eq 'success') { 
+            $resultTitle = $env:MSG_SUCCESS
+          } else { 
+            $resultTitle = $env:MSG_FAIL
+          }
+          
+          # 👇 [수정됨] 진짜 주소가 있으면 쓰고, 없으면 프로젝트 목록 페이지로 안내
+          if ($env:REAL_URL) {
+            $dashboardUrl = $env:REAL_URL
+          } else {
+            $dashboardUrl = "http://10.10.54.1:8080/projects"
+          }
+
+          # 1. 대시보드 링크 생성
+          #$dashboardUrl = "$env:DASH_BASE/run/${{ github.ref_name }}-${{ github.run_id }}"
+          
+          # 2. 메시지 생성 (한글직접 쓰지 않고 변수 $env:LABEL_... 사용)
+          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n${env:LABEL_DASH}: $dashboardUrl`n${env:LABEL_GIT}: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
+          Write-Host "Create Message: $message"
+          
+          $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
+          $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
+
+          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
+
+      - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: 🚨 [긴급/실패][Auto-PC] Cypress UI 테스트 실패 알림
+          to: yhjin@warevalley.com
+          from: Cypress 알림 봇 <noreply@warevalley.com>
+          body: |
+            [긴급] Auto-PC에서 수행된 로그캐치 UI 자동화 테스트가 실패했습니다.
+            
+            ---------------------------------------------------
+            발생 시간: ${{ env.NOW }}
+            상태: ❌ FAILED (실패)
+            Runner: PC-Auto
+            대시보드: Local (Sorry-Cypress)
+            리포지토리: ${{ github.repository }}
+            
+            👉 상세 로그 확인 (Link):
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            ---------------------------------------------------
+            
+            담당자분들은 위 링크를 클릭하여 실패 원인을 확인해 주세요.
