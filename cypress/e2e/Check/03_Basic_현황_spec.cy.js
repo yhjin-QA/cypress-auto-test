@@ -137,13 +137,10 @@ describe('로그캐치 사이트 테스트', () => {
     //cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     //cy.get('.v-input--selection-controls__ripple').eq(1).click({ force: true });
     cy.get('.v-list__tile__title').contains('리눅스_배송관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
-    //cy.contains('.c-headline', '검색 조건').filter(':visible').click({ force: true });
-    cy.get('body').click(0, 0);
-    //cy.get('body').type('{esc}');
-    //cy.get('body').type('{esc}');
-
+    cy.get('body').type('{esc}');
+    
     // 조건 입력 
     // 정보 사용자 클릭하는 코드 
     cy.get('span[title="정보 사용자"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
