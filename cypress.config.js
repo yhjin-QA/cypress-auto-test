@@ -5,8 +5,8 @@ module.exports = defineConfig({
   projectId: "Cypress-auto",
   e2e: {
     excludeSpecPattern: [    
-       "**/UI_Check/**",
-       "**/Basic_functions_check/**",
+       "**/Check/**",
+       //"**/Basic_functions_check/**",
     ],
 
     // ▼▼▼ [수정] 재시도 설정 ▼▼▼

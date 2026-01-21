@@ -27,7 +27,7 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('로그캐치 UI기본체크', () => {
+  it('로그캐치 기본동작 체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -89,8 +89,10 @@ describe('로그캐치 사이트 테스트', () => {
     // 테스트 자동화시나리오
     // 이력 - 자동화 시니라오 테스트 
     // ==========================================
+
     cy.contains('button', '이력').should('be.visible').click({ force: true });
     cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
+
 
     // 이력 > 사용자 추척 서브메뉴 클릭 
     cy.log('--- 이력 > 사용자 추적 클릭 ---');
@@ -180,7 +182,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
     cy.wait(3000);
     
-/*
+
     // 이력 > 접속기록 이력 > [파일 다운로드] 탭 선택
     cy.get('.tab-btn').contains('파일 다운로드').should('be.visible').click({ force: true });
     cy.wait(3000);
@@ -199,11 +201,12 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="파일명"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="파일 경로"]').filter(':visible').should('be.visible');
+     
      //토글
      cy.get('.v-label').filter(':visible').contains('개인정보').should('be.visible');
      cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
+     
      // like버튼 확인 
-     //cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
      cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
      cy.get('input[aria-label="파일명"]').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
      cy.get('input[aria-label="파일 경로"]').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
@@ -225,6 +228,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('개인정보 상세').should('be.visible');
     cy.get('th').filter(':visible').contains('확인').should('be.visible');
     cy.get('th').filter(':visible').contains('받기').should('be.visible');
+
+    //기능동작
+    //검색버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+
     cy.log('✅ 이력 - 파일 다운로드 탭 진입 및 데이터 출력 확인 완료!');
 
  
@@ -245,7 +253,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="경보 등급"]').filter(':visible').should('be.visible');
     //토글문구확인 
     cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
-    //검색버튼 존재확인인
+    //검색버튼 존재확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 문구확인 
     cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
@@ -258,7 +266,30 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('개인정보 유무').should('be.visible'); 
     cy.get('th').filter(':visible').contains('소명 대상 여부').should('be.visible');
     cy.get('th').filter(':visible').contains('조회').should('be.visible'); 
+
+    //조건입력 기능 동작 
+    //이상행위 유형 클릭하는 코드 
+    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(500);
+    // 이상행위 유형중 개인정보 과다조회 클릭하는 코드
+    //cy.get('.v-list__tile__title').contains('개인정보 과다조회').should('be.visible').closest('.v-list__tile').click({ force: true });
+    cy.get('.v-list__tile__title').filter(':visible').contains('개인정보 과다조회').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // 선택 후 메뉴 닫기
+    cy.get('body').type('{esc}');
+
+
+    //검색버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+
+    //표 안의 결과 확인 
+    //표안의 소명 대상 문구확인 
+    cy.wait(500);
+    //cy.get('tbody').contains('a', '개인정보 과다조회').should('be.visible');
+    cy.get('tbody').filter(':visible').contains('tr', '개인정보 과다조회').should('contain', '소명 대상').and('be.visible');
+  
+
     cy.log('✅ 이력 - 이상행위 탭 진입 및 데이터 출력 확인 완료!');
+
 
     // 이력 > 접속기록 이력 > [검출] 탭 선택
     cy.get('.tab-btn').contains('검출').should('be.visible').click({ force: true });
@@ -279,13 +310,15 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="종료 IP"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="개인정보 건수"]').filter(':visible').should('be.visible');
+     //3.0.3.0_R34785에서 해당항목 사라짐 
+     //cy.get('input[aria-label="개인정보 건수"]').filter(':visible').should('be.visible');
      //토글문구 확인
      cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
      // like버튼 확인 
      cy.get('input[aria-label="사용자 계정"]').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
      cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
-     cy.get('input[aria-label="개인정보 건수"]').parents('.v-input').find('.v-chip__content').contains('≥').should('be.visible');
+     //3.0.3.0_R34785에서 해당항목 사라짐 
+     //cy.get('input[aria-label="개인정보 건수"]').parents('.v-input').find('.v-chip__content').contains('≥').should('be.visible');
      
     //검색버튼 존재확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
@@ -301,12 +334,29 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('검출 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible'); 
     cy.get('th').filter(':visible').contains('검출 건수').should('be.visible'); 
-    cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
 
-  */
-    //임시 
-    //cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
-    //cy.wait(3000); 
+    //기능동작
+    //달력표를 펼침 
+    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    cy.wait(500);
+    // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
+    cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
+
+    // 2. '1월'이라는 글자를 찾아 클릭합니다.
+     cy.get('.v-date-picker-table--month').filter(':visible').contains('1월').click({ force: true });
+    // 달력 20일 클릭
+    cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '20일').closest('.v-btn').click({ force: true });
+    //달력창 닫기
+    cy.get('body').type('{esc}');
+
+    //검색버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(1000);
+    // 표 검색결과안의 검출유형 검출 문구확인
+    cy.get('tbody').filter(':visible').contains('a', '검출').should('be.visible');
+    
+    cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
+ 
 
     //이력 > 접속기록 이력 > [통합]탭 선택
     cy.get('.tab-btn').contains('통합').should('be.visible').click({ force: true });
@@ -386,9 +436,12 @@ describe('로그캐치 사이트 테스트', () => {
     // 알림창이 사라질 때까지(보통 3~5초 뒤) 기다렸다가 안 보이는지 체크
     cy.get('.v-snack__content', { timeout: 10000 }).should('not.be.visible');
     
-    //실제 로컬 폴더 다운로드 파일 확인
-    cy.wait(5000);
-    // 3. [검증] 다운로드 폴더를 확인합니다.
+    //실제 로컬 폴더 다운로드 시간 주기
+    cy.wait(7000);
+    
+    // [검증] 다운로드 폴더를 확인합니다.
+    // 수행시 기존에 다운로드 받아두었던 파일은 자동으로 지움(사전초기화)
+    // 폴더경로 : C:\Users\user\Desktop\CypressWork\cypress\downloads
     cy.task('readDirectory', 'cypress/downloads').then((files) => {
     // files: 다운로드 폴더에 있는 모든 파일 이름들의 리스트
   
@@ -403,8 +456,6 @@ describe('로그캐치 사이트 테스트', () => {
      // 검증: 파일이 존재해야 함 (없으면 에러 발생)
        expect(myFile).to.not.be.undefined; 
      });
-
-    
     cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
 
 
