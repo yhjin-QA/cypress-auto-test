@@ -8,7 +8,7 @@ module.exports = defineConfig({
   e2e: {
     excludeSpecPattern: [    
        "**/Check/**",
-       "**/Basic_functions_check/**",
+       //"**/Basic_functions_check/**",
     ],
 
     // ▼▼▼ [수정] 재시도 설정 ▼▼▼
