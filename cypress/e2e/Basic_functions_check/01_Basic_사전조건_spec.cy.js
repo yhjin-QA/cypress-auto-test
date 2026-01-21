@@ -37,6 +37,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.visit('http://10.10.54.12:8080/uat/uia/egovLoginUsr.do');
     cy.wait(4000); // 로딩 대기
 
+    
+
     // 2. 아이디 선택
     // 1. id가 'name'인 select 태그를 찾습니다.
     // 2. .select(1) : 위에서 두 번째 항목(인덱스 1)을 선택합니다. (인덱스 0은 안내 문구)

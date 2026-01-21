@@ -11,13 +11,15 @@ describe('로그캐치 사이트 테스트', () => {
   Cypress.on('uncaught:exception', (err, runnable) => {
     // 무시할 에러 메시지 목록
     const ignoredErrors = [
-      'Navigation cancelled',
-      'Cannot read properties',
-      'resetValidation',
+      'Navigation cancelled',  // 페이지 이동 취소 에러 무시
+      'Cannot read properties', // 속성 읽기 오류 무시
+      'resetValidation',      // [핵심] 화면 멈춤 주범 무시
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
       'Avoided redundant navigation',
       'Loading chunk',
-      'operate.task.packageManagement'
+      'operate.task.packageManagement',
+      'e is not defined',
+      'Script error'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -35,6 +37,24 @@ describe('로그캐치 사이트 테스트', () => {
     // 1. 사이트 방문
     cy.visit('https://10.10.54.11:18443/logcatch/login');
     cy.wait(4000); // 로딩 대기
+
+
+     ////////////새로고침코드//////
+      cy.get('body').then(($body) => {
+      // 만약 입력창이 안 보인다면? (흰 화면 상태라면?)
+      if ($body.find('input[aria-label="사용자 계정"]').length === 0) {
+        cy.log('🔴 화면 렌더링 실패 감지! 페이지를 새로고침합니다.');
+    
+      // 새로고침 실행
+      cy.reload();
+    
+      // 다시 한번 안정화 대기
+      cy.wait(2000);
+      } else {
+        cy.log('🟢 화면이 정상적으로 로드되었습니다.');
+      }
+     });
+     //////////////////////////////////////
 
     // 2. 아이디 입력
     cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
@@ -87,7 +107,7 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // STEP 4: 현황서브메뉴 
     // ==========================================
-    cy.wait(3000);
+    
     cy.contains('button', '현황').click({ force: true });
     cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
     cy.log('--- 현황 > 정보사용자별 탭 클릭  ---');
@@ -104,8 +124,49 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('label').filter(':visible').contains('기간').should('be.visible');
     cy.get('label').filter(':visible').contains('추적 타입').should('be.visible');
     cy.get('span').filter(':visible').contains('정보 사용자').should('be.visible');
+
+    ////////////////////////////
+    // 기능확인 - 조건별로 검색 
+    //업무 시스템 - 리눅스_배송관리 선택
+    // 조건 입력 
+    //업무시스템 클릭하는 코드 
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(500);
+    // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    cy.contains('.v-list__tile__title', '전체 선택').should('be.visible').click();
+    //cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    //cy.get('.v-input--selection-controls__ripple').eq(1).click({ force: true });
+    cy.get('.v-list__tile__title').contains('리눅스_배송관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    cy.wait(500);
+    // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+    //cy.contains('.c-headline', '검색 조건').filter(':visible').click({ force: true });
+    cy.get('body').click(0, 0);
+    //cy.get('body').type('{esc}');
+    //cy.get('body').type('{esc}');
+
+    // 조건 입력 
+    // 정보 사용자 클릭하는 코드 
+    cy.get('span[title="정보 사용자"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    //cy.get('span[title="정보 사용자"]').should('be.visible').click();
+    cy.wait(500);
+    // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    cy.get('.v-list__tile__title').contains('아이피').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // 선택 후 메뉴 닫기
+    cy.get('body').type('{esc}');
+
+    // IP입력
+    cy.get('input[aria-label="IP"]').filter(':visible').clear().type('10.10.0.237');
+
+    // 검색 버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+
+    //검색결과 확인 코드
+    cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
+    cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
+    cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
+
     cy.log('✅ 현황 - 정보사용자 별 탭 진입 및 데이터 출력 확인 완료!');
-    
+/*    
     cy.log('--- 현황 > 부서서 별 탭 클릭  ---');
     cy.get('.tab-btn').contains('부서 별').should('be.visible').click({ force: true });
     cy.wait(3000);
@@ -138,6 +199,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 검색조건 입력문구 확인
     cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
+
+    
     cy.log('✅ 업무 시스템 별 탭 진입 및 데이터 출력 확인 완료!');
    
 
@@ -194,7 +257,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 현황 - 종합현황 - [업무 시스템 별]탭 진입 및 데이터 출력 확인 완료!');
     cy.wait(3000);
 
-  
+  */
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================

@@ -62,7 +62,7 @@ jobs:
           # 3. Out-File -Encoding UTF8 명령어로 파일 저장 시 인코딩을 '확실하게' 지정합니다.
           # 3. 테스트실행 (특정 폴더 지정)
           # 👇 [수정됨] --spec 옵션을 추가하여 'Basic_functions_check' 폴더만 실행하도록 변경했습니다.
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           # 👇 [수정] 로그 파일을 읽을 때도 UTF-8임을 명시
           Get-Content cypress.log -Encoding UTF8
