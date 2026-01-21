@@ -63,8 +63,7 @@ jobs:
           # [수정됨] 실행 결과를 화면에도 보여주고(Tee-Object), 파일(cypress.log)로도 저장합니다.
           # 👇 [수정됨] 색상을 뺀 순수 텍스트로 실행
           # 3. Out-File -Encoding UTF8 명령어로 파일 저장 시 인코딩을 '확실하게' 지정합니다.
-          # "cypress/e2e/UI_Module Full_Check/**/*.cy.js" (쌍따옴표 이스케이프 사용)
-          cmd /c "chcp 65001 & npx cy2 run --record --spec \"cypress/e2e/UI_Module Full_Check/**/*.cy.js\" --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-ui 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          cmd /c "chcp 65001 & npx cy2 run --record --spec cypress/e2e/UI_Module_Full_Check/**/*.cy.js --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-ui 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           # 👇 [수정] 로그 파일을 읽을 때도 UTF-8임을 명시
           Get-Content cypress.log -Encoding UTF8
