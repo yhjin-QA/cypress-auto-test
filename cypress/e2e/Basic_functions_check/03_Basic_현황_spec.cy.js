@@ -110,6 +110,8 @@ describe('로그캐치 사이트 테스트', () => {
     
     cy.contains('button', '현황').click({ force: true });
     cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
+
+
     cy.log('--- 현황 > 정보사용자별 탭 클릭  ---');
     cy.get('.tab-btn').contains('정보사용자 별').should('be.visible').click({ force: true });
     cy.log('--- 화면 검증 시작 ---');
@@ -157,14 +159,16 @@ describe('로그캐치 사이트 테스트', () => {
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
-    //검색결과 확인 코드
+    //검색결과 통계 그래프 문구 확인 코드
     cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
     cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
     cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
-
     cy.log('✅ 현황 - 정보사용자 별 탭 진입 및 데이터 출력 확인 완료!');
-/*    
-    cy.log('--- 현황 > 부서서 별 탭 클릭  ---');
+
+    // 업무시스템 컨텍스트 메뉴 안닫히는 문제가있어 강제 페이지 새로고침
+    cy.reload();
+
+    cy.log('--- 현황 > 부서별 탭 클릭  ---');
     cy.get('.tab-btn').contains('부서 별').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
@@ -179,8 +183,44 @@ describe('로그캐치 사이트 테스트', () => {
     // 검색조건 입력문구 확인 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
+    
+    ////////////////////////////
+    // 기능확인 - 조건별로 검색 
+    //업무 시스템 - 리눅스_배송관리 선택
+    // 조건 입력 
+    //업무시스템 클릭하는 코드 
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(500);
+    // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    cy.contains('.v-list__tile__title', '전체 선택').should('be.visible').click();
+    //cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    //cy.get('.v-input--selection-controls__ripple').eq(1).click({ force: true });
+    cy.get('.v-list__tile__title').contains('전체 선택').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    cy.wait(1000);
+    // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+    cy.get('body').type('{esc}');
+    
+    // 조건 입력 
+    // 그룹별 클릭하는 코드 
+    cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(500);
+    // 그룹별중 영업팀 클릭하는 코드
+    cy.get('.v-list__tile__title').contains('영업팀').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // 선택 후 메뉴 닫기
+    cy.get('body').type('{esc}');
+
+
+    // 검색 버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+
+    //검색결과 통계 그래프 문구 확인 코드
+    cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
+    cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
+    cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
+
     cy.log('✅ 부서 별 탭 진입 및 데이터 출력 확인 완료!');
 
+    
     cy.log('--- 현황 > 업무시스템 별 탭 클릭  ---');
     cy.get('.tab-btn').contains('업무 시스템 별').should('be.visible').click({ force: true });
     cy.wait(3000);
@@ -197,10 +237,34 @@ describe('로그캐치 사이트 테스트', () => {
     // 검색조건 입력문구 확인
     cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
 
-    
-    cy.log('✅ 업무 시스템 별 탭 진입 및 데이터 출력 확인 완료!');
-   
+    ////////////////////////////
+    // 기능확인 - 조건별로 검색 
+    //업무 시스템 - 리눅스_배송관리 선택
+    // No data available 뜨는 이슈 발생 (맨티스 : 37152) 이로인해 두번클릭하게  우회코드 작성함. 
+     //cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
 
+    cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    cy.wait(1000);
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+   
+    // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
+    cy.wait(1000);
+    // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+    cy.get('body').type('{esc}');
+    
+
+    // 검색 버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+
+    //검색결과 통계 그래프 문구 확인 코드
+    cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
+    cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
+    cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
+    cy.log('✅ 업무 시스템 별 탭 진입 및 데이터 출력 확인 완료!');
+
+
+    //  현황 > 종합 현항 탭
     cy.log('--- 현황 > 종합 현항 탭 클릭  ---');
     cy.get('.tab-btn').contains('종합 현황').should('be.visible').click({ force: true });
     cy.wait(3000);
@@ -220,7 +284,46 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
     cy.get('span').filter(':visible').contains('정보 사용자').should('be.visible');
     cy.get('input[aria-label="사용자"]').filter(':visible').should('be.visible');
+
+    ////////////////////////////
+    // 기능확인 - 조건별로 검색 
+    //업무 시스템 - 리눅스_배송관리 선택
+    // 조건 입력 
+    //업무시스템 클릭하는 코드 
+    //cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    cy.wait(1000);
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+   
+    // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    //cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
+    //cy.wait(1000);
+    // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+    //cy.get('body').type('{esc}');
+    
+    // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    //cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').click({ force: true });
+    cy.get('.v-list__tile__title').filter(':visible').contains('리눅스_배송관리').click({ force: true });
+    cy.wait(500);
+    // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+    cy.get('body').type('{esc}');
+    //추적타입 - 정보사용자는 디폴트값으로 선택 Skip
+    //사용자 선택
+    cy.get('input[aria-label="사용자"]').filter(':visible').click({ force: true });
+    // 사용자 리스트 콤보박스에서 첫번쨰 사람 선택
+    cy.wait(500);
+    cy.get('.v-list__tile__title').filter(':visible').eq(0).click({ force: true });
+
+    // 검색 버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+
+    //검색결과 통계 그래프 문구 확인 코드
+    cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
+    cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
+    cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
     cy.log('✅ 현황 - 종합현황 - [정보 사용자별]탭 진입 및 데이터 출력 확인 완료!');
+
+    
     
     // 현황 > 종합현황  > [부서 별] 탭 클릭 
     cy.get('.tab-title').filter(':visible').should('be.visible').contains('부서 별').click();
@@ -236,7 +339,42 @@ describe('로그캐치 사이트 테스트', () => {
     // 검색 조건 입력 문구확인
     cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
+
+    ////////////////////////////
+    // 기능확인 - 조건별로 검색 
+    //업무 시스템 - 리눅스_배송관리 선택
+    // 조건 입력 
+    //업무시스템 클릭하는 코드 
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(500);
+    // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    //cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').click({ force: true });
+    cy.wait(500);
+    // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+    cy.get('body').type('{esc}');
+
+    // 조건 입력 
+    // 그룹별 클릭하는 코드 
+    cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(500);
+    // 그룹별중 영업팀 클릭하는 코드
+    cy.get('.v-list__tile__title').contains('개발팀').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // 선택 후 메뉴 닫기
+    cy.get('body').type('{esc}');
+
+    // 검색 버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+
+    //검색결과 통계 그래프 문구 확인 코드
+    cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
+    cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
+    cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
     cy.log('✅ 현황 - 종합현황 - [부서 별]탭 진입 및 데이터 출력 확인 완료!');
+
+    
+    // 업무시스템 콤보박스 닫히지 않는 이슈 새로고침 실행
+    cy.reload();
 
     // 현황 > 종합현황  > [업무시스템 별] 탭 클릭 
     cy.get('.tab-title').filter(':visible').contains('업무 시스템 별').click();
@@ -251,14 +389,40 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 검색조건 입력문구 확인
     cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
-    cy.log('✅ 현황 - 종합현황 - [업무 시스템 별]탭 진입 및 데이터 출력 확인 완료!');
-    cy.wait(3000);
 
-  */
+    ////////////////////////////
+    // 기능확인 - 조건별로 검색 
+    //업무 시스템 - 리눅스_배송관리 선택
+    // No data available 뜨는 이슈 발생 (맨티스 : 37152) 이로인해 두번클릭하게  우회코드 작성함. 
+     //cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+
+    cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    cy.wait(1000);
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+   
+    // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
+    cy.wait(1000);
+    // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+    cy.get('body').type('{esc}');
+    
+
+    // 검색 버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+
+    //검색결과 통계 그래프 문구 확인 코드
+    cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
+    cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
+    cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
+    cy.log('✅ 현황 - 종합현황 - [업무 시스템 별]탭 진입 및 데이터 출력 확인 완료!');
+    
+    cy.wait(1000);
+
+   
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 모든 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 현황 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 
