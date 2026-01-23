@@ -106,6 +106,7 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // STEP 5: 소명 서브메뉴 
     // ==========================================
+/*    
     cy.contains('button', '소명').click({ force: true });
     cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
     cy.log('--- 소명 > 관리 서브메뉴 클릭 ---');
@@ -312,10 +313,10 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('tbody').find('a').contains('소명 필요').should('be.visible');
     cy.wait(1000);
 
-    
     cy.log('✅ 소명 - 관리 - [종합 현황] 탭 진입 및 데이터 출력 확인 완료!');
 
- /*
+
+    */
     // 소명  > 나의 소명 서브메뉴 클릭
     cy.contains('.side-menu', '소명').should('be.visible').click({ force: true });
     cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
@@ -349,6 +350,8 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('th').filter(':visible').contains('소명 유형').should('be.visible');
      cy.log('✅ 소명 - 나의 소명 - [나의 소명 내역]탭 진입 및 데이터 출력 확인 완료!');
 
+
+  /*   
      // 소명 > 나의소명 > 소명하기 
      cy.get('.tab-btn').contains('소명하기').should('be.visible').click({ force: true });
      cy.wait(3000); 

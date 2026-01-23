@@ -13,5 +13,8 @@
 // https://on.cypress.io/configuration
 // ***********************************************************
 
+// [추가] 리포터 기능을 사용 선언
+import 'cypress-mochawesome-reporter/register';
+
 // Import commands.js using ES2015 syntax:
 import './commands'
