@@ -1,1 +1,7 @@
 cypress.local.config.js
+
+# Cypress 리포트 및 결과물 제외
+cypress/reports
+cypress/downloads
+cypress/screenshots
+cypress/videos

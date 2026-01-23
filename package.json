@@ -14,7 +14,8 @@
   "type": "commonjs",
   "devDependencies": {
     "cy2": "^4.0.9",
-    "cypress": "^15.8.1"
+    "cypress": "^15.8.1",
+    "cypress-mochawesome-reporter": "^4.0.2"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",

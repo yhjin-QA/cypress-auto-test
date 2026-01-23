@@ -124,7 +124,7 @@ jobs:
           DASH_BASE: "http://10.10.54.1:8080"  # 👈 이 부분이 추가된 버전이어야 합니다.
           # 👇 [추가됨] 한글 깨짐 방지를 위해 여기서 변수로 선언
           LABEL_DASH: "대시보드"
-          LABEL_GIT: "GitHub"
+          LABEL_GIT: "GitHub(Report)"
           # 👇 [여기!] 이 줄이 꼭 있어야 앞 단계에서 찾은 진짜 주소를 받아옵니다.
           REAL_URL: ${{ env.REAL_DASHBOARD_URL }}
 
