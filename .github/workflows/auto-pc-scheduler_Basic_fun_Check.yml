@@ -55,6 +55,9 @@ jobs:
           # 2. cy2 도구 설치 (안전장치)
           npm install cy2 --save-dev
 
+          # 👇 [추가] 리포터 도구 강제 설치
+          npm install cypress-mochawesome-reporter --save-dev
+
           # 👇 [추가] Cypress 실행 파일이 없으면 강제로 설치하는 명령어
           npx cypress install
           

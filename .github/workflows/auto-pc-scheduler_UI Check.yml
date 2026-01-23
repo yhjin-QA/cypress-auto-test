@@ -51,11 +51,14 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-          # 1. 의존성 설치
+          # 1. 기본패키지 설치
           npm install
           
           # 2. cy2 도구 설치 (혹시 없을까봐 안전장치)
           npm install cy2 --save-dev
+
+          # 👇 [추가] 리포터 도구 강제 설치
+          npm install cypress-mochawesome-reporter --save-dev
 
           # [추가] Cypress 실행 파일이 없으면 강제로 설치하는 명령어
           npx cypress install
