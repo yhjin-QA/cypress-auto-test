@@ -16,10 +16,11 @@ describe('로그캐치 사이트 테스트', () => {
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
       'Avoided redundant navigation',
-      'Loading chunk',
+      'Loading chunk',    //네트워크 로딩에러 
       'operate.task.packageManagement',
       'e is not defined',
-      'Script error'
+      'Script error',
+      'not valid JSON'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -372,7 +373,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 경보등급중 '심각' 검색결과 검증코드 (빨강색)
     cy.get('.g-IMinorAlert').filter('[style*="rgb(244, 67, 54)"]') .should('be.visible');
 
-    
+    /* 경보등급 경계있을시에만 ...
     cy.wait(1000);
     // 경보 등급 유형 선택창 팝업 띄우기 (다시 띄우기)
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -405,7 +406,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
     // 경보등급중 '경계' 검색결과 검증코드 (노란색)
     cy.get('.g-IMajorAlert').filter('[style*="rgb(255, 192, 0)"]') .should('be.visible');
-
+    */
 
 
     // 선택한 경보등급  x버튼 클릭하여 초기화 

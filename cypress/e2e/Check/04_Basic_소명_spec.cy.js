@@ -316,7 +316,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 소명 - 관리 - [종합 현황] 탭 진입 및 데이터 출력 확인 완료!');
 
 
-    */
+    
     // 소명  > 나의 소명 서브메뉴 클릭
     cy.contains('.side-menu', '소명').should('be.visible').click({ force: true });
     cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
@@ -351,7 +351,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.log('✅ 소명 - 나의 소명 - [나의 소명 내역]탭 진입 및 데이터 출력 확인 완료!');
 
 
-  /*   
+    
      // 소명 > 나의소명 > 소명하기 
      cy.get('.tab-btn').contains('소명하기').should('be.visible').click({ force: true });
      cy.wait(3000); 
@@ -406,7 +406,7 @@ describe('로그캐치 사이트 테스트', () => {
       cy.get('th').filter(':visible').contains('소명 유형').should('be.visible');
       cy.log('✅ 소명 - 나의 소명 - [승인하기]탭 진입 및 데이터 출력 확인 완료!');
 
-
+      */
       // 소명 > 결재 서브메뉴 클릭
       cy.contains('.side-menu', '소명').should('be.visible').click({ force: true });
       cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
@@ -429,16 +429,29 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('th').filter(':visible').contains('..').should('be.visible');
        // 정책 추가 + 버튼
        cy.get('.material-icons').filter(':visible').contains('add').should('be.visible');
+
+       // 결재 추가 기능 (Cypress 껍데기를 벗기고, 순수 HTML 요소($btn[0])에 직접 명령)
+       cy.get('.grid-add-button').should('exist').then(($btn) => {
+        $btn[0].click(); 
+           });
+
+       // 결재 정책등록창이 떴는지 확인
+       cy.wait(500);
+       cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 등록');
+
+       cy.get('input[aria-label="정책 이름"]').filter(':visible').clear().type('auto_add_test 결재정책');
+
+
        cy.log('✅ 소명 - 결재 - [결재라인] 탭 진입 및 데이터 출력 확인 완료!');
   
-  */
+  
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
     cy.log('🎉 소명 테스트 시나리오 성공적으로 완료!');
-    cy.get('body').type('{esc}');
-    cy.get('body').click('center', { force: true });
+    //cy.get('body').type('{esc}');
+    //cy.get('body').click('center', { force: true });
 
 
   });
