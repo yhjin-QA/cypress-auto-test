@@ -16,7 +16,7 @@ describe('로그캐치 사이트 테스트', () => {
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
       'Avoided redundant navigation',
-      'Loading chunk',
+      'Loading chunk',       
       'operate.task.packageManagement',
       'not valid JSON'
     ];
