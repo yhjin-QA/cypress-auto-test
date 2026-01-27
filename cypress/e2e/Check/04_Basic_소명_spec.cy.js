@@ -429,7 +429,9 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('th').filter(':visible').contains('..').should('be.visible');
        // 정책 추가 + 버튼
        cy.get('.material-icons').filter(':visible').contains('add').should('be.visible');
+        
 
+       /////// 결재 정책  기능확인//////
        // 결재 추가 기능 (Cypress 껍데기를 벗기고, 순수 HTML 요소($btn[0])에 직접 명령)
        cy.get('.grid-add-button').should('exist').then(($btn) => {
         $btn[0].click(); 
@@ -438,9 +440,21 @@ describe('로그캐치 사이트 테스트', () => {
        // 결재 정책등록창이 떴는지 확인
        cy.wait(500);
        cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 등록');
-
+       // 정책이름 입력하기
        cy.get('input[aria-label="정책 이름"]').filter(':visible').clear().type('auto_add_test 결재정책');
-
+      // 정책 설명 입력하기
+       cy.get('textarea[aria-label="정책 설명"]').filter(':visible').clear().type('테스트로 추가하는 결재라인입니다');
+       // 사용여부 OFF -> ON 상태로 바꾸기 
+       cy.get('input[aria-label="사용 여부"]').check({ force: true }).should('be.checked');
+       // 권한 유형 클릭하여 콤보박스 열기 
+       cy.get('input[aria-label="권한 유형"]').filter(':visible').click({ force: true });
+       // 권한유형중 [일반] 선택
+       cy.get('.v-list__tile__title').filter(':visible').contains('일반').click();
+       // 결재 적용대상 클릭하여 콤보박스 열기 
+       cy.get('input[aria-label="결재 적용 대상"]').filter(':visible').click({ force: true });
+       // 결재 적용대상 클릭하여 소명 선택 
+       cy.get('.v-list__tile__title').filter(':visible').contains('소명').click();
+       
 
        cy.log('✅ 소명 - 결재 - [결재라인] 탭 진입 및 데이터 출력 확인 완료!');
   

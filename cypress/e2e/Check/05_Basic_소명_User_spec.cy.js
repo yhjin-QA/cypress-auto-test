@@ -373,7 +373,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 경보등급중 '심각' 검색결과 검증코드 (빨강색)
     cy.get('.g-IMinorAlert').filter('[style*="rgb(244, 67, 54)"]') .should('be.visible');
 
-    /* 경보등급 경계있을시에만 ...
+    /* 경보등급 경계있을시에만 ... **********************************************
     cy.wait(1000);
     // 경보 등급 유형 선택창 팝업 띄우기 (다시 띄우기)
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -406,8 +406,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
     // 경보등급중 '경계' 검색결과 검증코드 (노란색)
     cy.get('.g-IMajorAlert').filter('[style*="rgb(255, 192, 0)"]') .should('be.visible');
-    */
-
+    
+   ***********************************************************************************/ 
 
     // 선택한 경보등급  x버튼 클릭하여 초기화 
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
@@ -477,9 +477,60 @@ describe('로그캐치 사이트 테스트', () => {
       cy.get('th').filter(':visible').contains('소명 상태').should('be.visible');
       cy.get('th').filter(':visible').contains('소명 유형').should('be.visible');
 
+      // 기능확인 //
+      // 업무시스템 클릭  : 리눅스 배송관리 선택 
+      cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+      cy.wait(1000);
+      cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+   
+      // 업무시스템중 리눅스_배송관리 클릭하는 코드
+      cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
+      cy.wait(1000);
+      // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+      cy.get('body').type('{esc}');
 
+      
+      // 소속 클릭하여 전체 선택 
+      cy.get('.material-icons').filter(':visible').contains('settings').click({ force: true });
+      cy.wait(500);
+      cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').closest('.v-list__tile').click({ force: true });
+      // 화면 본문(body)에 ESC 키 전송 (팝업창 닫는 동작 )
+      cy.get('body').type('{esc}');
+      cy.wait(500);
+
+      //// 사용자 계정 클릭하여 loginid2 아이디 입력
+      cy.contains('.v-label', '사용자 계정').closest('.v-input').find('input').type('hojun', { force: true });
+
+      // 소명상태  클릭하는 코드 
+      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+      cy.wait(500);
+      // 소명상태중 '취소' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('신청').click({ force: true });
+      cy.wait(500);
+      // 선택 후 메뉴 닫기
+      cy.get('body').type('{esc}');
+
+
+      // 소명유형 클릭 (팝업창 띄우기)
+      cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
+      // 소명유형중  '사후 소명' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
+      cy.wait(500);
+      // 선택 후 메뉴 닫기
+      cy.get('body').type('{esc}');
+
+      
+      // 검색 버튼 클릭
+      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+      // '신청', '사후소명' 선택한 검색결과 검증코드
+      cy.get('tbody').find('a').contains('인사팀').should('be.visible');
+      cy.get('tbody').find('a').contains('hojun').should('be.visible');
+      cy.get('tbody').find('a').contains('신청').should('be.visible');
+      cy.get('tbody').find('a').contains('사후 소명').should('be.visible');
+      cy.wait(1000);
 
       cy.log('✅ 소명 - 나의 소명 - [승인하기]탭 진입 및 데이터 출력 확인 완료!');
+
   
   
 
