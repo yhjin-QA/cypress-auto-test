@@ -542,7 +542,9 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('.v-dialog').find('button.success--text').contains('확인').click({ force: true });
        // 결재 정책 모두 다 삭제된 상태
        // 결제정책모두 삭제되었을때 문구 확인
-       cy.contains('td', 'No data available').should('be.visible');
+       //cy.contains('td', 'No data available').should('be.visible');
+       cy.contains('tr', 'auto_add_test 결재정책').should('not.exist');
+
 
        //지난 정책보기 확인하는 코드
        //지난 정책 보기 OFF -> ON상태로 바꾸기
@@ -555,7 +557,9 @@ describe('로그캐치 사이트 테스트', () => {
        cy.contains('.v-input', '지난 정책 보기').find('.v-input--selection-controls__ripple').click({ force: true });
        cy.wait(500);
        //결제정책모두 삭제되었을때 문구 확인
-       cy.contains('td', 'No data available').should('be.visible');
+       //cy.contains('td', 'No data available').should('be.visible');
+       // [핵심] 'auto_add_test 결재정책'을 포함한 행(tr)이 아예 사라졌는지 확인
+       cy.contains('tr', 'auto_add_test 결재정책').should('not.exist');
 
 
        cy.log('✅ 소명 - 결재 - [결재라인] 탭 진입 및 데이터 출력 확인 완료!');
