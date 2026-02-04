@@ -13,7 +13,7 @@ on:
 
 jobs:
   cypress-run:
-    runs-on: [self-hosted, PC-YHJIN]
+    runs-on: [self-hosted, PC-Auto]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,7 +31,7 @@ jobs:
         shell: powershell
         env:
           # PC-YHJIN(현재 PC)에 대시보드가 있으므로 localhost 사용
-          CYPRESS_API_URL: "http://10.10.54.1:1234/"
+          CYPRESS_API_URL: "http://10.10.54.5:1234/"
           CYPRESS_RECORD_KEY: "my-secret-key" # 아무거나 입력
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # 👇 [추가됨] 대시보드에 커밋 정보를 표시하기 위한 설정 (여기 4줄 추가!)
@@ -95,7 +95,7 @@ jobs:
                 $realRunId = $matches['id']
                 
                 # 찾아낸 ID로 진짜 주소 조립
-                $realUrl = "http://10.10.54.1:8080/run/$realRunId"
+                $realUrl = "http://10.10.54.5:8080/run/$realRunId"
                 
                 # 환경변수 저장
                 echo "REAL_DASHBOARD_URL=$realUrl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -121,7 +121,7 @@ jobs:
           MSG_SUCCESS: "*[성공]*"
           MSG_FAIL: "*[실패]*"
           MSG_TITLE: "기능(Basic) 시나리오 확인결과"
-          DASH_BASE: "http://10.10.54.1:8080"  # 👈 이 부분이 추가된 버전이어야 합니다.
+          DASH_BASE: "http://10.10.54.5:8080"  # 👈 이 부분이 추가된 버전이어야 합니다.
           # 👇 [추가됨] 한글 깨짐 방지를 위해 여기서 변수로 선언
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
@@ -142,7 +142,7 @@ jobs:
           if ($env:REAL_URL) {
             $dashboardUrl = $env:REAL_URL
           } else {
-            $dashboardUrl = "http://10.10.54.1:8080/projects"
+            $dashboardUrl = "http://10.10.54.5:8080/projects"
           }
 
           # 1. 대시보드 링크 생성
