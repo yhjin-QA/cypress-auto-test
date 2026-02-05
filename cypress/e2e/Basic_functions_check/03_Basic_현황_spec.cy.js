@@ -35,7 +35,7 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('https://10.10.54.11:18443/logcatch/login');
+    cy.visit('https://10.10.54.21:18443/logcatch/login');
     cy.wait(5000); // 로딩 대기
 
 
@@ -154,7 +154,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('body').type('{esc}');
 
     // IP입력
-    cy.get('input[aria-label="IP"]').filter(':visible').clear().type('10.10.0.237');
+    cy.get('input[aria-label="IP"]').filter(':visible').clear().type('10.10.54.1');
 
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -205,13 +205,14 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
     // 그룹별중 영업팀 클릭하는 코드
-    cy.get('.v-list__tile__title').contains('영업팀').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    cy.get('.v-list__tile__title').contains('인사팀').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
 
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(1000);
 
     //검색결과 통계 그래프 문구 확인 코드
     cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
@@ -359,12 +360,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
     // 그룹별중 영업팀 클릭하는 코드
-    cy.get('.v-list__tile__title').contains('개발팀').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    cy.get('.v-list__tile__title').contains('협력사').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(1000);
 
     //검색결과 통계 그래프 문구 확인 코드
     cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');

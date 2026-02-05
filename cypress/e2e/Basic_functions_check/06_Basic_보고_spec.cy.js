@@ -36,7 +36,7 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('https://10.10.54.11:18443/logcatch/login');
+    cy.visit('https://10.10.54.21:18443/logcatch/login');
     cy.wait(4000); // 로딩 대기
 
     ////////////새로고침코드//////
@@ -226,12 +226,14 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(500);
 
     // 보고서 추가화면에서 업무시스템 - 리눅스_배송관리 선택
-    cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
-    cy.wait(1000);
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+    //cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    //cy.wait(1000);
+    //cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+    cy.get('input[aria-label="업무시스템"]').closest('.v-input__slot').click({ force: true });
    
     // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
+    //cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
+    cy.get('.v-menu__content').filter(':visible').find('.v-list__tile__title').contains('리눅스_배송관리').scrollIntoView().click({ force: true });          
     cy.wait(1000);
     // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');

@@ -35,7 +35,7 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('https://10.10.54.11:18443/logcatch/login');
+    cy.visit('https://10.10.54.21:18443/logcatch/login');
     cy.wait(5000); // 로딩 대기
 
     ////////////새로고침코드//////
@@ -181,7 +181,7 @@ describe('로그캐치 사이트 테스트', () => {
     //cy.get('input[aria-label="사용자 계정"]').filter(':visible').clear().type('admin');
      cy.wait(500);
     // 사용자 IP에 10.10.0.237 입력 
-    cy.get('input[aria-label="사용자 IP"]').filter(':visible').clear().type('10.10.0.237');
+    cy.get('input[aria-label="사용자 IP"]').filter(':visible').clear().type('10.10.54.1');
 
     // 검색버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -372,11 +372,24 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
 
-    // 검색결과 2026-01-22 선택하기
+    // 검색결과 2026-02-05 선택하기
     cy.contains('.v-select__selection', '2026-01-20').filter(':visible').closest('.v-input').find('.v-icon').click({ force: true });
     cy.wait(1000);
-    cy.get('.v-list__tile__title').filter(':visible').contains('2026-01-22').click({ force: true });
+    //cy.get('.v-list__tile__title').filter(':visible').contains('2026-02-05').click({ force: true });
+    cy.get('.v-menu__content')       // 모든 메뉴창을 가져옴
+    .filter(':visible')            // 그 중 '진짜 열린' 놈만 골라냄
+    .should('be.visible')          // 확실하게 떴는지 확인
+    .find('.v-list__tile__title')  // 그 메뉴창 안의 리스트들 중에서
+    .contains('2026-02-05')        // 날짜 텍스트 찾기
+    .scrollIntoView()              // 스크롤을 굴려서 화면에 보이게 함
+    .click({ force: true });       // 클릭
+    
+    
     cy.wait(1000);
+    // 선택 후, 입력창(.v-select__selection)에 '2026-02-05'가 표시되는지 검증
+    cy.contains('.v-select__selection', '2026-02-05').should('be.visible');
+    cy.wait(1000);
+
   
     // 표 검색결과안의 검출유형 검출 문구확인
     cy.get('tbody').filter(':visible').contains('a', '검출').should('be.visible');
