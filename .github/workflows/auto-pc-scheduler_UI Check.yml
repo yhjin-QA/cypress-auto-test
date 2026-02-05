@@ -15,6 +15,10 @@ on:
 jobs:
   cypress-run:
     runs-on: [self-hosted, PC-Auto]
+    # 👇 [추가] 모든 단계에서 PowerShell 실행 시 'Bypass' 옵션을 강제로 적용합니다.
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
