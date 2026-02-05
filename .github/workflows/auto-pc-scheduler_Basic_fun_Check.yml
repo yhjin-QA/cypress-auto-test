@@ -111,7 +111,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Cypress-Report-HTML
-          path: cypress/reports/html
+          path: cypress/reports
           retention-days: 30
 
       # 4. 구글 챗 알림 전송
