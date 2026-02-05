@@ -35,7 +35,7 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('https://10.10.54.11:18443/logcatch/login');
+    cy.visit('https://10.10.54.21:18443/logcatch/login');
     cy.wait(5000); // 로딩 대기
 
     ////////////새로고침코드//////
@@ -164,9 +164,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('body').type('{esc}');
     cy.wait(500);
 
-    // 사용자 계정 클릭하여 loginid2 아이디 입력
+    // 사용자 계정 클릭하여 hojun 아이디 입력
     //cy.get('input[aria-label="사용자 계정"]').filter(':visible').click({ force: true });
-    cy.contains('.v-label', '사용자 계정').closest('.v-input').find('input').type('loginid2', { force: true });
+    cy.contains('.v-label', '사용자 계정').closest('.v-input').find('input').type('hojun', { force: true });
 
     // 소명상태 별로 검증 /////////////
     // 소명상태  클릭하는 코드 

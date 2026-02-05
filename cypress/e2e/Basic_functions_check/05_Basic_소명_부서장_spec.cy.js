@@ -110,11 +110,13 @@ describe('로그캐치 사이트 테스트', () => {
 
     cy.contains('button', '소명').click({ force: true });
     cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
+    
+    //부서장 권한있는 유저가 로그인시 
     cy.log('--- 소명 > 나의 소명 서브메뉴 ---');
     //서브메뉴 관리 클릭 
     cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('나의 소명').click({ force: true });
  
-
+/*
     // 소명 > 나의 소명 > 나의 소명내역 탭 (디폴트 기본화면)
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
@@ -408,7 +410,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.g-IMajorAlert').filter('[style*="rgb(255, 192, 0)"]') .should('be.visible');
     
    ***********************************************************************************/ 
-
+/*
     // 선택한 경보등급  x버튼 클릭하여 초기화 
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     cy.wait(1000);
@@ -431,21 +433,21 @@ describe('로그캐치 사이트 테스트', () => {
     // 소명 대상 일자 선택창 팝업 띄우기
     cy.get('input[aria-label="소명 대상 일자"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
-    // 일자 : 2026-01-22일자  클릭하는 코드
-    cy.get('.v-list__tile__title').filter(':visible').contains('2026-01-22').click({ force: true });
+    // 일자 : 2026-02-05일자  클릭하는 코드
+    cy.get('.v-list__tile__title').filter(':visible').contains('2026-02-05').click({ force: true });
      // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
-    // 소명대상일자 2026-01-22일 검색결과 검증코드 
-    cy.get('tbody').contains('2026-01-22').should('be.visible');
+    // 소명대상일자 2026-02-05일 검색결과 검증코드 
+    cy.get('tbody').contains('2026-02-05').should('be.visible');
 
     cy.log('✅ 소명 - 나의 소명 - [소명하기]탭 진입 및 데이터 출력 확인 완료!');
   
+*/
 
-
-
+      //부서장 권한이있는 사람으로 로그인시 확인하는 부분 
       // 소명 > 나의소명 > 승인하기
       cy.get('.tab-btn').contains('승인하기').should('be.visible').click({ force: true });
       cy.wait(3000); 
@@ -498,10 +500,11 @@ describe('로그캐치 사이트 테스트', () => {
       cy.get('body').type('{esc}');
       cy.wait(500);
 
-      //// 사용자 계정 클릭하여 loginid2 아이디 입력
+      //// 사용자 계정 클릭하여 hojun 아이디 입력
       cy.contains('.v-label', '사용자 계정').closest('.v-input').find('input').type('hojun', { force: true });
 
-      // 소명상태  클릭하는 코드 
+      // 소명상태 점검 시작 
+      // 소명상태 - 신청을  클릭하는 코드 
       cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
       cy.wait(500);
       // 소명상태중 '취소' 클릭하는 코드
@@ -519,6 +522,7 @@ describe('로그캐치 사이트 테스트', () => {
       // 선택 후 메뉴 닫기
       cy.get('body').type('{esc}');
 
+
       
       // 검색 버튼 클릭
       cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -529,9 +533,120 @@ describe('로그캐치 사이트 테스트', () => {
       cy.get('tbody').find('a').contains('사후 소명').should('be.visible');
       cy.wait(1000);
 
+      //-------------------------
+      // 소명상태 - 신청 + 반려 다중선택 클릭하는 코드 
+      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+      cy.wait(500);
+      // 소명상태중 '취소' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('반려').click({ force: true });
+      cy.wait(500);
+      // 선택 후 메뉴 닫기
+      cy.get('body').type('{esc}');
+
+
+      // 소명유형 클릭 (팝업창 띄우기)
+      cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
+      // 소명유형중  '사후 소명' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
+      cy.wait(500);
+      // 선택 후 메뉴 닫기
+      cy.get('body').type('{esc}');
+
+
+      
+      // 검색 버튼 클릭
+      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+      // '신청', '사후소명' 선택한 검색결과 검증코드
+      cy.get('tbody').find('a').contains('인사팀').should('be.visible');
+      cy.get('tbody').find('a').contains('hojun').should('be.visible');
+      cy.get('tbody').find('a').contains('반려').should('be.visible');
+      cy.get('tbody').find('a').contains('사후 소명').should('be.visible');
+      cy.wait(1000);
+
+      // 선택한 소명 x버튼 클릭하여 초기화 
+      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+
+     //-------------------------
+      // 소명상태 - 반려 클릭하는 코드 
+      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+      cy.wait(500);
+      // 소명상태중 '취소' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('반려').click({ force: true });
+      cy.wait(500);
+      // 선택 후 메뉴 닫기
+      cy.get('body').type('{esc}');
+
+
+      // 소명유형 클릭 (팝업창 띄우기)
+      cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
+      // 소명유형중  '사후 소명' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
+      cy.wait(500);
+      // 선택 후 메뉴 닫기
+      cy.get('body').type('{esc}');
+
+
+      
+      // 검색 버튼 클릭
+      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+      // '신청', '사후소명' 선택한 검색결과 검증코드
+      cy.get('tbody').find('a').contains('인사팀').should('be.visible');
+      cy.get('tbody').find('a').contains('hojun').should('be.visible');
+      cy.get('tbody').find('a').contains('반려').should('be.visible');
+      cy.get('tbody').find('a').contains('사후 소명').should('be.visible');
+      cy.wait(1000);
+      
+      // 선택한 소명 x버튼 클릭하여 초기화 
+      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+
+      //-------------------------
+      // 소명상태 - 승인 클릭하는 코드 
+      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+      cy.wait(500);
+      // 소명상태중 '취소' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('승인').click({ force: true });
+      cy.wait(500);
+      // 선택 후 메뉴 닫기
+      cy.get('body').type('{esc}');
+
+
+      // 소명유형 클릭 (팝업창 띄우기)
+      cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
+      // 소명유형중  '사후 소명' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
+      cy.wait(500);
+      // 선택 후 메뉴 닫기
+      cy.get('body').type('{esc}');
+
+
+      
+      // 검색 버튼 클릭
+      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+      // '신청', '사후소명' 선택한 검색결과 검증코드
+      cy.get('tbody').find('a').contains('인사팀').should('be.visible');
+      cy.get('tbody').find('a').contains('hojun').should('be.visible');
+      cy.get('tbody').find('a').contains('승인').should('be.visible');
+      cy.get('tbody').find('a').contains('사후 소명').should('be.visible');
+      cy.wait(1000)
+
+      // 승인필요한 내역만 보기 토글버튼 클릭 
+      cy.get('input[aria-label="승인이 필요한 내역만 보기"]').click({ force: true });
+      cy.wait(1000)
+      // 클릭 후, 체크된 상태(checked)인지 검증
+      cy.get('input[aria-label="승인이 필요한 내역만 보기"]').should('be.checked');
+      
+      //맨티스 이슈 : 
+      // 승인필요한 내역만 보기 표 검증
+      //cy.get('tbody').find('a').contains('신청').should('be.visible');
+      //cy.get('tbody').find('a').contains('반려').should('not.exist');
+      //cy.get('tbody').find('a').contains('승인').should('not.exist');
+     
+      
+
+
       cy.log('✅ 소명 - 나의 소명 - [승인하기]탭 진입 및 데이터 출력 확인 완료!');
 
-  
+    
   
 
     // ==========================================
@@ -550,4 +665,3 @@ describe('로그캐치 사이트 테스트', () => {
 
  })()
 ;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic3BlYy5jeS5qcyIsIm1hcHBpbmdzIjoiOzs7Ozs7O0FBQUFBLFFBQVEsQ0FBQyxlQUFlLEVBQUUsTUFBTTtFQUM5QkMsRUFBRSxDQUFDLFFBQVEsRUFBRSxNQUFNO0lBQ2pCQyxFQUFFLENBQUNDLEtBQUssQ0FBQyw0QkFBNEIsQ0FBQztFQUN4QyxDQUFDLENBQUM7QUFDSixDQUFDLENBQUMsQyIsInNvdXJjZXMiOlsid2VicGFjazovLy8uL2N5cHJlc3MvZTJlL3NwZWMuY3kuanMiXSwic291cmNlc0NvbnRlbnQiOlsiZGVzY3JpYmUoJ3RlbXBsYXRlIHNwZWMnLCAoKSA9PiB7XHJcbiAgaXQoJ3Bhc3NlcycsICgpID0+IHtcclxuICAgIGN5LnZpc2l0KCdodHRwczovL2V4YW1wbGUuY3lwcmVzcy5pbycpXHJcbiAgfSlcclxufSkiXSwibmFtZXMiOlsiZGVzY3JpYmUiLCJpdCIsImN5IiwidmlzaXQiXSwic291cmNlUm9vdCI6IiJ9

@@ -36,7 +36,7 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('https://10.10.54.11:18443/logcatch/login');
+    cy.visit('https://10.10.54.21:18443/logcatch/login');
     cy.wait(5000); // 로딩 대기
 
     ////////////새로고침코드//////
@@ -57,10 +57,10 @@ describe('로그캐치 사이트 테스트', () => {
      //////////////////////////////////////
 
     // 2. 아이디 입력
-    cy.get('input[aria-label="사용자 계정"]').should('exist').type('loginid2', { force: true });
+    cy.get('input[aria-label="사용자 계정"]').should('exist').type('hojun', { force: true });
 
     // 3. 비밀번호 입력
-    cy.get('input[aria-label="패스워드"]').should('exist').type('Manager1!', { force: true }); 
+    cy.get('input[aria-label="패스워드"]').should('exist').type('Manager1!@', { force: true }); 
     
     // 4. 로그인 실행 (버튼 클릭 대신 엔터키 사용)
     // 설명: 버튼 클릭보다 엔터키가 '중복 클릭'이나 '이동 에러'가 훨씬 적게 발생합니다.
@@ -110,9 +110,11 @@ describe('로그캐치 사이트 테스트', () => {
 
     cy.contains('button', '소명').click({ force: true });
     cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.log('--- 소명 > 나의 소명 서브메뉴 ---');
+    
+    //부서장 권한있는 유저가 로그인시 
+    //cy.log('--- 소명 > 나의 소명 서브메뉴 ---');
     //서브메뉴 관리 클릭 
-    cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('나의 소명').click({ force: true });
+    //cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('나의 소명').click({ force: true });
  
 
     // 소명 > 나의 소명 > 나의 소명내역 탭 (디폴트 기본화면)
@@ -431,21 +433,21 @@ describe('로그캐치 사이트 테스트', () => {
     // 소명 대상 일자 선택창 팝업 띄우기
     cy.get('input[aria-label="소명 대상 일자"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
-    // 일자 : 2026-01-22일자  클릭하는 코드
-    cy.get('.v-list__tile__title').filter(':visible').contains('2026-01-22').click({ force: true });
+    // 일자 : 2026-02-05일자  클릭하는 코드
+    cy.get('.v-list__tile__title').filter(':visible').contains('2026-02-05').click({ force: true });
      // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
-    // 소명대상일자 2026-01-22일 검색결과 검증코드 
-    cy.get('tbody').contains('2026-01-22').should('be.visible');
+    // 소명대상일자 2026-02-05일 검색결과 검증코드 
+    cy.get('tbody').contains('2026-02-05').should('be.visible');
 
     cy.log('✅ 소명 - 나의 소명 - [소명하기]탭 진입 및 데이터 출력 확인 완료!');
   
 
 
-
+     /* 부서장 권한이있는 사람으로 로그인시 확인하는 부분 
       // 소명 > 나의소명 > 승인하기
       cy.get('.tab-btn').contains('승인하기').should('be.visible').click({ force: true });
       cy.wait(3000); 
@@ -531,7 +533,7 @@ describe('로그캐치 사이트 테스트', () => {
 
       cy.log('✅ 소명 - 나의 소명 - [승인하기]탭 진입 및 데이터 출력 확인 완료!');
 
-  
+    */
   
 
     // ==========================================
