@@ -357,11 +357,26 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
     // '열람제한 개인정보 접근' 선택한 검색결과 검증코드
     cy.get('tbody').find('a').contains('열람제한 개인정보 접근').should('be.visible');
+    cy.wait(1000);
 
-    // 경보등급 선택 //
     // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     cy.wait(1000);
+
+    
+    // 경보등금 심각만 선택하여 검색시 이전날짜이력은 검색되지 않는 문제 (맨티스 이슈 : 37203)
+    //  임시로 날짜 선택하게 함.  37203 버그 해결시에는 임시 날짜 선택코드 삭제해야함. 
+    // 버그해결시 삭제 /////////////////
+    // 소명 대상 일자 선택창 팝업 띄우기
+    cy.get('input[aria-label="소명 대상 일자"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(500);
+    // 일자 : 2026-02-05일자  클릭하는 코드
+    cy.get('.v-list__tile__title').filter(':visible').contains('2026-02-05').click({ force: true });
+     // 선택 후 메뉴 닫기
+    cy.get('body').type('{esc}');
+    ///////////////////////////////
+
+    // 경보등급 선택 //
     // 경보 등급 유형 선택창 팝업 띄우기
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
@@ -369,13 +384,15 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
+
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    
     cy.wait(1000);
     // 경보등급중 '심각' 검색결과 검증코드 (빨강색)
     cy.get('.g-IMinorAlert').filter('[style*="rgb(244, 67, 54)"]') .should('be.visible');
 
-    /* 경보등급 경계있을시에만 ... **********************************************
+    //경보등급 경계있을시에만 ... **********************************************
     cy.wait(1000);
     // 경보 등급 유형 선택창 팝업 띄우기 (다시 띄우기)
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -409,7 +426,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 경보등급중 '경계' 검색결과 검증코드 (노란색)
     cy.get('.g-IMajorAlert').filter('[style*="rgb(255, 192, 0)"]') .should('be.visible');
     
-   ***********************************************************************************/ 
+    //***********************************************************************************/ 
 
     // 선택한 경보등급  x버튼 클릭하여 초기화 
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
