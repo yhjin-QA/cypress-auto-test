@@ -1,4 +1,4 @@
-name: Cypress Tests
+name: Auto-PC Work (Daily_LogCatch_Basic)
 
 env:
   PRODUCT_NAME: "로그캐치"

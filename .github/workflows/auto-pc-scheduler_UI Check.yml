@@ -1,4 +1,4 @@
-name: Auto-PC Work (Daily)
+name: Auto-PC (Daily_LogCatch_UI)
 
 env:
   PRODUCT_NAME: "로그캐치"
@@ -8,18 +8,17 @@ on:
   push:
     branches: [ "master" ]
   schedule:
-    - cron: '15 6 * * *' # 매일 아침 6:15
+    - cron: '15 6 * * *'
   workflow_dispatch:
 
 jobs:
+  # [Job 1] 테스트 실행 (일꾼 3명이 열심히 일만 함 - 알림 안 보냄)
   cypress-run:
     runs-on: [self-hosted, PC-Auto]
-    
-    # 👇 [핵심 추가] 병렬 실행을 위한 전략 설정
     strategy:
-      fail-fast: false # 하나가 실패해도 나머지 Runner들은 끝까지 테스트를 수행함
+      fail-fast: false # 하나가 실패해도 멈추지 말고 끝까지 진행
       matrix:
-        containers: [1, 2, 3] # Runner 개수만큼 숫자 지정 (3개면 1, 2, 3)
+        containers: [1, 2, 3] # 병렬 3개
 
     defaults:
       run:
@@ -29,22 +28,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 1. 한국 시간 구해서 환경변수(NOW)에 저장
-      - name: Get Current Time (KST)
-        run: |
-          $korea_time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-          echo "NOW=$korea_time" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-      
-      # 2. Cypress 실행
-      - name: Cypress Run (Self-Hosted Dashboard)
+      - name: Cypress Run
         env:
           CYPRESS_API_URL: "http://10.10.54.5:1234/"
           CYPRESS_RECORD_KEY: "my-secret-key"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_INFO_MESSAGE: ${{ github.event.head_commit.message }}
-          COMMIT_INFO_AUTHOR: ${{ github.actor }}
-          COMMIT_INFO_SHA: ${{ github.sha }}
-          COMMIT_INFO_BRANCH: ${{ github.ref_name }}
           NO_COLOR: 1           
           FORCE_COLOR: 0        
           TERM: dumb            
@@ -52,89 +41,77 @@ jobs:
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-
-          # 1. 패키지 설치
+          
           npm install
           npm install cy2 --save-dev
           npm install cypress-mochawesome-reporter --save-dev
           npx cypress install
 
-          # 2. 테스트 실행 (병렬 옵션은 이미 잘 들어가 있습니다)
-          # --ci-build-id가 동일해야 3개의 러너가 "우린 한 팀이야"라고 인식합니다.
-          # matrix 구조에서는 github.run_id가 동일하므로 잘 동작합니다.
-          cmd /c "chcp 65001 & npx cy2 run --record --spec cypress/e2e/UI_Module_Full_Check/**/*.cy.js --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          # 테스트 실행 (로그 저장)
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Full_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
-          Get-Content cypress.log -Encoding UTF8
           Get-Content cypress.log
 
-      # 3. 진짜 대시보드 URL 추출
-      - name: Extract Real Dashboard URL
-        if: always() 
-        run: |
-          $OutputEncoding = [System.Text.Encoding]::UTF8
-          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-
-          $logPath = "cypress.log"
-          if (Test-Path $logPath) {
-            $content = Get-Content $logPath -Raw -Encoding UTF8
-            if ($content -match "/run/(?<id>[a-f0-9]+)") {
-                $realRunId = $matches['id']
-                $realUrl = "http://10.10.54.5:8080/run/$realRunId"
-                
-                echo "REAL_DASHBOARD_URL=$realUrl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-                Write-Host "DashBoard URL! -> $realUrl"
-            } else {
-                Write-Host "Log Analysis Result: ID pattern (/run/xxxx) was not found."
-            }
-          }
-
-      # 👇 [수정] 리포트 이름 겹침 방지
-      # 병렬로 돌면 3명이 동시에 업로드하므로 이름을 구분해줍니다.
-      - name: 📂 테스트 리포트 업로드 (Artifacts)
+      # 리포트 업로드 (각자 수행)
+      - name: 📂 테스트 리포트 업로드
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Cypress-Report-HTML-${{ matrix.containers }} # 뒤에 번호 붙임 (1, 2, 3)
+          name: Cypress-Report-HTML-${{ matrix.containers }}
           path: cypress/reports
-          retention-days: 30      
-      
-      # 4. 구글 챗 알림 전송
-      - name: Send Google Chat Notification
-        if: always()
+          retention-days: 30
+
+  # [Job 2] 종합 결과 알림 (위 테스트가 다 끝나면 1번만 실행됨)
+  notify-result:
+    needs: cypress-run # ⭐ 중요: cypress-run 작업이 다 끝나야 실행됨
+    if: always()       # ⭐ 중요: 테스트가 실패했더라도 알림은 보내야 함
+    runs-on: [self-hosted, PC-Auto] # 아무 Runner나 하나 잡아서 실행
+    
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+
+    steps:
+      - name: Get Current Time (KST)
+        run: |
+          $korea_time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+          echo "NOW=$korea_time" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Send Summary Notification
         env:
-          MSG_SUCCESS: "*[성공]*[Auto-PC-${{ matrix.containers }}]" # 몇 번 러너인지 표시
-          MSG_FAIL: "*[실패]*[Auto-PC-${{ matrix.containers }}]"
-          MSG_TITLE: "UI 확인결과"
-          DASH_BASE: "http://10.10.54.5:8080"
-          LABEL_DASH: "대시보드"
-          LABEL_GIT: "GitHub(Report)"
-          REAL_URL: ${{ env.REAL_DASHBOARD_URL }}
+          # needs.cypress-run.result : 앞선 작업의 결과 (success 또는 failure)
+          JOB_STATUS: ${{ needs.cypress-run.result }}
+          MSG_TITLE: "UI 자동화 테스트 최종 결과"
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-          if ("${{ job.status }}" -eq 'success') { 
-            $resultTitle = $env:MSG_SUCCESS
-          } else { 
-            $resultTitle = $env:MSG_FAIL
-          }
-          
-          if ($env:REAL_URL) {
-            $dashboardUrl = $env:REAL_URL
+          # 1. 성공/실패 여부 판단
+          if ($env:JOB_STATUS -eq 'success') {
+            $resultTitle = "*[전체 성공]* 🟢"
+            $color = "success"
           } else {
-            $dashboardUrl = "http://10.10.54.5:8080/projects"
+            $resultTitle = "*[일부 실패]* 🔴 (리포트 확인 필요)"
+            $color = "failure"
           }
 
-          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n${env:LABEL_DASH}: $dashboardUrl`n${env:LABEL_GIT}: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # 2. 메시지 내용 작성
+          # (병렬 실행이라 개별 대시보드 주소는 알기 어려우므로 전체 프로젝트 목록으로 안내)
+          $dashboardUrl = "http://10.10.54.5:8080/projects"
+          $githubUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n📊 대시보드(목록): $dashboardUrl`n📝 상세결과(GitHub): $githubUrl"
           
+          Write-Host "Sending Message: $message"
+
+          # 3. 구글 챗 전송
           $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
-
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
 
-      # 5. 이메일 발송
-      - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
-        if: failure()
+      # [추가] 실패 시에만 팀원에게 메일 발송 (종합)
+      - name: 🚨 실패 시 긴급 메일 발송
+        if: needs.cypress-run.result == 'failure'
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
@@ -142,16 +119,16 @@ jobs:
           secure: true
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: 🚨 [긴급/실패][Auto-PC-${{ matrix.containers }}] Cypress UI 테스트 실패
+          subject: 🚨 [종합/실패] 로그캐치 UI 테스트 실패 알림
           to: yhjin@warevalley.com
           from: Cypress 알림 봇 <noreply@warevalley.com>
-          attachments: cypress/reports/html/index.html
           body: |
-            [긴급] Auto-PC (Runner-${{ matrix.containers }})에서 수행된 테스트가 실패했습니다.
+            [종합 알림] 로그캐치 UI 자동화 테스트 중 일부가 실패했습니다.
             
             ---------------------------------------------------
             발생 시간: ${{ env.NOW }}
-            상태: ❌ FAILED
-            Runner: PC-Auto-${{ matrix.containers }}
-            대시보드: ${{ env.REAL_DASHBOARD_URL }}
+            상태: ❌ 최종 실패 (Some checks failed)
+            
+            👉 결과 확인 (GitHub Actions):
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             ---------------------------------------------------
