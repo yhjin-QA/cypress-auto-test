@@ -8,17 +8,19 @@ on:
   push:
     branches: [ "master" ]
   schedule:
-    - cron: '15 2 * * *' # UI랑 시간 다르게 (예: 새벽 2:15)
+    - cron: '15 2 * * *' # 매일 새벽 2:15
   workflow_dispatch:
 
 jobs:
-  # [Job 1] 테스트 실행
+  # ====================================================
+  # [Job 1] 테스트 실행 (Runner 3명이 테스트만 수행)
+  # ====================================================
   cypress-run:
     runs-on: [self-hosted, PC-Auto]
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3]
+        containers: [1, 2, 3] # 3개 병렬 실행
 
     defaults:
       run:
@@ -47,22 +49,25 @@ jobs:
           npm install cy2 cypress-mochawesome-reporter --save-dev
           npx cypress install
 
-          # Basic 테스트 실행 (폴더 경로 확인)
+          # Basic 테스트 실행 (경로: Basic_functions_check)
           cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           Get-Content cypress.log
 
+      # 리포트 업로드 (Basic 전용 이름 사용)
       - name: 📂 리포트 업로드
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Basic-Report-${{ matrix.containers }} # 파일명 구분
+          name: Basic-Report-${{ matrix.containers }} # 파일명 구분 (UI와 섞임 방지)
           path: cypress/reports
           retention-days: 30
 
-  # [Job 2] 종합 알림
+  # ====================================================
+  # [Job 2] 종합 알림 (테스트 완료 후 1번만 실행)
+  # ====================================================
   notify-result:
-    needs: cypress-run # ⭐ 중요
+    needs: cypress-run # ⭐ 중요: 위 테스트 3개가 다 끝나야 실행됨
     if: always()
     runs-on: [self-hosted, PC-Auto]
     
@@ -74,10 +79,11 @@ jobs:
       - name: Get Current Time
         run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
+      # 구글 챗 알림 (한글 변수 적용)
       - name: Send Google Chat (Basic)
         env:
           JOB_STATUS: ${{ needs.cypress-run.result }}
-          # 👇 [요청하신 변수 적용 - 제목만 Basic으로 변경]
+          # 👇 [Basic 전용 제목 설정]
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "기능(Basic) 시나리오 확인결과"
@@ -94,7 +100,7 @@ jobs:
             $resultTitle = $env:MSG_FAIL
           }
           
-          # 메시지 조립
+          # 메시지 생성
           $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n${env:LABEL_DASH}: $env:DASH_BASE`n${env:LABEL_GIT}: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
           Write-Host "Sending Message: $message"
@@ -102,3 +108,18 @@ jobs:
           $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
+
+      # 👇 [추가된 부분] 이메일 알림 (실패 시 발송)
+      - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
+        if: needs.cypress-run.result == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          # 제목에 [Basic] 명시
+          subject: 🚨 [종합/실패][Basic] Cypress 기능 테스트 실패 알림
+          to: yhjin@warevalley.com
+          from: Cypress 알림
