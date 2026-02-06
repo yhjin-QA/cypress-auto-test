@@ -166,3 +166,5 @@ jobs:
             👉 상세 리포트 (GitHub): ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             
             ---------------------------------------------------
+            
+            담당자분들은 위 링크를 클릭하여 실패 원인을 확인해 주세요.  
