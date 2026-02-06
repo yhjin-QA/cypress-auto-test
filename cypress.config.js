@@ -42,30 +42,6 @@ module.exports = defineConfig({
       // 👇 [추가 2] 리포터 플러그인 연결 (task 설정보다 위에 적어주세요)
       require('cypress-mochawesome-reporter/plugin')(on);
 
-      // 👇 [핵심 추가] 일감이 0개일 때 에러 방지용 '빈 리포트 파일' 생성
-      on('before:run', async (details) => {
-        // 리포트 JSON이 저장될 폴더 경로 (cypress-mochawesome-reporter 기본 경로)
-        const reportDir = path.join(config.projectRoot, 'cypress', 'reports', 'html', '.jsons');
-        
-        // 폴더가 없으면 만듭니다.
-        if (!fs.existsSync(reportDir)) {
-          fs.mkdirSync(reportDir, { recursive: true });
-        }
-
-        // 'dummy.json'이라는 빈 결과 파일을 미리 하나 만들어 둡니다.
-        // 나중에 테스트가 하나도 안 돌아도, 이 파일이 있어서 에러가 안 납니다.
-        const dummyFile = path.join(reportDir, 'dummy.json');
-        const dummyContent = {
-          stats: { tests: 0, passes: 0, failures: 0, duration: 0, start: new Date(), end: new Date() },
-          results: [],
-          meta: {}
-        };
-        
-        fs.writeFileSync(dummyFile, JSON.stringify(dummyContent));
-        console.log('✅ [Info] 빈 리포트 병합 에러 방지용 dummy.json 생성 완료');
-      });
-      // 👆 [여기까지 추가]
-
       on('task', {
         // 1. (기존) 파일 목록 읽기
         readDirectory(folderPath) {
