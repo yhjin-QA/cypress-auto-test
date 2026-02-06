@@ -31,6 +31,12 @@ module.exports = defineConfig({
     chromeWebSecurity: false,
     viewportWidth: 1600,
     viewportHeight: 900,
+
+    // 👇 [핵심] 메모리에 스냅샷을 0개(또는 1개)만 유지하도록 설정
+    // 이렇게 하면 테스트가 진행되면서 메모리를 바로바로 비워줍니다.
+    numTestsKeptInMemory: 0, 
+    // 비디오 녹화가 켜져 있다면, 압축 옵션을 끄면 CPU 부하가 줍니다. (선택사항)
+    videoCompression: false,
     
     setupNodeEvents(on, config) {
       // 👇 [추가 2] 리포터 플러그인 연결 (task 설정보다 위에 적어주세요)
