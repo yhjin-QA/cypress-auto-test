@@ -15,6 +15,10 @@ on:
 jobs:
   cypress-run:
     runs-on: [self-hosted, PC-Auto]
+    strategy:
+      fail-fast: false # 하나가 실패해도 나머지는 계속 돌아라
+      matrix:
+        containers: [1, 2, 3] # 1, 2, 3번 주자 (총 3개 병렬)
     # 👇 [추가] 모든 단계에서 PowerShell 실행 시 'Bypass' 옵션을 강제로 적용합니다.
     defaults:
       run:
@@ -50,7 +54,8 @@ jobs:
           TERM: dumb              # 터미널 특수문자 제거
           # 👇 [추가] Cypress에게 "CI 환경임"을 알려주어 특수문자 사용을 줄이게 함
           CI: true
-        run: |
+        #run: |
+        run: npx cypress run --record --key ${{ secrets.CYPRESS_RECORD_KEY }} --parallel --ci-build-id ${{ github.sha }}-${{ github.workflow }}-${{ github.run_id }}
           # 👇 [추가] PowerShell 자체의 인코딩을 UTF-8로 고정
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
