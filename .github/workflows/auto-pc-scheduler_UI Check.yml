@@ -148,7 +148,7 @@ jobs:
           secure: true
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: 🚨 [종합/실패][UI] Cypress UI 테스트 실패 알림
+          subject: 🚨 [실패][UI] Cypress UI 테스트 실패 알림
           to: yhjin@warevalley.com
           from: Cypress 알림 봇 <noreply@warevalley.com>
           attachments: all_reports/**/*.html

@@ -1453,6 +1453,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '태스크 목록(MASTER)').should('exist');
+    cy.wait(1000);
     //버튼 확인
     cy.contains('.v-btn__content', 'MASTER 태스크 전체 시작').should('be.visible');
     cy.contains('.v-btn__content', 'MASTER 태스크 전체 정지').should('be.visible');
@@ -1460,18 +1461,23 @@ describe('로그캐치 사이트 테스트', () => {
     //프로세스 실행확인(프로세스 정지상태라면 시작문구로 버튼 변경되어있는상태 ) 
     cy.contains('p', 'Log Collector').should('be.visible');
     cy.contains('p', 'Log Collector').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
+    cy.wait(500);
 
     cy.contains('p', 'Discriminator').should('be.visible');
     cy.contains('p', 'Discriminator').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
+    cy.wait(500);
 
     cy.contains('p', 'Rule Analyzer').should('be.visible');
     cy.contains('p', 'Rule Analyzer').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
+    cy.wait(500);
 
     cy.contains('p', 'Data File Cleaner').should('be.visible');
     cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
+    cy.wait(500);
     
     cy.contains('p', 'Statistics').should('be.visible');
     cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
+    cy.wait(500);
 
     cy.log('✅ 운영 - 태스크 - [실행관리] 출력 확인 완료 ');
 
