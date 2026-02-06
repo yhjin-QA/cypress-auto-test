@@ -41,6 +41,22 @@ module.exports = defineConfig({
     setupNodeEvents(on, config) {
       // 👇 [추가 2] 리포터 플러그인 연결 (task 설정보다 위에 적어주세요)
       require('cypress-mochawesome-reporter/plugin')(on);
+      
+      // 👇 [다시 추가] 일감이 0개일 때 에러 방지용 '빈 리포트 파일' 생성 코드
+      on('before:run', async (details) => {
+        const reportDir = path.join(config.projectRoot, 'cypress', 'reports', 'html', '.jsons');
+        if (!fs.existsSync(reportDir)) {
+          fs.mkdirSync(reportDir, { recursive: true });
+        }
+        const dummyFile = path.join(reportDir, 'dummy.json');
+        const dummyContent = {
+          stats: { tests: 0, passes: 0, failures: 0, duration: 0, start: new Date(), end: new Date() },
+          results: [],
+          meta: {}
+        };
+        fs.writeFileSync(dummyFile, JSON.stringify(dummyContent));
+      });
+      // 👆 [여기까지]
 
       on('task', {
         // 1. (기존) 파일 목록 읽기

@@ -1,4 +1,4 @@
-name: Auto-PC Work (Daily_Basic)
+name: Auto-PC (Daily_Basic)
 
 env:
   PRODUCT_NAME: "로그캐치"
@@ -84,6 +84,7 @@ jobs:
           name: Basic-Report-${{ matrix.containers }}
           path: cypress/reports
           retention-days: 30
+          if-no-files-found: ignore  # 👈 이 줄을 추가해주세요!
 
   # ====================================================
   # [Job 2] 종합 알림 (테스트 완료 후 1번만 실행)

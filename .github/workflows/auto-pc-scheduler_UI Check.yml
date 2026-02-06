@@ -1,4 +1,4 @@
-name: Auto-PC Work (Daily_UI)
+name: Auto-PC (Daily_UI)
 
 env:
   PRODUCT_NAME: "로그캐치"
@@ -82,6 +82,7 @@ jobs:
           name: UI-Report-${{ matrix.containers }}
           path: cypress/reports
           retention-days: 30
+          if-no-files-found: ignore  # 👈 이 줄을 추가해주세요!
 
   # [Job 2] 종합 알림 (파일 첨부 기능 복구)
   notify-result:
