@@ -154,6 +154,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('개인정보 값').should('be.visible');
     cy.get('th').filter(':visible').contains('조회').should('be.visible');
 
+    //기능동작확인 ------------------------------------------------------------------
     // 클릭동작 
     //cy.get('.v-input__icon--append').filter(':visible').find('.material-icons').contains('arrow_drop_down').click({ force: true });
     //cy.get('label').filter(':visible').contains('업무시스템').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -165,6 +166,15 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('body').type('{esc}');
     cy.wait(500);
     cy.log('✅ 팝업 닫기 성공');
+
+     // 기간 - 시작 날짜 달력 지정하기 
+     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+     cy.wait(500);
+     // 5일 클릭
+     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '5일').click({ force: true });
+     cy.wait(500);
+  
+     cy.log('✅ 시작 날짜 지정 성공');
     
     //개인정보유형 전체선택 문구 클릭하여 유형 선택하는 코드
     // <bug> 개인정보 유형 선택시 기존 입력했던 검색조건 초기화 되어버림. (맨티스 이슈보고 : 37120))
@@ -193,7 +203,7 @@ describe('로그캐치 사이트 테스트', () => {
 
 
 
-    // 이력 > 접속 기록 이력 서브메뉴 클릭
+    // 이력 > 접속 기록 이력 서브메뉴 클릭  -----------------------
     cy.contains('button', '이력').click({ force: true });
     cy.log('--- 이력 > 접속기록 이력  클릭 ---');
     cy.wait(3000);
