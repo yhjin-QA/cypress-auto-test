@@ -8,7 +8,7 @@ on:
   push:
     branches: [ "master" ]
   schedule:
-    - cron: '15 6 * * *'
+    - cron: '15 6 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -155,6 +155,7 @@ jobs:
           body: |
             [긴급] Auto-PC에서 수행된 로그캐치 UI 자동화 테스트가 실패했습니다.
             (Runner 3대의 리포트가 첨부되었습니다.)
+
             ---------------------------------------------------
 
             발생 시간: ${{ env.NOW }}
