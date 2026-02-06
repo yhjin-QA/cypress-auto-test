@@ -76,17 +76,20 @@ jobs:
           path: run_url.txt
           retention-days: 1
 
-      # 리포트 파일 업로드
-      - name: 📂 리포트 업로드
+      # 👇 [핵심 변경] HTML 대신 'Raw 데이터(.json)'와 '스크린샷'을 업로드합니다.
+      # 나중에 이걸 하나로 합치기 위함입니다.
+      - name: 📂 리포트 데이터 업로드
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Basic-Report-${{ matrix.containers }}
-          path: cypress/reports
-          retention-days: 30
+          name: Basic-Raw-Data-${{ matrix.containers }}
+          path: |
+            cypress/reports/html/.jsons
+            cypress/screenshots
+          retention-days: 1
 
   # ====================================================
-  # [Job 2] 종합 알림 (테스트 완료 후 1번만 실행)
+  # [Job 2] 종합 알림 (리포트 통합 & 1회 발송)
   # ====================================================
   notify-result:
     needs: cypress-run
@@ -109,15 +112,33 @@ jobs:
           name: dashboard-url-1
           path: downloaded_url
 
-      # 2. 리포트 파일 4개 모두 다운로드 (여기가 수정되었습니다!)
-      - name: Download All Reports
+      # 👇 2. 4개의 Raw 데이터(JSON+이미지) 모두 다운로드 및 병합
+      - name: Download All Raw Data
         uses: actions/download-artifact@v4
         with:
-          pattern: Basic-Report-*
-          path: all_reports      
-          merge-multiple: false 
+          pattern: Basic-Raw-Data-* 
+          path: all_raw_data      
+          merge-multiple: true 
 
-      # 3. 구글 챗 알림
+      # 👇 3. 데이터 합치기 & HTML 생성 (Merge & Generate)
+      - name: 🔄 리포트 하나로 통합하기
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          # 1. 병합 도구 설치 (가볍게 설치)
+          npm install mochawesome-merge mochawesome-report-generator --no-save
+
+          # 2. JSON 파일 하나로 합치기 (PowerShell 인코딩 문제 방지를 위해 cmd /c 사용)
+          # all_raw_data 폴더 안의 모든 json을 찾아서 merged_report.json으로 만듭니다.
+          cmd /c "npx mochawesome-merge all_raw_data/*.json > merged_report.json"
+          
+          # 3. 합쳐진 JSON으로 '최종 HTML' 생성
+          # --inline: CSS/JS를 HTML 안에 넣기
+          # --charts: 차트 포함
+          npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "Basic 기능 통합 리포트" --saveJson=false
+
+      # 4. 구글 챗 알림
       - name: Send Google Chat (Basic)
         env:
           JOB_STATUS: ${{ needs.cypress-run.result }}
@@ -146,7 +167,7 @@ jobs:
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
 
-      # 4. 이메일 알림 (파일 4개 첨부)
+      # 5. 이메일 알림 (통합된 파일 1개 첨부)
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: needs.cypress-run.result == 'failure'
         uses: dawidd6/action-send-mail@v3
@@ -160,17 +181,15 @@ jobs:
           to: yhjin@warevalley.com
           from: Cypress 알림 봇 <noreply@warevalley.com>
           
-          # 모든 html 리포트 첨부
-          attachments: all_reports/**/*.html
+          # 👇 [수정됨] 이제 딱 1개의 파일만 첨부됩니다!
+          attachments: final_report/merged_report.html
 
           body: |
             [긴급] Auto-PC에서 수행된 로그캐치 [Basic 기능] 자동화 테스트가 실패했습니다.
-            (Runner 4대의 리포트 파일이 모두 첨부되었습니다.)
+            (4개의 Runner 결과를 하나로 합친 통합 리포트가 첨부되었습니다.)
             
             ---------------------------------------------------
-
             발생 시간: ${{ env.NOW }}
             상태: ❌ FAILED
             👉 상세 리포트 (GitHub): ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            
             ---------------------------------------------------
