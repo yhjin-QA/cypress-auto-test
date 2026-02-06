@@ -1,4 +1,4 @@
-name: Auto-PC (Daily_Basic)
+name: Auto-PC Work (Daily_Basic)
 
 env:
   PRODUCT_NAME: "로그캐치"
@@ -12,9 +12,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ====================================================
-  # [Job 1] 테스트 실행 (Runner 3명 병렬)
-  # ====================================================
+  # [Job 1] 테스트 실행 (3병렬)
   cypress-run:
     runs-on: [self-hosted, PC-Auto]
     strategy:
@@ -53,7 +51,6 @@ jobs:
           
           Get-Content cypress.log
 
-      # URL 추출 및 저장
       - name: Extract Dashboard URL
         if: always()
         run: |
@@ -67,7 +64,6 @@ jobs:
             }
           }
 
-      # URL 파일 업로드
       - name: Upload URL File
         if: always()
         uses: actions/upload-artifact@v4
@@ -75,8 +71,8 @@ jobs:
           name: dashboard-url-${{ matrix.containers }}
           path: run_url.txt
           retention-days: 1
+          if-no-files-found: ignore
 
-      # 리포트 파일 업로드
       - name: 📂 리포트 업로드
         if: always()
         uses: actions/upload-artifact@v4
@@ -84,11 +80,9 @@ jobs:
           name: Basic-Report-${{ matrix.containers }}
           path: cypress/reports
           retention-days: 30
-          if-no-files-found: ignore  # 👈 이 줄을 추가해주세요!
+          if-no-files-found: ignore
 
-  # ====================================================
-  # [Job 2] 종합 알림 (테스트 완료 후 1번만 실행)
-  # ====================================================
+  # [Job 2] 종합 알림
   notify-result:
     needs: cypress-run
     if: always()
@@ -102,7 +96,6 @@ jobs:
       - name: Get Current Time
         run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      # 1. 대시보드 URL 파일 다운로드
       - name: Download Dashboard URL
         uses: actions/download-artifact@v4
         continue-on-error: true
@@ -110,15 +103,14 @@ jobs:
           name: dashboard-url-1
           path: downloaded_url
 
-      # 2. 리포트 파일 4개 모두 다운로드 (여기가 수정되었습니다!)
+      # 👇 [추가됨] 3개의 리포트 파일 다운로드 (Basic 패턴)
       - name: Download All Reports
         uses: actions/download-artifact@v4
         with:
-          pattern: Basic-Report-*
+          pattern: Basic-Report-* 
           path: all_reports      
           merge-multiple: false 
 
-      # 3. 구글 챗 알림
       - name: Send Google Chat (Basic)
         env:
           JOB_STATUS: ${{ needs.cypress-run.result }}
@@ -147,7 +139,6 @@ jobs:
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
 
-      # 4. 이메일 알림 (파일 3개 첨부)
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: needs.cypress-run.result == 'failure'
         uses: dawidd6/action-send-mail@v3
@@ -157,11 +148,11 @@ jobs:
           secure: true
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: 🚨 [실패][Basic] Cypress 기능 테스트 실패 알림
+          subject: 🚨 [종합/실패][Basic] Cypress 기능 테스트 실패 알림
           to: yhjin@warevalley.com
           from: Cypress 알림 봇 <noreply@warevalley.com>
           
-          # 모든 html 리포트 첨부
+          # 👇 [복구됨] 모든 리포트 파일 첨부
           attachments: all_reports/**/*.html
 
           body: |
