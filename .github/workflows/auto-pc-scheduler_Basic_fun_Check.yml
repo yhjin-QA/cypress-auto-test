@@ -13,7 +13,7 @@ on:
 
 jobs:
   # ====================================================
-  # [Job 1] 테스트 실행 (Runner 4명 병렬)
+  # [Job 1] 테스트 실행 (Runner 3명 병렬)
   # ====================================================
   cypress-run:
     runs-on: [self-hosted, PC-Auto]
@@ -147,7 +147,7 @@ jobs:
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
 
-      # 4. 이메일 알림 (파일 4개 첨부)
+      # 4. 이메일 알림 (파일 3개 첨부)
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: needs.cypress-run.result == 'failure'
         uses: dawidd6/action-send-mail@v3
@@ -157,7 +157,7 @@ jobs:
           secure: true
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: 🚨 [종합/실패][Basic] Cypress 기능 테스트 실패 알림
+          subject: 🚨 [실패][Basic] Cypress 기능 테스트 실패 알림
           to: yhjin@warevalley.com
           from: Cypress 알림 봇 <noreply@warevalley.com>
           

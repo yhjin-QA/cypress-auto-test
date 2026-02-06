@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # [Job 1] 테스트 실행 (4병렬)
+  # [Job 1] 테스트 실행 (3병렬)
   cypress-run:
     runs-on: [self-hosted, PC-Auto]
     strategy:
@@ -153,12 +153,11 @@ jobs:
           secure: true
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: 🚨 [종합/실패][UI] Cypress UI 테스트 실패 알림
+          subject: 🚨 [실패][UI] Cypress UI 테스트 실패 알림
           to: yhjin@warevalley.com
           from: Cypress 알림 봇 <noreply@warevalley.com>
           
           # 👇 [복구됨] 다운로드 받은 폴더 안의 모든 html 파일을 첨부합니다.
-          # Runner가 4개이므로, 메일에 파일 4개가 첨부될 것입니다.
           attachments: all_reports/**/*.html
           
           body: |
