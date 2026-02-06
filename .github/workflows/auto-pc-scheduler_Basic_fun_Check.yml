@@ -12,13 +12,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  # [Job 1] 테스트 실행
+  # ====================================================
+  # [Job 1] 테스트 실행 (Runner 4명 병렬)
+  # ====================================================
   cypress-run:
     runs-on: [self-hosted, PC-Auto]
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3, 4]
+        containers: [1, 2, 3, 4] # Runner 4개
 
     defaults:
       run:
@@ -51,7 +53,7 @@ jobs:
           
           Get-Content cypress.log
 
-      # 👇 [추가 1] URL 추출 및 저장
+      # URL 추출 및 저장
       - name: Extract Dashboard URL
         if: always()
         run: |
@@ -65,7 +67,7 @@ jobs:
             }
           }
 
-      # 👇 [추가 2] URL 파일 업로드
+      # URL 파일 업로드
       - name: Upload URL File
         if: always()
         uses: actions/upload-artifact@v4
@@ -74,6 +76,7 @@ jobs:
           path: run_url.txt
           retention-days: 1
 
+      # 리포트 파일 업로드
       - name: 📂 리포트 업로드
         if: always()
         uses: actions/upload-artifact@v4
@@ -82,7 +85,9 @@ jobs:
           path: cypress/reports
           retention-days: 30
 
-  # [Job 2] 종합 알림
+  # ====================================================
+  # [Job 2] 종합 알림 (테스트 완료 후 1번만 실행)
+  # ====================================================
   notify-result:
     needs: cypress-run
     if: always()
@@ -96,7 +101,7 @@ jobs:
       - name: Get Current Time
         run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      # 👇 [추가 3] Runner 1번의 URL 파일 다운로드
+      # 1. 대시보드 URL 파일 다운로드
       - name: Download Dashboard URL
         uses: actions/download-artifact@v4
         continue-on-error: true
@@ -104,6 +109,15 @@ jobs:
           name: dashboard-url-1
           path: downloaded_url
 
+      # 2. 리포트 파일 4개 모두 다운로드 (여기가 수정되었습니다!)
+      - name: Download All Reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: Basic-Report-*
+          path: all_reports      
+          merge-multiple: false 
+
+      # 3. 구글 챗 알림
       - name: Send Google Chat (Basic)
         env:
           JOB_STATUS: ${{ needs.cypress-run.result }}
@@ -116,7 +130,6 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-          # URL 읽기
           $urlFile = "downloaded_url/run_url.txt"
           if (Test-Path $urlFile) {
             $realUrl = Get-Content $urlFile -Raw
@@ -127,14 +140,14 @@ jobs:
 
           if ($env:JOB_STATUS -eq 'success') { $resultTitle = $env:MSG_SUCCESS } else { $resultTitle = $env:MSG_FAIL }
           
-          # $realUrl 적용
           $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n${env:LABEL_DASH}: $realUrl`n${env:LABEL_GIT}: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
           $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
 
-      - name: 🚨 실패 시 긴급 메일 발송
+      # 4. 이메일 알림 (파일 4개 첨부)
+      - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: needs.cypress-run.result == 'failure'
         uses: dawidd6/action-send-mail@v3
         with:
@@ -146,10 +159,18 @@ jobs:
           subject: 🚨 [종합/실패][Basic] Cypress 기능 테스트 실패 알림
           to: yhjin@warevalley.com
           from: Cypress 알림 봇 <noreply@warevalley.com>
+          
+          # 모든 html 리포트 첨부
+          attachments: all_reports/**/*.html
+
           body: |
             [긴급] Auto-PC에서 수행된 로그캐치 [Basic 기능] 자동화 테스트가 실패했습니다.
+            (Runner 4대의 리포트 파일이 모두 첨부되었습니다.)
+            
             ---------------------------------------------------
+
             발생 시간: ${{ env.NOW }}
             상태: ❌ FAILED
             👉 상세 리포트 (GitHub): ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
             ---------------------------------------------------
