@@ -8,19 +8,17 @@ on:
   push:
     branches: [ "master" ]
   schedule:
-    - cron: '15 6 * * *' # 매일 아침 수행
+    - cron: '15 6 * * *'
   workflow_dispatch:
 
 jobs:
-  # ====================================================
-  # [Job 1] 테스트 실행 (3명이 일만 수행 - 알림 X)
-  # ====================================================
+  # [Job 1] 테스트 실행
   cypress-run:
     runs-on: [self-hosted, PC-Auto]
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3] # Runner 3대 병렬
+        containers: [1, 2, 3]
 
     defaults:
       run:
@@ -49,24 +47,45 @@ jobs:
           npm install cy2 cypress-mochawesome-reporter --save-dev
           npx cypress install
 
-          # UI 테스트 실행 (병렬)
           cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Full_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           Get-Content cypress.log
+
+      # 👇 [추가 1] 로그에서 URL 찾아서 파일(run_url.txt)에 저장
+      - name: Extract Dashboard URL
+        if: always()
+        run: |
+          $logPath = "cypress.log"
+          if (Test-Path $logPath) {
+            $content = Get-Content $logPath -Raw -Encoding UTF8
+            if ($content -match "/run/(?<id>[a-f0-9]+)") {
+                $realRunId = $matches['id']
+                $realUrl = "http://10.10.54.5:8080/run/$realRunId"
+                echo $realUrl | Out-File -FilePath run_url.txt -Encoding UTF8
+                Write-Host "Found URL: $realUrl"
+            }
+          }
+
+      # 👇 [추가 2] 저장한 URL 파일을 Job 2에게 넘겨주기 위해 업로드
+      - name: Upload URL File
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-url-${{ matrix.containers }} # Runner 별로 이름 구분
+          path: run_url.txt
+          retention-days: 1
 
       - name: 📂 리포트 업로드
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: UI-Report-${{ matrix.containers }} # 파일명 뒤에 번호 붙임
+          name: UI-Report-${{ matrix.containers }}
           path: cypress/reports
           retention-days: 30
 
-  # ====================================================
-  # [Job 2] 종합 알림 (테스트 완료 후 1번만 실행)
-  # ====================================================
+  # [Job 2] 종합 알림
   notify-result:
-    needs: cypress-run # ⭐ 중요: 위 3개가 다 끝나야 실행
+    needs: cypress-run
     if: always()
     runs-on: [self-hosted, PC-Auto]
     
@@ -78,34 +97,60 @@ jobs:
       - name: Get Current Time
         run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
+      # 👇 [추가 3] Runner 1번이 올린 URL 파일 다운로드
+      - name: Download Dashboard URL
+        uses: actions/download-artifact@v4
+        continue-on-error: true # 혹시 파일 없어도 죽지 않게 설정
+        with:
+          name: dashboard-url-1 # 1번 Runner의 결과만 가져옴 (URL은 다 같으므로)
+          path: downloaded_url
+
       - name: Send Google Chat (UI)
         env:
           JOB_STATUS: ${{ needs.cypress-run.result }}
-          # 👇 [요청하신 한글 깨짐 방지용 변수 그대로 적용]
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "UI 확인결과"
-          # 종합 결과이므로 특정 run ID 대신 프로젝트 목록으로 안내
-          DASH_BASE: "http://10.10.54.5:8080/projects"
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-          # 1. 성공/실패 여부에 따라 제목 변수 선택
-          if ($env:JOB_STATUS -eq 'success') { 
-            $resultTitle = $env:MSG_SUCCESS
-          } else { 
-            $resultTitle = $env:MSG_FAIL
+          # 다운로드한 파일에서 URL 읽기
+          $urlFile = "downloaded_url/run_url.txt"
+          if (Test-Path $urlFile) {
+            $realUrl = Get-Content $urlFile -Raw
+            $realUrl = $realUrl.Trim()
+          } else {
+            $realUrl = "http://10.10.54.5:8080/projects" # 실패 시 목록으로
           }
-          
-          # 2. 메시지 조립 (한글을 직접 쓰지 않고 $env:변수 사용)
-          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n${env:LABEL_DASH}: $env:DASH_BASE`n${env:LABEL_GIT}: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          
-          Write-Host "Sending Message: $message"
 
-          # 3. JSON 변환 및 전송
+          if ($env:JOB_STATUS -eq 'success') { $resultTitle = $env:MSG_SUCCESS } else { $resultTitle = $env:MSG_FAIL }
+          
+          # $realUrl 변수 사용
+          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n${env:LABEL_DASH}: $realUrl`n${env:LABEL_GIT}: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
           $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
+
+      - name: 🚨 실패 시 긴급 메일 발송
+        if: needs.cypress-run.result == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: 🚨 [종합/실패][UI] Cypress UI 테스트 실패 알림
+          to: yhjin@warevalley.com
+          from: Cypress 알림 봇 <noreply@warevalley.com>
+          body: |
+            [긴급] Auto-PC에서 수행된 로그캐치 UI 자동화 테스트가 실패했습니다.
+            ---------------------------------------------------
+            발생 시간: ${{ env.NOW }}
+            상태: ❌ FAILED
+            👉 상세 리포트 (GitHub): ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            ---------------------------------------------------
