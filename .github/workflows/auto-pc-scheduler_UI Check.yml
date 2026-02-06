@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3, 4] # Runner 4개
+        containers: [1, 2, 3] # Runner 3개
 
     defaults:
       run:
@@ -163,7 +163,7 @@ jobs:
           
           body: |
             [긴급] Auto-PC에서 수행된 로그캐치 UI 자동화 테스트가 실패했습니다.
-            (Runner 4대의 리포트 파일이 모두 첨부되었습니다.)
+            (Runner 3대의 리포트 파일이 모두 첨부되었습니다.)
             
             ---------------------------------------------------
 
