@@ -12,13 +12,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  # [Job 1] 테스트 실행 (3병렬)
+  # ====================================================
+  # [Job 1] 테스트 실행 (Runner 3개)
+  # ====================================================
   cypress-run:
     runs-on: [self-hosted, PC-Auto]
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3] # Runner 3개
+        containers: [1, 2, 3] # 3병렬 유지
 
     defaults:
       run:
@@ -47,6 +49,7 @@ jobs:
           npm install cy2 cypress-mochawesome-reporter --save-dev
           npx cypress install
 
+          # 👇 Cypress 실행 (HTML 생성 안 하므로 0건이어도 에러 안 남)
           cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           Get-Content cypress.log
@@ -73,16 +76,21 @@ jobs:
           retention-days: 1
           if-no-files-found: ignore
 
-      - name: 📂 리포트 업로드
+      # 👇 [중요] HTML 대신 '데이터(.jsons)'와 '스크린샷'을 업로드
+      - name: 📂 리포트 데이터 업로드
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Basic-Report-${{ matrix.containers }}
-          path: cypress/reports
-          retention-days: 30
+          name: Basic-Raw-Data-${{ matrix.containers }}
+          path: |
+            cypress/reports/html/.jsons
+            cypress/screenshots
+          retention-days: 1
           if-no-files-found: ignore
 
-  # [Job 2] 종합 알림
+  # ====================================================
+  # [Job 2] 종합 알림 (데이터 통합 & 리포트 생성)
+  # ====================================================
   notify-result:
     needs: cypress-run
     if: always()
@@ -103,13 +111,27 @@ jobs:
           name: dashboard-url-1
           path: downloaded_url
 
-      # 👇 [추가됨] 3개의 리포트 파일 다운로드 (Basic 패턴)
-      - name: Download All Reports
+      # 👇 모든 Runner의 Raw 데이터 다운로드
+      - name: Download All Raw Data
         uses: actions/download-artifact@v4
         with:
-          pattern: Basic-Report-* 
-          path: all_reports      
-          merge-multiple: false 
+          pattern: Basic-Raw-Data-*
+          path: all_raw_data      
+          merge-multiple: true 
+
+      # 👇 [통합 로직] 여기서 HTML을 생성합니다! (차트 옵션 등은 여기에!)
+      - name: 🔄 리포트 하나로 통합하기
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          npm install mochawesome-merge mochawesome-report-generator --no-save
+
+          # 1. JSON 파일 병합
+          cmd /c "npx mochawesome-merge \"all_raw_data/**/*.json\" > merged_report.json"
+          
+          # 2. HTML 생성 (여기서 차트, 인라인 옵션 부여)
+          npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "Basic 기능 통합 리포트" --saveJson=false
 
       - name: Send Google Chat (Basic)
         env:
@@ -139,6 +161,7 @@ jobs:
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
 
+      # 👇 최종 생성된 1개의 파일만 첨부
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: needs.cypress-run.result == 'failure'
         uses: dawidd6/action-send-mail@v3
@@ -152,12 +175,11 @@ jobs:
           to: yhjin@warevalley.com
           from: Cypress 알림 봇 <noreply@warevalley.com>
           
-          # 👇 [복구됨] 모든 리포트 파일 첨부
-          attachments: all_reports/**/*.html
+          attachments: final_report/merged_report.html
 
           body: |
             [긴급] Auto-PC에서 수행된 로그캐치 [Basic 기능] 자동화 테스트가 실패했습니다.
-            (Runner 3대의 리포트 파일이 모두 첨부되었습니다.)
+            (통합된 리포트가 첨부되었습니다.)
             
             ---------------------------------------------------
 
@@ -166,5 +188,5 @@ jobs:
             👉 상세 리포트 (GitHub): ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             
             ---------------------------------------------------
-            
-            담당자분들은 위 링크를 클릭하여 실패 원인을 확인해 주세요.  
+
+            담당자분들은 위 링크를 클릭하여 실패 원인을 확인해 주세요.

@@ -12,13 +12,15 @@ on:
   workflow_dispatch:
 
 jobs:
+  # ====================================================
   # [Job 1] 테스트 실행 (3병렬)
+  # ====================================================
   cypress-run:
     runs-on: [self-hosted, PC-Auto]
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3] # 👈 3개로 원복
+        containers: [1, 2, 3] # 3병렬 유지
 
     defaults:
       run:
@@ -47,6 +49,7 @@ jobs:
           npm install cy2 cypress-mochawesome-reporter --save-dev
           npx cypress install
 
+          # HTML 생성 끔 -> 에러 없이 JSON 데이터만 생성
           cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Full_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           Get-Content cypress.log
@@ -73,16 +76,21 @@ jobs:
           retention-days: 1
           if-no-files-found: ignore
 
-      - name: 📂 리포트 업로드
+      # 👇 [변경] HTML 대신 '데이터(.jsons)'와 '스크린샷'을 업로드
+      - name: 📂 리포트 데이터 업로드
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: UI-Report-${{ matrix.containers }}
-          path: cypress/reports
-          retention-days: 30
+          name: UI-Raw-Data-${{ matrix.containers }}
+          path: |
+            cypress/reports/html/.jsons
+            cypress/screenshots
+          retention-days: 1
           if-no-files-found: ignore
 
-  # [Job 2] 종합 알림
+  # ====================================================
+  # [Job 2] 종합 알림 (데이터 통합 & 리포트 생성)
+  # ====================================================
   notify-result:
     needs: cypress-run
     if: always()
@@ -103,13 +111,27 @@ jobs:
           name: dashboard-url-1
           path: downloaded_url
 
-      # 3개의 리포트 다운로드
-      - name: Download All Reports
+      # 👇 모든 Runner의 Raw 데이터 다운로드
+      - name: Download All Raw Data
         uses: actions/download-artifact@v4
         with:
-          pattern: UI-Report-*
-          path: all_reports
-          merge-multiple: false
+          pattern: UI-Raw-Data-*
+          path: all_raw_data
+          merge-multiple: true
+
+      # 👇 [통합 로직] JSON 병합 -> HTML 생성
+      - name: 🔄 리포트 하나로 통합하기
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          npm install mochawesome-merge mochawesome-report-generator --no-save
+
+          # 1. JSON 파일 병합
+          cmd /c "npx mochawesome-merge \"all_raw_data/**/*.json\" > merged_report.json"
+          
+          # 2. HTML 생성
+          npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "UI 기능 통합 리포트" --saveJson=false
 
       - name: Send Google Chat (UI)
         env:
@@ -139,6 +161,7 @@ jobs:
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
 
+      # 👇 최종 생성된 1개의 파일만 첨부
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: needs.cypress-run.result == 'failure'
         uses: dawidd6/action-send-mail@v3
@@ -151,10 +174,12 @@ jobs:
           subject: 🚨 [실패][UI] Cypress UI 테스트 실패 알림
           to: yhjin@warevalley.com
           from: Cypress 알림 봇 <noreply@warevalley.com>
-          attachments: all_reports/**/*.html
+          
+          attachments: final_report/merged_report.html
+
           body: |
             [긴급] Auto-PC에서 수행된 로그캐치 UI 자동화 테스트가 실패했습니다.
-            (Runner 3대의 리포트가 첨부되었습니다.)
+            (통합된 리포트가 첨부되었습니다.)
 
             ---------------------------------------------------
 
