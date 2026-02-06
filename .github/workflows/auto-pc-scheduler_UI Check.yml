@@ -8,101 +8,79 @@ on:
   push:
     branches: [ "master" ]
   schedule:
-    #- cron: '15 6 * * 1-5'
-     - cron: '15 6 * * *' # 매일
+    - cron: '15 6 * * *' # 매일 아침 6:15
   workflow_dispatch:
 
 jobs:
   cypress-run:
     runs-on: [self-hosted, PC-Auto]
-    # 👇 [추가] 모든 단계에서 PowerShell 실행 시 'Bypass' 옵션을 강제로 적용합니다.
+    
+    # 👇 [핵심 추가] 병렬 실행을 위한 전략 설정
+    strategy:
+      fail-fast: false # 하나가 실패해도 나머지 Runner들은 끝까지 테스트를 수행함
+      matrix:
+        containers: [1, 2, 3] # Runner 개수만큼 숫자 지정 (3개면 1, 2, 3)
+
     defaults:
       run:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       # 1. 한국 시간 구해서 환경변수(NOW)에 저장
       - name: Get Current Time (KST)
-        
         run: |
           $korea_time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
           echo "NOW=$korea_time" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       
-      # 2. Cypress 실행 (리포터 설정이 적용된 상태로 실행됨)
-      # 👇 [핵심 변경] 공식 액션 대신 'cy2' 명령어로 직접 실행
+      # 2. Cypress 실행
       - name: Cypress Run (Self-Hosted Dashboard)
-        
         env:
-          # 내 대시보드 서버 주소 (같은 PC면 localhost, 다른 PC면 IP 입력)
           CYPRESS_API_URL: "http://10.10.54.5:1234/"
-          CYPRESS_RECORD_KEY: "my-secret-key" # 아무거나 입력
+          CYPRESS_RECORD_KEY: "my-secret-key"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # 👇 [추가됨] 대시보드에 커밋 정보를 표시하기 위한 설정 (여기 4줄 추가!)
           COMMIT_INFO_MESSAGE: ${{ github.event.head_commit.message }}
           COMMIT_INFO_AUTHOR: ${{ github.actor }}
           COMMIT_INFO_SHA: ${{ github.sha }}
           COMMIT_INFO_BRANCH: ${{ github.ref_name }}
-          # 👇 [추가됨] 로그를 깨끗하게 만들기 위한 핵심 설정
-          NO_COLOR: 1             # 색상 코드 제거 (??[39m 삭제)
-          FORCE_COLOR: 0          # 색상 강제 비활성화
-          TERM: dumb              # 터미널 특수문자 제거
-          # 👇 [추가] Cypress에게 "CI 환경임"을 알려주어 특수문자 사용을 줄이게 함
+          NO_COLOR: 1           
+          FORCE_COLOR: 0        
+          TERM: dumb            
           CI: true
         run: |
-          # 👇 [추가] PowerShell 자체의 인코딩을 UTF-8로 고정
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-          # 1. 기본패키지 설치
+          # 1. 패키지 설치
           npm install
-          
-          # 2. cy2 도구 설치 (혹시 없을까봐 안전장치)
           npm install cy2 --save-dev
-
-          # 👇 [추가] 리포터 도구 강제 설치
           npm install cypress-mochawesome-reporter --save-dev
-
-          # [추가] Cypress 실행 파일이 없으면 강제로 설치하는 명령어
           npx cypress install
 
-          #3. 테스트실행
-          # [수정됨] 실행 결과를 화면에도 보여주고(Tee-Object), 파일(cypress.log)로도 저장합니다.
-          # 👇 [수정됨] 색상을 뺀 순수 텍스트로 실행
-          # 3. Out-File -Encoding UTF8 명령어로 파일 저장 시 인코딩을 '확실하게' 지정합니다.
+          # 2. 테스트 실행 (병렬 옵션은 이미 잘 들어가 있습니다)
+          # --ci-build-id가 동일해야 3개의 러너가 "우린 한 팀이야"라고 인식합니다.
+          # matrix 구조에서는 github.run_id가 동일하므로 잘 동작합니다.
           cmd /c "chcp 65001 & npx cy2 run --record --spec cypress/e2e/UI_Module_Full_Check/**/*.cy.js --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
-          # 👇 [수정] 로그 파일을 읽을 때도 UTF-8임을 명시
           Get-Content cypress.log -Encoding UTF8
-          # 👇 [추가] 저장된 로그 내용을 화면에도 출력해 줍니다.
           Get-Content cypress.log
-
-          # 👇 [새로 추가] 로그 파일에서 진짜 대시보드 URL(랜덤코드)을 찾아내는 단계
-          # 👇 [수정됨] 더 강력한 정규표현식으로 교체
 
       # 3. 진짜 대시보드 URL 추출
       - name: Extract Real Dashboard URL
         if: always() 
-        
         run: |
-          # 👇 [추가] 이 단계도 "새 창"이므로 UTF-8 설정
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
           $logPath = "cypress.log"
           if (Test-Path $logPath) {
-            # 로그 파일을 읽어옵니다.
             $content = Get-Content $logPath -Raw -Encoding UTF8
-
-            # 👇 [핵심 변경] "Run URL:" 글씨 상관없이 "/run/아이디" 패턴만 있으면 찾아냅니다.
             if ($content -match "/run/(?<id>[a-f0-9]+)") {
                 $realRunId = $matches['id']
-                
-                # 찾아낸 ID로 진짜 주소 조립
                 $realUrl = "http://10.10.54.5:8080/run/$realRunId"
                 
-                # 환경변수 저장
                 echo "REAL_DASHBOARD_URL=$realUrl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
                 Write-Host "DashBoard URL! -> $realUrl"
             } else {
@@ -110,12 +88,13 @@ jobs:
             }
           }
 
-      # 👇 [추가 1] 생성된 HTML 리포트 폴더를 GitHub 저장소(Artifacts)에 업로드
+      # 👇 [수정] 리포트 이름 겹침 방지
+      # 병렬로 돌면 3명이 동시에 업로드하므로 이름을 구분해줍니다.
       - name: 📂 테스트 리포트 업로드 (Artifacts)
-        if: always() # 성공하든 실패하든 리포트는 남겨야 함
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Cypress-Report-HTML
+          name: Cypress-Report-HTML-${{ matrix.containers }} # 뒤에 번호 붙임 (1, 2, 3)
           path: cypress/reports
           retention-days: 30      
       
@@ -123,17 +102,13 @@ jobs:
       - name: Send Google Chat Notification
         if: always()
         env:
-          MSG_SUCCESS: "*[성공]*[Auto-PC]"
-          MSG_FAIL: "*[실패]*[Auto-PC]"
+          MSG_SUCCESS: "*[성공]*[Auto-PC-${{ matrix.containers }}]" # 몇 번 러너인지 표시
+          MSG_FAIL: "*[실패]*[Auto-PC-${{ matrix.containers }}]"
           MSG_TITLE: "UI 확인결과"
-          #  [중요] 대시보드 기본 주소 (사용자 PC IP)
           DASH_BASE: "http://10.10.54.5:8080"
-          # 👇 [추가됨] 한글 깨짐 방지를 위해 여기서 변수로 선언
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
-          # 👇 [여기!] 이 줄이 꼭 있어야 앞 단계에서 찾은 진짜 주소를 받아옵니다.
           REAL_URL: ${{ env.REAL_DASHBOARD_URL }}
-
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -144,26 +119,20 @@ jobs:
             $resultTitle = $env:MSG_FAIL
           }
           
-          # 👇 [수정됨] 진짜 주소가 있으면 쓰고, 없으면 프로젝트 목록 페이지로 안내
           if ($env:REAL_URL) {
             $dashboardUrl = $env:REAL_URL
           } else {
             $dashboardUrl = "http://10.10.54.5:8080/projects"
           }
 
-          # 1. 대시보드 링크 생성
-          #$dashboardUrl = "$env:DASH_BASE/run/${{ github.ref_name }}-${{ github.run_id }}"
-          
-          # 2. 메시지 생성 (한글직접 쓰지 않고 변수 $env:LABEL_... 사용)
           $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n${env:LABEL_DASH}: $dashboardUrl`n${env:LABEL_GIT}: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          
-          Write-Host "Create Message: $message"
           
           $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
           $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
 
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
-      # 5. 이메일 발송 (리포트 첨부 포함)
+
+      # 5. 이메일 발송
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: failure()
         uses: dawidd6/action-send-mail@v3
@@ -173,25 +142,16 @@ jobs:
           secure: true
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: 🚨 [긴급/실패][Auto-PC] Cypress UI 테스트 실패 알림
+          subject: 🚨 [긴급/실패][Auto-PC-${{ matrix.containers }}] Cypress UI 테스트 실패
           to: yhjin@warevalley.com
           from: Cypress 알림 봇 <noreply@warevalley.com>
-
-          # 👇 [추가 2] HTML 리포트 파일을 이메일에 첨부
           attachments: cypress/reports/html/index.html
-
           body: |
-            [긴급] Auto-PC에서 수행된 로그캐치 UI 자동화 테스트가 실패했습니다.
+            [긴급] Auto-PC (Runner-${{ matrix.containers }})에서 수행된 테스트가 실패했습니다.
             
             ---------------------------------------------------
             발생 시간: ${{ env.NOW }}
-            상태: ❌ FAILED (실패)
-            Runner: PC-Auto
-            대시보드: Local (Sorry-Cypress)
-            리포지토리: ${{ github.repository }}
-            
-            👉 상세 로그 확인 (Link):
-            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            상태: ❌ FAILED
+            Runner: PC-Auto-${{ matrix.containers }}
+            대시보드: ${{ env.REAL_DASHBOARD_URL }}
             ---------------------------------------------------
-            
-            담당자분들은 위 링크를 클릭하여 실패 원인을 확인해 주세요.
