@@ -36,7 +36,7 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('https://10.10.54.11:18443/logcatch/login');
+    cy.visit('https://10.10.54.21:18443/logcatch/login');
     cy.wait(4000); // 로딩 대기
 
      ////////////새로고침코드//////
@@ -493,8 +493,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="업무시스템"]').closest('.v-input').find('.v-input__icon--append').click({ force: true });
     
 
-    // 20260127_0_res_0000.gz 파일명 입력하기 
-    cy.get('input[aria-label="파일명"]').filter(':visible').clear({ force: true }).type('20260127_0_res_0000.gz', { force: true }); // 원하는 파일명 입력
+    // 20260205_0_nonPrivacy_res_0000.gz 파일명 입력하기 
+    cy.get('input[aria-label="파일명"]').filter(':visible').clear({ force: true }).type('20260205_0_nonPrivacy_res_0000.gz', { force: true }); // 원하는 파일명 입력
     cy.wait(1000);
 
     // 위 변조 여부 값중 - 일치 클릭 
@@ -513,7 +513,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
      
     //조건 검색결과 검증
-    cy.contains('a', '20260127_0_res_0000.gz').should('be.visible');
+    cy.contains('a', '20260205_0_nonPrivacy_res_0000.gz').should('be.visible');
     cy.get('.ellipsis').contains('a', '일치').should('be.visible');
 
     //엑셀 다운로드 확인기능 -----------------

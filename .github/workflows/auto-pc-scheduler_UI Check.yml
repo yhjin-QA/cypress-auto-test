@@ -8,8 +8,8 @@ on:
   push:
     branches: [ "master" ]
   schedule:
-    # 10:15 AM, 03:15 PM (KST)
-    - cron: '15 6 * * 1-5'
+    #- cron: '15 6 * * 1-5'
+     - cron: '15 6 * * *' # 매일
   workflow_dispatch:
 
 jobs:
