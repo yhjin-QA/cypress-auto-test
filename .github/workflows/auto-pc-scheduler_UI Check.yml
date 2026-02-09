@@ -13,14 +13,14 @@ on:
 
 jobs:
   # ====================================================
-  # [Job 1] 테스트 실행 (Runner 3개)
+  # [Job 1] 테스트 실행 (Runner)
   # ====================================================
   cypress-run:
     runs-on: [self-hosted, PC-Auto]
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3] # 3병렬 유지
+        containers: [1, 2, 3, 4] # 4병렬 runner 추가
 
     defaults:
       run:
