@@ -42,31 +42,59 @@ jobs:
         run: |
           # 👇 경로를 config와 맞춤
           $dir = "cypress/reports/json_logs"
-          # if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir }
+          if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir }
           # $dummyContent = '{ "stats": { "tests": 0, "passes": 0, "failures": 0, "pending": 0, "duration": 0 }, "results": [], "meta": { "mocha": { "version": "7.0.0" }, "mochawesome": { "version": "7.1.3" } } }'
           # $dummyContent | Out-File -FilePath "$dir/dummy.json" -Encoding UTF8
-          if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir }
-          
-          # 👇 [수정] start, end 시간을 포함하여 병합 도구가 계산할 수 있게 만듭니다.
-          # (ISO 8601 날짜 형식 사용)
+          # 👇 [수정] 리포트 생성기가 요구하는 모든 필수 필드를 채워 넣었습니다.
           $dummyContent = '{
             "stats": {
+              "suites": 0,
               "tests": 0,
               "passes": 0,
-              "failures": 0,
               "pending": 0,
-              "duration": 0,
+              "failures": 0,
               "start": "2024-01-01T00:00:00.000Z",
-              "end": "2024-01-01T00:00:00.000Z"
+              "end": "2024-01-01T00:00:00.000Z",
+              "duration": 0,
+              "testsRegistered": 0,
+              "passPercent": 0,
+              "pendingPercent": 0,
+              "other": 0,
+              "hasOther": false,
+              "skipped": 0,
+              "hasSkipped": false
             },
             "results": [],
             "meta": {
-              "mocha": { "version": "7.0.0" },
-              "mochawesome": { "version": "7.1.3" }
+              "mocha": {
+                "version": "7.0.0"
+              },
+              "mochawesome": {
+                "options": {
+                  "quiet": false,
+                  "reportFilename": "mochawesome",
+                  "saveHtml": false,
+                  "saveJson": true,
+                  "consoleReporter": "spec",
+                  "useInlineDiffs": false,
+                  "code": true
+                },
+                "version": "7.1.3"
+              },
+              "marge": {
+                "options": {
+                  "reportDir": "cypress/reports/json_logs",
+                  "overwrite": false,
+                  "html": false,
+                  "json": true
+                },
+                "version": "6.2.0"
+              }
             }
           }'
           
           $dummyContent | Out-File -FilePath "$dir/dummy.json" -Encoding UTF8
+          
 
       - name: Cypress Run
         id: cypress
