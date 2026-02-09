@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3, 4] # 4병렬 runner 추가
+        containers: [1, 2, 3, 4, 5] # 5병렬 runner 추가
 
     defaults:
       run:
@@ -318,7 +318,7 @@ jobs:
           from: Cypress 알림 봇 <noreply@warevalley.com>
           
           # 👇 [수정 2] 첨부 파일 경로를 UI_Report.html로 변경
-          attachments: final_report/LogCatch_UI_Report.html
+          attachments: final_report_UI/LogCatch_UI_Report.html
 
           body: |
             [긴급] Auto-PC에서 수행된 로그캐치 [UI 기능] 자동화 테스트가 실패했습니다.
