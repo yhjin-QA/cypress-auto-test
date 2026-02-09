@@ -45,8 +45,13 @@ jobs:
           if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir }
           # $dummyContent = '{ "stats": { "tests": 0, "passes": 0, "failures": 0, "pending": 0, "duration": 0 }, "results": [], "meta": { "mocha": { "version": "7.0.0" }, "mochawesome": { "version": "7.1.3" } } }'
           # $dummyContent | Out-File -FilePath "$dir/dummy.json" -Encoding UTF8
-          # 👇 [수정] 0 나누기 오류 방지를 위해 '가짜 테스트 1개 성공' 데이터를 넣습니다.
-          $dummyContent = '{
+          # 👇 [핵심 수정] 가짜 문자열 대신 '진짜 UUID'를 생성합니다.
+          $suiteUUID = [guid]::NewGuid().ToString()
+          $testUUID  = [guid]::NewGuid().ToString()
+          
+          # 리포트 생성기가 좋아하는 완벽한 데이터 구조
+          $dummyContent = @"
+          {
             "stats": {
               "suites": 1,
               "tests": 1,
@@ -66,7 +71,7 @@ jobs:
             },
             "results": [
               {
-                "uuid": "dummy-suite-uuid",
+                "uuid": "$suiteUUID",
                 "title": "System Check",
                 "fullFile": "",
                 "file": "",
@@ -74,7 +79,7 @@ jobs:
                 "afterHooks": [],
                 "tests": [
                   {
-                    "title": "Report Placeholder (Auto-generated)",
+                    "title": "Report Placeholder",
                     "fullTitle": "System Check Report Placeholder",
                     "timedOut": false,
                     "duration": 100,
@@ -86,14 +91,14 @@ jobs:
                     "context": null,
                     "code": "true",
                     "err": {},
-                    "uuid": "dummy-test-uuid",
-                    "parentUUID": "dummy-suite-uuid",
+                    "uuid": "$testUUID",
+                    "parentUUID": "$suiteUUID",
                     "isHook": false,
                     "skipped": false
                   }
                 ],
                 "suites": [],
-                "passes": ["dummy-test-uuid"],
+                "passes": ["$testUUID"],
                 "failures": [],
                 "pending": [],
                 "skipped": [],
@@ -127,9 +132,11 @@ jobs:
                 "version": "6.2.0"
               }
             }
-          }'
+          }
+          "@
           
           $dummyContent | Out-File -FilePath "$dir/dummy.json" -Encoding UTF8
+         
           
           
 
