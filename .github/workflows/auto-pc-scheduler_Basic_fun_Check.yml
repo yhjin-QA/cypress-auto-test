@@ -137,11 +137,11 @@ jobs:
 
           npm install mochawesome-merge mochawesome-report-generator --no-save
 
-          # 1. JSON 파일 병합 (재귀적으로 모든 json 찾기)
-          cmd /c "npx mochawesome-merge \"all_raw_data/**/*.json\" > merged_report.json"
+          # 1. JSON 파일 병합 (복잡한 따옴표 제거 -> 경로 인식 성공)
+          cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
           
           # 2. HTML 생성
-          npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "Basic 기능 통합 리포트" --saveJson=false
+          npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "Basic Function Report" --saveJson=false
 
       - name: Send Google Chat (Basic)
         if: always() # 👈 리포트 생성이 혹시 실패해도 알림은 오도록 설정
@@ -197,3 +197,4 @@ jobs:
             상태: ❌ FAILED
             👉 상세 리포트 (GitHub): ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             ---------------------------------------------------
+            담당자분들은 위 링크를 클릭하여 실패 원인을 확인해 주세요.
