@@ -32,7 +32,7 @@ jobs:
 
         # 👇 [추가] 이전 테스트 결과 찌꺼기(HTML 등) 삭제
       - name: Clean Previous Reports
-        run: 
+        run: |
           Remove-Item -Path "cypress/reports" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "cypress/screenshots" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "cypress/videos" -Recurse -Force -ErrorAction SilentlyContinue
