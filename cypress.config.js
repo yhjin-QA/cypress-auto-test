@@ -9,13 +9,15 @@ module.exports = defineConfig({
   // 👇 [추가 1] 리포터 설정 (차트, 스크린샷 포함, HTML 하나로 합치기)
   reporter: 'cypress-mochawesome-reporter',
   reporterOptions: {
-    // 👇 [핵심 수정] Runner가 스스로 HTML을 만들다가 에러나지 않게 끕니다.
-    // 어차피 Job 2에서 통합 리포트를 만드니까요!
+   
     html: false,  
     json: true,   // 데이터는 남겨야 하니 true 유지
+
+    // 👇 [추가] JSON 파일이 저장될 폴더를 강제로 지정합니다.
+    reportDir: 'cypress/reports/json_logs',
     
     charts: true,              // 차트 보여주기
-    reportPageTitle: '로그캐치 UI 테스트 결과', // 리포트 제목
+    reportPageTitle: '로그캐치 테스트 결과', // 리포트 제목
     embeddedScreenshots: true, // 스크린샷을 HTML 안에 포함 (파일 하나로 만듦)
     inlineAssets: true,        // CSS/JS를 HTML 안에 포함
     saveAllAttempts: false,    // 재시도한 건 빼고 최종 결과만 저장

@@ -40,7 +40,8 @@ jobs:
       # 👇 [안전장치] 파일이 없어서 에러나는 것 방지용 빈 파일 생성
       - name: Create Dummy Report File
         run: |
-          $dir = "cypress/reports/.jsons"
+          # 👇 경로를 config와 맞춤
+          $dir = "cypress/reports/json_logs"
           if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir }
           $dummyContent = '{ "stats": { "tests": 0, "passes": 0, "failures": 0, "pending": 0, "duration": 0 }, "results": [], "meta": { "mocha": { "version": "7.0.0" }, "mochawesome": { "version": "7.1.3" } } }'
           $dummyContent | Out-File -FilePath "$dir/dummy.json" -Encoding UTF8
@@ -97,7 +98,7 @@ jobs:
         with:
           name: Basic-Raw-Data-${{ matrix.containers }}
           path: |
-            cypress/reports/**/*
+            cypress/reports/json_logs
             cypress/screenshots
           retention-days: 1
           if-no-files-found: ignore
