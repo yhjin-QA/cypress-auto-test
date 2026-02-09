@@ -15,6 +15,10 @@ module.exports = defineConfig({
       
       // 저장 경로 (YAML 파일의 artifact 경로와 일치해야 함)
       reportDir: 'cypress/reports/json_logs',
+
+      // 👇 [핵심 수정] 파일명이 겹치지 않게 랜덤 문자열을 붙입니다.
+      // 예: report_3k4j5l.json, report_9a8b7c.json ...
+      reportFilename: `report_${Math.floor(Math.random() * 1000000)}`,
       
       // 파일이 덮어씌워지지 않도록 설정
       overwrite: false,
