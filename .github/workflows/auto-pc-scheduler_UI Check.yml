@@ -217,7 +217,7 @@ jobs:
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
-          name: dashboard-url-* # 1, 2, 3번 모두 찾음
+          pattern: dashboard-url-*   # 1, 2, 3번 모두 찾음
           merge-multiple: true     # 파일 이름이 같으므로(run_url.txt) 하나로 합쳐짐 (덮어쓰기)
           path: downloaded_url
 
