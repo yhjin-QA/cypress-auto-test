@@ -6,12 +6,16 @@ module.exports = defineConfig({
   //projectId: "7yuixr",
   projectId: "Cypress-auto",
 
-  // 👇 [추가 1] 리포터 설정 (차트, 스크린샷 포함, HTML 하나로 합치기)
-  reporter: 'cypress-mochawesome-reporter',
-  reporterOptions: {
+    // 👇 [추가 1] 리포터 설정 (차트, 스크린샷 포함, HTML 하나로 합치기)
+    reporter: 'cypress-mochawesome-reporter',
+    reporterOptions: {
    
     html: false,  
     json: true,   // 데이터는 남겨야 하니 true 유지
+
+    // 파일이 덮어씌워지지 않도록 고유한 이름을 붙입니다.
+    overwrite: false,
+    reportFilename: "[name]-report",
 
     // 👇 [추가] JSON 파일이 저장될 폴더를 강제로 지정합니다.
     reportDir: 'cypress/reports/json_logs',
