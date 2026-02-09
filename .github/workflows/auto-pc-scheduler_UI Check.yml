@@ -246,7 +246,9 @@ jobs:
           cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
           
           # 2. HTML 생성
-          npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "UI Check Report" --saveJson=false
+          # npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "UI Check Report" --saveJson=false
+          # 여기에 --reportFilename "UI_Report" 추가
+          npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "UI Check Report" --reportFilename "UI_Report" --saveJson=false
 
       - name: Send Google Chat (UI)
         if: always() # 👈 리포트 생성이 혹시 실패해도 알림은 오도록 설정
@@ -291,7 +293,8 @@ jobs:
           to: yhjin@warevalley.com
           from: Cypress 알림 봇 <noreply@warevalley.com>
           
-          attachments: final_report/merged_report.html
+          # 👇 [수정 2] 첨부 파일 경로를 UI_Report.html로 변경
+          attachments: final_report/UI_Report.html
 
           body: |
             [긴급] Auto-PC에서 수행된 로그캐치 [UI 기능] 자동화 테스트가 실패했습니다.
