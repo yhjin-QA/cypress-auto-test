@@ -230,7 +230,8 @@ jobs:
         run: |
           Write-Host "이전 작업의 잔여 데이터를 삭제합니다..."
           Remove-Item -Path "all_raw_data" -Recurse -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path "final_report" -Recurse -Force -ErrorAction SilentlyContinue
+          # 👇 [수정] final_report_Basic 폴더를 청소
+          Remove-Item -Path "final_report_Basic" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "downloaded_url" -Recurse -Force -ErrorAction SilentlyContinue
           Write-Host "Clear Finish!"
 
@@ -270,7 +271,7 @@ jobs:
           
           # 2. HTML 생성
           # 여기에 --reportFilename "LogCatch_Basic_fun_Report" 추가
-          npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "Basic Function Report" --reportFilename "LogCatch_Basic_fun_Report" --saveJson=false
+          npx marge merged_report.json --reportDir ./final_report_Basic --inline --charts --reportTitle "Basic Function Report" --reportFilename "LogCatch_Basic_fun_Report" --saveJson=false
 
       - name: Send Google Chat (Basic)
         if: always() # 👈 리포트 생성이 혹시 실패해도 알림은 오도록 설정

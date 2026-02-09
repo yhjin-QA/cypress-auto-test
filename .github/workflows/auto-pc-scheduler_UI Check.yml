@@ -231,7 +231,8 @@ jobs:
         run: |
           Write-Host "이전 작업의 잔여 데이터를 삭제합니다..."
           Remove-Item -Path "all_raw_data" -Recurse -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path "final_report" -Recurse -Force -ErrorAction SilentlyContinue
+          # 👇 [수정] final_report_UI 폴더를 청소
+          Remove-Item -Path "final_report_UI" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "downloaded_url" -Recurse -Force -ErrorAction SilentlyContinue
           Write-Host "Clear Finish!"
 
@@ -270,9 +271,8 @@ jobs:
           cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
           
           # 2. HTML 생성
-          # npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "UI Check Report" --saveJson=false
           # 여기에 --reportFilename "LogCatch_UI_Report" 추가
-          npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "UI Check Report" --reportFilename "LogCatch_UI_Report" --saveJson=false
+          npx marge merged_report.json --reportDir ./final_report_UI --inline --charts --reportTitle "UI Check Report" --reportFilename "LogCatch_UI_Report" --saveJson=false
 
       - name: Send Google Chat (UI)
         if: always() # 👈 리포트 생성이 혹시 실패해도 알림은 오도록 설정
