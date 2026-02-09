@@ -141,7 +141,7 @@ jobs:
           cmd /c "npx mochawesome-merge \"all_raw_data/**/*.json\" > merged_report.json"
           
           # 2. HTML 생성
-          npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "Basic 기능 통합 리포트" --saveJson=false
+          npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "UI Check Report" --saveJson=false
 
       - name: Send Google Chat (UI)
         if: always() # 👈 리포트 생성이 혹시 실패해도 알림은 오도록 설정

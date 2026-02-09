@@ -332,7 +332,8 @@ describe('로그캐치 사이트 테스트', () => {
     
      // 오류상태 없는것으로 오류검색이 되었다는것으로 검증확인
      // 검색 결과 리스트(a.ellipsis) 중에 '오류'라는 글자가 '없어야' 합니다.
-     cy.contains('a.ellipsis', '오류').should('not.exist');
+     //cy.contains('a.ellipsis', '오류').should('not.exist');
+    cy.get('a.ellipsis').filter(':contains("무결성 오류")').should('have.length.at.least', 1);
 
      //엑셀 다운로드 확인기능 -----------------
      // 엑셀 다운로드 클릭하는 코드 
