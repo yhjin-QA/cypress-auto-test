@@ -153,7 +153,8 @@ jobs:
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
           npm install
-          npm install cy2 cypress-mochawesome-reporter --save-dev
+          # 👇 [필수] 'mochawesome'을 명시적으로 설치해야 합니다.
+          npm install cy2 mochawesome mochawesome-merge mochawesome-report-generator --save-dev
           npx cypress install
 
           # 👇 [수정] 복잡한 옵션은 다 빼고, config 파일 설정을 따르도록 단순화했습니다.
