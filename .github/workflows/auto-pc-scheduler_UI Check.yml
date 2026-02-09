@@ -168,13 +168,22 @@ jobs:
         if: always()
         run: |
           $logPath = "cypress.log"
+
           if (Test-Path $logPath) {
+            # 로그 파일 전체 내용을 읽어옵니다.
             $content = Get-Content $logPath -Raw -Encoding UTF8
-            if ($content -match "/run/(?<id>[a-f0-9]+)") {
-                $realRunId = $matches['id']
-                $realUrl = "http://10.10.54.5:8080/run/$realRunId"
+            
+            # 👇 [핵심 변경] 로그에 찍힌 URL을 통째로 찾습니다. (하드코딩 X)
+            # 패턴 설명: http 또는 https로 시작하고, 중간에 공백 없이 /run/이 포함된 문자열
+            if ($content -match "(http[s]?://[^\s]+/run/[a-zA-Z0-9]+)") {
+                $realUrl = $matches[1]
+                Write-Host "✅ 대시보드 URL 발견: $realUrl"
                 echo $realUrl | Out-File -FilePath run_url.txt -Encoding UTF8
+            } else {
+                Write-Host "⚠️ 로그에서 대시보드 URL을 찾을 수 없습니다."
             }
+          } else {
+             Write-Host "❌ cypress.log 파일이 없습니다. (Job 1 실행 실패 가능성)"
           }
 
       - name: Upload URL File
@@ -211,6 +220,15 @@ jobs:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
 
     steps:
+      # 👇 [필수 추가] 이 단계가 없으면 이전 테스트 결과(Basic)와 현재 결과(UI)가 뒤섞입니다!
+      - name: 🧹 기존 데이터 청소 (Clean Workspace)
+        run: |
+          Write-Host "이전 작업의 잔여 데이터를 삭제합니다..."
+          Remove-Item -Path "all_raw_data" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "final_report" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "downloaded_url" -Recurse -Force -ErrorAction SilentlyContinue
+          Write-Host "Clear Finish!"
+
       - name: Get Current Time
         run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
