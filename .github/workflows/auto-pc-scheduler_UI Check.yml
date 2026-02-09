@@ -30,6 +30,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+        # 👇 [추가] 이전 테스트 결과 찌꺼기(HTML 등) 삭제
+      - name: Clean Previous Reports
+        run: Remove-Item -Path "cypress/reports" -Recurse -Force -ErrorAction SilentlyContinue
+
       - name: Get Current Time
         run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
@@ -93,7 +97,7 @@ jobs:
         with:
           name: UI-Raw-Data-${{ matrix.containers }}
           path: |
-            cypress/reports
+            cypress/reports/**/*
             cypress/screenshots
           retention-days: 1
           if-no-files-found: ignore
@@ -141,11 +145,8 @@ jobs:
 
           npm install mochawesome-merge mochawesome-report-generator --no-save
 
-          # 1. JSON 파일 병합 (복잡한 따옴표 제거 -> 경로 인식 성공)
-          # cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
-
-          # 👇 [수정됨] .jsons 폴더를 명시적으로 포함시켰습니다.
-          cmd /c "npx mochawesome-merge all_raw_data/**/.jsons/*.json > merged_report.json"
+          # 1. JSON 파일 병합 (가장 넓은 범위로 탐색)
+          cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
           
           # 2. HTML 생성
           npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "UI Check Report" --saveJson=false
