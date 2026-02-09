@@ -60,7 +60,7 @@ jobs:
           npx cypress install
 
           # HTML 생성 안 함 -> JSON 데이터만 생성
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Full_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Full_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           Get-Content cypress.log
 
@@ -91,7 +91,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Basic-Raw-Data-${{ matrix.containers }}
+          name: UI-Raw-Data-${{ matrix.containers }}
           path: |
             cypress/reports
             cypress/screenshots
@@ -125,9 +125,13 @@ jobs:
       - name: Download All Raw Data
         uses: actions/download-artifact@v4
         with:
-          pattern: Basic-Raw-Data-*
+          pattern: UI-Raw-Data-*
           path: all_raw_data
           merge-multiple: true
+          
+      # 👇 [추가됨] 파일이 진짜 있는지 눈으로 확인 (디버깅용)
+      - name: 🔍 파일 구조 확인
+        run: Get-ChildItem -Path all_raw_data -Recurse       
 
       # 👇 [통합 로직] 폴더 구조가 바뀌어도 찾을 수 있게 **/*.json 사용
       - name: 🔄 리포트 하나로 통합하기
@@ -138,7 +142,10 @@ jobs:
           npm install mochawesome-merge mochawesome-report-generator --no-save
 
           # 1. JSON 파일 병합 (복잡한 따옴표 제거 -> 경로 인식 성공)
-          cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
+          # cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
+
+          # 👇 [수정됨] .jsons 폴더를 명시적으로 포함시켰습니다.
+          cmd /c "npx mochawesome-merge all_raw_data/**/.jsons/*.json > merged_report.json"
           
           # 2. HTML 생성
           npx marge merged_report.json --reportDir ./final_report --inline --charts --reportTitle "UI Check Report" --saveJson=false
