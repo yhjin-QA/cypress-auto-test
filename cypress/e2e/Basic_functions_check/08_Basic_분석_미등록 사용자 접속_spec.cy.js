@@ -690,7 +690,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
     // 업무시스템중 '전체 선택 클릭하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('전체 선택').click({ force: true });
-    
+    cy.wait(500);
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
     cy.wait(500);
