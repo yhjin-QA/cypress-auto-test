@@ -631,7 +631,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="주일"]').should('have.value', '2');
 
     // 접속차단상태가 ON상태인지 확인
-    cy.get('input[aria-label="접속 차단"]').should('be.checked');
+    cy.get('input[aria-label="접속 차단"]').siblings('.v-input--selection-controls__ripple').should('have.css', 'color', 'rgb(169, 209, 142)');
+    cy.get('input[aria-label="접속 차단"]').should('have.attr', 'aria-checked', 'true');
+
     cy.wait(500);
 
     // 취소 버튼 클릭

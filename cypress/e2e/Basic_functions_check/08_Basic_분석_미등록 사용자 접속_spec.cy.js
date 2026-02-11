@@ -449,7 +449,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅  분석 탭 - 업무시간 외 접속 및 데이터 출력 확인 완료!');
 
 
-*/
+
 
     ///////////////////////////////////////////////
     // 이상행위 정책 -  업무 시간 외 접속
@@ -643,8 +643,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅  분석 탭 - 장기 미접속 사용자 및 데이터 출력 확인 완료!');
     cy.wait(2000);
 
-    
-    /*
+  */
+    ///////////////////////////////////////////////
+    // 이상행위 정책 -  미등록 사용자 접속 
+    ///////////////////////////////////////////////
+    cy.wait(1000);
     cy.contains('.v-chip__content', '미등록 사용자 접속').should('be.visible').click({ force: true });
     cy.contains('.c-headline', '미등록 사용자 접속 정책 목록').should('exist');
     // 표 문구열 확인
@@ -652,9 +655,146 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
     cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-    cy.log('✅  분석 탭 - 미등록 사용자 접속 및 데이터 출력 확인 완료!');
-    cy.wait(2000);
 
+    // 기능 확인 -------------------------------------------------
+
+
+    //추가된 test_auto_미등록 사용자 접속 삭제 --------------------------
+    cy.contains('tr', 'test_auto_미등록 사용자 접속').find('.fa-trash').click({ force: true });
+    cy.wait(500);
+    // 삭제 확인 알림창에서 확인 버튼 클릭 
+    cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
+
+    //추가한 정책 삭제 검증코드 
+    cy.contains('tr', 'test_auto_미등록 사용자 접속').should('not.exist'); 
+
+
+    // 우측 동그란 + 플러스 버튼 클릭-----------------------
+      cy.get('.grid-add-button').should('exist').then(($btn) => {
+        $btn[0].click(); 
+           });
+    cy.wait(1000);
+
+    // 미등록 사용자 접속 정책 추가화면 진입----------------------------------------
+    // 정책이름 입력 
+    cy.get('input[aria-label="정책 이름"]').filter(':visible').clear({ force: true }).type('test_auto_미등록 사용자 접속', { force: true });
+
+    // 정책설정 부분
+    // 정책 사용여부 토글 OFF-> ON
+    cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
+    cy.wait(500);
+
+    // 업무시스템 - 전체 선택
+    cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    cy.wait(1000);
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+    // 업무시스템중 '전체 선택 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').contains('전체 선택').click({ force: true });
+    
+    // 저장버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+    cy.wait(500);
+
+    //기본정책 설정 /철회 코드 -------------------------
+    //깃발 클릭 
+    cy.get('.fa-flag').first().click({ force: true });
+    cy.wait(500);
+   
+    //기본정책 설정
+    //기본 정책 설정 팝업창 확인 버튼 클릭 
+    cy.contains('기본정책으로 설정하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
+    cy.wait(500);
+
+     // 기본 정책 설정확인 검증 코드 (초록색색상값 확인 )
+     cy.contains('tr', 'test_auto_미등록 사용자 접속').find('.fa-flag').should('be.visible')
+    .invoke('css', 'color') // 아이콘의 실제 색상(CSS color) 값을 가져옴
+    .should('not.eq', 'rgba(0, 0, 0, 0.54)') // 기본 회색이 아니어야 함
+    .and('not.eq', 'rgb(0, 0, 0)');
+
+    //기본 정책 철회
+    // 초록색 깃발아이콘 클릭 
+    cy.contains('tr', 'test_auto_미등록 사용자 접속').find('.fa-flag').should('be.visible').click({ force: true });
+    cy.wait(500);
+
+    //기본 정책 철회 팝업창 확인 버튼 클릭
+    cy.contains('기본정책에서 철회하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
+    cy.wait(500);
+
+    // 기본 정책 철회 검증
+    // test_auto_미등록 사용자 접속 사용여부 false 상태로 되어있는지 검증 (철회시 사용여부 false로 변하기때문)
+    cy.contains('tr', 'test_auto_미등록 사용자 접속').find('td').contains('false').should('be.visible');
+    cy.wait(1000);
+
+
+    // 추가한 test_auto_미등록 사용자 접속 정책 그룹 수정1.--------------------------------------
+    // 추가된 정책명 : test_auto_미등록 사용자 접속 사용자 다시 재클릭 
+    cy.contains('a', 'test_auto_미등록 사용자 접속').should('be.visible').click({ force: true });
+    cy.wait(500);
+
+    // 정책 사용여부 토글 ON
+    cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
+    cy.wait(500);
+
+    // 선택한 그룹 x버튼 클릭하여 초기화 
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+   
+    // 업무시스템 - 리눅스_배송관리 선택
+    cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    cy.wait(1000);
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+    // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
+    cy.wait(1000);
+    // 선택한 컨텍스트 메뉴 닫기
+    cy.get('body').type('{esc}');
+    
+    //경보등급 주의 -> 경계로 선택하기 
+    cy.contains('label', '경계').closest('div').find('.v-input--selection-controls__ripple').click({ force: true });
+    cy.wait(500);
+    // 경보등급 경례 상태 확인 검증코드 
+    cy.contains('label', '경계').closest('div').find('input').should('have.attr', 'aria-checked', 'true');
+    cy.wait(500);
+
+     // 저장 버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+    cy.wait(500);
+
+    // 추가한 test_auto_미등록 사용자 접속 정책 그룹 수정2.--------------------------------------
+    // 추가된 정책명 :test_auto_미등록 사용자 접속 사용자 다시 재클릭 
+    cy.contains('a', 'test_auto_미등록 사용자 접속').should('be.visible').click({ force: true });
+    cy.wait(500);
+
+    //경보등급 경계 -> 심각 선택하기 
+    cy.contains('label', '심각').closest('div').find('.v-input--selection-controls__ripple').click({ force: true });
+    cy.wait(500);
+    // 경보등급 심각 상태 확인 검증코드 
+    cy.contains('label', '심각').closest('div').find('input').should('have.attr', 'aria-checked', 'true');
+    cy.wait(500);
+
+    //  버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+    cy.wait(500);
+
+    // 추가한 test_auto_미등록 사용자 접속 정책 그룹 수정3.--------------------------------------
+    // 추가된 정책명 :test_auto_미등록 사용자 접속 사용자 다시 재클릭 
+    cy.contains('a', 'test_auto_미등록 사용자 접속').should('be.visible').click({ force: true });
+    cy.wait(500);
+
+    //경보등급 심각 -> 주의로 선택하기 
+    cy.contains('label', '주의').closest('div').find('.v-input--selection-controls__ripple').click({ force: true });
+    cy.wait(500);
+    // 경보등급 주의 상태 확인 검증코드 
+    cy.contains('label', '주의').closest('div').find('input').should('have.attr', 'aria-checked', 'true');
+    cy.wait(500);
+
+    // 취소 버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('취소').click({ force: true });
+    cy.wait(500);
+
+    cy.log('✅  분석 탭 - 미등록 사용자 접속 및 데이터 출력 확인 완료!');
+    cy.wait(1000);
+
+    /*
     cy.contains('.v-chip__content', '비인가 IP 접근').should('be.visible').click({ force: true });
     cy.contains('.c-headline', '비인가 IP 접근 정책 목록').should('exist');
     // 표 문구열 확인
