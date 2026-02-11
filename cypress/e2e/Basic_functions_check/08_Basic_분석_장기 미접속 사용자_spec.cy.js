@@ -506,6 +506,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
     cy.wait(500);
 
+    //test_auto_장기 미접속 사용자 목록에 정책이 잘 추가되었는지 검증하는 코드 
+    cy.get('tbody').contains('tr', 'test_auto_장기 미접속 사용자').should('be.visible');
+
     //기본정책 설정 /철회 코드 -------------------------
     //깃발 클릭 
     cy.get('.fa-flag').first().click({ force: true });

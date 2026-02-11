@@ -694,6 +694,10 @@ describe('로그캐치 사이트 테스트', () => {
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
     cy.wait(500);
+    
+    //미등록 사용자 접속정책 목록에 정책이 잘 추가되었는지 검증하는 코드 
+    cy.get('tbody').contains('tr', 'test_auto_미등록 사용자 접속').should('be.visible');
+
 
     //기본정책 설정 /철회 코드 -------------------------
     //깃발 클릭 
@@ -786,6 +790,17 @@ describe('로그캐치 사이트 테스트', () => {
     // 경보등급 주의 상태 확인 검증코드 
     cy.contains('label', '주의').closest('div').find('input').should('have.attr', 'aria-checked', 'true');
     cy.wait(500);
+
+    // 취소 버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('취소').click({ force: true });
+    cy.wait(500);
+
+    // 추가된 정책명 :test_auto_미등록 사용자 접속 사용자 다시 재클릭 
+    cy.contains('a', 'test_auto_미등록 사용자 접속').should('be.visible').click({ force: true });
+    cy.wait(500);
+    
+    // 경보등급 심각 상태 확인 검증코드 
+    cy.contains('label', '심각').closest('div').find('input').should('have.attr', 'aria-checked', 'true');
 
     // 취소 버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('취소').click({ force: true });
