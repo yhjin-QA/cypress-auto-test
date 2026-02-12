@@ -641,8 +641,7 @@ describe('로그캐치 사이트 테스트', () => {
       //cy.get('tbody').find('a').contains('반려').should('not.exist');
       //cy.get('tbody').find('a').contains('승인').should('not.exist');
      
-      
-
+  
 
       cy.log('✅ 소명 - 나의 소명 - [승인하기]탭 진입 및 데이터 출력 확인 완료!');
 
@@ -652,7 +651,7 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 소명_유저(User) 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 소명_유저(부서장) 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 

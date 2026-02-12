@@ -570,8 +570,8 @@ describe('로그캐치 사이트 테스트', () => {
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
     cy.log('🎉 소명 테스트 시나리오 성공적으로 완료!');
-    //cy.get('body').type('{esc}');
-    //cy.get('body').click('center', { force: true });
+    cy.get('body').type('{esc}');
+    cy.get('body').click('center', { force: true });
 
 
   });
