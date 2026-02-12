@@ -1187,6 +1187,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.contains('tr', '주민등록번호').should('contain', '3');
      cy.contains('tr', '신용카드번호').should('contain', '5');
      cy.contains('tr', '생년월일').should('contain', '5');
+     cy.contains('tr', '계좌 번호').should('not.exist');
      cy.wait(500);
 
      // 저장버튼 클릭 
