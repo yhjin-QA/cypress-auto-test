@@ -1170,6 +1170,29 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
      cy.wait(500);
 
+     // 추가한 test_auto_개인정보 유형 과다사용 정책 그룹 수정2.--------------------------------------
+    // 추가된 정책명 : test_auto_개인정보 유형 과다사용  다시 재클릭 
+    cy.contains('a', 'test_auto_개인정보 유형 과다사용').should('be.visible').click({ force: true });
+    cy.wait(500);
+
+    // 개인정보 유형 과다사용등록 화면 위치로 스크롤 이동 
+    //cy.get('.scrollable-detail-content').contains('개인정보 유형 과다사용 등록').filter(':visible').scrollIntoView({ duration: 500 }); // 부드럽게 스크롤
+    
+    // 개인정보 유형 과다사용등록 항목중 계좌번호 삭제
+    // 계좌번호 행에 맞는 휴지통 아이콘 클릭
+    cy.contains('tr', '계좌 번호').find('.fa-trash').click({ force: true });
+    cy.wait(500);
+
+     // 계좌번호  패턴유형 삭제시 검증하는 코드
+     cy.contains('tr', '주민등록번호').should('contain', '3');
+     cy.contains('tr', '신용카드번호').should('contain', '5');
+     cy.contains('tr', '생년월일').should('contain', '5');
+     cy.wait(500);
+
+     // 저장버튼 클릭 
+     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+     cy.wait(500);
+
 
     cy.log('✅  분석 탭 - 개인정보 유형 과다사용 및 데이터 출력 확인 완료!');
     cy.wait(2000);

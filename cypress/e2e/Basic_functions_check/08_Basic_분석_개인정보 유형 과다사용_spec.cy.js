@@ -1170,11 +1170,85 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
      cy.wait(500);
 
+     // 추가한 test_auto_개인정보 유형 과다사용 정책 그룹 수정2.--------------------------------------
+    // 추가된 정책명 : test_auto_개인정보 유형 과다사용  다시 재클릭 
+    cy.contains('a', 'test_auto_개인정보 유형 과다사용').should('be.visible').click({ force: true });
+    cy.wait(500);
+
+    // 개인정보 유형 과다사용등록 화면 위치로 스크롤 이동 
+    //cy.get('.scrollable-detail-content').contains('개인정보 유형 과다사용 등록').filter(':visible').scrollIntoView({ duration: 500 }); // 부드럽게 스크롤
+    
+    // 개인정보 유형 과다사용등록 항목중 계좌번호 삭제
+    // 계좌번호 행에 맞는 휴지통 아이콘 클릭
+    cy.contains('tr', '계좌 번호').find('.fa-trash').click({ force: true });
+    cy.wait(500);
+
+     // 계좌번호  패턴유형 삭제시 검증하는 코드
+     cy.contains('tr', '주민등록번호').should('contain', '3');
+     cy.contains('tr', '신용카드번호').should('contain', '5');
+     cy.contains('tr', '생년월일').should('contain', '5');
+     cy.wait(500);
+
+     // 저장버튼 클릭 
+     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+     cy.wait(500);
+
 
     cy.log('✅  분석 탭 - 개인정보 유형 과다사용 및 데이터 출력 확인 완료!');
     cy.wait(2000);
 
+    /*
+    cy.contains('.v-chip__content', '열람제한 개인정보 접근').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '열람제한 개인정보 접근 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 열람제한 개인정보 접근 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
 
+    cy.contains('.v-chip__content', '권한 외 메뉴 접근').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '권한 외 메뉴 접근 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 권한 외 메뉴 접근 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
+
+    cy.contains('.v-chip__content', '비인가 접근 사용자').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '비인가 접근 사용자 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 비인가 접근 사용자 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
+
+    cy.contains('.v-chip__content', '접근제한 업무 시스템 접근').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '접근제한 업무 시스템 접근 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 접근제한 업무 시스템 접근 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
+
+    cy.contains('.v-chip__content', '파일다운로드').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '파일다운로드 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 파일다운로드 접근 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
+
+*/
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
