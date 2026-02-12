@@ -658,7 +658,6 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 기능 확인 -------------------------------------------------
 
-
     //추가된 test_auto_미등록 사용자 접속 삭제 --------------------------
     cy.contains('tr', 'test_auto_미등록 사용자 접속').find('.fa-trash').click({ force: true });
     cy.wait(500);
@@ -691,6 +690,8 @@ describe('로그캐치 사이트 테스트', () => {
     // 업무시스템중 '전체 선택 클릭하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('전체 선택').click({ force: true });
     cy.wait(500);
+    
+    
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
     cy.wait(500);
@@ -735,7 +736,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('a', 'test_auto_미등록 사용자 접속').should('be.visible').click({ force: true });
     cy.wait(500);
 
-    // 정책 사용여부 토글 ON
+    // 정책 사용여부 토글 OFF-> ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
     cy.wait(500);
 
@@ -880,15 +881,15 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅  분석 탭 - 파일다운로드 접근 및 데이터 출력 확인 완료!');
     cy.wait(2000);
 
-
+*/
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 분석 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 분석 - 미등록 사용자 접속 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 
-*/
+
   });
 });  
 

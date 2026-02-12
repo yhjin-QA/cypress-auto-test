@@ -948,6 +948,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
     cy.wait(500);
 
+    //경보등급 주의 -> 경계로 선택하기 
+    cy.contains('label', '경계').closest('div').find('.v-input--selection-controls__ripple').click({ force: true });
+    cy.wait(500);
+    // 경보등급 경례 상태 확인 검증코드 
+    cy.contains('label', '경계').closest('div').find('input').should('have.attr', 'aria-checked', 'true');
+    cy.wait(500);
+
      // 허용 IP설정-------
      // 허용/비허용 상태 ON->OFF상태로 변경
      // 1. '허용/비허용' 라벨 옆의 버튼을 클릭 (ON -> OFF)
@@ -968,7 +975,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-dialog').filter(':visible').find('input[aria-label="사용자"]').type('차은우', { force: true });
     cy.wait(500);
 
-    // 정보사용자 팝업창에서 유우종이라는 사람 그옆 체크박스 클릭
+    // 정보사용자 팝업창에서 차은우이라는 사람 그옆 체크박스 클릭
     cy.contains('tr', '차은우').find('.v-icon').click({ force: true });
     cy.wait(500);
 
@@ -989,7 +996,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('button', '추가').filter(':visible').click({ force: true });
     cy.wait(500);
 
-    // [검증] 아래 리스트(Grid)에 'tester'라는 식별자가 추가되었는지 확인
+    // [검증] 아래 리스트(Grid)에 'block'라는 식별자가 추가되었는지 확인
     cy.contains('td', 'block').should('be.visible');
     cy.contains('tr', 'block').find('.v-icon').should('exist');
 
@@ -1061,16 +1068,16 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
     cy.log('✅  분석 탭 - 파일다운로드 접근 및 데이터 출력 확인 완료!');
     cy.wait(2000);
-
+*/
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 분석 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 분석 - 비인가 IP접근 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 
-*/
+
   });
 });  
 
