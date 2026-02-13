@@ -1007,7 +1007,7 @@ describe('로그캐치 사이트 테스트', () => {
   
     cy.log('✅  분석 탭 - 비인가 IP 접근 및 데이터 출력 확인 완료!');
     cy.wait(2000);
-*/
+
     
     ///////////////////////////////////////////////
     // 이상행위 정책 -  개인정보 유형 과다사용 
@@ -1198,7 +1198,296 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅  분석 탭 - 개인정보 유형 과다사용 및 데이터 출력 확인 완료!');
     cy.wait(2000);
 
+*/
+    ///////////////////////////////////////////////
+    // 이상행위 정책 -  개인정보 유형 과다사용 
+    ///////////////////////////////////////////////
+    cy.contains('.v-chip__content', '열람제한 개인정보 접근').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '열람제한 개인정보 접근 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+
+    // 기능 확인
+       // 기능 확인 -------------------------------------------------
+
+    //추가된 test_auto_미등록 사용자 접속 삭제 --------------------------
+    cy.contains('tr', 'test_auto_열람제한 개인정보 접근').find('.fa-trash').click({ force: true });
+    cy.wait(500);
+    // 삭제 확인 알림창에서 확인 버튼 클릭 
+    cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
+
+    //추가한 정책 삭제 검증코드 
+    cy.contains('tr', 'test_auto_열람제한 개인정보 접근').should('not.exist'); 
+
+
+    // 우측 동그란 + 플러스 버튼 클릭-----------------------
+      cy.get('.grid-add-button').should('exist').then(($btn) => {
+        $btn[0].click(); 
+           });
+    cy.wait(1000);
+
+    // 열람 제한 개인정보 접근 정책 추가화면 진입----------------------------------------
+    // 정책이름 입력 
+    cy.get('input[aria-label="정책 이름"]').filter(':visible').clear({ force: true }).type('test_auto_열람제한 개인정보 접근', { force: true });
+
+    // 정책설정 부분
+    // 정책 사용여부 토글 OFF-> ON
+    cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
+    cy.wait(500);
+
+    // 소명 사용여부 토글 ON 
+    cy.get('input[aria-label="소명 여부"]').check({ force: true });
+    cy.wait(500); 
+
+    // 업무시스템 - 선택
+    cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    cy.wait(1000);
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+    // 업무시스템중 '리눅스배송관리' 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').contains('리눅스_배송관리').click({ force: true });
+    cy.wait(500);
+    // 선택한 컨텍스트 메뉴 닫기
+    cy.get('body').type('{esc}');
+
+
+     // 열람 제한 개인정보 설정 -----------------------------------------------------
+     // 개인정보 주체 이름 입력 
+     cy.contains('label', '개인정보 주체 이름 입력').parent().find('input').clear({ force: true }).type('test_신용카드', { force: true });
+     cy.wait(500);
+
+     // 개인정보 유형 클릭하여 콤보박스 메뉴열기
+     cy.get('input[aria-label="개인정보 유형"]').filter(':visible').parent().click({ force: true });
+     cy.wait(500);
+
+     // 신용카드번호 선택하기 
+     cy.get('.v-menu__content').filter(':visible').contains('신용카드번호').click({ force: true });
+     cy.wait(500);
+
+     // 1. '-' 기호가 있는 줄을 찾되, 이번엔 입력창이 '4개'인지 확인해야 합니다.
+     cy.contains('h3', '-').closest('.layout.row').find('input').should('have.length', 4).as('CardInputs');
+
+     //// 2. 순서대로 신용카드번호를 입력한다.
+     cy.get('@CardInputs').eq(0).type('4469', { force: true });  // 첫 번째 (0번)
+     cy.get('@CardInputs').eq(1).type('4314', { force: true }); // 두 번째 (1번)
+     cy.get('@CardInputs').eq(2).type('3564', { force: true }); // 세 번째 (2번)
+     cy.get('@CardInputs').eq(3).type('3296', { force: true }).blur();// 세 번째 (3번)
+     cy.wait(500);
+
+     // 추가버튼 클릭
+     cy.get('input[aria-label="개인정보 주체 이름 입력"]').closest('form').find('button').contains('추가').click({ force: true });
+
+     
+     //식별대상 개인정보 목록 표안의 추가한 값을 검증코드
+     cy.contains('tr', 'test_신용카드')
+     .scrollIntoView()
+     .within(() => {
+     // 2. 그 행(tr) 내부에서만 검색합니다. (범위 제한)
+     cy.contains('4469.4314.3564.3296').should('be.visible'); // 값이 정확한지
+     cy.contains('신용카드번호').should('be.visible'); // 타입이 정확한지
+      });
+     cy.wait(500)
+
+
+     // 열람 제한 개인정보 설정 -----------------------------------------------------
+     // 개인정보 주체 이름 입력 
+     cy.contains('label', '개인정보 주체 이름 입력').scrollIntoView({ block: 'center' }).parent().find('input').clear({ force: true }).type('test_휴대전화', { force: true });
+     cy.wait(500);
+
+     // 개인정보 유형 클릭하여 콤보박스 메뉴열기
+     cy.get('input[aria-label="개인정보 유형"]').filter(':visible').parent().click({ force: true });
+     cy.wait(500);
+
+     // 휴대전화번호  선택하기 
+     cy.get('.v-menu__content').filter(':visible').contains('휴대전화번호').scrollIntoView().click({ force: true });
+     cy.wait(500);
+
+     // 1. '-' 기호(h3 태그)를 포함하고 있는 부모 행(Row)을 찾습니다.
+     cy.contains('h3', '-').closest('.layout.row').find('input').should('have.length', 3).as('phoneInputs');
+
+     //// 2. 순서대로 휴대폰 번호 입력합니다.
+     cy.get('@phoneInputs').eq(0).type('010', { force: true });  // 첫 번째 (0번)
+     cy.get('@phoneInputs').eq(1).type('4617', { force: true }); // 두 번째 (1번)
+     cy.get('@phoneInputs').eq(2).type('1665', { force: true }).blur();; // 세 번째 (2번)
+     cy.wait(500);
+
+     // 추가버튼 클릭
+     cy.get('input[aria-label="개인정보 주체 이름 입력"]').closest('form').find('button').contains('추가').click({ force: true });
+
+     
+     //식별대상 개인정보 목록 표안의 추가한 값을 검증코드
+     cy.contains('tr', 'test_휴대전화')
+     .scrollIntoView()
+     .within(() => {
+     // 2. 그 행(tr) 내부에서만 검색합니다. (범위 제한)
+     cy.contains('010.4617.1665').should('be.visible'); // 값이 정확한지
+     cy.contains('휴대전화번호').should('be.visible'); // 타입이 정확한지
+      });
+     cy.wait(500)
     
+     // 저장버튼 클릭 
+     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+     cy.wait(500);
+    
+     //열람 제한 개인정보 접근 정책 목록에 정책이 잘 추가되었는지 검증하는 코드 
+     cy.get('tbody').contains('tr', 'test_auto_열람제한 개인정보 접근').should('be.visible');
+
+     //기본정책 설정 /철회 코드 ---------------------------------------------------------------
+    //깃발 클릭 
+    cy.get('.fa-flag').first().click({ force: true });
+    cy.wait(500);
+   
+    //기본정책 설정
+    //기본 정책 설정 팝업창 확인 버튼 클릭 
+    cy.contains('기본정책으로 설정하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
+    cy.wait(500);
+
+     // 기본 정책 설정확인 검증 코드 (초록색색상값 확인 )
+     cy.contains('tr', 'test_auto_열람제한 개인정보 접근').find('.fa-flag').should('be.visible')
+    .invoke('css', 'color') // 아이콘의 실제 색상(CSS color) 값을 가져옴
+    .should('not.eq', 'rgba(0, 0, 0, 0.54)') // 기본 회색이 아니어야 함
+    .and('not.eq', 'rgb(0, 0, 0)');
+
+    //기본 정책 철회
+    // 초록색 깃발아이콘 클릭 
+    cy.contains('tr', 'test_auto_열람제한 개인정보 접근').find('.fa-flag').should('be.visible').click({ force: true });
+    cy.wait(500);
+
+    //기본 정책 철회 팝업창 확인 버튼 클릭
+    cy.contains('기본정책에서 철회하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
+    cy.wait(500);
+
+    // 기본 정책 철회 검증
+    // test_auto_열람제한 개인정보 접근'용 사용여부 false 상태로 되어있는지 검증 (철회시 사용여부 false로 변하기때문)
+    cy.contains('tr', 'test_auto_열람제한 개인정보 접근').find('td').contains('false').should('be.visible');
+    cy.wait(1000);
+     //--------------------------------
+
+     // 추가한 test_auto_열람제한 개인정보 접근 정책 그룹 수정1.--------------------------------------
+    // 추가된 정책명 : test_auto_열람제한 개인정보 접근  다시 재클릭 
+    cy.contains('a', 'test_auto_열람제한 개인정보 접근').should('be.visible').click({ force: true });
+    cy.wait(500);
+
+    // 정책 사용여부 토글 OFF-> ON
+    cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
+    cy.wait(500);
+
+    // 열람 제한 개인정보 설정 수정1 -----------------------------------------------------
+     // 개인정보 주체 이름 입력 (계좌번호 추가)
+     cy.contains('label', '개인정보 주체 이름 입력').scrollIntoView({ block: 'center' }).parent().find('input').clear({ force: true }).type('test_계좌 번호', { force: true });
+     cy.wait(500);
+
+     // 개인정보 유형 클릭하여 콤보박스 메뉴열기
+     cy.get('input[aria-label="개인정보 유형"]').filter(':visible').parent().click({ force: true });
+     cy.wait(500);
+
+     // 계좌번호 선택하기 
+     cy.get('.v-menu__content').filter(':visible').contains('계좌 번호').scrollIntoView().click({ force: true });
+     cy.wait(500);
+
+     //개인정보 고유식별 값 입력하기
+     cy.get('input[aria-label="개인정보 고유식별 값"]').clear().type('475-6025314-6-985').blur();
+     cy.wait(500);
+
+     // 추가버튼 클릭
+     cy.get('input[aria-label="개인정보 주체 이름 입력"]').closest('form').find('button').contains('추가').click({ force: true });
+
+     
+     //식별대상 개인정보 목록 표안의 추가한 값을 검증코드
+     cy.contains('tr', 'test_계좌 번호')
+     .scrollIntoView()
+     .within(() => {
+     // 2. 그 행(tr) 내부에서만 검색합니다. (범위 제한)
+     cy.contains('475-6025314-6-985').should('be.visible'); // 값이 정확한지
+     cy.contains('계좌번호').should('be.visible'); // 타입이 정확한지
+      });
+     cy.wait(500);
+
+     // 저장버튼 클릭 
+     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+     cy.wait(500);
+    
+     //열람 제한 개인정보 접근 정책 목록에 정책이 잘 추가되었는지 검증하는 코드 
+     cy.get('tbody').contains('tr', 'test_auto_열람제한 개인정보 접근').should('be.visible');
+
+
+      // 추가한 test_auto_열람제한 개인정보 접근 정책 그룹 수정1.--------------------------------------
+    // 추가된 정책명 : test_auto_열람제한 개인정보 접근  다시 재클릭 
+    cy.contains('a', 'test_auto_열람제한 개인정보 접근').should('be.visible').click({ force: true });
+    cy.wait(1000);
+
+    // 열람 제한 개인정보 설정 수정 2-----------------------------------------------------
+    // 식별 대상 개인정보 목록에서 계좌번호 삭제
+     cy.contains('tr', 'test_계좌 번호')
+     .scrollIntoView()
+     .within(() => {
+      // 1. 기존 검증 코드
+      cy.contains('475-6025314-6-985').should('be.visible');
+      cy.contains('계좌번호').should('be.visible');
+
+      // 2. [추가된 코드] 휴지통 아이콘 클릭
+      // fa-trash 클래스가 휴지통을 의미하는 가장 명확한 식별자입니다.
+      cy.get('.fa-trash').click(); 
+       });
+
+      // 삭제 클릭 후 혹시 모를 딜레이나 팝업 처리를 위해 잠시 대기
+      cy.wait(500);
+
+      // 'test_계좌 번호 존재하지 않는지 검증코드
+      cy.contains('tr', 'test_계좌 번호').should('not.exist');
+
+      // 저장버튼 클릭 
+      cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+      cy.wait(500);
+    
+
+    cy.log('✅  분석 탭 - 열람제한 개인정보 접근 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
+
+    /*
+    cy.contains('.v-chip__content', '권한 외 메뉴 접근').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '권한 외 메뉴 접근 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 권한 외 메뉴 접근 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
+
+    cy.contains('.v-chip__content', '비인가 접근 사용자').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '비인가 접근 사용자 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 비인가 접근 사용자 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
+
+    cy.contains('.v-chip__content', '접근제한 업무 시스템 접근').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '접근제한 업무 시스템 접근 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 접근제한 업무 시스템 접근 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
+
+    cy.contains('.v-chip__content', '파일다운로드').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '파일다운로드 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 파일다운로드 접근 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
+
+*/
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
