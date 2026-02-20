@@ -382,22 +382,22 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
 
-    // 검색결과 2026-02-05 선택하기
-    cy.contains('.v-select__selection', '2026-01-20').filter(':visible').closest('.v-input').find('.v-icon').click({ force: true });
+    // 검색결과 2026-02-20 선택하기
+    cy.contains('.v-select__selection', '2026-02-20').filter(':visible').closest('.v-input').find('.v-icon').click({ force: true });
     cy.wait(1000);
     //cy.get('.v-list__tile__title').filter(':visible').contains('2026-02-05').click({ force: true });
     cy.get('.v-menu__content')       // 모든 메뉴창을 가져옴
     .filter(':visible')            // 그 중 '진짜 열린' 놈만 골라냄
     .should('be.visible')          // 확실하게 떴는지 확인
     .find('.v-list__tile__title')  // 그 메뉴창 안의 리스트들 중에서
-    .contains('2026-02-05')        // 날짜 텍스트 찾기
+    .contains('2026-02-20')        // 날짜 텍스트 찾기
     .scrollIntoView()              // 스크롤을 굴려서 화면에 보이게 함
     .click({ force: true });       // 클릭
     
     
     cy.wait(1000);
-    // 선택 후, 입력창(.v-select__selection)에 '2026-02-05'가 표시되는지 검증
-    cy.contains('.v-select__selection', '2026-02-05').should('be.visible');
+    // 선택 후, 입력창(.v-select__selection)에 '2026-02-20'가 표시되는지 검증
+    cy.contains('.v-select__selection', '2026-02-20').should('be.visible');
     cy.wait(1000);
 
   

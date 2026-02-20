@@ -454,7 +454,7 @@ describe('로그캐치 사이트 테스트', () => {
        // 메뉴 등록 필요 상태 OFF인지 검증코드
        cy.contains('label', '메뉴 등록 필요').closest('.v-input').find('input[type="checkbox"]').should('not.be.checked'); // 꺼져 있어야 정상!
 
-       //배송관리 - 배송 담당자 조회  URI 주소 입력하기 
+       //배송관리 - 상품 배송 현황  URI 주소 입력하기 
        cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/cop/logcatch/selectOrderList.do', { force: true });
        cy.wait(500);
 
