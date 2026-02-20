@@ -162,7 +162,6 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 그룹별 클릭하는 코드 
     cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    
     cy.wait(1000);
     // 그룹별중 총무,인사팀 클릭하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('인사팀').click({ force: true });

@@ -518,12 +518,12 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.ellipsis').contains('a', '일치').should('be.visible');
 
     //엑셀 다운로드 확인기능 -----------------
-     // 엑셀 다운로드 클릭하는 코드 
+    // 엑셀 다운로드 클릭하는 코드 
     cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
     cy.wait(500);
 
     // 엑셀 파일 다운로드 팝업 확인창 진행
-    cy.get('input[aria-label="확장자"]').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.get('input[aria-label="확장자"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     // 엑셀파일 다운로드 팝업 확인창에서 콤보박스 메뉴 첫번째 xlsx 선택
     cy.get('.v-menu__content').filter(':visible').find('.v-list__tile').first().click({ force: true });
