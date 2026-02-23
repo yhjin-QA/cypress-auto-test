@@ -288,44 +288,54 @@ jobs:
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
         run: |
+          # 1. 인코딩 및 기본 변수 설정
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-
-          # 1. 리포트 분석
           $isFailed = $false
-          if (Test-Path "merged_report.json") {
-              try {
-                  $report = Get-Content "merged_report.json" -Raw | ConvertFrom-Json
-                  if ($report.stats.failures -gt 0) { $isFailed = $true }
-              } catch {
-                  $isFailed = $true # JSON 파싱 실패 시 실패로 간주
-              }
-          } else { $isFailed = $true }
 
-          # 2. 결과 판정 및 GITHUB_ENV 기록
-          if ($isFailed) {
-              $resultTitle = $env:MSG_FAIL
-              "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          } else {
-              $resultTitle = $env:MSG_SUCCESS
+          # 2. JOB_STATUS를 이용한 결과 판정 (가장 확실한 방법)
+          # ${{ env.JOB_STATUS }} 값이 'success'가 아니면 실패로 간주합니다.
+          if ("${{ env.JOB_STATUS }}" -eq "success") {
+              $isFailed = $false
+              $title = $env:MSG_SUCCESS
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          }
-          
-          # 3. 대시보드 URL 읽기
-          $urlFile = "downloaded_url/run_url.txt"
-          if (Test-Path $urlFile) {
-            $realUrl = Get-Content $urlFile -Raw
-            $realUrl = $realUrl.Trim()
+              Write-Host "📢 Result: SUCCESS (Job Status: success)"
           } else {
-            $realUrl = "http://10.10.54.5:8080/projects"
+              $isFailed = $true
+              $title = $env:MSG_FAIL
+              "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              Write-Host "📢 Result: FAILED (Job Status: ${{ env.JOB_STATUS }})"
           }
 
-          # 4. 구글 챗 전송
-          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n${env:LABEL_DASH}: $realUrl`n${env:LABEL_GIT}: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          
-          $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
-          $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
-          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
+          # 3. 대시보드 URL 읽기
+          $url = "http://10.10.54.5:8080/projects"
+          if (Test-Path "downloaded_url/run_url.txt") {
+              $url = (Get-Content "downloaded_url/run_url.txt" -Raw).Trim()
+          }
+
+          # 4. 메시지 본문 생성 (변수 뒤 공백 포함으로 안전하게)
+          $pName = $env:PRODUCT_NAME
+          $mTitle = $env:MSG_TITLE
+          $time = $env:NOW
+          $dLabel = $env:LABEL_DASH
+          $gLabel = $env:LABEL_GIT
+          $runLink = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          $msgText = "$title $pName $mTitle ($time)`n`n$dLabel : $url`n$gLabel : $runLink"
+
+          # 5. 구글 챗 전송
+          try {
+              $body = @{ text = $msgText } | ConvertTo-Json -Compress
+              $utf8 = New-Object System.Text.UTF8Encoding $false
+              $bytes = $utf8.GetBytes($body)
+              $webhook = '${{ secrets.GOOGLE_CHAT_WEBHOOK }}'
+
+              Invoke-RestMethod -Uri $webhook -Method Post -ContentType "application/json; charset=utf-8" -Body $bytes
+              Write-Host "✅ Google Chat Notification Sent Successfully"
+          } catch {
+              Write-Host "❌ Error sending Google Chat: $_"
+          }
+              
 
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: always() && env.FINAL_STATUS == 'FAIL'
