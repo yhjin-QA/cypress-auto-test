@@ -296,18 +296,6 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('소명 대상 여부').should('be.visible');
     cy.get('th').filter(':visible').contains('조회').should('be.visible'); 
 
-
-     // 기간 - 시작 날짜 달력 지정하기 
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-     cy.wait(500);
-     // 5일 클릭
-     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
-     cy.wait(500);
-     //달력창 닫기
-     cy.get('body').type('{esc}');
-     cy.log('✅ 시작 날짜 지정 성공');
-  
-     
     //조건입력 기능 동작 
     //이상행위 유형 클릭하는 코드 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -394,24 +382,17 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
 
-
-    // 검색결과 2026-01-20 선택하기
-    cy.contains('.v-select__selection', '2026-01-20').filter(':visible').closest('.v-input').find('.v-icon').click({ force: true });
+    // 검색결과 2026-02-20 선택하기
+    cy.contains('.v-select__selection', '2026-02-20').filter(':visible').closest('.v-input').find('.v-icon').click({ force: true });
     cy.wait(1000);
-
-    // 1. 먼저 드롭다운 박스를 클릭해서 리스트를 엽니다.
-    cy.contains('.v-select__selection', '2026-01-20').click({ force: true });
-    cy.wait(500); // 메뉴가 열리는 애니메이션 대기
-
-    // 2. 열린 메뉴창(.v-menu__content) 내부를 강제로 스크롤합니다.
-    // v-menu__content 자체가 스크롤을 가지고 있으므로 해당 요소를 scrollTo 합니다.
-    cy.get('.v-menu__content:visible')
-    .first() // 혹시 여러개 떠있을 경우를 대비해 첫번째 보이는 창 선택
-    .scrollTo('bottom', { duration: 1000 }) // 1초 동안 부드럽게 끝까지 내리기
-    .wait(500); // 데이터가 로드되거나 렌더링될 시간 대기
-
-    // 3. 이제 리스트 내에서 2월 20일을 찾아 클릭합니다.
-    cy.get('.v-menu__content:visible').contains('.v-list__tile__title, .v-list-item__title', '2026-02-20').click({ force: true });
+    //cy.get('.v-list__tile__title').filter(':visible').contains('2026-02-05').click({ force: true });
+    cy.get('.v-menu__content')       // 모든 메뉴창을 가져옴
+    .filter(':visible')            // 그 중 '진짜 열린' 놈만 골라냄
+    .should('be.visible')          // 확실하게 떴는지 확인
+    .find('.v-list__tile__title')  // 그 메뉴창 안의 리스트들 중에서
+    .contains('2026-02-20')        // 날짜 텍스트 찾기
+    .scrollIntoView()              // 스크롤을 굴려서 화면에 보이게 함
+    .click({ force: true });       // 클릭
     
     
     cy.wait(1000);
@@ -471,19 +452,6 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('상세 접속기록 정보').should('be.visible');
     cy.get('th').filter(':visible').contains('처리').should('be.visible');
 
-    //달력표를 펼침 
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.wait(500);
-    // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
-    cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
-
-    // 2. '1월'이라는 글자를 찾아 클릭합니다.
-     cy.get('.v-date-picker-table--month').filter(':visible').contains('1월').click({ force: true });
-    // 달력 20일 클릭
-    cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '20일').closest('.v-btn').click({ force: true });
-    //달력창 닫기
-    cy.get('body').type('{esc}');
-
 
     // 조건 입력 
     //업무시스템 클릭하는 코드 
@@ -494,8 +462,6 @@ describe('로그캐치 사이트 테스트', () => {
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
-    // 검색버튼 클릭 
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
 
     // 엑셀 다운로드 클릭하는 코드 
