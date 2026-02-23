@@ -289,46 +289,47 @@ jobs:
           LABEL_GIT: "GitHub(Report)"
 
         run: |
-          # 0. 환경 설정 및 기존 변수 초기화
+          # 1. 인코딩 설정
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          
+          # 2. 결과 판정 (Needs 결과값 기준)
+          # needs.cypress-run.result는 실패 시 "failure" 값을 가집니다.
+          $jobStatus = "${{ env.JOB_STATUS }}".ToLower()
           $reportPath = "merged_report.json"
           $actualFailures = 0
 
-          # 1. 리포트 분석
-          # 파일이 존재할 때만 분석하고, 없으면(성공하여 병합이 안 되었을 가능성 등) 0으로 간주
+          # 리포트 파일 분석 시도
           if (Test-Path $reportPath) {
               try {
-                  $content = Get-Content $reportPath -Raw
-                  if (-not [string]::IsNullOrWhiteSpace($content)) {
-                      $reportJson = $content | ConvertFrom-Json
-                      # stats.failures 값을 안전하게 추출
-                      if ($null -ne $reportJson.stats -and $null -ne $reportJson.stats.failures) {
-                          $actualFailures = [int]$reportJson.stats.failures
-                      }
+                  $reportJson = Get-Content $reportPath -Raw | ConvertFrom-Json
+                  if ($null -ne $reportJson.stats.failures) {
+                      $actualFailures = [int]$reportJson.stats.failures
                   }
-              } catch {
-                  Write-Host "⚠️ 리포트 해석 중 오류 발생, 무시하고 진행합니다."
-              }
+              } catch { }
           }
 
-          # 2. 결과 판정 (JOB_STATUS와 실제 실패 수를 교차 검증)
-          # Job Status가 성공이고 실패 수가 0일 때만 [성공]으로 판정
-          $jobStatus = "${{ env.JOB_STATUS }}"
-          
-          if ($jobStatus -eq "success" -and $actualFailures -eq 0) {
+          # 판정 로직: status가 success가 아니면 무조건 실패 알림
+          if ($jobStatus -ne "success") {
+              $isFailed = $true
+              $title = $env:MSG_FAIL
+              
+              # 리포트에서 실패 수를 못 읽었더라도 Job 자체가 실패면 최소 1로 표시
+              $displayCount = if ($actualFailures -gt 0) { $actualFailures } else { 1 }
+              $statusDetail = "(FAIL: $displayCount script) "
+              
+              "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              Write-Host "📢 Result: FAILED (Status: $jobStatus)"
+          } else {
               $isFailed = $false
               $title = $env:MSG_SUCCESS
               $statusDetail = ""
+              
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          } else {
-              $isFailed = $true
-              $title = $env:MSG_FAIL
-              $statusDetail = "(FAIL : $actualFailures ) "
-              "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              Write-Host "📢 Result: SUCCESS"
           }
 
-          # 3. 메시지 조립
+          # 3. 메시지 조립 및 전송
           $url = "http://10.10.54.5:8080/projects"
           if (Test-Path "downloaded_url/run_url.txt") {
               $url = (Get-Content "downloaded_url/run_url.txt" -Raw).Trim()
@@ -337,25 +338,16 @@ jobs:
           $pName = $env:PRODUCT_NAME
           $mTitle = $env:MSG_TITLE
           $time = $env:NOW
-          $dLabel = $env:LABEL_DASH
-          $gLabel = $env:LABEL_GIT
-          $runLink = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          $msgText = "$title $statusDetail $pName $mTitle ($time)`n`n${env:LABEL_DASH} : $url`n${env:LABEL_GIT} : https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-          # 타이틀에 실패 정보 결합
-          $fullTitle = "$title $statusDetail"
-          $msgText = "$fullTitle $pName $mTitle ($time)`n`n$dLabel : $url`n$gLabel : $runLink"
-
-          # 4. 구글 챗 전송
           try {
               $body = @{ text = $msgText } | ConvertTo-Json -Compress
               $utf8NoBom = New-Object System.Text.UTF8Encoding $false
               $bytes = $utf8NoBom.GetBytes($body)
-              $webhook = '${{ secrets.GOOGLE_CHAT_WEBHOOK }}'
-
-              Invoke-RestMethod -Uri $webhook -Method Post -ContentType "application/json; charset=utf-8" -Body $bytes
-              Write-Host "✅ 전송 완료"
+              Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $bytes
+              Write-Host "✅ Notification Sent Successfully"
           } catch {
-              Write-Host "❌ 에러: $_"
+              Write-Host "❌ Error: $_"
           }
 
 
