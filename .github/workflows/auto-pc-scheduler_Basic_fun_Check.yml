@@ -278,7 +278,7 @@ jobs:
           npx marge merged_report.json --reportDir ./final_report_Basic --inline --charts --reportTitle "Basic Function Report" --reportFilename "LogCatch_Basic_fun_Report" --saveJson=false
 
       - name: Send Google Chat (Basic)
-        if: always() # 👈 리포트 생성이 혹시 실패해도 알림은 오도록 설정
+        if: always() 
         env:
           # Job 1의 결과를 확인
           JOB_STATUS: ${{ needs.cypress-run.result }}
@@ -290,21 +290,25 @@ jobs:
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-
-          # 1. 리포트의 failures 숫자 직접 체크 (핵심!)
+          
+          # 1. 리포트 분석
           $isFailed = $false
           if (Test-Path "merged_report.json") {
-              $report = Get-Content "merged_report.json" | ConvertFrom-Json
-              if ($report.stats.failures -gt 0) { $isFailed = $true }
-          } else { $isFailed = $true } # 리포트가 없으면 실패로 간주
-           
-          # 2. 결과에 따른 변수 설정
+              try {
+                  $report = Get-Content "merged_report.json" -Raw | ConvertFrom-Json
+                  if ($report.stats.failures -gt 0) { $isFailed = $true }
+              } catch {
+                  $isFailed = $true # JSON 파싱 실패 시 실패로 간주
+              }
+          } else { $isFailed = $true }
+
+          # 2. 결과 판정 및 GITHUB_ENV 기록
           if ($isFailed) {
               $resultTitle = "[실패][Auto-PC]"
-              echo "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           } else {
               $resultTitle = "[성공][Auto-PC]"
-              echo "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           }
           
           # 3. 대시보드 URL 읽기
