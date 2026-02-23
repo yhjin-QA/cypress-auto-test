@@ -316,7 +316,6 @@ jobs:
             $realUrl = "http://10.10.54.5:8080/projects"
           }
 
-          if ($env:JOB_STATUS -eq 'success') { $resultTitle = $env:MSG_SUCCESS } else { $resultTitle = $env:MSG_FAIL }
           
           # 4. 구글 챗 전송
           $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n${env:LABEL_DASH}: $realUrl`n${env:LABEL_GIT}: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
@@ -326,7 +325,7 @@ jobs:
           Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
 
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
-        if: needs.cypress-run.result == 'failure'
+        if: always() && env.FINAL_STATUS == 'FAIL'
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
