@@ -291,54 +291,54 @@ jobs:
          
 
         run: |
-          # 1. Encoding & Init
+          # 1. 환경 설정 및 인코딩
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
           $jobStatus = "${{ env.JOB_STATUS }}".ToLower()
+          $reportFolder = "all_raw_data/reports/json_logs"
           $screenshotPath = "all_raw_data/screenshots"
-          $reportPath = "merged_report.json"
           
           $isActuallyFailed = $false
-          $foundFailCount = 0
+          $finalFailCount = 0
 
-          # 2. Check Job Status
-          if ($jobStatus -ne "success") { $isActuallyFailed = $true }
-
-          # 3. Check Screenshots (Unique Spec Folders - Precision Version)
-          if (Test-Path $screenshotPath) {
-              $failScreenshots = Get-ChildItem -Path $screenshotPath -Recurse -Filter "*(failed)*.png"
-              if ($failScreenshots.Count -gt 0) {
-                  $isActuallyFailed = $true
-                  
-                  # 파일의 전체 경로가 아닌, 바로 위 '부모 폴더 이름'만 가져와서 중복을 제거합니다.
-                  # 예: .../screenshots/02_사이드탭_spec.cy.js/image.png -> 02_사이드탭_spec.cy.js 추출
-                  $failedSpecNames = $failScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-                  $foundFailCount = $failedSpecNames.Count
-                  
-                  Write-Host "⚠️ Unique Failed Specs: $failedSpecNames (Count: $foundFailCount)"
+          # 2. 병렬 리포트 전수 조사 (실제 실패 합산)
+          if (Test-Path $reportFolder) {
+              $reportFiles = Get-ChildItem -Path $reportFolder -Filter "*.json"
+              foreach ($file in $reportFiles) {
+                  try {
+                      $content = Get-Content $file.FullName -Raw | ConvertFrom-Json
+                      # Flaky를 제외한 최종 실패(failures)만 합산
+                      if ($null -ne $content.stats -and $null -ne $content.stats.failures) {
+                          $finalFailCount += [int]$content.stats.failures
+                      }
+                  } catch {
+                      Write-Host "Skip: Could not parse $($file.Name)"
+                  }
               }
           }
 
-          # 4. Check Report JSON
-          if (Test-Path $reportPath) {
-              try {
-                  $reportJson = Get-Content $reportPath -Raw | ConvertFrom-Json
-                  if ($null -ne $reportJson.stats.failures -and $reportJson.stats.failures -gt 0) {
-                      $isActuallyFailed = $true
-                      if ([int]$reportJson.stats.failures -gt $foundFailCount) {
-                          $foundFailCount = [int]$reportJson.stats.failures
-                      }
+          # 3. 보조 판정 (리포트가 0이어도 Job이 실패했거나 스크린샷이 있으면 체크)
+          if ($finalFailCount -eq 0) {
+              if ($jobStatus -ne "success") {
+                  $isActuallyFailed = $true
+                  # 리포트상 0인데 실패라면, 스크린샷 폴더 개수로 최소 수치 확보
+                  if (Test-Path $screenshotPath) {
+                      $failedSpecs = Get-ChildItem -Path $screenshotPath -Recurse -Filter "*(failed)*.png" | 
+                                     ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
+                      $finalFailCount = if ($failedSpecs.Count -gt 0) { $failedSpecs.Count } else { 1 }
+                  } else {
+                      $finalFailCount = 1
                   }
-              } catch { }
+              }
+          } else {
+              $isActuallyFailed = $true
           }
 
-          # 5. Final Result Determination
-          if ($isActuallyFailed) {
+          # 4. 최종 상태 및 메시지 결정
+          if ($isActuallyFailed -and $finalFailCount -gt 0) {
               $title = $env:MSG_FAIL
-              $displayCount = if ($foundFailCount -gt 0) { $foundFailCount } else { 1 }
-              # 제목 옆이 아닌 별도 줄에 표시하기 위해 변수 구성
-              $statusDetail = "FAIL: $displayCount script"
+              $statusDetail = "FAIL: $finalFailCount script"
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           } else {
               $title = $env:MSG_SUCCESS
@@ -346,7 +346,7 @@ jobs:
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           }
 
-          # 6. Build Message (요청하신 위치로 조정)
+          # 5. 메시지 조립 (요청하신 레이아웃 반영)
           $pName  = $env:PRODUCT_NAME
           $tType  = $env:TEST_TYPE
           $mTitle = $env:MSG_TITLE
@@ -354,17 +354,15 @@ jobs:
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           $url = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
 
-          # 메시지 구조 조립
-          if ($isActuallyFailed) {
-              # 실패 시: 제목 / FAIL 건수 / 대시보드 순서
+          if ($statusDetail -ne "") {
+              # 실패 시 레이아웃
               $msgText = "$title $pName $tType $mTitle ($time)`n$statusDetail`n`n${env:LABEL_DASH} : $url`n${env:LABEL_GIT} : $runUrl"
           } else {
-              # 성공 시: 기존과 동일하게 깔끔하게 표시
+              # 성공 시 레이아웃
               $msgText = "$title $pName $tType $mTitle ($time)`n`n${env:LABEL_DASH} : $url`n${env:LABEL_GIT} : $runUrl"
           }
-         
 
-          # 7. Send to Google Chat
+          # 6. 구글 챗 전송
           try {
               $body = @{ text = $msgText } | ConvertTo-Json -Compress
               $utf8NoBom = New-Object System.Text.UTF8Encoding $false
@@ -372,7 +370,7 @@ jobs:
               $webhook = '${{ secrets.GOOGLE_CHAT_WEBHOOK }}'
 
               Invoke-RestMethod -Uri $webhook -Method Post -ContentType "application/json; charset=utf-8" -Body $payload
-              Write-Host "✅ Notification Sent for $tType"
+              Write-Host "✅ Notification Sent: $tType (Failures: $finalFailCount)"
           } catch {
               Write-Host "❌ Error: $($_.Exception.Message)"
           }
