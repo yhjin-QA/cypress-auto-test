@@ -309,16 +309,19 @@ jobs:
               $failReason = "Workflow Job Status (failure)"
           }
 
-          # [검사 2] 실패 전용 스크린샷 파일 존재 여부 확인 (충돌 방지 핵심)
-          # 파일명에 '(failed)' 문구가 포함된 .png 파일만 필터링합니다.
-          # 수동으로 찍은 스크린샷은 '(failed)'가 붙지 않으므로 성공으로 처리됩니다.
+          # [검사 2] 물리적 스크린샷 존재 여부 확인 (중복 제거 버전)
           if (Test-Path $screenshotPath) {
               $failScreenshots = Get-ChildItem -Path $screenshotPath -Recurse -Filter "*(failed)*.png"
               if ($failScreenshots.Count -gt 0) {
                   $isActuallyFailed = $true
-                  $foundFailCount = $failScreenshots.Count
-                  $failReason = "Detected $($failScreenshots.Count) 'failed' marked screenshots"
-                  Write-Host "⚠️ 실제 실패 마킹(failed) 스크린샷 발견!"
+                  
+                  # 파일명이 아닌, 파일이 들어있는 '폴더'의 개수를 세어 중복을 제거합니다.
+                  # (실패한 spec 파일별로 폴더가 생성되는 특성 활용)
+                  $failedSpecs = $failScreenshots | Select-Object -ExpandProperty DirectoryName -Unique
+                  $foundFailCount = $failedSpecs.Count
+                  
+                  $failReason = "Detected $($failedSpecs.Count) failed spec files"
+                  Write-Host "⚠️ 실패 스펙 발견: $($failedSpecs.Count) 건"
               }
           }
 
