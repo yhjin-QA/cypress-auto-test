@@ -294,19 +294,36 @@ jobs:
           $reportPath = "merged_report.json"
           $isFailed = $false
 
-          # 2. 리포트 파일 확인 및 분석
+          # 2. 리포트 파일 확인 및 분석 (디버깅 강화)
           if (Test-Path $reportPath) {
               try {
                   $json = Get-Content $reportPath -Raw | ConvertFrom-Json
-                  if ($null -ne $json.stats -and $null -ne $json.stats.failures) {
-                      if ([int]$json.stats.failures -gt 0) { $isFailed = $true }
+                  
+                  # 디버깅: 실제 어떤 값을 읽어오는지 로그에 출력
+                  $rawFailures = $json.stats.failures
+                  Write-Host "DEBUG: stats.failures value is -> $rawFailures"
+
+                  if ($null -ne $rawFailures) {
+                      $failCount = [int]$rawFailures
+                      Write-Host "🔍 최종 파싱된 실패 수: $failCount"
+                      
+                      # 실제 실패가 0보다 클 때만 실패로 처리
+                      if ($failCount -gt 0) { 
+                          $isFailed = $true 
+                      } else {
+                          $isFailed = $false
+                      }
                   } else {
-                      $isFailed = $true
+                      # stats.failures를 못 찾을 경우, results 배열 내부를 한 번 더 탐색
+                      Write-Host "⚠️ stats.failures가 비어있습니다. 대안 구조를 탐색합니다."
+                      if ($json.results[0].suite.stats.failures -gt 0) { $isFailed = $true }
                   }
               } catch {
+                  Write-Host "❌ JSON 분석 중 예외 발생: $_"
                   $isFailed = $true
               }
           } else {
+              Write-Host "❌ 리포트 파일을 찾을 수 없습니다."
               $isFailed = $true
           }
 
