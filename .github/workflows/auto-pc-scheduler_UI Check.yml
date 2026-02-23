@@ -278,7 +278,7 @@ jobs:
           npx marge merged_report.json --reportDir ./final_report_UI --inline --charts --reportTitle "UI Check Report" --reportFilename "LogCatch_UI_Report" --saveJson=false
 
       - name: Send Google Chat (UI)
-        if: always() # 👈 리포트 생성이 혹시 실패해도 알림은 오도록 설정
+        if: always() 
         env:
           # Job 1의 결과를 확인
           JOB_STATUS: ${{ needs.cypress-run.result }}

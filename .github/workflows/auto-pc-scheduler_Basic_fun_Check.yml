@@ -291,24 +291,45 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          # 1. 리포트 분석
+          # 1. 리포트 분석 (더 엄격한 체크)
           $isFailed = $false
-          if (Test-Path "merged_report.json") {
-              try {
-                  $report = Get-Content "merged_report.json" -Raw | ConvertFrom-Json
-                  if ($report.stats.failures -gt 0) { $isFailed = $true }
-              } catch {
-                  $isFailed = $true # JSON 파싱 실패 시 실패로 간주
-              }
-          } else { $isFailed = $true }
+          $reportPath = "merged_report.json"
 
-          # 2. 결과 판정 및 GITHUB_ENV 기록
+          if (Test-Path $reportPath) {
+              try {
+                  $reportContent = Get-Content $reportPath -Raw -Encoding utf8
+                  $report = $reportContent | ConvertFrom-Json
+                  
+                  # stats 객체와 failures 속성이 있는지 확인 후 정수 비교
+                  if ($null -ne $report.stats -and $null -ne $report.stats.failures) {
+                      $failureCount = [int]$report.stats.failures
+                      Write-Host "🔍 감지된 실패 수: $failureCount"
+                      
+                      if ($failureCount -gt 0) {
+                          $isFailed = $true
+                      }
+                  } else {
+                      Write-Host "⚠️ 리포트 구조가 예상과 다릅니다. 안전을 위해 실패로 처리합니다."
+                      $isFailed = $true
+                  }
+              } catch {
+                  Write-Host "❌ JSON 분석 에러: $_"
+                  $isFailed = $true 
+              }
+          } else {
+              Write-Host "❌ 리포트 파일(merged_report.json)을 찾을 수 없습니다."
+              $isFailed = $true
+          }
+
+          # 2. env 변수를 이용한 결과 판정 (MSG_FAIL/MSG_SUCCESS 활용)
           if ($isFailed) {
               $resultTitle = $env:MSG_FAIL
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              Write-Host "📢 최종 상태: 실패(FAIL)"
           } else {
               $resultTitle = $env:MSG_SUCCESS
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              Write-Host "📢 최종 상태: 성공(PASS)"
           }
           
           # 3. 대시보드 URL 읽기
