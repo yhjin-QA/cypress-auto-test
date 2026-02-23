@@ -339,7 +339,7 @@ jobs:
 
           # 4. 최종 상태 및 상세 메시지(파일명 목록) 조립
           if ($isActuallyFailed -and $finalFailCount -gt 0) {
-              $title = $env:MSG_FAIL
+              $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*")
               
               # 파일명 리스트를 쉼표로 연결
               $fileNameString = if ($failedSpecList.Count -gt 0) { $failedSpecList -join ", " } else { "Unknown Spec" }
@@ -349,7 +349,7 @@ jobs:
               
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           } else {
-              $title = $env:MSG_SUCCESS
+              $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*")
               $statusDetail = ""
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           }
