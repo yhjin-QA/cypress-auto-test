@@ -291,6 +291,23 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+          # 1. 리포트의 failures 숫자 직접 체크 (핵심!)
+          $isFailed = $false
+          if (Test-Path "merged_report.json") {
+              $report = Get-Content "merged_report.json" | ConvertFrom-Json
+              if ($report.stats.failures -gt 0) { $isFailed = $true }
+          } else { $isFailed = $true } # 리포트가 없으면 실패로 간주
+           
+          # 2. 결과에 따른 변수 설정
+          if ($isFailed) {
+              $resultTitle = "[실패][Auto-PC]"
+              echo "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          } else {
+              $resultTitle = "[성공][Auto-PC]"
+              echo "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          }
+          
+          # 3. 대시보드 URL 읽기
           $urlFile = "downloaded_url/run_url.txt"
           if (Test-Path $urlFile) {
             $realUrl = Get-Content $urlFile -Raw
@@ -301,6 +318,7 @@ jobs:
 
           if ($env:JOB_STATUS -eq 'success') { $resultTitle = $env:MSG_SUCCESS } else { $resultTitle = $env:MSG_FAIL }
           
+          # 4. 구글 챗 전송
           $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n${env:LABEL_DASH}: $realUrl`n${env:LABEL_GIT}: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
           $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
