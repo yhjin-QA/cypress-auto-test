@@ -285,7 +285,7 @@ jobs:
           JOB_STATUS: ${{ needs.cypress-run.result }}
           MSG_SUCCESS: "[성공][Auto-PC]"
           MSG_FAIL: "[실패][Auto-PC]"
-          MSG_TITLE: "로그캐치 UI 확인결과"
+          MSG_TITLE: "확인결과"
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
 
@@ -351,7 +351,7 @@ jobs:
               $url = (Get-Content "downloaded_url/run_url.txt" -Raw).Trim()
           }
 
-          $pName  = $env:PRODUCT_NAME
+          $pName  = $env:PRODUCT_NAME   # "로그캐치"
           $tType  = $env:TEST_TYPE      # UI 또는 기능(Basic)
           $mTitle = $env:MSG_TITLE     # 확인결과
           $time   = $env:NOW

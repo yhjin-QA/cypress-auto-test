@@ -285,7 +285,7 @@ jobs:
           JOB_STATUS: ${{ needs.cypress-run.result }}
           MSG_SUCCESS: "[성공][Auto-PC]"
           MSG_FAIL: "[실패][Auto-PC]"
-          MSG_TITLE: "기능(Basic) 시나리오 확인결과"
+          MSG_TITLE: "시나리오 확인결과"
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
          
@@ -337,7 +337,8 @@ jobs:
           if ($isActuallyFailed) {
               $title = $env:MSG_FAIL
               $displayCount = if ($foundFailCount -gt 0) { $foundFailCount } else { 1 }
-              $statusDetail = "(FAIL: $displayCount script)"
+              # 제목 옆이 아닌 별도 줄에 표시하기 위해 변수 구성
+              $statusDetail = "FAIL: $displayCount script"
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           } else {
               $title = $env:MSG_SUCCESS
@@ -345,20 +346,23 @@ jobs:
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           }
 
-          # 6. Build Message (UI / Basic 구분 적용)
-          $url = "http://10.10.54.5:8080/projects"
-          if (Test-Path "downloaded_url/run_url.txt") {
-              $url = (Get-Content "downloaded_url/run_url.txt" -Raw).Trim()
-          }
-
+          # 6. Build Message (요청하신 위치로 조정)
           $pName  = $env:PRODUCT_NAME
-          $tType  = $env:TEST_TYPE      # UI 또는 기능(Basic)
-          $mTitle = $env:MSG_TITLE     # 확인결과
+          $tType  = $env:TEST_TYPE
+          $mTitle = $env:MSG_TITLE
           $time   = $env:NOW
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          $url = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
 
-          # 구글챗 제목 형식: [실패][Auto-PC] (FAIL: 1 script) 로그캐치 Basic 확인결과 (시간)
-          $msgText = "$title $statusDetail $pName $tType $mTitle ($time)`n`n${env:LABEL_DASH} : $url`n${env:LABEL_GIT} : $runUrl"
+          # 메시지 구조 조립
+          if ($isActuallyFailed) {
+              # 실패 시: 제목 / FAIL 건수 / 대시보드 순서
+              $msgText = "$title $pName $tType $mTitle ($time)`n$statusDetail`n`n${env:LABEL_DASH} : $url`n${env:LABEL_GIT} : $runUrl"
+          } else {
+              # 성공 시: 기존과 동일하게 깔끔하게 표시
+              $msgText = "$title $pName $tType $mTitle ($time)`n`n${env:LABEL_DASH} : $url`n${env:LABEL_GIT} : $runUrl"
+          }
+         
 
           # 7. Send to Google Chat
           try {
