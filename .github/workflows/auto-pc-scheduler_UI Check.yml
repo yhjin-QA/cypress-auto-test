@@ -305,13 +305,18 @@ jobs:
           # 2. Check Job Status
           if ($jobStatus -ne "success") { $isActuallyFailed = $true }
 
-          # 3. Check Screenshots (Unique Spec Folders)
+          # 3. Check Screenshots (Unique Spec Folders - Precision Version)
           if (Test-Path $screenshotPath) {
               $failScreenshots = Get-ChildItem -Path $screenshotPath -Recurse -Filter "*(failed)*.png"
               if ($failScreenshots.Count -gt 0) {
                   $isActuallyFailed = $true
-                  $failedSpecs = $failScreenshots | Select-Object -ExpandProperty DirectoryName -Unique
-                  $foundFailCount = $failedSpecs.Count
+                  
+                  # 파일의 전체 경로가 아닌, 바로 위 '부모 폴더 이름'만 가져와서 중복을 제거합니다.
+                  # 예: .../screenshots/02_사이드탭_spec.cy.js/image.png -> 02_사이드탭_spec.cy.js 추출
+                  $failedSpecNames = $failScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
+                  $foundFailCount = $failedSpecNames.Count
+                  
+                  Write-Host "⚠️ Unique Failed Specs: $failedSpecNames (Count: $foundFailCount)"
               }
           }
 
@@ -352,7 +357,7 @@ jobs:
           $time   = $env:NOW
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-          # 제목 형식: [실패][Auto-PC] (FAIL: 1 script) 로그캐치 UI 확인결과 (시간)
+          # 구글 챗 제목 형식: [실패][Auto-PC] (FAIL: 1 script) 로그캐치 UI 확인결과 (시간)
           $msgText = "$title $statusDetail $pName $tType $mTitle ($time)`n`n${env:LABEL_DASH} : $url`n${env:LABEL_GIT} : $runUrl"
 
           # 7. Send to Google Chat
