@@ -288,6 +288,7 @@ jobs:
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
         run: |
+          # 0. 환경 설정
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
@@ -297,27 +298,22 @@ jobs:
 
           if (Test-Path $reportPath) {
               try {
-                  $reportContent = Get-Content $reportPath -Raw -Encoding utf8
-                  $report = $reportContent | ConvertFrom-Json
-                  
-                  # stats 객체와 failures 속성이 있는지 확인 후 정수 비교
+                  $report = Get-Content $reportPath -Raw | ConvertFrom-Json
+                  # stats.failures가 있는지 확인하고 숫자로 변환
                   if ($null -ne $report.stats -and $null -ne $report.stats.failures) {
-                      $failureCount = [int]$report.stats.failures
-                      Write-Host "🔍 감지된 실패 수: $failureCount"
-                      
-                      if ($failureCount -gt 0) {
-                          $isFailed = $true
-                      }
+                      $failCount = [int]$report.stats.failures
+                      Write-Host "🔍 감지된 실패 수: $failCount"
+                      if ($failCount -gt 0) { $isFailed = $true }
                   } else {
-                      Write-Host "⚠️ 리포트 구조가 예상과 다릅니다. 안전을 위해 실패로 처리합니다."
+                      Write-Host "⚠️ 리포트 구조 이상"
                       $isFailed = $true
                   }
               } catch {
-                  Write-Host "❌ JSON 분석 에러: $_"
-                  $isFailed = $true 
+                  Write-Host "❌ JSON 파싱 에러"
+                  $isFailed = $true
               }
           } else {
-              Write-Host "❌ 리포트 파일(merged_report.json)을 찾을 수 없습니다."
+              Write-Host "❌ 리포트 파일 없음"
               $isFailed = $true
           }
 
