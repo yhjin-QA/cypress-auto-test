@@ -292,7 +292,7 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          # 1. 리포트 분석 (더 엄격한 체크)
+          # 1. 리포트 분석 
           $isFailed = $false
           $reportPath = "merged_report.json"
 
@@ -338,12 +338,31 @@ jobs:
           }
 
           
-          # 4. 구글 챗 전송
-          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n${env:LABEL_DASH}: $realUrl`n${env:LABEL_GIT}: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # 4. 구글 챗 메시지 조립 (변수 참조 방식 수정)
+          # 환경 변수는 $env:변수명 형식을 사용하는 것이 가장 안전합니다.
+          $msg_dash_label = if ($env:LABEL_DASH) { $env:LABEL_DASH } else { "대시보드" }
+          $msg_git_label = if ($env:LABEL_GIT) { $env:LABEL_GIT } else { "GitHub(Report)" }
           
-          $payloadJson = (@{ text = $message } | ConvertTo-Json -Compress -Depth 2)
-          $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadJson)
-          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body $payloadBytes
+          $message = "$resultTitle $env:PRODUCT_NAME $env:MSG_TITLE ($env:NOW)`n`n$msg_dash_label: $realUrl`n$msg_git_label: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
+          # 5. 구글 챗 전송 (에러 핸들링 추가)
+          try {
+              $payloadJson = @{ text = $message } | ConvertTo-Json -Compress
+              
+              # 한글 깨짐 방지를 위한 UTF8 바이트 변환 (BOM 제거)
+              $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+              $payloadBytes = $utf8NoBom.GetBytes($payloadJson)
+              
+              Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" `
+                                -Method Post `
+                                -ContentType "application/json; charset=utf-8" `
+                                -Body $payloadBytes
+              Write-Host "✅ 구글 챗 전송 성공"
+          } catch {
+              Write-Host "❌ 구글 챗 전송 실패: $_"
+              # 전송 실패 시 전체 잡(Job)이 실패로 끝나지 않게 하려면 아래 주석 해제
+              # exit 0 
+          }
 
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: always() && env.FINAL_STATUS == 'FAIL'
