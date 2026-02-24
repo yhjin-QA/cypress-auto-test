@@ -9,7 +9,7 @@ on:
   push:
     branches: [ "master" ]
   schedule:
-    - cron: '15 2 * * *'
+    - cron: '5 2 * * *'
   workflow_dispatch:
 
 jobs:
