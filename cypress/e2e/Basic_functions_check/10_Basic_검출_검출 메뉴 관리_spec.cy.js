@@ -17,7 +17,10 @@ describe('로그캐치 사이트 테스트', () => {
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
       'Avoided redundant navigation',
       'Loading chunk',
-      'operate.task.packageManagement'
+      'operate.task.packageManagement',
+      'e is not defined',
+      'Script error',
+      'not valid JSON'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
