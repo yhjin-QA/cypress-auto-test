@@ -291,6 +291,7 @@ jobs:
          
 
         run: |
+          # 1. 인코딩 설정 (UTF8)
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
@@ -302,50 +303,55 @@ jobs:
           $finalFailCount = 0
           $realFailedSpecs = @()
 
-          # [1단계] 우선 스크린샷이 있는지 확인 (실패 감지 최우선)
+          # [1단계] 스크린샷 기반 실패 감지
           if (Test-Path $screenshotPath) {
               $failedScreenshots = Get-ChildItem -Path $screenshotPath -Recurse -Filter "*(failed)*.png"
               if ($failedScreenshots.Count -gt 0) {
                   $isActuallyFailed = $true
-                  # 일단 스크린샷이 발견된 모든 폴더명을 가져옵니다.
                   $potentialFailSpecs = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
                   
-                  # [2단계] 그 중에서 진짜 리포트상 실패(failures > 0)인 것만 필터링
+                  # [2단계] 리포트 검증 (Flaky 필터링)
                   if (Test-Path $reportFolder) {
                       foreach ($specName in $potentialFailSpecs) {
-                          # 해당 스펙 이름이 포함된 리포트 파일을 찾습니다.
-                          # (예: 11_운영_spec.cy.js 이름이 리포트 내용에 있는지 확인)
                           $isRealFail = $false
                           $relatedReports = Get-ChildItem -Path $reportFolder -Filter "report_*.json"
+                          
                           foreach ($report in $relatedReports) {
-                              $content = Get-Content $report.FullName -Raw | ConvertFrom-Json
-                              # 파일명이 일치하고, 그 파일의 failures가 0보다 큰지 확인
-                              if ($content.results[0].fullFile -like "*$specName*" -and [int]$content.stats.failures -gt 0) {
-                                  $isRealFail = $true
-                                  break
+                              try {
+                                  # -Encoding UTF8 추가 및 에러 발생 시 건너뛰기
+                                  $rawJson = Get-Content $report.FullName -Raw -Encoding UTF8
+                                  if ([string]::IsNullOrWhiteSpace($rawJson)) { continue }
+                                  
+                                  $content = $rawJson | ConvertFrom-Json -ErrorAction Stop
+                                  
+                                  # 리포트에서 실패 여부 확인
+                                  if ($content.results[0].fullFile -like "*$specName*" -and [int]$content.stats.failures -gt 0) {
+                                      $isRealFail = $true
+                                      break
+                                  }
+                              } catch {
+                                  # JSON 파싱 에러 발생 시 무시하고 다음 파일 확인
+                                  continue
                               }
                           }
-                          # 리포트에서 실패가 확인된 것만 목록에 추가
                           if ($isRealFail) { $realFailedSpecs += $specName }
                       }
                   } else {
-                      # 리포트 폴더가 없으면 어쩔 수 없이 스크린샷 기반 목록을 그대로 사용 (안전빵)
                       $realFailedSpecs = $potentialFailSpecs
                   }
               }
           }
 
-          # [3단계] 최종 숫자 보정
+          # [3단계] 최종 판정 및 숫자 보정
           if ($isActuallyFailed) {
               $finalFailCount = $realFailedSpecs.Count
-              # 만약 리포트 필터링으로 0이 되었더라도, Job 자체가 실패면 최소 1로 표시
               if ($finalFailCount -eq 0 -and $jobStatus -ne "success") {
                   $finalFailCount = 1
                   $realFailedSpecs = @("Detected by System")
               }
           }
 
-          # 4. 최종 메시지 조립
+          # 4. 메시지 조립 (강조 적용)
           if ($isActuallyFailed -and $finalFailCount -gt 0) {
               $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*")
               $fileNameString = $realFailedSpecs -join ", "
@@ -357,17 +363,17 @@ jobs:
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           }
 
-          # 5. 메시지 전송 로직 (이하 동일)
+          # 5. 메시지 전송 로직
           $pName = $env:PRODUCT_NAME; $tType = $env:TEST_TYPE; $mTitle = $env:MSG_TITLE; $time = $env:NOW
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           $url = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
+          
           $msgText = if ($statusDetail -ne "") { "$title $pName $tType $mTitle ($time)`n$statusDetail`n`n${env:LABEL_DASH} : $url`n${env:LABEL_GIT} : $runUrl" } 
                      else { "$title $pName $tType $mTitle ($time)`n`n${env:LABEL_DASH} : $url`n${env:LABEL_GIT} : $runUrl" }
 
           $body = @{ text = $msgText } | ConvertTo-Json -Compress
           Invoke-RestMethod -Uri '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
 
-          
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: always() && env.FINAL_STATUS == 'FAIL'
         uses: dawidd6/action-send-mail@v3
