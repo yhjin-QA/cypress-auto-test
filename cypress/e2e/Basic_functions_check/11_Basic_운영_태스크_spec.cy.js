@@ -439,11 +439,12 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(500);
+     cy.wait(2000);
 
      // 로그 출력 검증코드
      // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 첫줄 텍스트 확인
-     cy.get('.mtk1').contains('target').should('contain', '/home/logcatch/data/logcollector/data').and('be.visible');
+     cy.contains('.mtk1', /target.*\/home\/logcatch\/data\/logcollector\/data/).should('be.visible');
+     //cy.get('.mtk1').filter(':contains("/home/logcatch/data/logcollector/data")').should('have.length.at.least', 1); // 최소 1개 이상 존재하는지 확인
      //--------------------------------------------------
      
      // 업무유형 - 접속 로그 분석기 
@@ -459,12 +460,12 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="로그 파일"]').click({ force: true });
      cy.wait(500);
      
-     // 콤보박스 리스트안에서 'DISCRIMINATOR_2002_api_20260209.log'를 찾아 클릭합니다.
-     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'DISCRIMINATOR_2002_api_20260209.log').click({ force: true });
+     // 콤보박스 리스트안에서 'DISCRIMINATOR_200220260204.log'를 찾아 클릭합니다.
+     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'DISCRIMINATOR_200220260204.log').click({ force: true });
      cy.wait(500);
 
      // 선택이 잘 되었는지 검증코드
-     cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'DISCRIMINATOR_2002_api_20260209.log');
+     cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'DISCRIMINATOR_200220260204.log');
 
      // tail 토글 OFF-> ON
      cy.get('input[aria-label="tail"]').check({ force: true })
@@ -473,11 +474,11 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(500);
+     cy.wait(2000);
      
      // 로그 출력 검증코드
      // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 첫줄 텍스트 확인
-     cy.get('.mtk1').contains('target').should('contain', '/home/logcatch/data/discriminator/data').and('be.visible');
+     cy.contains('.mtk1', /target.*\/home\/logcatch\/data\/discriminator\/data/).should('be.visible');
      //--------------------------------------------------
 
      // 업무유형 - 통계 처리기 
@@ -507,7 +508,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(500);
+     cy.wait(2000);
      
      // 로그 출력 검증코드
      // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 첫줄 텍스트 확인
@@ -541,17 +542,67 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(500);
+     cy.wait(2000);
      
      // 로그 출력 검증코드
      // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 첫줄 텍스트 확인
-     cy.get('.mtk1').contains('target').should('contain', '/home/logcatch/data/ruleanalyzer/data').and('be.visible');
+     cy.contains('.mtk1', /target.*\/home\/logcatch\/data\/ruleanalyzer\/data/).should('be.visible');
+
       //--------------------------------------------------
 
+     // 업무유형 - 로그 수집기 & tail OFF
+     //'업무 유형' 클릭하여 콤보박스 열기 -----------------
+     cy.get('input[aria-label="업무 유형"]').click({ force: true });
+     cy.wait(500);
+
+     // 콤보박스 리스트안에서 '로그 수집기'를 찾아 클릭합니다.
+     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', '로그 수집기').click({ force: true });
+     cy.wait(500);
+
+     // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
+     cy.get('input[aria-label="로그 파일"]').click({ force: true });
+     cy.wait(500);
+     
+     // 콤보박스 리스트안에서 'RSQLPARSER_2001_20260204.log'를 찾아 클릭합니다.
+     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'SQLPARSER_2001_20260204.log').click({ force: true });
+     cy.wait(500);
+
+     // 선택이 잘 되었는지 검증코드
+     cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'SQLPARSER_2001_20260204.log');
+
+     // tail 토글 ON -> OFF
+     cy.get('input[aria-label="tail"]').uncheck({ force: true }) // 체크 해제 실행
+     .should('not.be.checked'); // 실제로 체크가 해제되었는지(OFF) 확인
+     cy.wait(500);
+
+     // 검색 버튼 클릭 
+     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+     cy.wait(2000);
+     
+     // 로그 출력 검증코드
+     // 로그내용중  Currently in standby mode 텍스트 확인
+     cy.contains('.mtk1', 'Currently in standby mode').should('be.visible');
+
+      // tail 토글 OFF-> ON
+     cy.get('input[aria-label="tail"]').check({ force: true })
+     .should('be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
+     cy.wait(500);
+
+     // 검색 버튼 클릭 
+     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+     cy.wait(2000);
+     
+     // 로그 출력 검증코드
+     // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 첫줄 텍스트 확인
+     // 'target'과 'logcollector' 경로가 모두 포함된 요소를 직접 찾습니다.
+     cy.contains('.mtk1', /target.*\/home\/logcatch\/data\/logcollector\/data/).should('be.visible');
+
+    //--------------------------------------------------
      cy.log('✅ 운영 - 태스크 - [로그 뷰] 출력 확인 완료 ');
   
-
-     // 운영 > 태스크  > "로그 다운로드" 탭을 클릭
+    // =============================================
+    // 운영 > 태스크  > "로그 다운로드" 탭을 클릭
+    // =============================================
      cy.log('--- 로그 다운로드 탭 클릭 ---');
      cy.contains('.v-btn__content', '로그 다운로드').should('be.visible').click({ force: true });
      cy.wait(3000);
@@ -718,8 +769,11 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('.v-icon.fa-search').click({ force: true });
        cy.wait(1000); 
        cy.log('✅ 운영 - 태스크 - [패키지 관리] 출력 확인 완료 ');
+
     */
 
+
+   
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
