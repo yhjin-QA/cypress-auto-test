@@ -160,16 +160,16 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          # 1. 11번 파일을 제외한 모든 .cy.js 파일 목록을 쉼표로 연결해서 만듭니다.
-          $allSpecs = Get-ChildItem -Path "cypress/e2e/Basic_functions_check" -Recurse -Filter "*.cy.js" | 
-                      Where-Object { $_.Name -notlike "*11_Basic_운영_태스크_spec.cy.js*" } | 
-                      ForEach-Object { $_.FullName }
-          $specList = $allSpecs -join ","
+          # [1단계] 11번 파일의 확장자를 임시로 변경 (Cypress가 못 찾게 함)
+          $target = Get-ChildItem -Path "cypress/e2e/Basic_functions_check" -Recurse -Filter "11_Basic_운영_태스크_spec.cy.js"
+          if ($target) {
+              Rename-Item -Path $target.FullName -NewName ($target.Name + ".bak")
+              Write-Host "✅ 제외 완료: $($target.Name).bak"
+          }
 
-          Write-Host "실행될 파일 목록: $specList"
+          # [2단계] 실행 (이제 11번은 .bak 파일이라 자동 제외됩니다)
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
 
-          # 2. 추출한 파일 목록($specList)만 실행하도록 전달합니다.
-          cmd /c "chcp 65001 & npx cy2 run --record --spec '$specList' --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           Get-Content cypress.log
 
@@ -252,9 +252,19 @@ jobs:
           npm install --no-audit  
           npx cypress install
 
-          # 임시폴더로 옮긴 특정 파일 단독 실행
-          cmd /c "chcp 65001 & npx cy2 run --record --spec '${{ env.RESTART_SPEC }}' --browser chrome --group 'Restart-Job' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
+          # [핵심] 실제 파일의 위치를 찾아서 변수에 할당합니다.
+          $actualFile = (Get-ChildItem -Path "cypress/e2e/Basic_functions_check" -Recurse -Filter "11_Basic_운영_태스크_spec.cy.js").FullName
+          
+          if (-not $actualFile) {
+              Write-Error "❌ 테스트 파일을 찾을 수 없습니다!"
+              exit 1
+          }
 
+          Write-Host "🚀 단독 실행 파일: $actualFile"
+
+          # [수정] 찾은 실제 경로($actualFile)를 --spec에 전달
+          cmd /c "chcp 65001 & npx cy2 run --record --spec '$actualFile' --browser chrome --group 'Restart-Job' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
+         
           Get-Content cypress_restart.log
           
       - name: 📂 리포트 데이터 업로드 (Restart Spec)
