@@ -159,17 +159,20 @@ jobs:
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          # [핵심] 11번 파일을 실행 경로 밖으로 잠시 옮깁니다.
+          $restartFile = "${{ env.RESTART_SPEC }}"
+          if (Test-Path $restartFile) {
+              Move-Item -Path $restartFile -Destination ".." # 한 단계 위 폴더로 이동
+              Write-Host "✅ 태스크 재시작 파일을 격리했습니다: $restartFile"
+          }
           
           npm install
-          # 👇 [필수] 'mochawesome'을 명시적으로 설치해야 합니다.
           npm install cy2 mochawesome mochawesome-merge mochawesome-report-generator --save-dev
           npx cypress install
 
           # 👇 [수정] 복잡한 옵션은 다 빼고, config 파일 설정을 따르도록 단순화했습니다.
-          #cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
-
-          # [수정 후] 특정 파일을 제외하고 수행
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --config 'excludeSpecPattern=${{ env.RESTART_SPEC }}' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           
           Get-Content cypress.log
@@ -230,6 +233,15 @@ jobs:
     needs: cypress-run  # Job 1이 끝나야 시작
     if: always()        
     runs-on: [self-hosted, PC-Auto]
+    # 👇 [추가] cy2 실행을 위한 환경 변수 복사
+    env:
+      CYPRESS_API_URL: "http://10.10.54.5:1234/"
+      CYPRESS_RECORD_KEY: "my-secret-key"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      COMMIT_INFO_MESSAGE: ${{ github.event.head_commit.message }}
+      NO_COLOR: 1
+      CI: true
+      continue-on-error: true # 에러가 나도 업로드는 해야 함
     defaults:
       run:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
@@ -239,16 +251,16 @@ jobs:
 
       - name: Cypress Run (Restart Task Spec)
         run: |
-          # npm install 대신 ci 혹은 필요한 패키지만 확인
-          # 에러 무시를 위해 에러 액션 설정 추가
+         
           $ErrorActionPreference = "Continue" 
-          npm install --no-audit  # audit 과정을 빼서 에러 가능성 감소
-          
-          # npx cypress install (캐시가 없을 경우 대비)
+          npm install --no-audit  
           npx cypress install
 
           # 특정 파일 단독 실행
+          # 환경변수 누락 에러 해결을 위해 env가 위쪽에 선언되었는지 꼭 확인하세요!
           cmd /c "chcp 65001 & npx cy2 run --record --spec '${{ env.RESTART_SPEC }}' --browser chrome --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
+          Get-Content cypress_restart.log
+
           Get-Content cypress_restart.log
           
       - name: 📂 리포트 데이터 업로드 (Restart Spec)
