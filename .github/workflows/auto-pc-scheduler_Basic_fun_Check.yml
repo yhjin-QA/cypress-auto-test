@@ -5,8 +5,6 @@ env:
   #실패시 파일명 독립적으로 UI/basic 명시하기위해 꼬리표
   TEST_TYPE: 기능(Basic)
   TZ: Asia/Seoul
-  # [추가] 재시작 테스트 파일 경로 변수화 (관리 편의성) 아래 해당파일은 맨마지막에 수행하도록 
-  RESTART_SPEC: "cypress/e2e/Basic_functions_check/**/11_Basic_운영_태스크_spec.cy.js"
 
 on:
   push:
@@ -157,19 +155,17 @@ jobs:
           CI: true
         continue-on-error: true # 에러가 나도 업로드는 해야 함
         run: |
+          # 1. 인코딩 강제 설정 (한글 파일명 인식용)
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          # [1단계] 11번 파일의 확장자를 임시로 변경 (Cypress가 못 찾게 함)
-          $target = Get-ChildItem -Path "cypress/e2e/Basic_functions_check" -Recurse -Filter "11_Basic_운영_태스크_spec.cy.js"
-          if ($target) {
-              Rename-Item -Path $target.FullName -NewName ($target.Name + ".bak")
-              Write-Host "✅ 제외 완료: $($target.Name).bak"
-          }
+          # 2. 11번 파일을 찾아서 아예 삭제 (이 러너 환경에서만 삭제됨)
+          # 파일명의 '일부'만 사용해서 인코딩 이슈를 회피합니다.
+          Get-ChildItem -Path "cypress/e2e/Basic_functions_check" -Recurse | Where-Object { $_.Name -like "*11_Basic*" } | Remove-Item -Force
+          Write-Host "✅ [Job 1] 운영 태스크 파일을 물리적으로 제거하여 실행에서 제외했습니다."
 
-          # [2단계] 실행 (이제 11번은 .bak 파일이라 자동 제외됩니다)
+          # 3. 실행
           cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
-
           
           Get-Content cypress.log
 
@@ -247,23 +243,26 @@ jobs:
 
       - name: Cypress Run (Restart Task Spec)
         run: |
-         
+          # 1. 초기 설정 및 설치
           $ErrorActionPreference = "Continue" 
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
           npm install --no-audit  
           npx cypress install
 
-          # [핵심] 실제 파일의 위치를 찾아서 변수에 할당합니다.
-          $actualFile = (Get-ChildItem -Path "cypress/e2e/Basic_functions_check" -Recurse -Filter "11_Basic_운영_태스크_spec.cy.js").FullName
+          # 파일을 찾지 말고, 경로를 직접 변수에 담습니다. (한글 깨짐 방지 위해 와일드카드 사용)
+          $targetSpec = Get-ChildItem -Path "cypress/e2e/Basic_functions_check" -Recurse | Where-Object { $_.Name -like "*11_Basic*" } | Select-Object -ExpandProperty FullName
           
-          if (-not $actualFile) {
-              Write-Error "❌ 테스트 파일을 찾을 수 없습니다!"
+          if (-not $targetSpec) {
+              Write-Error "❌ 테스트 파일을 찾을 수 없습니다! 경로를 다시 확인해주세요."
               exit 1
           }
 
-          Write-Host "🚀 단독 실행 파일: $actualFile"
+          Write-Host "🚀 [Job 2] 단독 실행 파일: $targetSpec"
 
-          # [수정] 찾은 실제 경로($actualFile)를 --spec에 전달
-          cmd /c "chcp 65001 & npx cy2 run --record --spec '$actualFile' --browser chrome --group 'Restart-Job' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
+          # 실행 시 변수를 따옴표로 감싸서 공백/한글 이슈 방지
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --group 'Restart-Job' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
          
           Get-Content cypress_restart.log
           
