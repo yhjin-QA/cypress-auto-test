@@ -159,21 +159,17 @@ jobs:
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-
-          # [핵심] 11번 파일을 실행 경로 밖으로 잠시 옮깁니다.
-          $restartFile = "${{ env.RESTART_SPEC }}"
-          if (Test-Path $restartFile) {
-              Move-Item -Path $restartFile -Destination ".." # 한 단계 위 폴더로 이동
-              Write-Host "✅ 태스크 재시작 파일을 격리했습니다: $restartFile"
-          }
           
-          npm install
-          npm install cy2 mochawesome mochawesome-merge mochawesome-report-generator --save-dev
-          npx cypress install
+          # 1. 11번 파일을 제외한 모든 .cy.js 파일 목록을 쉼표로 연결해서 만듭니다.
+          $allSpecs = Get-ChildItem -Path "cypress/e2e/Basic_functions_check" -Recurse -Filter "*.cy.js" | 
+                      Where-Object { $_.Name -notlike "*11_Basic_운영_태스크_spec.cy.js*" } | 
+                      ForEach-Object { $_.FullName }
+          $specList = $allSpecs -join ","
 
-          # 👇 [수정] 복잡한 옵션은 다 빼고, config 파일 설정을 따르도록 단순화했습니다.
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
-          
+          Write-Host "실행될 파일 목록: $specList"
+
+          # 2. 추출한 파일 목록($specList)만 실행하도록 전달합니다.
+          cmd /c "chcp 65001 & npx cy2 run --record --spec '$specList' --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           Get-Content cypress.log
 
@@ -256,10 +252,8 @@ jobs:
           npm install --no-audit  
           npx cypress install
 
-          # 특정 파일 단독 실행
-          # 환경변수 누락 에러 해결을 위해 env가 위쪽에 선언되었는지 꼭 확인하세요!
-          cmd /c "chcp 65001 & npx cy2 run --record --spec '${{ env.RESTART_SPEC }}' --browser chrome --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
-          Get-Content cypress_restart.log
+          # 임시폴더로 옮긴 특정 파일 단독 실행
+          cmd /c "chcp 65001 & npx cy2 run --record --spec '${{ env.RESTART_SPEC }}' --browser chrome --group 'Restart-Job' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
 
           Get-Content cypress_restart.log
           
