@@ -5,7 +5,7 @@ env:
   #실패시 파일명 독립적으로 UI/basic 명시하기위해 꼬리표
   TEST_TYPE: 기능(Basic)
   TZ: Asia/Seoul
-  # [추가] 재시작 테스트 파일 경로 변수화 (관리 편의성)
+  # [추가] 재시작 테스트 파일 경로 변수화 (관리 편의성) 아래 해당파일은 맨마지막에 수행하도록 
   RESTART_SPEC: "cypress/e2e/Basic_functions_check/**/11_Basic_운영_태스크_spec.cy.js"
 
 on:
@@ -166,7 +166,10 @@ jobs:
           npx cypress install
 
           # 👇 [수정] 복잡한 옵션은 다 빼고, config 파일 설정을 따르도록 단순화했습니다.
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          #cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+
+          # [수정 후] 특정파일 은 맨마지막 제외하고 마지막 수행하도록 ( 11.운영_태스크)
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --exclude-spec '${{ env.RESTART_SPEC }}' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           
           Get-Content cypress.log
@@ -251,7 +254,7 @@ jobs:
           retention-days: 1       
 
   # ====================================================
-  # [Job 2] 종합 알림 (데이터 통합 & 리포트 생성)
+  # [Job 3] 종합 알림 (데이터 통합 & 리포트 생성)
   # ====================================================
   notify-result:
     #needs: cypress-run
