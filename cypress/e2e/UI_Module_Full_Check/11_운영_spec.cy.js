@@ -1567,7 +1567,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-list__tile__title').filter(':contains("실행 플랜")').filter(':visible').click({ force: true });
     cy.wait(3000); 
 
-    // 운영 > 태스크  > "실행관리" 탭을 클릭
+    // 운영 > 실행플랜  > 스케줄러 탭을 클릭
     cy.log('--- 스케줄러 탭 클릭 ---');
     cy.contains('.v-btn__content', '스케줄러').should('be.visible').click({ force: true });
     cy.wait(3000);
@@ -1613,7 +1613,7 @@ describe('로그캐치 사이트 테스트', () => {
 
  
  
-    // 운영 > 태스크  > "실시간 모니터링" 탭을 클릭
+    // 운영 > 실행 플랜  > "실시간 모니터링" 탭을 클릭
     cy.log('--- 실시간 모니터링 탭 클릭 ---');
     cy.contains('.v-btn__content', '실시간 모니터링').should('be.visible').click({ force: true });
     cy.wait(3000);

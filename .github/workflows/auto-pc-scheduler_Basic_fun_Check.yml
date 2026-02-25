@@ -2,8 +2,11 @@ name: Auto-PC Work (Daily_Basic)
 
 env:
   PRODUCT_NAME: "로그캐치"
+  #실패시 파일명 독립적으로 UI/basic 명시하기위해 꼬리표
   TEST_TYPE: 기능(Basic)
   TZ: Asia/Seoul
+  # [추가] 재시작 테스트 파일 경로 변수화 (관리 편의성)
+  RESTART_SPEC: "cypress/e2e/Basic_functions_check/**/11_Basic_운영_태스크_spec.cy.js"
 
 on:
   push:
@@ -216,12 +219,43 @@ jobs:
             cypress/screenshots
           retention-days: 1
           if-no-files-found: ignore
+  
+  # ====================================================
+  # [Job 2] 태스크 재시작 테스트 (단독 실행)
+  # ====================================================
+  restart-task-run:
+    needs: cypress-run  # Job 1이 끝나야 시작
+    if: always()        
+    runs-on: [self-hosted, PC-Auto]
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cypress Run (Restart Task Spec)
+        run: |
+          npm install
+          # 특정 파일만 단독 실행 (병렬 옵션 제외)
+          cmd /c "chcp 65001 & npx cy2 run --record --spec '${{ env.RESTART_SPEC }}' --browser chrome --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
+          
+      - name: 📂 리포트 데이터 업로드 (Restart Spec)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Basic-Raw-Data-Restart
+          path: |
+            cypress/reports/json_logs
+            cypress/screenshots
+          retention-days: 1       
 
   # ====================================================
   # [Job 2] 종합 알림 (데이터 통합 & 리포트 생성)
   # ====================================================
   notify-result:
-    needs: cypress-run
+    #needs: cypress-run
+    needs: [cypress-run, restart-task-run] # 두 작업이 모두 끝나야 함
     if: always()
     runs-on: [self-hosted, PC-Auto]
     
