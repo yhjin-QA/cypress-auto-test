@@ -168,8 +168,8 @@ jobs:
           # 👇 [수정] 복잡한 옵션은 다 빼고, config 파일 설정을 따르도록 단순화했습니다.
           #cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
 
-          # [수정 후] 명시적으로 전체 포함 후, 쉼표(,) 뒤에 !를 붙여 제외할 파일을 적습니다.
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js,!${{ env.RESTART_SPEC }}' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          # [수정 후] 특정 파일을 제외하고 수행
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --config 'excludeSpecPattern=${{ env.RESTART_SPEC }}' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           
           Get-Content cypress.log
@@ -239,9 +239,17 @@ jobs:
 
       - name: Cypress Run (Restart Task Spec)
         run: |
-          npm install
-          # 특정 파일만 단독 실행 (병렬 옵션 제외)
+          # npm install 대신 ci 혹은 필요한 패키지만 확인
+          # 에러 무시를 위해 에러 액션 설정 추가
+          $ErrorActionPreference = "Continue" 
+          npm install --no-audit  # audit 과정을 빼서 에러 가능성 감소
+          
+          # npx cypress install (캐시가 없을 경우 대비)
+          npx cypress install
+
+          # 특정 파일 단독 실행
           cmd /c "chcp 65001 & npx cy2 run --record --spec '${{ env.RESTART_SPEC }}' --browser chrome --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
+          Get-Content cypress_restart.log
           
       - name: 📂 리포트 데이터 업로드 (Restart Spec)
         if: always()
