@@ -168,8 +168,8 @@ jobs:
           # 👇 [수정] 복잡한 옵션은 다 빼고, config 파일 설정을 따르도록 단순화했습니다.
           #cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
 
-          # [수정 후] 특정파일 은 맨마지막 제외하고 마지막 수행하도록 ( 11.운영_태스크)
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --exclude-spec '${{ env.RESTART_SPEC }}' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          # [수정 후] 명시적으로 전체 포함 후, 쉼표(,) 뒤에 !를 붙여 제외할 파일을 적습니다.
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js,!${{ env.RESTART_SPEC }}' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           
           Get-Content cypress.log
