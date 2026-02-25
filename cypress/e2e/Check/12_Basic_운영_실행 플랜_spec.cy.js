@@ -160,15 +160,55 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('@detailHeader').contains('플랜 삭제 여부').should('be.visible');
 
 
-    //기능확인
+    //기능확인------------------------------------------------
     // "무결성 검사정책" 텍스트가 포함된 행(tr)을 찾습니다.
+    // 1. "무결성 검사 정책" 행을 찾아 체크박스 클릭 (행을 @targetRow로 별칭 지정)
+    cy.contains('tr', '무결성 검사 정책').as('targetRow')
+     .within(() => {
+      cy.get('.v-input--selection-controls__ripple').click({ force: true });
+     });
+
+    // (옵션) 체크가 실제로 되었는지 검증
+    cy.contains('tr', '무결성 검사 정책').find('input[role="checkbox"]').should('have.attr', 'aria-checked', 'true');
+
+    // '시작' 버튼 활성화 확인 및 클릭
+    cy.wait(1000); 
+    cy.contains('.v-btn__content', '시작').closest('button').should('not.be.disabled').click({ force: true });
+
+    // 4. 성공 알림창(Snackbar) 포착 및 텍스트 검증
+    cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible').and('contain', '성공'); // '성공' 문구 포함 확인
+
+    // 5. 알림창이 사라질 때까지 대기
+    cy.get('.v-snack__content').should('not.exist');
+    cy.wait(2000); 
+
+    // [최종 확인] 해당 행의 상태가 '활성'으로 바뀌었는지 확인
+    cy.get('@targetRow').should('contain', '활성').and('be.visible');
+
+    cy.log('✅ 무결성 검사 정책 실행 및 상태 변경 확인 완료');
+    //------------------------------------------------------------------------
+
+    // 1. 해당 행(tr)을 찾습니다.
     cy.contains('tr', '무결성 검사 정책')
+    .within(() => {
+      // 2. 현재 체크된 상태인지 먼저 확인한 후 클릭하여 해제합니다.
+      // 'v-input--is-label-active' 클래스가 있으면 체크된상태인지 확인하고 언체크
+      cy.get('.v-input--selection-controls').should('have.class', 'v-input--is-label-active').find('.v-input--selection-controls__ripple').click({ force: true });
+
+      // 3. 해제 후 'v-input--is-label-active' 클래스가 사라졌는지 확인 (언체크 검증)
+      cy.get('.v-input--selection-controls').should('not.have.class', 'v-input--is-label-active');
+    });
+     cy.log('✅ 무결성 검사 정책 언체크 완료');
+     cy.wait(5000); 
+
+    // "인사연동 플랜" 텍스트가 포함된 행(tr)을 찾습니다.-----------------------------
+    cy.contains('tr', '인사연동 플랜').as('targetRow1')
     .within(() => {
       cy.get('.v-input--selection-controls__ripple').click({ force: true });
     });
 
     // (옵션) 체크가 실제로 되었는지 검증
-    cy.contains('tr', '무결성 검사 정책').find('input[role="checkbox"]').should('have.attr', 'aria-checked', 'true');
+    cy.contains('tr', '인사연동 플랜').find('input[role="checkbox"]').should('have.attr', 'aria-checked', 'true');
 
     // '시작'이라는 버튼이 활성화 해당버튼을 클릭합니다.
     cy.wait(1000);
@@ -178,7 +218,12 @@ describe('로그캐치 사이트 테스트', () => {
     // 성공 팝업 알림창 나타나는 순간을 포착 (Timeout을 넉넉히 주어 나타날 때까지 기다림)
     cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible').should('contain', '성공'); // 텍스트 검증
     // 성공 팝업 알림창 사라질 때까지 기다리기 (선택 사항)
-    cy.get('.v-snack__content').should('not.exist'); 
+    cy.get('.v-snack__content').should('not.exist');
+    cy.wait(2000);  
+
+    // 해당 행의 상태가 '활성'으로 바뀌었는지 확인
+    cy.get('@targetRow1').should('contain', '활성').and('be.visible');
+    //------------------------------------------------------------------------ 
 
     cy.log('✅ 운영 - 실행플랜 - [스케줄러] 출력 확인 완료 ');
 
