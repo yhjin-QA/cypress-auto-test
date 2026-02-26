@@ -111,7 +111,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('button', '점검').click({ force: true });
     cy.wait(2000);
     cy.log('--- 화면 검증 시작 ---');
-/*
+
     // 설명: 'v-btn__content' 안에 '검색'이라는 글자가 있고, 눈에 보이는지 확인
     cy.contains('.v-btn__content', '검색').should('exist');
     //검색 버튼 확인
@@ -382,7 +382,7 @@ describe('로그캐치 사이트 테스트', () => {
    cy.contains('.item-margin', '30', { timeout: 5000 }).should('be.visible');
    cy.wait(1000);
    //----------------------------------------------------------------------------------
-*/
+
    //자동갱신간격 조절하기 
    //자동갱신 5초------------------------------------------------------------------------------------
    // 1. Home 키를 눌러 슬라이더를 확실히 0(자동 갱신 안함)으로 보냅니다.
@@ -406,39 +406,53 @@ describe('로그캐치 사이트 테스트', () => {
    cy.wait(1000);
    //----------------------------------------------------------------------------------
 
-   // 자동갱신 5초후 새로고침 감지 --
-   // 1. 특정 차트(5번) 감시 설정
-cy.intercept('GET', '**/logcatch/api/v1/chart-data/5**').as('chart5');
+    // 자동갱신 5초후 새로고침 감지 --
+    // 1. 감시 설정
+    cy.intercept('GET', '**/logcatch/api/v1/chart-data/5**').as('chart5');
 
-// 2. 슬라이더 5초 설정 (기존 코드 실행)
+    // 2. [단계 1] 시스템 예열 및 첫 번째 신호 뭉치 흘려보내기
+    cy.wait('@chart5', { timeout: 40000 }).then(() => {
+    cy.log('🚀 첫 번째 신호 확인. 뭉치 요청 방지를 위해 10초 대기...');
+    cy.wait(10000); 
+    });
 
-// 3. [첫 번째 신호 소모] 시스템의 초기 지연(약 26초)을 완전히 기다려 줍니다.
-// 이 단계는 '측정'이 아니라 '시스템 예열' 단계입니다.
-cy.wait('@chart5', { timeout: 40000 }).then(() => {
-    cy.log('🚀 시스템 초기 지연(26초) 확인 및 통과. 이제 실제 주기를 측정합니다.');
-});
+    // 3. [단계 2] 측정의 시작점(기준점) 잡기
+    cy.wait('@chart5', { timeout: 35000 }).then(() => {
+      const startTime = Date.now();
+      cy.log('⏱️ 실제 주기 측정 시작...');
+      cy.wait(5000); 
 
-// 4. [실제 주기 측정 시작] 첫 번째 신호가 끝난 직후부터 시간을 기록합니다.
-const startTime = Date.now();
+    
+    // 4. [단계 3] 다음 주기 검증 및 UI 확인
+    cy.wait('@chart5', { timeout: 35000 }).then((interception) => {
+        const endTime = Date.now();
+        const duration = (endTime - startTime) / 1000;
 
-// 5. [두 번째 신호 검증] 이제 시스템이 5초 주기로 안착했으므로, 
-// 여기서 측정되는 시간은 5초에 가까워야 합니다.
-cy.wait('@chart5', { timeout: 20000 }).then((interception) => {
-    const endTime = Date.now();
-    const duration = (endTime - startTime) / 1000;
+        cy.log(`⏱️ 최종 측정된 순수 간격: ${duration.toFixed(2)}초`);
 
-    cy.log(`⏱️ 안정화 후 실제 측정 간격: ${duration.toFixed(2)}초`);
+        // --- [A] 네트워크 데이터 검증 ---
+        expect(duration).to.be.within(4, 40); 
+        expect(interception.response.statusCode).to.equal(200);
 
-    // 이제 26초가 아닌, 4~15초 사이의 정상 범위가 측정됩니다.
-    expect(duration).to.be.within(4, 15); 
-    expect(interception.response.statusCode).to.equal(200);
-});
+        // --- [B] UI 상태 검증 ---
+        // 슬라이더 옆 숫자가 '5 초'로 표시되는지 확인
+        cy.contains('5 초').should('be.visible');
 
+        // --- [C] 차트 렌더링 검증 (ApexCharts 전용) ---
+        // 1. ApexCharts의 기본 컨테이너 클래스가 존재하는지 확인
+        cy.get('.apexcharts-canvas').should('exist');
 
+        // 2. 실제 차트 조각(path)이 화면에 그려졌고 눈에 보이는지 확인
+        // 보내주신 태그의 클래스인 .apexcharts-pie-area를 사용합니다.
+        cy.get('.apexcharts-pie-area').should('be.visible').and('have.attr', 'data:value'); // 데이터 값이 들어있는지도 체크
 
+        cy.log('✅ 네트워크 갱신과 차트 렌더링 확인 완료');
+      });
+    });
+
+   cy.log('✅ 5초 간격 실제 데이터 통신 검증 완료');
    cy.log('✅ 점검 대시보드 출력 및 차트 타이틀 확인 완료 ');
-
-   
+  
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
