@@ -2,6 +2,12 @@ const { defineConfig } = require("cypress");
 const fs = require('fs');   // 파일 시스템 모듈
 const path = require('path');
 
+// 👇 [추가 1] Lighthouse 플러그인 불러오기
+const { lighthouse, prepareAudit } = require("@cypress-audit/lighthouse");
+
+// 👇 [신규 추가] 파일명을 저장해둘 전역 변수
+let currentReportName = "default";
+
 module.exports = defineConfig({
   //projectId: "7yuixr",
   projectId: "Cypress-auto",
@@ -47,10 +53,57 @@ module.exports = defineConfig({
     videoCompression: false,
     
     setupNodeEvents(on, config) {
+
+      // 👇 [추가 2] 브라우저 실행 전 Lighthouse 감사 준비
+      on("before:browser:launch", (browser = {}, launchOptions) => {
+        prepareAudit(launchOptions);
+      });
+
+
       // 👇 [수정 3] 리포터 플러그인 연결 제거 (mochawesome 쓸 때는 필요 없음)
       // require('cypress-mochawesome-reporter/plugin')(on);
 
       on('task', {
+
+        // ==========================================
+        // 👇 [핵심 수정] Lighthouse 결과를 HTML 파일로 저장하는 로직
+        // ==========================================
+
+        // 👇 [신규 추가] 테스트 코드에서 파일명을 전달받아 변수에 저장하는 기능
+        setReportName: (name) => {
+          currentReportName = name;
+          return null; // task는 항상 무언가를 반환해야 하므로 null 반환
+        },
+
+        // 👇 [핵심 수정] 파일 저장 시 읽기 편한 날짜 포맷 적용
+        lighthouse: lighthouse((lighthouseReport) => {
+          const reportDir = path.join(__dirname, 'cypress', 'reports', 'lighthouse');
+          if (!fs.existsSync(reportDir)) {
+              fs.mkdirSync(reportDir, { recursive: true });
+            }
+                  
+            // 1. 현재 시간을 보기 좋은 형식(YYYYMMDD_HHMMSS)으로 변환
+            const now = new Date();
+            const formattedDate = now.getFullYear() + 
+                                  String(now.getMonth() + 1).padStart(2, '0') + 
+                                  String(now.getDate()).padStart(2, '0') + '_' + 
+                                  String(now.getHours()).padStart(2, '0') + 
+                                  String(now.getMinutes()).padStart(2, '0') + 
+                                  String(now.getSeconds()).padStart(2, '0');
+                  
+           // 2. 파일명 생성 (예: lighthouse-report-현황-20260227_151830.html)
+           const fileName = `lighthouse-report-${currentReportName}-${formattedDate}.html`;
+           const filePath = path.join(reportDir, fileName);
+          
+          // HTML 데이터 쓰기
+          fs.writeFileSync(filePath, lighthouseReport.report);
+          console.log(`\n✅ Lighthouse 성능 리포트 저장 완료: ${filePath}\n`);
+          
+          return null; 
+        }),
+        // ==========================================
+
+
         // 1. (기존) 파일 목록 읽기
         readDirectory(folderPath) {
           const dir = path.resolve(folderPath);

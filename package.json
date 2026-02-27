@@ -13,6 +13,7 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@cypress-audit/lighthouse": "^1.4.2",
     "cy2": "^4.0.9",
     "cypress": "^15.8.1",
     "cypress-mochawesome-reporter": "^4.0.2"

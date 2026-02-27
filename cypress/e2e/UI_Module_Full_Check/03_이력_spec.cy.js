@@ -197,7 +197,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('button', '이력').click({ force: true });
     cy.log('--- 이력 > 접속기록 이력  클릭 ---');
     cy.wait(3000);
-    // 설명: .v-list__tile__title 클래스 내의 '사용자 추적' 글자를 찾아 클릭
+    // 설명: .v-list__tile__title 클래스 내의 '접속기록 이력'' 글자를 찾아 클릭
     cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
     cy.wait(3000);
     // 'tab-btn' 클래스를 가진 요소 안에서 '  ' 글자를 찾아 클릭
