@@ -110,38 +110,70 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-  # ====================================================
-  # [Job 2] 구글 챗 알림 전송 (테스트 종료 후)
+ # ====================================================
+  # [Job 2] 종합 알림 (구글 챗 전송) 테스트종료후
   # ====================================================
   notify-result:
-    needs: [performance-run] # 5병렬 테스트가 모두 종료되면 실행
+    needs: [performance-run] 
     if: always()
     runs-on: [self-hosted, PC-Auto]
     defaults:
       run:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
     steps:
-      - name: Get Current Time
-        run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        
+      # 👇 [신규 추가] 점수를 추출하기 위해 방금 업로드된 HTML 리포트들을 임시로 다운로드합니다.
+      - name: 📥 Download Lighthouse Reports for Parsing
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: Lighthouse-Performance-Report-*
+          path: downloaded_reports
+
       - name: Send Google Chat (Performance)
         env:
           MSG_TITLE: "[성능][웹페이지로딩][Auto-PC] 로그캐치 웹페이지 로딩측정결과"
-          MSG_TOBE: "10.10.54.41 (to-be) :"
-          MSG_ASIS: "10.10.54.42 (as-is) :"
+          MSG_TOBE: "10.10.54.41 (To-be) :"
+          MSG_ASIS: "10.10.54.42 (As-is) :"
           MSG_DESC: "측정결과 : 해당 링크의 Artifacts 다운로드 압축 파일을 확인해주세요"
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          # 👇 [핵심 추가] 현재 시간을 스텝 내부에서 직접 추출하여 변수에 담습니다.
           $nowTime = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-          
-          # GitHub Artifacts (리포트 파일)를 다운받을 수 있는 해당 Action Run의 고유 링크
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # 👇 변수가 꼬이지 않도록 $($변수명) 형태로 안전하게 감싸서 조립합니다.
-          $msgText = "$($env:MSG_TITLE) ($nowTime)`n$($env:MSG_TOBE) $runUrl`n$($env:MSG_ASIS) $runUrl`n$($env:MSG_DESC)"
+          # 👇 [핵심 추가] HTML 파일 안에서 성능 점수(0.0~1.0)를 찾아 100점 만점으로 계산하는 함수
+          function Get-AvgScore($ip) {
+              $folderPath = "downloaded_reports/Lighthouse-Performance-Report-$ip"
+              if (-not (Test-Path $folderPath)) { return "확인 불가" }
+
+              $scores = @()
+              $files = Get-ChildItem -Path $folderPath -Filter "*.html"
+              foreach ($file in $files) {
+                  $content = Get-Content $file.FullName -Raw -Encoding UTF8
+                  # Lighthouse 리포트 안의 JSON 데이터에서 score 값만 정규식으로 쏙 빼냅니다.
+                  if ($content -match '"categories":\{"performance":\{[^}]*"score":([0-9.]+)') {
+                      $score = [math]::Round([double]$matches[1] * 100)
+                      $scores += $score
+                  }
+              }
+
+              if ($scores.Count -gt 0) {
+                  $avg = [math]::Round(($scores | Measure-Object -Average).Average)
+                  return "$avg점"
+              }
+              return "확인 불가"
+          }
+
+          # 41번과 42번 서버의 11개 페이지 평균 점수를 각각 계산합니다.
+          $score41 = Get-AvgScore "10.10.54.41"
+          $score42 = Get-AvgScore "10.10.54.42"
+          
+          # 👇 챗 메시지에 평균 점수를 추가하여 조립합니다.
+          $msgText = "$($env:MSG_TITLE) ($nowTime)`n"
+          $msgText += "$($env:MSG_TOBE) 평균 $score41 | $runUrl`n"
+          $msgText += "$($env:MSG_ASIS) 평균 $score42 | $runUrl`n"
+          $msgText += "$($env:MSG_DESC)"
 
           $body = @{ text = $msgText } | ConvertTo-Json -Compress
           Invoke-RestMethod -Uri '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
