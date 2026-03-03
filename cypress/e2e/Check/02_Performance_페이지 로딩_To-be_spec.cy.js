@@ -117,8 +117,10 @@ describe('로그캐치 사이트 테스트', () => {
     // 설명: .v-list__tile__title 클래스 내의 '사용자 추적' 글자를 찾아 클릭
     cy.contains('.v-list__tile__title', '사용자 추적').should('be.visible').click({ force: true });
     cy.wait(3000);
+    cy.log('--- 화면 검증 시작 ---');
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
+    cy.wait(3000);
   
-    
     // 👇 두 번째 측정: 이력 화면 로딩 속도
     cy.log('🚀 [2/11] 이력 페이지 성능 측정을 시작합니다...');
     // 👇 [추가] 파일명을 '이력'으로 지정
