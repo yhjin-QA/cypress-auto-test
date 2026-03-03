@@ -96,7 +96,9 @@ jobs:
         continue-on-error: true
         with:
           pattern: Lighthouse-Fast-Report-*
-          path: downloaded_reports
+          # 👇 [수정] 쾌적망 전용 폴더로 다운로드
+          path: downloaded_fast_reports
+        
 
       - name: Send Google Chat (Fast Mode)
         env:
@@ -115,10 +117,11 @@ jobs:
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
           function Get-AvgScore($ip) {
-              $folders = Get-ChildItem -Path "downloaded_reports" -Filter "*$ip*" -Directory -ErrorAction SilentlyContinue
+              # 👇 [수정] 쾌적망 전용 폴더만 뒤져서 계산
+              $folders = Get-ChildItem -Path "downloaded_fast_reports" -Filter "*$ip*" -Directory -ErrorAction SilentlyContinue
               if (-not $folders) { return $env:MSG_UNKNOWN }
               $suffix = $ip.Split('.')[-1]
-              $allFiles = Get-ChildItem -Path "downloaded_reports" -Filter "*_$suffix-*.html" -Recurse -ErrorAction SilentlyContinue
+              $allFiles = Get-ChildItem -Path "downloaded_fast_reports" -Filter "*_$suffix-*.html" -Recurse -ErrorAction SilentlyContinue
               if (-not $allFiles) { return $env:MSG_UNKNOWN }
 
               $latestFiles = @{}
@@ -250,7 +253,8 @@ jobs:
         continue-on-error: true
         with:
           pattern: Lighthouse-Limit-Report-*
-          path: downloaded_reports
+          # 👇 [수정] 제한망 전용 폴더로 다운로드
+          path: downloaded_limit_reports
 
       - name: Send Google Chat (Limit Mode)
         env:
@@ -269,10 +273,11 @@ jobs:
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
           function Get-AvgScore($ip) {
-              $folders = Get-ChildItem -Path "downloaded_reports" -Filter "*$ip*" -Directory -ErrorAction SilentlyContinue
+              # 👇 [수정] 제한망 전용 폴더만 뒤져서 계산
+              $folders = Get-ChildItem -Path "downloaded_limit_reports" -Filter "*$ip*" -Directory -ErrorAction SilentlyContinue
               if (-not $folders) { return $env:MSG_UNKNOWN }
               $suffix = $ip.Split('.')[-1]
-              $allFiles = Get-ChildItem -Path "downloaded_reports" -Filter "*_$suffix-*.html" -Recurse -ErrorAction SilentlyContinue
+              $allFiles = Get-ChildItem -Path "downloaded_limit_reports" -Filter "*_$suffix-*.html" -Recurse -ErrorAction SilentlyContinue
               if (-not $allFiles) { return $env:MSG_UNKNOWN }
 
               $latestFiles = @{}
