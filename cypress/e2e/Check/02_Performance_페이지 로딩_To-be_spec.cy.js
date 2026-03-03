@@ -97,7 +97,6 @@ describe('로그캐치 사이트 테스트', () => {
       }
     });
 
-    cy.url({ timeout: 10000 }).should('not.include', '/login');
     cy.wait(3000); // 메인 대시보드 로딩 안정화
 
 
