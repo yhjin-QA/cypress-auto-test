@@ -137,6 +137,10 @@ jobs:
           MSG_TOBE: "10.10.54.41 (To-be) :"
           MSG_ASIS: "10.10.54.42 (As-is) :"
           MSG_DESC: "측정결과 : 자세한 세부사항은 해당 링크의 Artifacts 다운로드 압축 파일을 확인해주세요"
+          # 👇 [추가] 스크립트 내부에서 쓰이던 한글들을 모두 환경 변수로 대피시켰습니다!
+          MSG_UNKNOWN: "확인 불가"
+          MSG_UNIT: "점"
+          MSG_AVG: "평균"
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -144,11 +148,10 @@ jobs:
           $nowTime = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # 👇 [수정됨] 바뀐 폴더 이름(-1, -2) 형식에 맞춰 점수를 추출하도록 업데이트
           function Get-AvgScore($ip) {
-              # 와일드카드(*)를 사용하여 해당 IP가 포함된 폴더를 싹 다 찾습니다.
               $folders = Get-ChildItem -Path "downloaded_reports" -Filter "*$ip*" -Directory -ErrorAction SilentlyContinue
-              if (-not $folders) { return "확인 불가" }
+              # 한글 대신 환경 변수 호출
+              if (-not $folders) { return $env:MSG_UNKNOWN }
 
               $scores = @()
               foreach ($folder in $folders) {
@@ -164,19 +167,19 @@ jobs:
 
               if ($scores.Count -gt 0) {
                   $avg = [math]::Round(($scores | Measure-Object -Average).Average)
-                  return "$avg점"
+                  # 한글 '점' 대신 환경 변수 호출
+                  return "$avg$($env:MSG_UNIT)"
               }
-              return "확인 불가"
+              return $env:MSG_UNKNOWN
           }
 
-          # 41번과 42번 서버의 11개 페이지 평균 점수를 각각 계산합니다.
           $score41 = Get-AvgScore "10.10.54.41"
           $score42 = Get-AvgScore "10.10.54.42"
           
-          # 👇 챗 메시지에 평균 점수를 추가하여 조립합니다.
+          # 👇 스크립트(run) 안에는 이제 단 한 글자의 한글도 없습니다. 완벽하게 안전합니다!
           $msgText = "$($env:MSG_TITLE) ($nowTime)`n"
-          $msgText += "$($env:MSG_TOBE) 평균 $score41 | $runUrl`n"
-          $msgText += "$($env:MSG_ASIS) 평균 $score42 | $runUrl`n"
+          $msgText += "$($env:MSG_TOBE) $($env:MSG_AVG) $score41 | $runUrl`n"
+          $msgText += "$($env:MSG_ASIS) $($env:MSG_AVG) $score42 | $runUrl`n"
           $msgText += "$($env:MSG_DESC)"
 
           $body = @{ text = $msgText } | ConvertTo-Json -Compress
