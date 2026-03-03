@@ -71,12 +71,41 @@ jobs:
        
           Get-Content cypress.log
 
-      # 👇 Lighthouse HTML 리포트 폴더를 GitHub Artifact로 업로드 (팀원 다운로드용)
+     # 👇 [신규 추가] 생성된 리포트 파일명을 분석해서 이 컨테이너가 어떤 IP를 측정했는지 알아냅니다.
+      - name: 🔍 측정 대상 IP 추출
+        if: always()
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          
+          $targetIp = "Unknown"
+          
+          # 리포트 폴더가 정상적으로 생성되었는지 확인
+          if (Test-Path "cypress/reports/lighthouse") {
+              # 폴더 안의 모든 html 파일 이름을 하나의 문자열로 합칩니다.
+              $fileNames = (Get-ChildItem -Path "cypress/reports/lighthouse" -Filter "*.html").Name -join " "
+              
+              # 파일명 안에 '41'이 포함되어 있다면 To-be 서버로 판단
+              if ($fileNames -match "41") {
+                  $targetIp = "10.10.54.41"
+              } 
+              # 파일명 안에 '42'가 포함되어 있다면 As-is 서버로 판단
+              elseif ($fileNames -match "42") {
+                  $targetIp = "10.10.54.42"
+              }
+          }
+          
+          Write-Host "✅ 이 컨테이너에서 측정한 IP: $targetIp"
+          
+          # 다음 스텝에서 쓸 수 있도록 환경 변수(TARGET_IP)에 저장합니다.
+          "TARGET_IP=$targetIp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      # 👇 [수정됨] matrix.containers 대신 방금 추출한 TARGET_IP 변수를 이름에 사용합니다.
       - name: 📊 Upload Lighthouse Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Lighthouse-Performance-Reports-${{ matrix.containers }}
+          name: Lighthouse-Performance-Report-${{ env.TARGET_IP }}
           path: cypress/reports/lighthouse
           retention-days: 7
           if-no-files-found: ignore
