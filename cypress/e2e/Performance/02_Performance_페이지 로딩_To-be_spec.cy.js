@@ -45,8 +45,8 @@ describe('로그캐치 사이트 테스트', () => {
 
       // [네트워크 제한]
       // 주석처리시: 일반적인 가정용/사무용 광랜 또는 느린 3G/4G 수준(약 10Mbps)으로 대역폭 강제 제한 CPU 속도 강제제한 (네트워크 느린환경 구현 )
-      //throttlingMethod: 'provided', 
-      
+      throttlingMethod: 'provided', 
+      /*
       // [네트워크 제한하지않음]
       // 👇 다시 simulate로 되돌립니다. (무한 대기 버그 완벽 차단)
         throttlingMethod: 'simulate', 
@@ -60,6 +60,7 @@ describe('로그캐치 사이트 테스트', () => {
             downloadThroughputKbps: 0,
             uploadThroughputKbps: 0
         }
+        */
     };
 
     const lighthouseConfig = {
