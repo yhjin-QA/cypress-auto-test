@@ -53,7 +53,7 @@ jobs:
           Write-Host "🚀 [Phase 1] 쾌적망(Fast) 환경 성능 측정을 시작합니다. (01, 02 파일 대상)"
           
           # 👇 [핵심] 01, 02 파일만 골라서 쾌적망 그룹으로 병렬 실행합니다.
-          cmd /c "chcp 65001 & npx cy2 run --record --spec `"cypress/e2e/Performance/01*.cy.js,cypress/e2e/Performance/02*.cy.js`" --browser chrome --parallel --group `"Performance-Fast`" --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Fast 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"cypress/e2e/Performance`" --browser chrome --parallel --group `"Performance-Fast`" --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Fast 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           Get-Content cypress.log
 
       - name: 🔍 측정 대상 IP 추출
@@ -207,7 +207,7 @@ jobs:
           Write-Host "🚀 [Phase 2] 제한망(Limit) 환경 성능 측정을 시작합니다. (03, 04 파일 대상)"
           
           # 👇 [핵심] 03, 04 파일만 골라서 제한망 그룹으로 병렬 실행합니다.
-          cmd /c "chcp 65001 & npx cy2 run --record --spec `"cypress/e2e/Performance/03*.cy.js,cypress/e2e/Performance/04*.cy.js`" --browser chrome --parallel --group `"Performance-Limit`" --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Limit 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"cypress/e2e/Performance_Network_Limit`" --browser chrome --parallel --group `"Performance-Limit`" --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Limit 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           Get-Content cypress.log
 
       - name: 🔍 측정 대상 IP 추출
