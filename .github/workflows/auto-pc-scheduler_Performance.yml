@@ -183,7 +183,9 @@ jobs:
               }
 
               if ($scores.Count -gt 0) {
-                  $avg = [math]::Round(($scores | Measure-Object -Average).Average)
+                  # 👇 [수정됨] 기존의 정수 반올림을 없애고, 소수점 둘째 자리(2)까지 정확하게 유지합니다.
+                  $avg = [math]::Round(($scores | Measure-Object -Average).Average, 2)
+                  
                   Write-Host "🏆 [$ip] 진짜 최종 평균: $avg$($env:MSG_UNIT)"
                   return "$avg$($env:MSG_UNIT)"
               }
