@@ -111,7 +111,7 @@ jobs:
           retention-days: 7
           overwrite: true # 만약 겹치더라도 에러 대신 덮어쓰도록 허용
           if-no-files-found: ignore
-          
+
  # ====================================================
   # [Job 2] 종합 알림 (구글 챗 전송) 테스트종료후
   # ====================================================
@@ -144,19 +144,21 @@ jobs:
           $nowTime = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # 👇 [핵심 추가] HTML 파일 안에서 성능 점수(0.0~1.0)를 찾아 100점 만점으로 계산하는 함수
+          # 👇 [수정됨] 바뀐 폴더 이름(-1, -2) 형식에 맞춰 점수를 추출하도록 업데이트
           function Get-AvgScore($ip) {
-              $folderPath = "downloaded_reports/Lighthouse-Performance-Report-$ip"
-              if (-not (Test-Path $folderPath)) { return "확인 불가" }
+              # 와일드카드(*)를 사용하여 해당 IP가 포함된 폴더를 싹 다 찾습니다.
+              $folders = Get-ChildItem -Path "downloaded_reports" -Filter "*$ip*" -Directory -ErrorAction SilentlyContinue
+              if (-not $folders) { return "확인 불가" }
 
               $scores = @()
-              $files = Get-ChildItem -Path $folderPath -Filter "*.html"
-              foreach ($file in $files) {
-                  $content = Get-Content $file.FullName -Raw -Encoding UTF8
-                  # Lighthouse 리포트 안의 JSON 데이터에서 score 값만 정규식으로 쏙 빼냅니다.
-                  if ($content -match '"categories":\{"performance":\{[^}]*"score":([0-9.]+)') {
-                      $score = [math]::Round([double]$matches[1] * 100)
-                      $scores += $score
+              foreach ($folder in $folders) {
+                  $files = Get-ChildItem -Path $folder.FullName -Filter "*.html"
+                  foreach ($file in $files) {
+                      $content = Get-Content $file.FullName -Raw -Encoding UTF8
+                      if ($content -match '"categories":\{"performance":\{[^}]*"score":([0-9.]+)') {
+                          $score = [math]::Round([double]$matches[1] * 100)
+                          $scores += $score
+                      }
                   }
               }
 
