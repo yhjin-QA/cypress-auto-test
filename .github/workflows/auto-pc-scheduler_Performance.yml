@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3, 4, 5] # 기존과 동일하게 5병렬 유지 (2개 파일이 자동으로 분배됨)
+        containers: [1, 2] # 기존과 동일하게 5병렬 유지 (2개 파일이 자동으로 분배됨)
 
     defaults:
       run:
@@ -30,6 +30,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+        # 👇 패키지 설치 단계 추가
+      - name: Install Dependencies
+        run: |
+          npm install --no-audit  
+          npx cypress install
 
       - name: Clean Previous Reports
         run: | 
