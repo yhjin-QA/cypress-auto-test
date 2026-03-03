@@ -42,7 +42,7 @@ describe('로그캐치 사이트 테스트', () => {
       formFactor: 'desktop',
       screenEmulation: { disabled: true },
       // 주석처리시: 일반적인 가정용/사무용 광랜 또는 느린 3G/4G 수준(약 10Mbps)으로 대역폭 강제 제한 CPU 속도 강제제한 (네트워크 느린환경 구현 )
-      throttlingMethod: 'provided', // 사내망 쾌적한 속도 그대로 측정
+      //throttlingMethod: 'provided', // 사내망 쾌적한 속도 그대로 측정
     };
     const lighthouseConfig = {
       extends: 'lighthouse:default',
@@ -111,17 +111,12 @@ describe('로그캐치 사이트 테스트', () => {
     // 🎯 [측정 2] '이력' 페이지 이동 및 성능 측정
     // ==========================================
     cy.contains('button', '이력').should('be.visible').click({ force: true });
-    cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
-
-    // 이력 > 사용자 추척 서브메뉴 클릭 
-    cy.log('--- 이력 > 사용자 추적 클릭 ---');
-    // 설명: .v-list__tile__title 클래스 내의 '사용자 추적' 글자를 찾아 클릭
-    cy.contains('.v-list__tile__title', '사용자 추적').should('be.visible').click({ force: true });
-    cy.wait(3000);
-    cy.log('--- 화면 검증 시작 ---');
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
-    cy.wait(3000);
+    cy.wait(3000); 
   
+    
+    // 이력 > 접속기록 이력 클릭 
+    cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
+    
     // 👇 두 번째 측정: 이력 화면 로딩 속도
     cy.log('🚀 [2/11] 이력 페이지 성능 측정을 시작합니다...');
     // 👇 [추가] 파일명을 '이력'으로 지정
