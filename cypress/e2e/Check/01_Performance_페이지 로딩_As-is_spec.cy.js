@@ -111,12 +111,14 @@ describe('로그캐치 사이트 테스트', () => {
     // 🎯 [측정 2] '이력' 페이지 이동 및 성능 측정
     // ==========================================
     cy.contains('button', '이력').should('be.visible').click({ force: true });
-    cy.wait(3000); 
-  
-    
-    // 이력 > 접속기록 이력 클릭 
-    cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
-    
+    cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
+
+    // 이력 > 사용자 추척 서브메뉴 클릭 
+    cy.log('--- 이력 > 사용자 추적 클릭 ---');
+    // 설명: .v-list__tile__title 클래스 내의 '사용자 추적' 글자를 찾아 클릭
+    cy.contains('.v-list__tile__title', '사용자 추적').should('be.visible').click({ force: true });
+    cy.wait(3000);
+      
     // 👇 두 번째 측정: 이력 화면 로딩 속도
     cy.log('🚀 [2/11] 이력 페이지 성능 측정을 시작합니다...');
     // 👇 [추가] 파일명을 '이력'으로 지정
