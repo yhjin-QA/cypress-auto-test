@@ -125,18 +125,23 @@ jobs:
         run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         
       - name: Send Google Chat (Performance)
+        env:
+          MSG_TITLE: "[성능][웹페이지로딩][Auto-PC] 로그캐치 웹페이지 로딩측정결과"
+          MSG_TOBE: "10.10.54.41 (to-be) :"
+          MSG_ASIS: "10.10.54.42 (as-is) :"
+          MSG_DESC: "측정결과 : 해당 링크의 Artifacts 다운로드 압축 파일을 확인해주세요"
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
+          # 👇 [핵심 추가] 현재 시간을 스텝 내부에서 직접 추출하여 변수에 담습니다.
+          $nowTime = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+          
           # GitHub Artifacts (리포트 파일)를 다운받을 수 있는 해당 Action Run의 고유 링크
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # 👇 요청하신 포맷으로 완벽하게 맞춘 메시지 구성입니다.
-          $msgText = "[성능][웹페이지로딩][Auto-PC] 로그캐치 웹페이지 로딩측정결과 ($env:NOW)`n"
-          $msgText += "10.10.54.41 (to-be) : $runUrl`n"
-          $msgText += "10.10.54.42 (as-is) : $runUrl`n"
-          $msgText += "측정결과 : 해당 링크의 Artifacts 다운로드 압축 파일을 확인해주세요"
+          # 👇 변수가 꼬이지 않도록 $($변수명) 형태로 안전하게 감싸서 조립합니다.
+          $msgText = "$($env:MSG_TITLE) ($nowTime)`n$($env:MSG_TOBE) $runUrl`n$($env:MSG_ASIS) $runUrl`n$($env:MSG_DESC)"
 
           $body = @{ text = $msgText } | ConvertTo-Json -Compress
           Invoke-RestMethod -Uri '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
