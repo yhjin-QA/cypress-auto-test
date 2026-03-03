@@ -203,11 +203,17 @@ jobs:
                   if ($content -match '(?s)"categories"\s*:\s*\{.*?"performance"\s*:\s*\{.*?"score"\s*:\s*([0-9.]+)') {
                       $score = [math]::Round([double]$matches[1] * 100)
                       $scores += $score
+
+                      # 👇 [복구 1] 각 파일별 점수를 로그에 출력합니다.
+                      Write-Host "✅ [$ip] $($file.Name) -> $score$($env:MSG_UNIT)"
                   }
               }
 
               if ($scores.Count -gt 0) {
                   $avg = [math]::Round(($scores | Measure-Object -Average).Average, 2)
+
+                  # 👇 [복구 2] 최종 계산된 평균 점수를 로그에 출력합니다.
+                  Write-Host "🏆 [$ip] 100% 검증된 최종 평균: $avg$($env:MSG_UNIT)"
                   return "$avg$($env:MSG_UNIT)"
               }
               return $env:MSG_UNKNOWN
