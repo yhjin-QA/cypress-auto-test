@@ -42,7 +42,7 @@ describe('로그캐치 사이트 테스트', () => {
       formFactor: 'desktop',
       screenEmulation: { disabled: true },
       // 주석처리시: 일반적인 가정용/사무용 광랜 또는 느린 3G/4G 수준(약 10Mbps)으로 대역폭 강제 제한 CPU 속도 강제제한 (네트워크 느린환경 구현 )
-      throttlingMethod: 'provided', // 사내망 쾌적한 속도 그대로 측정
+      //throttlingMethod: 'provided', // 사내망 쾌적한 속도 그대로 측정
     };
     const lighthouseConfig = {
       extends: 'lighthouse:default',
