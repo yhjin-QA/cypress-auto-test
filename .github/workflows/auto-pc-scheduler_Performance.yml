@@ -105,11 +105,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Lighthouse-Performance-Report-${{ env.TARGET_IP }}
+          # 👇 [핵심 해결] 끝에 러너 번호(-1, -2)를 붙여서 409 에러를 완벽하게 차단합니다!
+          name: Lighthouse-Performance-Report-${{ env.TARGET_IP }}-${{ matrix.containers }}
           path: cypress/reports/lighthouse
           retention-days: 7
+          overwrite: true # 만약 겹치더라도 에러 대신 덮어쓰도록 허용
           if-no-files-found: ignore
-
+          
  # ====================================================
   # [Job 2] 종합 알림 (구글 챗 전송) 테스트종료후
   # ====================================================
@@ -134,7 +136,7 @@ jobs:
           MSG_TITLE: "[성능][웹페이지로딩][Auto-PC] 로그캐치 웹페이지 로딩측정결과"
           MSG_TOBE: "10.10.54.41 (To-be) :"
           MSG_ASIS: "10.10.54.42 (As-is) :"
-          MSG_DESC: "측정결과 : 해당 링크의 Artifacts 다운로드 압축 파일을 확인해주세요"
+          MSG_DESC: "측정결과 : 자세한 세부사항은 해당 링크의 Artifacts 다운로드 압축 파일을 확인해주세요"
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
