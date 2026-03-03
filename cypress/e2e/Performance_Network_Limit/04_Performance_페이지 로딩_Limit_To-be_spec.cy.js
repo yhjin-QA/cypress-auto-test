@@ -44,23 +44,19 @@ describe('로그캐치 사이트 테스트', () => {
       screenEmulation: { disabled: true },
 
       // [네트워크 제한]
-      // 주석처리시: 일반적인 가정용/사무용 광랜 또는 느린 3G/4G 수준(약 10Mbps)으로 대역폭 강제 제한 CPU 속도 강제제한 (네트워크 느린환경 구현 )
-      //throttlingMethod: 'provided', 
-      /*
-      // [네트워크 제한하지않음]
-      // 👇 다시 simulate로 되돌립니다. (무한 대기 버그 완벽 차단)
-        throttlingMethod: 'simulate', 
-        
-        // 👇 대신, 시뮬레이션 환경을 '초고속 사내망' 수준으로 풀어버립니다.
+      // 일반적인 가정용/사무용 광랜 또는 느린 3G/4G 수준(약 10Mbps)으로 대역폭 강제 제한 CPU 속도 강제제한 (네트워크 느린환경 구현 )
+      throttlingMethod: 'simulate',
+
+      // 👇 [제한망 세팅] 모바일 4G 수준의 느린 네트워크와 4배 느린 CPU를 명시적으로 강제합니다!
         throttling: {
-            rttMs: 40,
-            throughputKbps: 102400, // 100Mbps (매우 쾌적)
-            cpuSlowdownMultiplier: 1, // CPU 속도 저하 시키지 않음 (기본값은 4배 느리게 됨)
-            requestLatencyMs: 0,
-            downloadThroughputKbps: 0,
-            uploadThroughputKbps: 0
+            rttMs: 150,
+            throughputKbps: 1638,       // 약 1.6Mbps (아주 느린 4G 수준)
+            cpuSlowdownMultiplier: 4,   // CPU 속도 4배 저하 (🚨 알림 스크립트가 이걸 보고 '제한망'으로 정확히 인식함!)
+            requestLatencyMs: 150,
+            downloadThroughputKbps: 1638,
+            uploadThroughputKbps: 750
         }
-        */
+      
     };
 
     const lighthouseConfig = {
