@@ -9,12 +9,12 @@ on:
   push:
     branches: [ "master" ]
   schedule:
-    - cron: '5 4 * * *' # 예: 매일 새벽 3시 등 원하는 시간으로 설정
+    - cron: '5 4 * * 1-5'
   workflow_dispatch:
 
 jobs:
   # ====================================================
-  # [Job 1] 성능 테스트 실행 (5병렬 러너)
+  # [Job 1] 성능 테스트 실행 (2병렬 러너)
   # ====================================================
   performance-run:
     runs-on: [self-hosted, PC-Auto]
@@ -57,11 +57,18 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
+          # 👇 [디버깅용 추가] 실제로 러너가 파일을 잘 인식하는지 화면에 출력해봅니다.
+          Write-Host "🔍 [Check] 파일 목록을 확인합니다:"
+          Get-ChildItem -Path "cypress/e2e/Performance" -ErrorAction SilentlyContinue | Select-Object Name
+
           Write-Host "🚀 [Job 1] Performance 폴더의 As-is / To-be 성능 테스트를 실행합니다."
 
-          # 👇 Performance 폴더에 있는 2개의 파일만 타겟으로 실행합니다.
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Performance/**/*.cy.js' --browser chrome --parallel --group 'Performance-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Performance 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
-          
+          # 👇 [핵심 해결] 
+          # 1. 작은따옴표(') 대신 이스케이프된 큰따옴표(`") 사용 (공백 인식 문제 해결)
+          # 2. **/*.cy.js 대신 폴더 경로만 깔끔하게 지정하여 내부의 모든 테스트를 실행하도록 변경
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"cypress/e2e/Performance`" --browser chrome --parallel --group `"Performance-Tests`" --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Performance 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+
+       
           Get-Content cypress.log
 
       # 👇 Lighthouse HTML 리포트 폴더를 GitHub Artifact로 업로드 (팀원 다운로드용)
