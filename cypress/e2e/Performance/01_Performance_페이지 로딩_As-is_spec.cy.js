@@ -41,10 +41,25 @@ describe('로그캐치 사이트 테스트', () => {
     const lighthouseOptions = {
       formFactor: 'desktop',
       screenEmulation: { disabled: true },
+      
+      //[네트워크 제한]
       // 주석처리시: 일반적인 가정용/사무용 광랜 또는 느린 3G/4G 수준(약 10Mbps)으로 대역폭 강제 제한 CPU 속도 강제제한 (네트워크 느린환경 구현 )
-      throttlingMethod: 'provided', // 사내망 쾌적한 속도 그대로 측정
+      //throttlingMethod: 'provided', // 사내망 쾌적한 속도 그대로 측정
+      
+      //[네트워크 제한하지않음 ]
       // 👇 throttlingMethod: 'provided' 주석 해제시 아무리 백그라운드 통신이 돌아도 60초(60000ms) 뒤에는 무조건 측정 종료!
-       maxWaitForLoad: 60000
+      // 👇 다시 simulate로 되돌립니다. (무한 대기 버그 완벽 차단)
+        throttlingMethod: 'simulate', 
+        
+        // 👇 대신, 시뮬레이션 환경을 '초고속 사내망' 수준으로 풀어버립니다.
+        throttling: {
+            rttMs: 40,
+            throughputKbps: 102400, // 100Mbps (매우 쾌적)
+            cpuSlowdownMultiplier: 1, // CPU 속도 저하 시키지 않음 (기본값은 4배 느리게 됨)
+            requestLatencyMs: 0,
+            downloadThroughputKbps: 0,
+            uploadThroughputKbps: 0
+        }
     };
     const lighthouseConfig = {
       extends: 'lighthouse:default',
