@@ -115,7 +115,7 @@ describe('로그캐치 사이트 테스트', () => {
   
     
     // 이력 > 접속기록 이력 클릭 
-    cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
+    cy.contains('.v-list__tile__title', '사용자 추적').should('be.visible').click({ force: true });
     
     // 👇 두 번째 측정: 이력 화면 로딩 속도
     cy.log('🚀 [2/11] 이력 페이지 성능 측정을 시작합니다...');
