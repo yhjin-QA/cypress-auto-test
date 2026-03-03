@@ -103,10 +103,11 @@ jobs:
           # GitHub Artifacts (리포트 파일)를 다운받을 수 있는 해당 Action Run의 고유 링크
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # 👇 요청하신 구글챗 알림 내용 및 포맷을 정확히 구성합니다.
-          $msgText = "[Auto-PC] LogCatch Web Page Loading Test Result ($env:NOW)`n"
+          # 👇 요청하신 포맷으로 완벽하게 맞춘 메시지 구성입니다.
+          $msgText = "[성능][웹페이지로딩][Auto-PC] 로그캐치 웹페이지 로딩측정결과 ($env:NOW)`n"
           $msgText += "10.10.54.41 (to-be) : $runUrl`n"
-          $msgText += "10.10.54.42 (as-is) : $runUrl"
+          $msgText += "10.10.54.42 (as-is) : $runUrl`n"
+          $msgText += "측정결과 : 해당 링크의 Artifacts 다운로드 압축 파일을 확인해주세요"
 
           $body = @{ text = $msgText } | ConvertTo-Json -Compress
           Invoke-RestMethod -Uri '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
