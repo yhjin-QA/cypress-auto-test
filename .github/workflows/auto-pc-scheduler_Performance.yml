@@ -71,7 +71,7 @@ jobs:
        
           Get-Content cypress.log
 
-     # 👇 [신규 추가] 생성된 리포트 파일명을 분석해서 이 컨테이너가 어떤 IP를 측정했는지 알아냅니다.
+     # 👇 [수정됨] 생성된 리포트 파일명을 분석해서 이 컨테이너가 어떤 IP를 측정했는지 알아냅니다.
       - name: 🔍 측정 대상 IP 추출
         if: always()
         run: |
@@ -85,12 +85,11 @@ jobs:
               # 폴더 안의 모든 html 파일 이름을 하나의 문자열로 합칩니다.
               $fileNames = (Get-ChildItem -Path "cypress/reports/lighthouse" -Filter "*.html").Name -join " "
               
-              # 파일명 안에 '41'이 포함되어 있다면 To-be 서버로 판단
-              if ($fileNames -match "41") {
+              # 👇 [핵심 해결] 날짜/시간(141407 등)과 헷갈리지 않도록 언더바(_)와 하이픈(-)을 포함해 엄격하게 검사합니다.
+              if ($fileNames -match "_41-") {
                   $targetIp = "10.10.54.41"
               } 
-              # 파일명 안에 '42'가 포함되어 있다면 As-is 서버로 판단
-              elseif ($fileNames -match "42") {
+              elseif ($fileNames -match "_42-") {
                   $targetIp = "10.10.54.42"
               }
           }
