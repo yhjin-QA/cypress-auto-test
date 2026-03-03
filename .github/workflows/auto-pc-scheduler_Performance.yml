@@ -1,0 +1,99 @@
+name: Auto-PC Work (Performance)
+
+env:
+  PRODUCT_NAME: "로그캐치"
+  TEST_TYPE: 성능(Performance)
+  TZ: Asia/Seoul
+
+on:
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '5 4 * * *' # 예: 매일 새벽 3시 등 원하는 시간으로 설정
+  workflow_dispatch:
+
+jobs:
+  # ====================================================
+  # [Job 1] 성능 테스트 실행 (5병렬 러너)
+  # ====================================================
+  performance-run:
+    runs-on: [self-hosted, PC-Auto]
+    strategy:
+      fail-fast: false
+      matrix:
+        containers: [1, 2, 3, 4, 5] # 기존과 동일하게 5병렬 유지 (2개 파일이 자동으로 분배됨)
+
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clean Previous Reports
+        run: | 
+          Remove-Item -Path "cypress/reports" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "cypress/screenshots" -Recurse -Force -ErrorAction SilentlyContinue
+
+      - name: Get Current Time
+        run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Cypress Run (Performance)
+        env:
+          CYPRESS_API_URL: "http://10.10.54.5:1234/"
+          CYPRESS_RECORD_KEY: "my-secret-key"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NO_COLOR: 1
+          CI: true
+        continue-on-error: true
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          
+          Write-Host "🚀 [Job 1] Performance 폴더의 As-is / To-be 성능 테스트를 실행합니다."
+
+          # 👇 Performance 폴더에 있는 2개의 파일만 타겟으로 실행합니다.
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Performance/**/*.cy.js' --browser chrome --parallel --group 'Performance-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Performance 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          
+          Get-Content cypress.log
+
+      # 👇 Lighthouse HTML 리포트 폴더를 GitHub Artifact로 업로드 (팀원 다운로드용)
+      - name: 📊 Upload Lighthouse Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lighthouse-Performance-Reports-${{ matrix.containers }}
+          path: cypress/reports/lighthouse
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # ====================================================
+  # [Job 2] 구글 챗 알림 전송 (테스트 종료 후)
+  # ====================================================
+  notify-result:
+    needs: [performance-run] # 5병렬 테스트가 모두 종료되면 실행
+    if: always()
+    runs-on: [self-hosted, PC-Auto]
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+    steps:
+      - name: Get Current Time
+        run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        
+      - name: Send Google Chat (Performance)
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          
+          # GitHub Artifacts (리포트 파일)를 다운받을 수 있는 해당 Action Run의 고유 링크
+          $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
+          # 👇 요청하신 구글챗 알림 내용 및 포맷을 정확히 구성합니다.
+          $msgText = "[Auto-PC] LogCatch Web Page Loading Test Result ($env:NOW)`n"
+          $msgText += "10.10.54.41 (to-be) : $runUrl`n"
+          $msgText += "10.10.54.42 (as-is) : $runUrl"
+
+          $body = @{ text = $msgText } | ConvertTo-Json -Compress
+          Invoke-RestMethod -Uri '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
