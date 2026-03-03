@@ -14,24 +14,21 @@ on:
 
 jobs:
   # ====================================================
-  # [Job 1] 성능 테스트 실행 (2병렬 러너)
+  # [Phase 1] 쾌적망 (Fast) 성능 테스트 (01, 02 파일 수행)
   # ====================================================
-  performance-run:
+  fast-run:
     runs-on: [self-hosted, PC-Auto]
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2] # 기존과 동일하게 5병렬 유지 (2개 파일이 자동으로 분배됨)
-
+        containers: [1, 2]
     defaults:
       run:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-        # 👇 패키지 설치 단계 추가
       - name: Install Dependencies
         run: |
           npm install --no-audit  
@@ -42,10 +39,7 @@ jobs:
           Remove-Item -Path "cypress/reports" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "cypress/screenshots" -Recurse -Force -ErrorAction SilentlyContinue
 
-      - name: Get Current Time
-        run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-      - name: Cypress Run (Performance)
+      - name: Cypress Run (Fast Mode)
         env:
           CYPRESS_API_URL: "http://10.10.54.5:1234/"
           CYPRESS_RECORD_KEY: "my-secret-key"
@@ -56,87 +50,58 @@ jobs:
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          Write-Host "🚀 [Phase 1] 쾌적망(Fast) 환경 성능 측정을 시작합니다. (01, 02 파일 대상)"
           
-          # 👇 [디버깅용 추가] 실제로 러너가 파일을 잘 인식하는지 화면에 출력해봅니다.
-          Write-Host "🔍 [Check] 파일 목록을 확인합니다:"
-          Get-ChildItem -Path "cypress/e2e/Performance" -ErrorAction SilentlyContinue | Select-Object Name
-
-          Write-Host "🚀 [Job 1] Performance 폴더의 As-is / To-be 성능 테스트를 실행합니다."
-
-          # 👇 [핵심 해결] 
-          # 1. 작은따옴표(') 대신 이스케이프된 큰따옴표(`") 사용 (공백 인식 문제 해결)
-          # 2. **/*.cy.js 대신 폴더 경로만 깔끔하게 지정하여 내부의 모든 테스트를 실행하도록 변경
-          cmd /c "chcp 65001 & npx cy2 run --record --spec `"cypress/e2e/Performance`" --browser chrome --parallel --group `"Performance-Tests`" --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Performance 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
-
-       
+          # 👇 [핵심] 01, 02 파일만 골라서 쾌적망 그룹으로 병렬 실행합니다.
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"cypress/e2e/Performance/01*.cy.js,cypress/e2e/Performance/02*.cy.js`" --browser chrome --parallel --group `"Performance-Fast`" --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Fast 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           Get-Content cypress.log
 
-     # 👇 [수정됨] 생성된 리포트 파일명을 분석해서 이 컨테이너가 어떤 IP를 측정했는지 알아냅니다.
       - name: 🔍 측정 대상 IP 추출
         if: always()
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-          
           $targetIp = "Unknown"
-          
-          # 리포트 폴더가 정상적으로 생성되었는지 확인
           if (Test-Path "cypress/reports/lighthouse") {
-              # 폴더 안의 모든 html 파일 이름을 하나의 문자열로 합칩니다.
               $fileNames = (Get-ChildItem -Path "cypress/reports/lighthouse" -Filter "*.html").Name -join " "
-              
-              # 👇 [핵심 해결] 날짜/시간(141407 등)과 헷갈리지 않도록 언더바(_)와 하이픈(-)을 포함해 엄격하게 검사합니다.
-              if ($fileNames -match "_41-") {
-                  $targetIp = "10.10.54.41"
-              } 
-              elseif ($fileNames -match "_42-") {
-                  $targetIp = "10.10.54.42"
-              }
+              if ($fileNames -match "_41-") { $targetIp = "10.10.54.41" } 
+              elseif ($fileNames -match "_42-") { $targetIp = "10.10.54.42" }
           }
-          
           Write-Host "✅ 이 컨테이너에서 측정한 IP: $targetIp"
-          
-          # 다음 스텝에서 쓸 수 있도록 환경 변수(TARGET_IP)에 저장합니다.
           "TARGET_IP=$targetIp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      # 👇 [수정됨] matrix.containers 대신 방금 추출한 TARGET_IP 변수를 이름에 사용합니다.
-      - name: 📊 Upload Lighthouse Reports
+      - name: 📊 Upload Fast Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          # 👇 [핵심 해결] 끝에 러너 번호(-1, -2)를 붙여서 409 에러를 완벽하게 차단합니다!
-          name: Lighthouse-Performance-Report-${{ env.TARGET_IP }}-${{ matrix.containers }}
+          name: Lighthouse-Fast-Report-${{ env.TARGET_IP }}-${{ matrix.containers }} # Fast 리포트로 분리
           path: cypress/reports/lighthouse
           retention-days: 7
-          overwrite: true # 만약 겹치더라도 에러 대신 덮어쓰도록 허용
+          overwrite: true
           if-no-files-found: ignore
 
- # ====================================================
-  # [Job 2] 종합 알림 (구글 챗 전송) 테스트종료후
   # ====================================================
-  notify-result:
-    needs: [performance-run] 
+  # [Phase 1-Notify] 쾌적망 테스트 결과 전송
+  # ====================================================
+  notify-fast:
+    needs: [fast-run] 
     if: always()
     runs-on: [self-hosted, PC-Auto]
     defaults:
       run:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
     steps:
-      # 👇 [신규 추가] 점수를 추출하기 위해 방금 업로드된 HTML 리포트들을 임시로 다운로드합니다.
-      - name: 📥 Download Lighthouse Reports for Parsing
+      - name: 📥 Download Fast Reports
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
-          pattern: Lighthouse-Performance-Report-*
+          pattern: Lighthouse-Fast-Report-*
           path: downloaded_reports
 
-      - name: Send Google Chat (Performance)
+      - name: Send Google Chat (Fast Mode)
         env:
           MSG_TITLE: "[성능][웹페이지로딩][Auto-PC] 로그캐치 웹페이지 로딩측정결과"
-          # 👇 [신규 추가] 네트워크 쓰로틀링 관련 한글 문구 대피소
-          MSG_NETWORK: "📡 네트워크 제한(Throttling) :"
-          MSG_THROTTLING_OFF: "미적용 (사내망 속도 시뮬레이션으로 쾌적하게 측정)"
-          MSG_THROTTLING_ON: "적용됨 (제한된 네트워크 속도로 빡빡하게 측정)"
+          MSG_NETWORK: "📡 네트워크 제한(Throttling) : 미적용 (사내망 속도 시뮬레이션으로 쾌적하게 측정)"
           MSG_TOBE: "10.10.54.41 (To-be) :"
           MSG_ASIS: "10.10.54.42 (As-is) :"
           MSG_DESC: "측정결과 : 자세한 세부사항은 해당 링크의 Artifacts의 다운로드 버튼 클릭하여 압축 파일을 확인해주세요"
@@ -146,57 +111,27 @@ jobs:
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-          
           $nowTime = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # 👇 [수정됨] 무한루프 방지용 초고속 simulate 설정까지 완벽하게 감지하는 함수
-          function Get-ThrottlingStatus() {
-              $htmlFile = Get-ChildItem -Path "downloaded_reports" -Filter "*.html" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-              if ($htmlFile) {
-                  $content = Get-Content $htmlFile.FullName -Raw -Encoding UTF8
-                  
-                  if ($content -match '"throttlingMethod"\s*:\s*"([^"]+)"') {
-                      $method = $matches[1]
-                      
-                      # HTML 리포트 안에 CPU 속도 제한을 풀었는지(cpuSlowdownMultiplier: 1) 확인
-                      $isFastMode = ($content -match '"cpuSlowdownMultiplier"\s*:\s*1')
-                      
-                     # 방식이 provided 이거나, 초고속 simulate 세팅을 한 경우 모두 "미적용(쾌적)"으로 출력!
-                      if ($method -eq "provided" -or ($method -eq "simulate" -and $isFastMode)) {
-                          # 👇 [수정됨] 하드코딩된 한글 대신 환경 변수를 호출합니다!
-                          return $env:MSG_THROTTLING_OFF
-                      } else {
-                          return $env:MSG_THROTTLING_ON
-                      }
-                  }
-              }
-              return $env:MSG_UNKNOWN
-          }
-
           function Get-AvgScore($ip) {
               $folders = Get-ChildItem -Path "downloaded_reports" -Filter "*$ip*" -Directory -ErrorAction SilentlyContinue
               if (-not $folders) { return $env:MSG_UNKNOWN }
-
               $suffix = $ip.Split('.')[-1]
               $allFiles = Get-ChildItem -Path "downloaded_reports" -Filter "*_$suffix-*.html" -Recurse -ErrorAction SilentlyContinue
               if (-not $allFiles) { return $env:MSG_UNKNOWN }
 
               $latestFiles = @{}
-
               foreach ($file in $allFiles) {
                   $menuName = $file.Name -replace "lighthouse-report-(.*)_$suffix-.*", '$1'
                   $timeStr = ""
                   if ($file.Name -match "_$suffix-(.*)\.html") { $timeStr = $matches[1] }
-
                   if (-not $latestFiles[$menuName]) {
                       $latestFiles[$menuName] = $file
                   } else {
                       $existingTimeStr = ""
                       if ($latestFiles[$menuName].Name -match "_$suffix-(.*)\.html") { $existingTimeStr = $matches[1] }
-                      if ($timeStr.CompareTo($existingTimeStr) -gt 0) {
-                          $latestFiles[$menuName] = $file
-                      }
+                      if ($timeStr.CompareTo($existingTimeStr) -gt 0) { $latestFiles[$menuName] = $file }
                   }
               }
 
@@ -206,34 +141,177 @@ jobs:
                   if ($content -match '(?s)"categories"\s*:\s*\{.*?"performance"\s*:\s*\{.*?"score"\s*:\s*([0-9.]+)') {
                       $score = [math]::Round([double]$matches[1] * 100)
                       $scores += $score
-
-                      # 👇 [복구 1] 각 파일별 점수를 로그에 출력합니다.
                       Write-Host "✅ [$ip] $($file.Name) -> $score$($env:MSG_UNIT)"
                   }
               }
 
               if ($scores.Count -gt 0) {
                   $avg = [math]::Round(($scores | Measure-Object -Average).Average, 2)
-
-                  # 👇 [복구 2] 최종 계산된 평균 점수를 로그에 출력합니다.
-                  Write-Host "🏆 [$ip] 100% 검증된 최종 평균: $avg$($env:MSG_UNIT)"
-
+                  Write-Host "🏆 [$ip] Fast 최종 평균: $avg$($env:MSG_UNIT)"
                   return "$avg$($env:MSG_UNIT)"
               }
               return $env:MSG_UNKNOWN
           }
 
-          Write-Host "🔍 점수 추출을 시작합니다..."
           $score41 = Get-AvgScore "10.10.54.41"
           $score42 = Get-AvgScore "10.10.54.42"
           
-          # [신규] 네트워크 상태 판별
-          $throttlingStatus = Get-ThrottlingStatus
-          Write-Host "📡 네트워크 쓰로틀링 상태: $throttlingStatus"
-          
-          # 👇 챗 메시지에 네트워크 상태($throttlingStatus) 한 줄을 추가로 조립합니다.
           $msgText = "$($env:MSG_TITLE) ($nowTime)`n"
-          $msgText += "$($env:MSG_NETWORK) $throttlingStatus`n"
+          $msgText += "$($env:MSG_NETWORK)`n"
+          $msgText += "$($env:MSG_TOBE) $($env:MSG_AVG) $score41 | $runUrl`n"
+          $msgText += "$($env:MSG_ASIS) $($env:MSG_AVG) $score42 | $runUrl`n"
+          $msgText += "$($env:MSG_DESC)"
+
+          $body = @{ text = $msgText } | ConvertTo-Json -Compress
+          Invoke-RestMethod -Uri '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
+
+  # ====================================================
+  # [Phase 2] 제한망 (Limit) 성능 테스트 (03, 04 파일 수행)
+  # ====================================================
+  limit-run:
+    needs: [notify-fast] # 쾌적망 알림까지 다 끝난 후 배턴을 넘겨받아 실행합니다.
+    if: always()
+    runs-on: [self-hosted, PC-Auto]
+    strategy:
+      fail-fast: false
+      matrix:
+        containers: [1, 2]
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          npm install --no-audit  
+          npx cypress install
+
+      - name: Clean Previous Reports
+        run: | 
+          Remove-Item -Path "cypress/reports" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "cypress/screenshots" -Recurse -Force -ErrorAction SilentlyContinue
+
+      - name: Cypress Run (Limit Mode)
+        env:
+          CYPRESS_API_URL: "http://10.10.54.5:1234/"
+          CYPRESS_RECORD_KEY: "my-secret-key"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NO_COLOR: 1
+          CI: true
+        continue-on-error: true
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          Write-Host "🚀 [Phase 2] 제한망(Limit) 환경 성능 측정을 시작합니다. (03, 04 파일 대상)"
+          
+          # 👇 [핵심] 03, 04 파일만 골라서 제한망 그룹으로 병렬 실행합니다.
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"cypress/e2e/Performance/03*.cy.js,cypress/e2e/Performance/04*.cy.js`" --browser chrome --parallel --group `"Performance-Limit`" --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Limit 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          Get-Content cypress.log
+
+      - name: 🔍 측정 대상 IP 추출
+        if: always()
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          $targetIp = "Unknown"
+          if (Test-Path "cypress/reports/lighthouse") {
+              $fileNames = (Get-ChildItem -Path "cypress/reports/lighthouse" -Filter "*.html").Name -join " "
+              if ($fileNames -match "_41-") { $targetIp = "10.10.54.41" } 
+              elseif ($fileNames -match "_42-") { $targetIp = "10.10.54.42" }
+          }
+          Write-Host "✅ 이 컨테이너에서 측정한 IP: $targetIp"
+          "TARGET_IP=$targetIp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: 📊 Upload Limit Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lighthouse-Limit-Report-${{ env.TARGET_IP }}-${{ matrix.containers }} # Limit 리포트로 분리
+          path: cypress/reports/lighthouse
+          retention-days: 7
+          overwrite: true
+          if-no-files-found: ignore
+
+  # ====================================================
+  # [Phase 2-Notify] 제한망 테스트 결과 전송
+  # ====================================================
+  notify-limit:
+    needs: [limit-run] 
+    if: always()
+    runs-on: [self-hosted, PC-Auto]
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+    steps:
+      - name: 📥 Download Limit Reports
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: Lighthouse-Limit-Report-*
+          path: downloaded_reports
+
+      - name: Send Google Chat (Limit Mode)
+        env:
+          MSG_TITLE: "[성능][웹페이지로딩][Auto-PC] 로그캐치 웹페이지 로딩측정결과"
+          MSG_NETWORK: "📡 네트워크 제한(Throttling) : 적용됨 (제한된 네트워크 환경으로 빡빡하게 측정)"
+          MSG_TOBE: "10.10.54.41 (To-be) :"
+          MSG_ASIS: "10.10.54.42 (As-is) :"
+          MSG_DESC: "측정결과 : 자세한 세부사항은 해당 링크의 Artifacts의 다운로드 버튼 클릭하여 압축 파일을 확인해주세요"
+          MSG_UNKNOWN: "확인 불가"
+          MSG_UNIT: "점"
+          MSG_AVG: "평균"
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          $nowTime = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+          $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
+          function Get-AvgScore($ip) {
+              $folders = Get-ChildItem -Path "downloaded_reports" -Filter "*$ip*" -Directory -ErrorAction SilentlyContinue
+              if (-not $folders) { return $env:MSG_UNKNOWN }
+              $suffix = $ip.Split('.')[-1]
+              $allFiles = Get-ChildItem -Path "downloaded_reports" -Filter "*_$suffix-*.html" -Recurse -ErrorAction SilentlyContinue
+              if (-not $allFiles) { return $env:MSG_UNKNOWN }
+
+              $latestFiles = @{}
+              foreach ($file in $allFiles) {
+                  $menuName = $file.Name -replace "lighthouse-report-(.*)_$suffix-.*", '$1'
+                  $timeStr = ""
+                  if ($file.Name -match "_$suffix-(.*)\.html") { $timeStr = $matches[1] }
+                  if (-not $latestFiles[$menuName]) {
+                      $latestFiles[$menuName] = $file
+                  } else {
+                      $existingTimeStr = ""
+                      if ($latestFiles[$menuName].Name -match "_$suffix-(.*)\.html") { $existingTimeStr = $matches[1] }
+                      if ($timeStr.CompareTo($existingTimeStr) -gt 0) { $latestFiles[$menuName] = $file }
+                  }
+              }
+
+              $scores = @()
+              foreach ($file in $latestFiles.Values) {
+                  $content = Get-Content $file.FullName -Raw -Encoding UTF8
+                  if ($content -match '(?s)"categories"\s*:\s*\{.*?"performance"\s*:\s*\{.*?"score"\s*:\s*([0-9.]+)') {
+                      $score = [math]::Round([double]$matches[1] * 100)
+                      $scores += $score
+                      Write-Host "✅ [$ip] $($file.Name) -> $score$($env:MSG_UNIT)"
+                  }
+              }
+
+              if ($scores.Count -gt 0) {
+                  $avg = [math]::Round(($scores | Measure-Object -Average).Average, 2)
+                  Write-Host "🏆 [$ip] Limit 최종 평균: $avg$($env:MSG_UNIT)"
+                  return "$avg$($env:MSG_UNIT)"
+              }
+              return $env:MSG_UNKNOWN
+          }
+
+          $score41 = Get-AvgScore "10.10.54.41"
+          $score42 = Get-AvgScore "10.10.54.42"
+          
+          $msgText = "$($env:MSG_TITLE) ($nowTime)`n"
+          $msgText += "$($env:MSG_NETWORK)`n"
           $msgText += "$($env:MSG_TOBE) $($env:MSG_AVG) $score41 | $runUrl`n"
           $msgText += "$($env:MSG_ASIS) $($env:MSG_AVG) $score42 | $runUrl`n"
           $msgText += "$($env:MSG_DESC)"

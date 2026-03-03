@@ -42,11 +42,11 @@ describe('로그캐치 사이트 테스트', () => {
     const lighthouseOptions = {
       formFactor: 'desktop',
       screenEmulation: { disabled: true },
-      
+
       // [네트워크 제한]
       // 주석처리시: 일반적인 가정용/사무용 광랜 또는 느린 3G/4G 수준(약 10Mbps)으로 대역폭 강제 제한 CPU 속도 강제제한 (네트워크 느린환경 구현 )
-      //throttlingMethod: 'provided',
-      
+      throttlingMethod: 'provided', 
+      /*
       // [네트워크 제한하지않음]
       // 👇 다시 simulate로 되돌립니다. (무한 대기 버그 완벽 차단)
         throttlingMethod: 'simulate', 
@@ -60,7 +60,7 @@ describe('로그캐치 사이트 테스트', () => {
             downloadThroughputKbps: 0,
             uploadThroughputKbps: 0
         }
-        
+        */
     };
 
     const lighthouseConfig = {
@@ -69,11 +69,11 @@ describe('로그캐치 사이트 테스트', () => {
     };
 
     // 👇 파일명에 붙일수있는 숫자 - 전체 파일명에 일괄 적용
-    const ServerIP = '42';
+    const ServerIP = '41';
     // ==========================================
     // 🎯 [측정 1] 로그인 페이지 진입 및 성능 측정
     // ==========================================
-    cy.visit('https://10.10.54.42:18443/logcatch/login');
+    cy.visit('https://10.10.54.41:18443/logcatch/login');
     cy.wait(4000); // 로딩 대기
 
     // (흰 화면 새로고침 방어 로직)
@@ -129,7 +129,7 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // 🎯 [측정 2] '이력' 페이지 이동 및 성능 측정
     // ==========================================
-    cy.contains('button', '이력').should('be.visible').click({ force: true });
+   cy.contains('button', '이력').should('be.visible').click({ force: true });
     cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
 
     // 이력 > 사용자 추척 서브메뉴 클릭 
@@ -140,7 +140,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('--- 화면 검증 시작 ---');
     cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
     cy.wait(3000);
-  
+
     // 👇 두 번째 측정: 이력 화면 로딩 속도
     cy.log('🚀 [2/11] 이력 페이지 성능 측정을 시작합니다...');
     // 👇 [추가] 파일명을 '이력'으로 지정
