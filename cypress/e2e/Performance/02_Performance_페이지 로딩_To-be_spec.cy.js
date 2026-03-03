@@ -43,6 +43,8 @@ describe('로그캐치 사이트 테스트', () => {
       screenEmulation: { disabled: true },
       // 주석처리시: 일반적인 가정용/사무용 광랜 또는 느린 3G/4G 수준(약 10Mbps)으로 대역폭 강제 제한 CPU 속도 강제제한 (네트워크 느린환경 구현 )
       //throttlingMethod: 'provided', // 사내망 쾌적한 속도 그대로 측정
+      // 👇 [추가] 아무리 백그라운드 통신이 돌아도 30초(30000ms) 뒤에는 무조건 측정 종료!
+      // maxWaitForLoad: 30000
     };
     const lighthouseConfig = {
       extends: 'lighthouse:default',
@@ -121,7 +123,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('--- 화면 검증 시작 ---');
     cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
     cy.wait(3000);
-    
+
     // 👇 두 번째 측정: 이력 화면 로딩 속도
     cy.log('🚀 [2/11] 이력 페이지 성능 측정을 시작합니다...');
     // 👇 [추가] 파일명을 '이력'으로 지정
