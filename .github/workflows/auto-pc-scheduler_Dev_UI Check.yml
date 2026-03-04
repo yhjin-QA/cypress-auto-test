@@ -1,8 +1,8 @@
-name: Auto-PC Work (Daily_UI)
+name: Auto-PC Work (Dev_UI)
 
 env:
   PRODUCT_NAME: "로그캐치"
-  TEST_TYPE: UI
+  TEST_TYPE: Dev_UI
   TZ: Asia/Seoul
 
 on:
