@@ -39,30 +39,31 @@ jobs:
           echo "BIN_FILE_PATH=$($latestFile.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "BIN_FILE_NAME=$($latestFile.Name)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      # 👇 변수 해석 문제를 방지하기 위해 더 직관적인 코드로 수정했습니다.
       - name: Native SSH & SCP Deploy
         env:
           QA_IP: ${{ secrets.QA_SERVER_IP }}
           QA_USER: ${{ secrets.QA_SERVER_USER }}
         run: |
-          # 1. 변수 설정
-          $userHost = "${env:QA_USER}@${env:QA_IP}"
-          $remoteDir = "/home/${env:QA_USER}/deploy"
-          $fileName = "${env:BIN_FILE_NAME}"
+          # 1. SSH/SCP를 위한 접속 대상 고정
+          $target = "${env:QA_USER}@${env:QA_IP}"
+          $remotePath = "/home/${env:QA_USER}/deploy"
           $localPath = "${env:BIN_FILE_PATH}"
-          
-          Write-Host "🚀 1. 리눅스 서버($userHost)에 접속하여 폴더를 생성합니다..."
-          ssh -o StrictHostKeyChecking=no $userHost "mkdir -p $remoteDir"
-          
-          Write-Host "📂 2. 파일 전송(SCP)을 시작합니다..."
-          scp -o StrictHostKeyChecking=no $localPath "${userHost}:${remoteDir}/"
-          
-          Write-Host "✅ 3. 설치 명령어를 실행합니다..."
-          # 명령어를 하나씩 실행하도록 분리하여 안정성을 높임
-          ssh -o StrictHostKeyChecking=no $userHost "chmod +x $remoteDir/$fileName"
-          ssh -o StrictHostKeyChecking=no $userHost "$remoteDir/$fileName -b -f"
-          
-          Write-Host "✨ 모든 작업 완료! 60초간 서버 기동을 기다립니다..."
+          $fileName = "${env:BIN_FILE_NAME}"
+
+          Write-Host "🚀 [1단계] 리눅스 서버 접속 확인..."
+          # -n 옵션은 '입력을 기다리지 않음'을 뜻하여 멈춤을 방지합니다.
+          ssh -n -o StrictHostKeyChecking=no $target "mkdir -p $remotePath"
+
+          Write-Host "📂 [2단계] 파일 전송을 시작합니다..."
+          # 파일을 덮어쓰도록 강제 설정
+          scp -o StrictHostKeyChecking=no $localPath "${target}:${remotePath}/"
+
+          Write-Host "✅ [3단계] 서버 설치 명령어를 날립니다..."
+          # 명령어들을 하나로 합치지 않고 각각 따로 실행하여 로그를 명확히 봅니다.
+          ssh -n -o StrictHostKeyChecking=no $target "chmod +x ${remotePath}/${fileName}"
+          ssh -n -o StrictHostKeyChecking=no $target "${remotePath}/${fileName} -b -f"
+
+          Write-Host "✨ 모든 배포 스크립트가 종료되었습니다. 1분 대기 시작!"
           Start-Sleep -Seconds 60
 
   # ====================================================
