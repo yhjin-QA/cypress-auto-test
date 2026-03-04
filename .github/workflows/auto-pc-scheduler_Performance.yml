@@ -107,8 +107,11 @@ jobs:
           
           function Get-AvgScore($ip) {
               $suffix = $ip.Split('.')[-1]
-             $allFiles = Get-ChildItem -Path "downloaded_fast_reports" -Filter "*_$suffix-*.html" -Recurse -ErrorAction SilentlyContinue
-              if (-not $allFiles -or $allFiles.Count -eq 0) { return $env:MSG_UNKNOWN }
+              
+              # 👇 [핵심] 옛날 폴더 검사($folders) 로직을 지우고, 파일만 강력하게 싹 다 뒤집니다!
+              $allFiles = @(Get-ChildItem -Path "downloaded_fast_reports" -Filter "*_$suffix-*.html" -Recurse -ErrorAction SilentlyContinue)
+              
+              if ($allFiles.Count -eq 0) { return $env:MSG_UNKNOWN }
 
               $latestFiles = @{}
               foreach ($file in $allFiles) {
@@ -141,6 +144,7 @@ jobs:
               }
               return $env:MSG_UNKNOWN
           }
+
 
           $score41 = Get-AvgScore "10.10.54.41"
           $score42 = Get-AvgScore "10.10.54.42"
@@ -248,10 +252,12 @@ jobs:
           
           function Get-AvgScore($ip) {
               $suffix = $ip.Split('.')[-1]
-              # ✅ 폴더 껍데기를 보지 않고 바로 알맹이(html) 파일만 싹 다 뒤져서 찾습니다!
-              $allFiles = Get-ChildItem -Path "downloaded_fast_reports" -Filter "*_$suffix-*.html" -Recurse -ErrorAction SilentlyContinue
-              if (-not $allFiles -or $allFiles.Count -eq 0) { return $env:MSG_UNKNOWN }
               
+              # 👇 [핵심] 제한망 전용 폴더의 파일을 강력하게 싹 다 뒤집니다!
+              $allFiles = @(Get-ChildItem -Path "downloaded_limit_reports" -Filter "*_$suffix-*.html" -Recurse -ErrorAction SilentlyContinue)
+              
+              if ($allFiles.Count -eq 0) { return $env:MSG_UNKNOWN }
+
               $latestFiles = @{}
               foreach ($file in $allFiles) {
                   $menuName = $file.Name -replace "lighthouse-report-(.*)_$suffix-.*", '$1'
