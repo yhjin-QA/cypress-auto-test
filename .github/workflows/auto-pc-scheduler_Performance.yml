@@ -56,25 +56,14 @@ jobs:
           cmd /c "chcp 65001 & npx cy2 run --record --spec `"cypress/e2e/Performance`" --browser chrome --parallel --group `"Performance-Fast`" --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Fast 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           Get-Content cypress.log
 
-      - name: 🔍 측정 대상 IP 추출
-        if: always()
-        run: |
-          $OutputEncoding = [System.Text.Encoding]::UTF8
-          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-          $targetIp = "Unknown"
-          if (Test-Path "cypress/reports/lighthouse") {
-              $fileNames = (Get-ChildItem -Path "cypress/reports/lighthouse" -Filter "*.html").Name -join " "
-              if ($fileNames -match "_41-") { $targetIp = "10.10.54.41" } 
-              elseif ($fileNames -match "_42-") { $targetIp = "10.10.54.42" }
-          }
-          Write-Host "✅ 이 컨테이너에서 측정한 IP: $targetIp"
-          "TARGET_IP=$targetIp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    
 
       - name: 📊 Upload Fast Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Lighthouse-Fast-Report-${{ env.TARGET_IP }}-${{ matrix.containers }} # Fast 리포트로 분리
+          # 👇 [수정됨] 복잡한 IP를 빼고 러너 번호(1, 2)로만 깔끔하게 저장합니다.
+          name: Lighthouse-Fast-Report-${{ matrix.containers }} 
           path: cypress/reports/lighthouse
           retention-days: 7
           overwrite: true
@@ -117,12 +106,9 @@ jobs:
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
           function Get-AvgScore($ip) {
-              # 👇 [수정] 쾌적망 전용 폴더만 뒤져서 계산
-              $folders = Get-ChildItem -Path "downloaded_fast_reports" -Filter "*$ip*" -Directory -ErrorAction SilentlyContinue
-              if (-not $folders) { return $env:MSG_UNKNOWN }
               $suffix = $ip.Split('.')[-1]
-              $allFiles = Get-ChildItem -Path "downloaded_fast_reports" -Filter "*_$suffix-*.html" -Recurse -ErrorAction SilentlyContinue
-              if (-not $allFiles) { return $env:MSG_UNKNOWN }
+             $allFiles = Get-ChildItem -Path "downloaded_fast_reports" -Filter "*_$suffix-*.html" -Recurse -ErrorAction SilentlyContinue
+              if (-not $allFiles -or $allFiles.Count -eq 0) { return $env:MSG_UNKNOWN }
 
               $latestFiles = @{}
               foreach ($file in $allFiles) {
@@ -213,25 +199,13 @@ jobs:
           cmd /c "chcp 65001 & npx cy2 run --record --spec `"cypress/e2e/Performance_Network_Limit`" --browser chrome --parallel --group `"Performance-Limit`" --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Limit 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           Get-Content cypress.log
 
-      - name: 🔍 측정 대상 IP 추출
-        if: always()
-        run: |
-          $OutputEncoding = [System.Text.Encoding]::UTF8
-          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-          $targetIp = "Unknown"
-          if (Test-Path "cypress/reports/lighthouse") {
-              $fileNames = (Get-ChildItem -Path "cypress/reports/lighthouse" -Filter "*.html").Name -join " "
-              if ($fileNames -match "_41-") { $targetIp = "10.10.54.41" } 
-              elseif ($fileNames -match "_42-") { $targetIp = "10.10.54.42" }
-          }
-          Write-Host "✅ 이 컨테이너에서 측정한 IP: $targetIp"
-          "TARGET_IP=$targetIp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: 📊 Upload Limit Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Lighthouse-Limit-Report-${{ env.TARGET_IP }}-${{ matrix.containers }} # Limit 리포트로 분리
+          # 👇 [수정] 껍데기(폴더명)에 IP를 뺍니다. 러너 번호(-1, -2)만으로 덮어쓰기 완벽 방지!
+          name: Lighthouse-Limit-Report-${{ matrix.containers }} 
           path: cypress/reports/lighthouse
           retention-days: 7
           overwrite: true
@@ -273,13 +247,11 @@ jobs:
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
           function Get-AvgScore($ip) {
-              # 👇 [수정] 제한망 전용 폴더만 뒤져서 계산
-              $folders = Get-ChildItem -Path "downloaded_limit_reports" -Filter "*$ip*" -Directory -ErrorAction SilentlyContinue
-              if (-not $folders) { return $env:MSG_UNKNOWN }
               $suffix = $ip.Split('.')[-1]
-              $allFiles = Get-ChildItem -Path "downloaded_limit_reports" -Filter "*_$suffix-*.html" -Recurse -ErrorAction SilentlyContinue
-              if (-not $allFiles) { return $env:MSG_UNKNOWN }
-
+              # ✅ 폴더 껍데기를 보지 않고 바로 알맹이(html) 파일만 싹 다 뒤져서 찾습니다!
+              $allFiles = Get-ChildItem -Path "downloaded_fast_reports" -Filter "*_$suffix-*.html" -Recurse -ErrorAction SilentlyContinue
+              if (-not $allFiles -or $allFiles.Count -eq 0) { return $env:MSG_UNKNOWN }
+              
               $latestFiles = @{}
               foreach ($file in $allFiles) {
                   $menuName = $file.Name -replace "lighthouse-report-(.*)_$suffix-.*", '$1'
