@@ -39,69 +39,26 @@ jobs:
           echo "BIN_FILE_PATH=$($latestFile.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "BIN_FILE_NAME=$($latestFile.Name)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      # 👇 [수정됨] Docker 플러그인 대신 Node.js를 이용해 파일 전송과 설치를 원스톱으로 처리합니다!
-      - name: Upload and Install via Node.js
+      # 👇 방금 만든 VIP 프리패스(SSH Key)를 이용해 Windows 순정 명령어로 날아갑니다!
+      - name: Native SSH & SCP Deploy
         env:
           QA_IP: ${{ secrets.QA_SERVER_IP }}
           QA_USER: ${{ secrets.QA_SERVER_USER }}
-          QA_PASSWORD: ${{ secrets.QA_SERVER_PASSWORD }}
         run: |
-          Write-Host "SSH 연결 모듈을 준비합니다..."
-          npm install ssh2 --no-save
+          $remoteDir = "/home/$env:QA_USER/deploy"
           
-          $script = @"
-          const { Client } = require('ssh2');
-          const conn = new Client();
+          Write-Host "🚀 리눅스 서버($env:QA_IP)에 배포 폴더를 확인/생성합니다..."
+          ssh -o StrictHostKeyChecking=no "$env:QA_USER@$env:QA_IP" "mkdir -p $remoteDir"
           
-          const remoteDir = '/home/' + process.env.QA_USER + '/deploy';
-          const localFile = process.env.BIN_FILE_PATH;
-          const fileName = process.env.BIN_FILE_NAME;
-          const remoteFile = remoteDir + '/' + fileName;
+          Write-Host "📂 파일 전송(SCP)을 시작합니다 (파일 크기에 따라 1~2분 소요)..."
+          scp -o StrictHostKeyChecking=no $env:BIN_FILE_PATH "$env:QA_USER@${env:QA_IP}:$remoteDir/"
           
-          console.log('🚀 Hyper-V 리눅스 서버(' + process.env.QA_IP + ')로 연결 시도 중...');
+          Write-Host "✅ 파일 전송 완료! 기존 버전을 끄고 새 버전을 설치합니다."
+          $cmd = "cd $remoteDir && chmod +x $env:BIN_FILE_NAME && ./$env:BIN_FILE_NAME -b -f"
+          ssh -o StrictHostKeyChecking=no "$env:QA_USER@$env:QA_IP" $cmd
           
-          conn.on('ready', () => {
-            console.log('✅ SSH 연결 성공!');
-            conn.exec('mkdir -p ' + remoteDir, (err, stream) => {
-              if (err) throw err;
-              stream.on('close', () => {
-                console.log('✅ 전송 준비 완료. 파일 업로드를 시작합니다 (파일 크기에 따라 1~2분 소요)...');
-                
-                conn.sftp((err, sftp) => {
-                  if (err) throw err;
-                  sftp.fastPut(localFile, remoteFile, (err) => {
-                    if (err) throw err;
-                    console.log('✅ 파일 업로드 완료! 기존 버전을 끄고 새 버전을 설치합니다.');
-                    
-                    const cmd = 'cd ' + remoteDir + ' && chmod +x ' + fileName + ' && ./' + fileName + ' -b -f && echo "✅ 18443 포트 기동 대기 중 (60초)" && sleep 60';
-                    conn.exec(cmd, (err, stream2) => {
-                      if (err) throw err;
-                      stream2.on('close', (code) => {
-                        console.log('✅ 배포 및 기동 대기 완벽 종료!');
-                        conn.end();
-                      }).on('data', (data) => {
-                        process.stdout.write(data.toString());
-                      }).stderr.on('data', (data) => {
-                        process.stderr.write(data.toString());
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          }).on('error', (err) => {
-            console.error('❌ SSH 연결 에러:', err);
-            process.exit(1);
-          }).connect({
-            host: process.env.QA_IP,
-            port: 22,
-            username: process.env.QA_USER,
-            password: process.env.QA_PASSWORD
-          });
-          "@
-          
-          $script | Out-File -FilePath deploy.js -Encoding UTF8
-          node deploy.js
+          Write-Host "✅ 배포 완료! 18443 포트 기동 대기 중 (60초)..."
+          Start-Sleep -Seconds 60
 
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
