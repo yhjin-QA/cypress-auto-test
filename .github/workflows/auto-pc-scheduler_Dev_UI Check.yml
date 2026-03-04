@@ -39,33 +39,69 @@ jobs:
           echo "BIN_FILE_PATH=$($latestFile.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "BIN_FILE_NAME=$($latestFile.Name)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Copy file to QA Linux Server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.QA_SERVER_IP }}
-          username: ${{ secrets.QA_SERVER_USER }}
-          password: ${{ secrets.QA_SERVER_PASSWORD }}
-          port: 22
-          source: ${{ env.BIN_FILE_PATH }}
-          target: "/home/${{ secrets.QA_SERVER_USER }}/deploy/"
-          strip_components: 1
-
-      - name: Install and Start Logcatch on Linux
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.QA_SERVER_IP }}
-          username: ${{ secrets.QA_SERVER_USER }}
-          password: ${{ secrets.QA_SERVER_PASSWORD }}
-          port: 22
-          script: |
-            mkdir -p /home/${{ secrets.QA_SERVER_USER }}/deploy
-            cd /home/${{ secrets.QA_SERVER_USER }}/deploy
-            echo "==== 1. 실행 권한 부여 ===="
-            chmod +x ${{ env.BIN_FILE_NAME }}
-            echo "==== 2. 기존 서버 종료 및 신규 설치 시작 ===="
-            ./${{ env.BIN_FILE_NAME }} -b -f
-            echo "==== 3. 설치 완료! 웹 포트(18443) 기동 대기 중 (60초) ===="
-            sleep 60
+      # 👇 [수정됨] Docker 플러그인 대신 Node.js를 이용해 파일 전송과 설치를 원스톱으로 처리합니다!
+      - name: Upload and Install via Node.js
+        env:
+          QA_IP: ${{ secrets.QA_SERVER_IP }}
+          QA_USER: ${{ secrets.QA_SERVER_USER }}
+          QA_PASSWORD: ${{ secrets.QA_SERVER_PASSWORD }}
+        run: |
+          Write-Host "SSH 연결 모듈을 준비합니다..."
+          npm install ssh2 --no-save
+          
+          $script = @"
+          const { Client } = require('ssh2');
+          const conn = new Client();
+          
+          const remoteDir = '/home/' + process.env.QA_USER + '/deploy';
+          const localFile = process.env.BIN_FILE_PATH;
+          const fileName = process.env.BIN_FILE_NAME;
+          const remoteFile = remoteDir + '/' + fileName;
+          
+          console.log('🚀 Hyper-V 리눅스 서버(' + process.env.QA_IP + ')로 연결 시도 중...');
+          
+          conn.on('ready', () => {
+            console.log('✅ SSH 연결 성공!');
+            conn.exec('mkdir -p ' + remoteDir, (err, stream) => {
+              if (err) throw err;
+              stream.on('close', () => {
+                console.log('✅ 전송 준비 완료. 파일 업로드를 시작합니다 (파일 크기에 따라 1~2분 소요)...');
+                
+                conn.sftp((err, sftp) => {
+                  if (err) throw err;
+                  sftp.fastPut(localFile, remoteFile, (err) => {
+                    if (err) throw err;
+                    console.log('✅ 파일 업로드 완료! 기존 버전을 끄고 새 버전을 설치합니다.');
+                    
+                    const cmd = 'cd ' + remoteDir + ' && chmod +x ' + fileName + ' && ./' + fileName + ' -b -f && echo "✅ 18443 포트 기동 대기 중 (60초)" && sleep 60';
+                    conn.exec(cmd, (err, stream2) => {
+                      if (err) throw err;
+                      stream2.on('close', (code) => {
+                        console.log('✅ 배포 및 기동 대기 완벽 종료!');
+                        conn.end();
+                      }).on('data', (data) => {
+                        process.stdout.write(data.toString());
+                      }).stderr.on('data', (data) => {
+                        process.stderr.write(data.toString());
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          }).on('error', (err) => {
+            console.error('❌ SSH 연결 에러:', err);
+            process.exit(1);
+          }).connect({
+            host: process.env.QA_IP,
+            port: 22,
+            username: process.env.QA_USER,
+            password: process.env.QA_PASSWORD
+          });
+          "@
+          
+          $script | Out-File -FilePath deploy.js -Encoding UTF8
+          node deploy.js
 
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
