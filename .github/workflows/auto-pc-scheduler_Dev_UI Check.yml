@@ -39,25 +39,30 @@ jobs:
           echo "BIN_FILE_PATH=$($latestFile.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "BIN_FILE_NAME=$($latestFile.Name)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      # 👇 방금 만든 VIP 프리패스(SSH Key)를 이용해 Windows 순정 명령어로 날아갑니다!
+      # 👇 변수 해석 문제를 방지하기 위해 더 직관적인 코드로 수정했습니다.
       - name: Native SSH & SCP Deploy
         env:
           QA_IP: ${{ secrets.QA_SERVER_IP }}
           QA_USER: ${{ secrets.QA_SERVER_USER }}
         run: |
-          $remoteDir = "/home/$env:QA_USER/deploy"
+          # 1. 변수 설정
+          $userHost = "${env:QA_USER}@${env:QA_IP}"
+          $remoteDir = "/home/${env:QA_USER}/deploy"
+          $fileName = "${env:BIN_FILE_NAME}"
+          $localPath = "${env:BIN_FILE_PATH}"
           
-          Write-Host "🚀 리눅스 서버($env:QA_IP)에 배포 폴더를 확인/생성합니다..."
-          ssh -o StrictHostKeyChecking=no "$env:QA_USER@$env:QA_IP" "mkdir -p $remoteDir"
+          Write-Host "🚀 1. 리눅스 서버($userHost)에 접속하여 폴더를 생성합니다..."
+          ssh -o StrictHostKeyChecking=no $userHost "mkdir -p $remoteDir"
           
-          Write-Host "📂 파일 전송(SCP)을 시작합니다 (파일 크기에 따라 1~2분 소요)..."
-          scp -o StrictHostKeyChecking=no $env:BIN_FILE_PATH "$env:QA_USER@${env:QA_IP}:$remoteDir/"
+          Write-Host "📂 2. 파일 전송(SCP)을 시작합니다..."
+          scp -o StrictHostKeyChecking=no $localPath "${userHost}:${remoteDir}/"
           
-          Write-Host "✅ 파일 전송 완료! 기존 버전을 끄고 새 버전을 설치합니다."
-          $cmd = "cd $remoteDir && chmod +x $env:BIN_FILE_NAME && ./$env:BIN_FILE_NAME -b -f"
-          ssh -o StrictHostKeyChecking=no "$env:QA_USER@$env:QA_IP" $cmd
+          Write-Host "✅ 3. 설치 명령어를 실행합니다..."
+          # 명령어를 하나씩 실행하도록 분리하여 안정성을 높임
+          ssh -o StrictHostKeyChecking=no $userHost "chmod +x $remoteDir/$fileName"
+          ssh -o StrictHostKeyChecking=no $userHost "$remoteDir/$fileName -b -f"
           
-          Write-Host "✅ 배포 완료! 18443 포트 기동 대기 중 (60초)..."
+          Write-Host "✨ 모든 작업 완료! 60초간 서버 기동을 기다립니다..."
           Start-Sleep -Seconds 60
 
   # ====================================================
