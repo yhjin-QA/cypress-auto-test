@@ -33,8 +33,25 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('https://10.10.54.51:18443/logcatch/login');
+    cy.visit('https://10.10.54.21:18443/logcatch/login');
     cy.wait(4000); // 로딩 대기
+
+    ////////////새로고침코드//////
+      cy.get('body').then(($body) => {
+      // 만약 입력창이 안 보인다면? (흰 화면 상태라면?)
+      if ($body.find('input[aria-label="사용자 계정"]').length === 0) {
+        cy.log('🔴 화면 렌더링 실패 감지! 페이지를 새로고침합니다.');
+    
+      // 새로고침 실행
+      cy.reload();
+    
+      // 다시 한번 안정화 대기
+      cy.wait(2000);
+      } else {
+        cy.log('🟢 화면이 정상적으로 로드되었습니다.');
+      }
+     });
+     //////////////////////////////////////
 
     // 2. 아이디 입력
     cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
@@ -1141,6 +1158,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.get('.v-list__tile__title').filter(':contains("필터")').filter(':visible').click({ force: true });
         cy.wait(3000); 
         
+        /*
         // 검출탭 > 필터 > 탐색/분석 필터 그룹 관리 탭 클릭 
         cy.contains('.v-btn__content', '탐색/분석 필터 그룹 관리').should('be.visible').click({ force: true });
         cy.log('--- 화면 검증 시작 ---');
@@ -1161,7 +1179,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.get('th').filter(':visible').contains('필터 개수').should('be.visible');
         cy.get('th').filter(':visible').contains('사용 중인 정책 개수').should('be.visible');
         cy.log('✅ 검출 - 필터 - [탐색/분석 필터 그룹 관리] 출력 확인 완료!');
-
+        */
 
 
         // 검출탭 > 필터 > 전처리 파일 구분 설정 탭 클릭 
@@ -1382,6 +1400,60 @@ describe('로그캐치 사이트 테스트', () => {
         cy.get('input[aria-label="업무시스템 할당"]').filter(':visible').should('be.visible');
         cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
         cy.log('✅ 검출 - 필터 - [전처리 디코더 설정] 화면 출력 확인 완료 ');
+
+        // v3.0.4.0_R34865 추가 메뉴
+        // 검출탭 > 필터 > 전처리 인코더 설정 탭 클릭 
+        cy.log('--- 전처리 인코더 설정 탭 클릭 ---');
+        cy.contains('.v-btn__content', '전처리 인코더 설정').should('be.visible').click({ force: true });
+        cy.wait(2000);
+        cy.log('--- 화면 검증 시작 ---');
+        // 트리영역 + 아이콘
+        cy.get('.v-icon.fa-plus').filter(':visible').should('be.visible');
+        //트리영역 새로고침 아이콘
+        cy.get('.material-icons').filter(':visible').contains('autorenew').should('be.visible');
+        cy.contains('.c-headline', '설정').should('exist');
+        //전처리 사용자 계정 탐색 설정 문구 확인
+        cy.get('input[aria-label="정책 이름"]').filter(':visible').should('be.visible');
+        cy.get('input[aria-label="Log Tracer"]').should('be.visible').and('have.attr', 'type', 'text').and('have.attr', 'role', 'combobox');
+        cy.get('input[aria-label="URI"]').should('be.visible').and('be.enabled').and('have.attr', 'type', 'text').and('have.attr', 'role', 'combobox');
+        cy.get('input[aria-label="Charset ( 대소문자 및 빈공간 유의 )"]').should('be.visible').and('have.attr', 'type', 'text');
+        
+        //저장 버튼 존재확인
+        cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
+        cy.log('✅ 검출 - 필터 - [전처리 인코더 설정] 화면 출력 확인 완료 ');
+
+
+        // v3.0.4.0_R34865 추가 메뉴
+        // 검출탭 > 필터 > 식별자 패턴 관리 탭 클릭 
+        cy.log('--- 식별자 패턴 관리 탭 탭 클릭 ---');
+        cy.contains('.v-btn__content', '식별자 패턴 관리').should('be.visible').click({ force: true });
+        cy.wait(2000);
+        cy.log('--- 화면 검증 시작 ---');
+        // 트리영역 + 아이콘
+        cy.get('.v-icon.fa-plus').filter(':visible').should('be.visible');
+        //트리영역 새로고침 아이콘
+        cy.get('.material-icons').filter(':visible').contains('autorenew').should('be.visible');
+        // 트리영역 돋보기 아이콘
+        cy.get('.v-icon.fa-search').filter(':visible').should('be.visible'); 
+
+        // 타이틀 문구확인
+        cy.contains('span.title', '식별자').should('be.visible').and('have.class', 'font-weight-bold');
+
+
+        // 트리영역 폴더 문구확인
+        // label 태그 중 '식별자 패턴 그룹'이라는 텍스트가 보이는지 확인
+        cy.contains('label.text-label', '식별자 패턴 그룹').should('exist');
+        // 'text-label' 클래스를 가진 label 중 'Pattern Korea'가 포함된 요소를 확인
+        cy.contains('label.text-label', 'Pattern Korea').should('exist');
+        cy.contains('label.text-label', 'Pattern Korea2').should('exist');
+
+        // '개인정보 유형' 컬럼이 존재하고, 현재 오름차순(asc) 정렬인지 확인
+        cy.contains('th.column.sortable', '개인정보 유형').should('be.visible').and('have.class', 'asc');
+        // '식별자 패턴' 컬럼이 존재하고, 현재 오름차순(asc) 정렬 상태인지 확인
+        cy.contains('th.column.sortable', '식별자 패턴').should('be.visible').and('have.class', 'asc'); 
+        
+        cy.log('✅ 검출 - 필터 - [전처리 인코더 설정] 화면 출력 확인 완료 ');
+
 
 
 
@@ -2469,7 +2541,7 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 모든 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 검출 UI 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 

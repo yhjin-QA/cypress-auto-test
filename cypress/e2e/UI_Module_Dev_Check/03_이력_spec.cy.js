@@ -33,8 +33,25 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('https://10.10.54.51:18443/logcatch/login');
+    cy.visit('https://10.10.54.21:18443/logcatch/login');
     cy.wait(4000); // 로딩 대기
+
+    ////////////새로고침코드//////
+      cy.get('body').then(($body) => {
+      // 만약 입력창이 안 보인다면? (흰 화면 상태라면?)
+      if ($body.find('input[aria-label="사용자 계정"]').length === 0) {
+        cy.log('🔴 화면 렌더링 실패 감지! 페이지를 새로고침합니다.');
+    
+      // 새로고침 실행
+      cy.reload();
+    
+      // 다시 한번 안정화 대기
+      cy.wait(2000);
+      } else {
+        cy.log('🟢 화면이 정상적으로 로드되었습니다.');
+      }
+     });
+     //////////////////////////////////////
 
     // 2. 아이디 입력
     cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
@@ -224,11 +241,12 @@ describe('로그캐치 사이트 테스트', () => {
      //토글
      cy.get('.v-label').filter(':visible').contains('개인정보').should('be.visible');
      cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
-     // like버튼 확인 
+     // 
+     // v3.0.4.0_R34865 like ->  포함 문구로 버튼문구 변경됨.
      //cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
-     cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
-     cy.get('input[aria-label="파일명"]').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
-     cy.get('input[aria-label="파일 경로"]').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
+     cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
+     cy.get('input[aria-label="파일명"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
+     cy.get('input[aria-label="파일 경로"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      
     
      //검색 버튼 존재확인 
@@ -303,9 +321,11 @@ describe('로그캐치 사이트 테스트', () => {
      //cy.get('input[aria-label="개인정보 건수"]').filter(':visible').should('be.visible');
      //토글문구 확인
      cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
-     // like버튼 확인 
+     // like버튼 확인
+     // v3.0.4.0_R34865 like ->  포함 문구로 버튼문구 변경됨.
+     // 사용자 계정은 변경되지않음 맨티스 이슈등록필요  
      cy.get('input[aria-label="사용자 계정"]').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
-     cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
+     cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      //3.0.3.0_R34785에서 해당항목 사라짐 
      //cy.get('input[aria-label="개인정보 건수"]').parents('.v-input').find('.v-chip__content').contains('≥').should('be.visible');
      
@@ -349,7 +369,8 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
      //3.0.3.0_R34785에서 해당목 추가됨 
      cy.get('input[aria-label="개인정보 건수"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="개인정보 건수"]').parents('.v-input').find('.v-chip__content').contains('≥').should('be.visible');
+     // v3.0.4.0_R34865d에서 ≥  -> 이상 한글문구로 표기확인  
+     cy.get('input[aria-label="개인정보 건수"]').parents('.v-input').find('.v-chip__content').contains('이상').should('be.visible');
      //3.0.3.0_R34785에서 해당목 추가됨 
      //엑셀다운로드 버튼 존재 확인
      cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').should('be.visible');
@@ -2465,7 +2486,7 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 모든 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 이력 UI 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 
