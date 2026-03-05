@@ -41,21 +41,25 @@ jobs:
 
       - name: Native SSH & SCP Deploy
         run: |
-          # 1. 경로 및 파일명 설정
-          $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
+          # 1. 정보 설정
+          $target = "root@10.10.54.51"
+          $remotePath = "/home/root/deploy"
           $localFile = "${env:BIN_FILE_PATH}"
           $fileName = "${env:BIN_FILE_NAME}"
-          $target = "10.10.54.51"
+          
+          # 💡 핵심: 키 파일 위치를 직접 지정 (-i C:\id_ed25519)
+          $sshBase = "ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i C:\id_ed25519"
+          $scpBase = "scp -o BatchMode=yes -o StrictHostKeyChecking=no -i C:\id_ed25519"
 
           Write-Host "🚀 [1단계] 리눅스 서버 폴더 생성..."
-          # config 설정 덕분에 ssh 10.10.54.51 만 쳐도 자동으로 root와 키를 찾아갑니다.
-          ssh $target "mkdir -p $remotePath"
+          # & 를 사용하여 명령어 실행
+          & cmd /c "$sshBase $target `"mkdir -p $remotePath`""
 
-          Write-Host "📂 [2단계] 파일 전송..."
-          scp $localFile "${target}:${remotePath}/"
+          Write-Host "📂 [2단계] 파일 전송 시작..."
+          & cmd /c "$scpBase `"$localFile`" `${target}:${remotePath}/"
 
           Write-Host "✅ [3단계] 서버 설치 및 실행..."
-          ssh $target "chmod +x $remotePath/$fileName && $remotePath/$fileName -b -f"
+          & cmd /c "$sshBase $target `"chmod +x $remotePath/$fileName && $remotePath/$fileName -b -f`""
 
           Write-Host "✨ 모든 배포 작업이 완료되었습니다. 60초 대기!"
           Start-Sleep -Seconds 60
