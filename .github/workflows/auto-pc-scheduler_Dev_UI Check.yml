@@ -76,7 +76,7 @@ jobs:
           if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
           
           Write-Host "✨ 모든 배포 작업 완료! 1분간 기동을 기다립니다..."
-          Start-Sleep -Seconds 60
+          Start-Sleep -Seconds 180
 
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
@@ -129,6 +129,8 @@ jobs:
           CYPRESS_API_URL: "http://10.10.54.5:1234/"
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 👇 [추가] 보안 인증서 경고를 무시하고 접속을 허용합니다.
+          NODE_TLS_REJECT_UNAUTHORIZED: 0
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
