@@ -138,8 +138,7 @@ jobs:
           npm install cy2 mochawesome mochawesome-merge mochawesome-report-generator --save-dev
           npx cypress install
 
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Full_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
-
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"cypress/e2e/UI_Module_Dev_Check/**/*.cy.js`" --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           Get-Content cypress.log
 
       - name: Extract Dashboard URL
