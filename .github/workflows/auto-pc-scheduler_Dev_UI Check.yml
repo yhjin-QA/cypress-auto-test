@@ -236,7 +236,7 @@ jobs:
           JOB_STATUS: ${{ needs.cypress-run.result }}
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
-          MSG_TITLE: "확인결과"
+          MSG_TITLE: "DEV 확인결과"
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
         run: |
@@ -261,7 +261,6 @@ jobs:
                       foreach ($specName in $potentialFailSpecs) {
                           $isRealFail = $false
                           $relatedReports = Get-ChildItem -Path $reportFolder -Filter "report_*.json"
-                          
                           foreach ($report in $relatedReports) {
                               try {
                                   $rawJson = Get-Content $report.FullName -Raw -Encoding UTF8
@@ -287,19 +286,34 @@ jobs:
               }
           }
 
+          # 상태 결정
           if ($isActuallyFailed -and $finalFailCount -gt 0) {
-              $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*")
+              $title = $env:MSG_FAIL
               $fileNameString = if ($realFailedSpecs.Count -gt 0) { $realFailedSpecs -join ", " } else { "Unknown Spec" }
               $statusDetail = "FAIL: $finalFailCount script ( $fileNameString )"
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           } else {
-              $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*")
+              $title = $env:MSG_SUCCESS
               $statusDetail = ""
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           }
 
-          $pName = $env:PRODUCT_NAME; $tType = $env:TEST_TYPE; $mTitle = $env:MSG_TITLE; $time = $env:NOW
+          # 메시지 조립 (Here-String 방식으로 따옴표 에러 방지)
+          $pName = $env:PRODUCT_NAME
+          $tType = $env:TEST_TYPE
+          $mTitle = $env:MSG_TITLE
+          $time = $env:NOW
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           $url = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
-          
-          $msgText = if ($statusDetail -ne "") { "$title $pName $tType $mTitle ($time)`n$statusDetail`n`n${env:LABEL_DASH} : $url
+
+          # 👇 여기가 에러가 났던 부분입니다. 구조를 완전히 안전하게 바꿨습니다.
+          $msgBody = @"
+          $title $pName $tType $mTitle ($time)
+          $statusDetail
+
+          ${env:LABEL_DASH} : $url
+          ${env:LABEL_GIT} : $runUrl
+          "@
+
+          $payload = @{ text = $msgBody } | ConvertTo-Json -Compress
+          Invoke-RestMethod -Uri '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($payload))
