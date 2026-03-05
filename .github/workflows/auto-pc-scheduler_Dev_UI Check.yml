@@ -6,10 +6,10 @@ env:
   TZ: Asia/Seoul
 
 on:
-  push:
-    branches: [ "master" ]
-  schedule:
-    - cron: '5 2 * * *'
+  #push:
+  #  branches: [ "master" ]
+  #schedule:
+  #  - cron: '5 2 * * *'
   # 👇 수동 배포 및 테스트 트리거
   workflow_dispatch:
 
@@ -235,7 +235,7 @@ jobs:
           JOB_STATUS: ${{ needs.cypress-run.result }}
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
-          MSG_TITLE: "DEV 확인결과"
+          MSG_TITLE: "확인결과"
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
         run: |
