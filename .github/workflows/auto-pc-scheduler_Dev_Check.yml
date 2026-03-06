@@ -55,7 +55,9 @@ jobs:
           $partyName = "${env:PARTY_FILE_NAME}"
 
           Write-Host "🚀 [Step 1] Cleanup & Automated Uninstall..."
-          $cleanup = "sudo pkill -9 -u logcatch || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch"
+          # 1. SSH 접속 시 오류를 일으키는 profile 파일을 가장 먼저 강제 삭제 (sudo rm -f)
+          # 2. 그 후 프로세스 종료 및 언인스톨 진행
+          $cleanup = "sudo rm -f /etc/profile.d/logcatch.sh; sudo pkill -9 -u logcatch || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $cleanup"
 
           Write-Host "📂 [Step 2] Transferring Binaries..."
