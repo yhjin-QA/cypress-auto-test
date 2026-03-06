@@ -65,17 +65,27 @@ jobs:
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
 
-          Write-Host "✅ [Step 3] Running Installation & Background Service Start..."
+          Write-Host "✅ [Step 3] Running Installation & Controlled Service Restart..."
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           
-          # 💡 핵심 수정: 서비스 재시작 명령을 SSH 세션과 완전히 독립시킵니다.
-          # 모든 입출력을 /dev/null로 처리하여 SSH 세션이 즉시 닫히도록 유도합니다.
-          $svcRestart = "(nohup bash -c 'source /etc/profile.d/logcatch.sh || true; sleep 5; sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr' < /dev/null > /dev/null 2>&1 &) && sleep 1"
+          # 💡 사용자님의 제안 반영: 순차 정지 -> 대기 -> 순차 기동
+          # 모든 명령 끝에 ; 를 붙여 실패하더라도 다음 단계로 넘어가게 합니다.
+          $svcControl = @"
+            sudo systemctl stop logcatch_taskmgr || true;
+            sudo systemctl stop logcatch_server || true;
+            sudo systemctl stop logcatch_redis || true;
+            sleep 10;
+            sudo systemctl start logcatch_redis || true;
+            sudo systemctl start logcatch_server || true;
+            sudo systemctl start logcatch_taskmgr || true;
+            sleep 10;
+          "@
           
-          # 설치 완료 후 명령줄을 즉시 닫도록 실행
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $fixProfile && $svcRestart"
+          # 💡 전체 과정을 SSH 세션에서 실행 (마지막에 sleep 2를 두어 전송 완료 보장)
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $fixProfile && ($svcControl)"
 
+          
           Write-Host "🕵️ [Step 4] Finalizing Readiness Check (Port 18443)..."
           $success = $false
           # 💡 Runner(PowerShell)가 직접 루프를 제어합니다. (가장 안정적)
@@ -98,7 +108,7 @@ jobs:
 
           if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
           Write-Host "✨ All systems go! Proceeding to Cypress tests."
-          
+
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
   # ====================================================
