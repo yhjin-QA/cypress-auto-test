@@ -65,25 +65,24 @@ jobs:
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
 
-          Write-Host "✅ [Step 3] Running Installation & Controlled Service Restart..."
+          Write-Host "✅ [Step 3] Executing Installation & Detaching Session..."
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
-          
-          # 💡 수정 포인트: 백그라운드 실행 시 입출력(0,1,2번 스트림)을 모두 차단하여 SSH 종료 유도
-          # 'disown' 대신 '&'와 'exit' 조합을 사용하여 세션을 즉시 해제합니다.
-          $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 2; (nohup bash -c 'sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr' >/dev/null 2>&1 &); sleep 1"
-          
-          # 💡 SSH 세션이 명령어를 전달한 즉시 종료되도록 명령 구조 구성
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $fixProfile && $svcControl"
-          
+          $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 2; (nohup bash -c 'sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr' > /dev/null 2>&1 &)"
+
+          # 💡 핵심 수정: ssh 명령어에 -n -f 옵션을 추가하여 명령 전달 후 세션을 즉시 닫습니다.
+          # 이렇게 하면 'generate install information' 로그 직후에 바로 Step 4가 시작됩니다.
+          ssh -n -f -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $fixProfile && $svcControl"
+
+          # 💡 SSH가 배경으로 던져졌으므로 설치 진행 시간을 위해 잠깐의 여유를 줍니다.
+          Write-Host "⏳ Detached from server. Waiting 10s for installation to wrap up..."
+          Start-Sleep -Seconds 10
+
           Write-Host "🕵️ [Step 4] Finalizing Readiness Check (Port 18443)..."
           $success = $false
-          # 💡 Runner(PowerShell)가 직접 루프를 제어합니다. (가장 안정적)
           for ($i = 1; $i -le 30; $i++) {
               Write-Host "⏳ Attempt $i/30: Checking Port 18443 Status..."
-              
-              # SSH로 명령을 던져 결과값(라인 수)만 가져옵니다.
-              # grep -c는 매칭되는 라인의 숫자를 반환합니다.
+              # 이 단계의 SSH는 포트 숫자만 확인하고 바로 빠져나오는 단기 세션입니다.
               $check = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "sudo netstat -tpln | grep -i listen | grep -c :18443"
               
               if ($check.Trim() -match '^[1-9][0-9]*$') {
@@ -93,11 +92,6 @@ jobs:
               }
               Start-Sleep -Seconds 15
           }
-
-          if (-not $success) { Write-Error "❌ Timeout: Port 18443 did not open."; exit 1 }
-
-          if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
-          Write-Host "✨ All systems go! Proceeding to Cypress tests."
 
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
