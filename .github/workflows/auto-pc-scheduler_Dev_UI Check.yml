@@ -27,22 +27,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Find and Deploy Both Files
+      - name: Find Latest Build & 3rdparty Files
         run: |
           $deployFolder = "C:\Auto_Deploy"
           # 1. 메인 엔진 파일 찾기
           $mainFile = Get-ChildItem -Path $deployFolder -Filter "logcatch_linux_*.bin" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-          # 2. 3rdparty 파일 찾기
+          # 2. 동일한 버전의 3rdparty 파일 찾기
           $partyFile = Get-ChildItem -Path $deployFolder -Filter "logcatch_3rdparty_*.bin" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 
-          if (!$mainFile -or !$partyFile) { Write-Error "❌ 필요한 .bin 파일(엔진 또는 3rdparty)이 부족합니다."; exit 1 }
+          if (!$mainFile -or !$partyFile) { Write-Error "❌ 필요한 파일이 부족합니다."; exit 1 }
 
           echo "MAIN_FILE_PATH=$($mainFile.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "MAIN_FILE_NAME=$($mainFile.Name)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "PARTY_FILE_PATH=$($partyFile.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "PARTY_FILE_NAME=$($partyFile.Name)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Native SSH & SCP Deploy (Dual Install)
+      - name: Native SSH & SCP Deploy
         env:
           SSH_KEY_DATA: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
@@ -53,18 +52,17 @@ jobs:
           $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
           $sshOpts = "-o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath"
 
-          Write-Host "🚀 [1단계] 구버전 프로세스 및 계정 정리..."
+          Write-Host "🚀 [1단계] 환경 초기화 (기존 프로세스 및 계정 정리)..."
           ssh $sshOpts $target "export TERM=linux && (pkill -u logcatch -9 || true) && (userdel -rf logcatch || true)"
 
-          Write-Host "📂 [2단계] 파일 2종 전송 중..."
+          Write-Host "📂 [2단계] 파일 2종(메인+3rdparty) 전송 중..."
           ssh $sshOpts $target "mkdir -p $remotePath"
+          # 두 파일을 동일한 remotePath로 전송해야 설치 프로그램이 인식합니다.
           scp $sshOpts "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
           scp $sshOpts "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
 
-          Write-Host "🛠️ [3단계] 3rdparty 라이브러리 우선 설치..."
-          ssh $sshOpts $target "export TERM=linux && chmod +x $remotePath/${env:PARTY_FILE_NAME} && $remotePath/${env:PARTY_FILE_NAME} -b TESSERACT"
-
-          Write-Host "✅ [4단계] 메인 엔진 설치 및 실행..."
+          Write-Host "✅ [3단계] 서버 설치 및 실행 (3rdparty 자동 인식)..."
+          # 메인 파일만 실행해도 옆에 있는 3rdparty를 알아서 참조합니다.
           ssh $sshOpts $target "export TERM=linux && chmod +x $remotePath/${env:MAIN_FILE_NAME} && $remotePath/${env:MAIN_FILE_NAME} -b -f"
 
           Remove-Item -Path $keyPath -Force
