@@ -79,7 +79,7 @@ jobs:
 
           if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
           Write-Host "✨ Deployment completed and session released!"
-          
+
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
   # ====================================================
@@ -141,8 +141,11 @@ jobs:
           npm install cy2 mochawesome mochawesome-merge mochawesome-report-generator --save-dev
           npx cypress install
 
-          # 👇 스펙 경로를 Dev_Check 폴더로 변경하고 따옴표 처리를 안전하게 수정했습니다.
-          $specPath = "cypress/e2e/UI_Module_Dev_Check/**/*.cy.js"
+          # 스펙 경로를 Dev_Check 폴더로 변경하고 따옴표 처리를 안전하게 수정했습니다.
+          # $specPath = "cypress/e2e/UI_Module_Dev_Check/**/*.cy.js"
+          # 수정된 부분: 중괄호를 사용하여 두 폴더의 모든 .cy.js 파일을 실행 대상으로 잡습니다.
+          $specPath = "cypress/e2e/{UI_Module_Dev_Check,Basic_functions_Dev_check}/**/*.cy.js"
+
           cmd /c "chcp 65001 & npx cy2 run --record --spec $specPath --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           Get-Content cypress.log
 
