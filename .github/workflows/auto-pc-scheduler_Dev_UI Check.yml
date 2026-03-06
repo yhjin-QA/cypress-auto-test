@@ -45,35 +45,36 @@ jobs:
         env:
           SSH_KEY_DATA: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          # 1. 임시 키 파일 생성 (UTF8 BOM 제거 저장)
+          # 1. 임시 키 파일 생성
           $keyPath = "$env:TEMP\id_auto"
           $env:SSH_KEY_DATA.Trim() | Out-File -FilePath $keyPath -Encoding ASCII
           
           # 2. 정보 설정
           $target = "${{ secrets.QA_SERVER_USER }}@${{ secrets.QA_SERVER_IP }}"
           $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
-          $mainLocal = "${env:MAIN_FILE_PATH}"
-          $partyLocal = "${env:PARTY_FILE_PATH}"
           $mainName = "${env:MAIN_FILE_NAME}"
 
-          Write-Host "🚀 [1단계] 환경 초기화 (기존 프로세스 및 계정 정리)..."
-          # 변수($sshOpts)를 쓰지 않고 직접 옵션을 적습니다.
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux && (pkill -u logcatch -9 || true) && (userdel -rf logcatch || true)"
+          Write-Host "🚀 [1단계] 환경 초기화 (강력한 계정 및 프로세스 정리)..."
+          # - pkill: 해당 사용자의 모든 프로세스 강제 종료 (-9)
+          # - userdel -rf: 홈 디렉토리까지 포함하여 강제 삭제
+          # - groupdel: 그룹까지 깔끔하게 삭제
+          $cleanup = "export TERM=linux && (pkill -u logcatch -9 || true) && (userdel -rf logcatch || true) && (groupdel logcatch || true)"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$cleanup"
 
-          Write-Host "📂 [2단계] 파일 2종 전송 중..."
+          Write-Host "📂 [2단계] 폴더 생성 및 파일 전송..."
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "mkdir -p $remotePath"
-          scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "$mainLocal" "${target}:${remotePath}/"
-          scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "$partyLocal" "${target}:${remotePath}/"
+          scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
+          scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
 
-          Write-Host "✅ [3단계] 서버 설치 시작..."
-          # 메인 파일만 실행 (옆에 있는 3rdparty 자동 인식)
+          Write-Host "✅ [3단계] 서버 설치 실행..."
+          # 메인 파일만 실행 (3rdparty 자동 인식)
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux && chmod +x $remotePath/$mainName && $remotePath/$mainName -b -f"
 
-          # 4. 보안 정리
+          # 4. 보안 정리 및 대기
           if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
           Write-Host "✨ 배포 완료! 서비스 안정을 위해 2분간 대기합니다."
           Start-Sleep -Seconds 120
-          
+
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
   # ====================================================
