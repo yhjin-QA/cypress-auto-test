@@ -72,24 +72,31 @@ jobs:
           $svcRestart = "sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr || true"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           
-          # 💡 핵심 수정: 설치가 완전히 끝날 때까지 SSH 세션을 유지합니다. (nohup 제거)
+          Write-Host "✅ [Step 3] Running Installation & Ensuring Services Start..."
+          $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
+          $svcRestart = "sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr || true"
+          $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
+          
+          # 설치 완료까지 확실히 대기
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $svcRestart && $fixProfile"
 
           Write-Host "🕵️ [Step 4] Finalizing Readiness Check (Port 18443)..."
-          # 💡 -q를 사용하되, 성공 시 명확한 메시지를 출력하고 루프를 탈출합니다.
-          $wait = @"
-            for i in {1..20}; do
-              if netstat -tpln | grep -i listen | grep -q :18443; then
-                echo '✅ PORT_OPEN_DETECTED'
-                exit 0
-              fi
-              echo "⏳ Waiting for service (Attempt \$i/20)..."
-              sleep 15
-            done
-            exit 1
-          "@
-          # 💡 bash -c로 감싸서 실행하고 세션을 확실히 분리합니다.
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; bash -c '$wait'"
+          # 💡 Runner가 직접 20회 반복하며 SSH로 상태를 묻습니다. (가장 안정적)
+          $success = $false
+          for ($i = 1; $i -le 20; $i++) {
+              Write-Host "⏳ Attempt $i/20: Checking Port 18443..."
+              # SSH로 netstat 결과만 가져와서 PowerShell에서 직접 판단
+              $check = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "netstat -tpln | grep -i listen | grep -c :18443"
+              
+              if ($check.Trim() -gt 0) {
+                  Write-Host "✅ PORT_OPEN_DETECTED! Moving to next job."
+                  $success = $true
+                  break
+              }
+              Start-Sleep -Seconds 15
+          }
+
+          if (-not $success) { Write-Error "❌ Timeout: Port 18443 did not open."; exit 1 }
 
           if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
           Write-Host "✨ All systems go! Proceeding to Cypress tests."
