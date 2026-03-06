@@ -93,6 +93,7 @@ jobs:
           if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
           Write-Host "✨ Deployment task finished. Waiting 120s for service initialization..."
           Start-Sleep -Seconds 120
+          
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
   # ====================================================
