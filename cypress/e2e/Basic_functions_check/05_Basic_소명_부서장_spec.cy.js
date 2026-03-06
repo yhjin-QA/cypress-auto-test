@@ -480,6 +480,16 @@ describe('로그캐치 사이트 테스트', () => {
       cy.get('th').filter(':visible').contains('소명 유형').should('be.visible');
 
       // 기능확인 //
+      // 날짜부터 선택안하면 업무시스템 초기화되는 문제
+      // 기간 - 시작 날짜 달력 지정하기 
+     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+     cy.wait(500);
+     // 1일 클릭
+     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
+     cy.wait(500);
+     //달력창 닫기
+     cy.get('body').type('{esc}');
+
       // 업무시스템 클릭  : 리눅스 배송관리 선택 
       cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
       cy.wait(1000);
@@ -503,6 +513,7 @@ describe('로그캐치 사이트 테스트', () => {
       //// 사용자 계정 클릭하여 hojun 아이디 입력
       cy.contains('.v-label', '사용자 계정').closest('.v-input').find('input').type('hojun', { force: true });
 
+
       // 소명상태 점검 시작 
       // 소명상태 - 신청을  클릭하는 코드 
       cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -522,10 +533,9 @@ describe('로그캐치 사이트 테스트', () => {
       // 선택 후 메뉴 닫기
       cy.get('body').type('{esc}');
 
-
-      
       // 검색 버튼 클릭
       cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+
       // '신청', '사후소명' 선택한 검색결과 검증코드
       cy.get('tbody').find('a').contains('인사팀').should('be.visible');
       cy.get('tbody').find('a').contains('hojun').should('be.visible');
@@ -635,7 +645,8 @@ describe('로그캐치 사이트 테스트', () => {
       // 클릭 후, 체크된 상태(checked)인지 검증
       cy.get('input[aria-label="승인이 필요한 내역만 보기"]').should('be.checked');
       
-      //맨티스 이슈 : 
+      //맨티스 이슈 : 0037197 수정필요
+      // [소명] 소명 - 승인하기 탭 ' 승인이필요한 내역만 보기 클릭시' 초기화되어 검색결과 보여지지 않는 문제
       // 승인필요한 내역만 보기 표 검증
       //cy.get('tbody').find('a').contains('신청').should('be.visible');
       //cy.get('tbody').find('a').contains('반려').should('not.exist');

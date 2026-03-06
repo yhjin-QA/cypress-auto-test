@@ -168,6 +168,17 @@ describe('로그캐치 사이트 테스트', () => {
     //cy.get('input[aria-label="사용자 계정"]').filter(':visible').click({ force: true });
     cy.contains('.v-label', '사용자 계정').closest('.v-input').find('input').type('hojun', { force: true });
 
+    
+    // 기간 - 시작 날짜 달력 지정하기 
+     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+     cy.wait(500);
+     // 1일 클릭
+     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
+     cy.wait(500);
+     //달력창 닫기
+     cy.get('body').type('{esc}');
+    
+
     // 소명상태 별로 검증 /////////////
     // 소명상태  클릭하는 코드 
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -528,7 +539,7 @@ describe('로그캐치 사이트 테스트', () => {
        // 추가된 결재 정책창 팝업창 띄우기
        cy.contains('a', 'auto_add_test 결재정책').should('be.visible').click({ force: true });
        cy.get('tr').find('a').contains(/^인사팀$/).should('be.visible');
-       cy.get('tr').find('a').contains(/^참조$/).should('be.visible');
+       cy.get('tr').find('a.ellipsis').contains('참조').should('be.visible');
 
        // 결재 정책 팝업창 취소 버튼 클릭하기 
         cy.get('.v-dialog').contains('button', '취소') .click({ force: true });

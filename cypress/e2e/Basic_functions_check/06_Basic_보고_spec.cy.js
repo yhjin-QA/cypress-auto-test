@@ -242,7 +242,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="확장자"]').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
     // 확장자 종류중 ppt 선택하는 코드
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'ppt').should('be.visible').click({ force: true });
+    //cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'ppt').should('be.visible').click({ force: true });
+    // 1. 드롭다운 컨테이너를 먼저 찾고, 내부를 맨 아래로 스크롤합니다.
+    cy.get('.v-menu__content:visible').should('be.visible').scrollTo('bottom', { duration: 500 }); // 부드럽게 끝까지 내림
+
+    // 2. 이제 나타난 'ppt' 항목을 클릭합니다.
+    cy.contains('.v-list__tile__title', 'ppt').click({ force: true });
+    cy.wait(500);
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });

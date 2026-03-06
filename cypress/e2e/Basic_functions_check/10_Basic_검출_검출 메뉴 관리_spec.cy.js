@@ -616,8 +616,11 @@ describe('로그캐치 사이트 테스트', () => {
        //'+' 버튼 활성화(노출) 검증
        cy.get('.fa-plus').should('be.visible');
        // 2. 등록된 URI 값이 공백(비어있음)인지 검증
-       cy.get('td.ellipsis a:empty').should('exist');
-
+       //eq(3)은 0부터 시작하여 4번째 열
+       cy.get('td').eq(3).invoke('text')
+      .then((text) => {
+        expect(text.trim()).to.equal('');
+        });
        });
 
        

@@ -109,7 +109,7 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
 
     cy.contains('button', '소명').click({ force: true });
-    cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
+    cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
     
     //부서장 권한있는 유저가 로그인시 
     //cy.log('--- 소명 > 나의 소명 서브메뉴 ---');
@@ -144,6 +144,17 @@ describe('로그캐치 사이트 테스트', () => {
     // 기능확인 - 조건별로 검색  
     // 소명상태 별로 검증 /////////////
     // 소명상태  클릭하는 코드 
+
+     // 기간 - 시작 날짜 달력 지정하기 
+     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+     cy.wait(500);
+     // 1일 클릭
+     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
+     cy.wait(500);
+     //달력창 닫기
+     cy.get('body').type('{esc}');
+    
+
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
     // 소명상태중 '취소' 클릭하는 코드
@@ -161,7 +172,8 @@ describe('로그캐치 사이트 테스트', () => {
     // 소명상태중 '대기' 클릭하는 코드 
     // 대기 &  소명필요 검색결과로 나오지  않는 이슈 ( 맨티스 이슈 : 37157)
     // 이슈라면 수정후 대기상태 코드 작성필요 
-    
+
+   
     // 소명 상태 클릭 (팝업창 다시띄우기) (소명상태 다중선택 취소 + 신청 )
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '신청' 클릭하는 코드
@@ -371,7 +383,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="소명 대상 일자"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
     // 일자 : 2026-02-05일자  클릭하는 코드
-    cy.get('.v-list__tile__title').filter(':visible').contains('2026-02-05').click({ force: true });
+    //cy.get('.v-list__tile__title').filter(':visible').contains('2026-02-05').click({ force: true });
+    cy.get('.v-menu__content:visible, .v-autocomplete__content:visible').should('exist').scrollTo('bottom', { duration: 1000 }); // 1초 동안 천천히 아래로 이동
+    // 2. 데이터가 렌더링될 시간을 잠시 준 뒤 날짜를 클릭합니다.
+    cy.wait(500);
+    cy.contains('.v-list__tile__title', '2026-02-05').should('exist').click({ force: true });
      // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     ///////////////////////////////

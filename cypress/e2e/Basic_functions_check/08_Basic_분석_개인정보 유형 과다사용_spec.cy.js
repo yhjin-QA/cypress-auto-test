@@ -1156,9 +1156,20 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(500);
 
      // 패턴유형 '추가' 버튼 클릭
-     cy.contains('.v-btn__content', '추가').filter(':visible').click({ force: true });
+     //cy.contains('.v-btn__content', '추가').filter(':visible').should('be.visible').click({ force: true });
+     // 1. 전체 내용을 감싸고 있는 최상위 스크롤 컨테이너를 아래로 내립니다.
+     cy.get('.scrollable-detail-content').scrollTo('bottom', { duration: 800 }); 
+     // 2. 스크롤 후 버튼이 렌더링되고 안정화될 시간을 줍니다.
      cy.wait(500);
+     // 3. '추가' 버튼 클릭
 
+     // contains의 범위를 좁히기 위해 '개인정보 유형 추가' 섹션 내부를 지정하면 더 정확합니다.
+     cy.contains('.v-card', '개인정보 유형 추가').within(() => {
+      cy.contains('button', '추가')
+      .scrollIntoView() // 다시 한번 해당 요소 위치로 정밀 이동
+      .click({ force: true });
+    });
+    
      // 기존 + 추가한 패턴유형 검증하는 코드
      cy.contains('tr', '주민등록번호').should('contain', '3');
      cy.contains('tr', '신용카드번호').should('contain', '5');
