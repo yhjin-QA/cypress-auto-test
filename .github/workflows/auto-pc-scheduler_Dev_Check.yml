@@ -70,6 +70,7 @@ jobs:
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           
           # 💡 핵심 수정: 서비스 재시작 명령을 SSH 세션과 완전히 독립시킵니다.
+          # 모든 입출력을 /dev/null로 처리하여 SSH 세션이 즉시 닫히도록 유도합니다.
           $svcRestart = "(nohup bash -c 'source /etc/profile.d/logcatch.sh || true; sleep 5; sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr' < /dev/null > /dev/null 2>&1 &) && sleep 1"
           
           # 설치 완료 후 명령줄을 즉시 닫도록 실행
