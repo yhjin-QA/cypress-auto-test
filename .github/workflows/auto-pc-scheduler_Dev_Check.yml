@@ -69,13 +69,16 @@ jobs:
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           
-          # 💡 핵심 수정: 설치와 프로필 수정은 기다리되, 서비스 재시작은 백그라운드로 던집니다.
-          # nohup과 & disown을 사용하여 SSH 세션이 즉시 종료되도록 유도합니다.
-          $svcRestart = "nohup bash -c 'source /etc/profile.d/logcatch.sh || true; sleep 5; sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr' > /dev/null 2>&1 & disown"
+          # 💡 핵심 수정: svcRestart 명령을 SSH 세션과 완전히 독립시킵니다.
+          # 1. 쉘 스크립트 실행 후 즉시 종료되도록 ( ... ) & 를 사용
+          # 2. 모든 출력을 /dev/null로 버리고 입력은 /dev/null에서 받도록 명시 (< /dev/null)
+          $svcRestart = "(nohup bash -c 'source /etc/profile.d/logcatch.sh || true; sleep 5; sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr' < /dev/null > /dev/null 2>&1 &) && sleep 1"
           
+          # SSH 실행 시 -f 옵션(배경 작업) 대신 명령 끝에 sleep을 두어 전송 후 즉시 닫히게 유도
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $fixProfile && $svcRestart"
 
           Write-Host "🕵️ [Step 4] Finalizing Readiness Check (Port 18443)..."
+          
           $success = $false
           # 💡 대기 횟수를 30회로 늘려 DB 초기화 시간을 충분히 확보
           for ($i = 1; $i -le 30; $i++) {
