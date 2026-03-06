@@ -9,7 +9,7 @@ on:
   push:
     branches: [ "master" ]
   schedule:
-    - cron: '5 2 * * *'
+    - cron: '5 2 * * 1-5'
   # 👇 수동 배포 및 테스트 트리거
   workflow_dispatch:
 
@@ -65,28 +65,24 @@ jobs:
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
 
-          Write-Host "✅ [Step 3] Executing Installation & Detaching Session..."
+          Write-Host "🚀 [Step 3] Executing Installation with Force-Disconnect (60s Timeout)..."
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
-          $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 2; (nohup bash -c 'sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr' > /dev/null 2>&1 &)"
+          $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 2; (sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr > /dev/null 2>&1 &)"
 
-          # 💡 핵심 수정: ssh 명령어에 -n -f 옵션을 추가하여 명령 전달 후 세션을 즉시 닫습니다.
-          # 이렇게 하면 'generate install information' 로그 직후에 바로 Step 4가 시작됩니다.
-          ssh -n -f -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $fixProfile && $svcControl"
-
-          # 💡 SSH가 배경으로 던져졌으므로 설치 진행 시간을 위해 잠깐의 여유를 줍니다.
-          Write-Host "⏳ Detached from server. Waiting 10s for installation to wrap up..."
-          Start-Sleep -Seconds 10
+          # 💡 핵심 수정: 'timeout 60s'를 사용하여 SSH 세션이 60초 이상 물려있지 못하게 강제 종료시킵니다.
+          # 설치 스크립트가 100%를 찍는 데 충분한 시간인 60~90초를 부여합니다.
+          timeout 90s ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $fixProfile && $svcControl" || Write-Host "⚠️ SSH session timed out as expected, moving to Step 4."
 
           Write-Host "🕵️ [Step 4] Finalizing Readiness Check (Port 18443)..."
           $success = $false
           for ($i = 1; $i -le 30; $i++) {
-              Write-Host "⏳ Attempt $i/30: Checking Port 18443 Status..."
-              # 이 단계의 SSH는 포트 숫자만 확인하고 바로 빠져나오는 단기 세션입니다.
+              Write-Host "⏳ Attempt $i/30: Polling Port 18443..."
+              # 이 짧은 SSH 세션은 결과만 받고 즉시 닫힙니다.
               $check = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "sudo netstat -tpln | grep -i listen | grep -c :18443"
               
               if ($check.Trim() -match '^[1-9][0-9]*$') {
-                  Write-Host "✅ PORT_OPEN_DETECTED! Moving to next job."
+                  Write-Host "✅ PORT_OPEN_DETECTED! Moving to Cypress Job."
                   $success = $true
                   break
               }
