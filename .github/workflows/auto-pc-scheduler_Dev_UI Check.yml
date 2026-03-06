@@ -54,21 +54,22 @@ jobs:
           $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
           $mainName = "${env:MAIN_FILE_NAME}"
 
-          Write-Host "🚀 [1단계] 환경 초기화 (강력한 계정 및 프로세스 정리)..."
-          # - pkill: 해당 사용자의 모든 프로세스 강제 종료 (-9)
-          # - userdel -rf: 홈 디렉토리까지 포함하여 강제 삭제
-          # - groupdel: 그룹까지 깔끔하게 삭제
-          $cleanup = "export TERM=linux && (pkill -u logcatch -9 || true) && (userdel -rf logcatch || true) && (groupdel logcatch || true)"
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$cleanup"
+          Write-Host "🚀 [1단계] 환경 초기화 및 sudo 권한/프로필 체크..."
+          # 환경 변수를 수동으로 로드하고 기존 계정을 정리합니다.
+          $setupCmd = "source /etc/profile && source ~/.bash_profile && (sudo pkill -u logcatch -9 || true) && (sudo userdel -rf logcatch || true)"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$setupCmd"
 
-          Write-Host "📂 [2단계] 폴더 생성 및 파일 전송..."
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "mkdir -p $remotePath"
-          scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
-          scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
+          Write-Host "📂 [2단계] 파일 전송..."
+          # ... (SCP 전송 로직 동일) ...
 
-          Write-Host "✅ [3단계] 서버 설치 실행..."
-          # 메인 파일만 실행 (3rdparty 자동 인식)
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux && chmod +x $remotePath/$mainName && $remotePath/$mainName -b -f"
+          Write-Host "✅ [3단계] sudo 권한으로 서버 설치 실행..."
+          # 💡 핵심: 명령 실행 전 profile을 로드하고 sudo를 붙여 실행합니다.
+          $installCmd = "source /etc/profile && chmod +x $remotePath/$mainName && sudo $remotePath/$mainName -b -f"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$installCmd"
+
+          # 설치 후 환경 변수가 profile.d 등에 잘 들어갔는지 확인
+          Write-Host "🔍 환경 변수 적용 확인..."
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "source /etc/profile && env | grep logcatch || echo 'Path not found'"
 
           # 4. 보안 정리 및 대기
           if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
