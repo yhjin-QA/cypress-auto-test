@@ -69,11 +69,11 @@ jobs:
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           
-          # 💡 줄바꿈 에러($\r) 방지를 위해 모든 명령을 한 줄로 연결
-          $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 5; sudo systemctl start logcatch_redis || true; sudo systemctl start logcatch_server || true; sudo systemctl start logcatch_taskmgr || true; sleep 5"
+          # 💡 수정 포인트: 명령어를 백그라운드로 던지고, 출력을 차단하여 SSH 세션이 즉시 종료되게 함
+          $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 5; (sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr > /dev/null 2>&1 &); disown; sleep 2"
           
-          # 💡 전체 과정을 하나의 bash 명령어로 실행하여 세션 분리 보장
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $fixProfile && ($svcControl)"
+          # 이제 SSH는 위의 명령어를 서버에 '전달'만 하고 바로 종료됩니다.
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $fixProfile && $svcControl"
 
           
           Write-Host "🕵️ [Step 4] Finalizing Readiness Check (Port 18443)..."
