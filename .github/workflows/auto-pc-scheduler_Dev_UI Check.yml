@@ -41,11 +41,11 @@ jobs:
           echo "MAIN_FILE_NAME=$($mainFile.Name)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "PARTY_FILE_PATH=$($partyFile.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Native SSH & SCP Deploy (Syntax & Uninstall Fix)
+      - name: Native SSH & SCP Deploy (Session Disconnect Fix)
         env:
           SSH_KEY_DATA: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          # 1. Create SSH Key
+          # 1. SSH Key Setup (Same as before)
           $keyPath = "$env:TEMP\id_auto"
           $env:SSH_KEY_DATA.Trim() | Out-File -FilePath $keyPath -Encoding ASCII
           
@@ -55,7 +55,6 @@ jobs:
           $partyName = "${env:PARTY_FILE_NAME}"
 
           Write-Host "🚀 [Step 1] Cleanup & Automated Uninstall..."
-          # Using printf to handle interactive 'uninstall' prompt and removing line break issues
           $cleanup = "sudo pkill -9 -u logcatch || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $cleanup"
 
@@ -64,23 +63,23 @@ jobs:
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
 
-          Write-Host "✅ [Step 3] Installation & Service Control..."
-          # Consolidating commands into single lines to prevent \r syntax errors
+          Write-Host "✅ [Step 3] Installation & Background Service Start..."
+          # 💡 핵심 수정: nohup과 disown을 사용하여 세션을 분리합니다.
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f; "
-          $svcStop = "sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_redis || true; "
-          $svcStart = "sudo systemctl start logcatch_redis; sudo systemctl start logcatch_server; sudo systemctl start logcatch_taskmgr; "
+          $svcRestart = "sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr || true; "
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install $svcStop $svcStart $fixProfile"
+          # nohup과 disown을 사용하여 SSH가 명령 완료 후 즉시 세션을 닫도록 유도
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; nohup bash -c '$install $svcRestart $fixProfile' > /dev/null 2>&1 & disown"
 
-          Write-Host "🕵️ [Step 4] Port Monitoring (18443)..."
-          # Single-line loop prevents 'do\r' syntax errors
-          $wait = "for i in {1..30}; do if netstat -tpln | grep -q 18443; then echo '✅ PORT_OPEN_SUCCESS'; exit 0; fi; echo '⏳ Waiting for service (20s)...'; sleep 20; done; exit 1"
+          Write-Host "🕵️ [Step 4] Monitoring Port (18443) for Readiness..."
+          # 포트가 열리는지만 확인하고 성공하면 즉시 종료하여 다음 Job으로 넘깁니다.
+          $wait = "for i in {1..30}; do if netstat -tpln | grep -q 18443; then echo 'PORT_OPEN'; exit 0; fi; sleep 20; done; exit 1"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $wait"
 
-          # Final cleanup of local key
           if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
-          Write-Host "✨ Deployment Successful!"
+          Write-Host "✨ Deployment completed and session released!"
+          
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
   # ====================================================
