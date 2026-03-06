@@ -41,45 +41,53 @@ jobs:
           echo "MAIN_FILE_NAME=$($mainFile.Name)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "PARTY_FILE_PATH=$($partyFile.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Native SSH & SCP Deploy
-        env:
-          SSH_KEY_DATA: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Native SSH & SCP Deploy (Final English Version)
         run: |
-          # 1. 임시 키 파일 생성
+          # 1. Create Temporary Key File
           $keyPath = "$env:TEMP\id_auto"
           $env:SSH_KEY_DATA.Trim() | Out-File -FilePath $keyPath -Encoding ASCII
           
-          # 2. 정보 설정
           $target = "${{ secrets.QA_SERVER_USER }}@${{ secrets.QA_SERVER_IP }}"
           $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
           $mainName = "${env:MAIN_FILE_NAME}"
 
-          Write-Host "🚀 [1단계] 환경 초기화 (기존 프로세스 및 계정 강제 정리)..."
-          # sudo를 사용하여 기존 계정과 프로세스를 확실히 제거합니다.
-          $setupCmd = "export TERM=linux && (sudo pkill -u logcatch -9 || true) && (sudo userdel -rf logcatch || true)"
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$setupCmd"
+          Write-Host "🚀 [Step 1] Initializing environment and installing dependencies..."
+          # Install PostgreSQL client for psql command and clean up old accounts
+          $preSetup = @"
+            sudo yum install -y postgresql && 
+            sudo pkill -u logcatch -9 || true && 
+            sudo userdel -rf logcatch || true
+          "@
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux && $preSetup"
 
-          Write-Host "📂 [2단계] 파일 전송 (메인 + 3rdparty)..."
+          Write-Host "📂 [Step 2] Transferring installation files..."
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "mkdir -p $remotePath"
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
 
-          Write-Host "✅ [3단계] 서버 설치 및 환경 변수 권한 설정..."
-          # 1. 설치 실행 (sudo 권한 활용)
-          # 2. 요청하신 profile.d 권한 부여 추가
-          # 3. 환경 변수 즉시 반영(source) 후 서비스 확인
+          Write-Host "✅ [Step 3] Running installation and fixing line endings..."
+          # 1. Fix CRLF issues (\r) using sed
+          # 2. Run installation with sudo
+          # 3. Set permission for profile.d script
           $installCmd = @"
-            sudo chmod +x $remotePath/${env:MAIN_FILE_NAME} && 
-            sudo $remotePath/${env:MAIN_FILE_NAME} -b -f && 
+            sudo chmod +x $remotePath/$mainName && 
+            sudo $remotePath/$mainName -b -f && 
             if [ -f /etc/profile.d/logcatch.sh ]; then 
-              sudo chmod 755 /etc/profile.d/logcatch.sh && 
-              source /etc/profile.d/logcatch.sh
+              sudo sed -i 's/\r//' /etc/profile.d/logcatch.sh && 
+              sudo chmod 755 /etc/profile.d/logcatch.sh
             fi
           "@
           
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux && $installCmd"
 
-          Write-Host "✨ 모든 작업 완료! 2분간 대기 후 서비스를 확인합니다."
+          Write-Host "🕵️ [Step 4] Verifying service status with forced environment loading..."
+          # Loading profile manually to avoid 'command not found' errors
+          $checkCmd = "source /etc/profile && [ -f /etc/profile.d/logcatch.sh ] && source /etc/profile.d/logcatch.sh && netstat -tpln | grep 18443"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux && $checkCmd"
+
+          # 4. Cleanup
+          if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
+          Write-Host "✨ All tasks completed! Waiting 2 minutes for service stability..."
           Start-Sleep -Seconds 120
 
   # ====================================================
