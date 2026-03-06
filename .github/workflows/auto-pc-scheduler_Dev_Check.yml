@@ -66,29 +66,22 @@ jobs:
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
 
           Write-Host "✅ [Step 3] Running Installation & Ensuring Services Start..."
-          # 1. 설치와 서비스 재시작, 프로필 교정을 하나의 블록으로 묶음
-          # 2. & disown 대신 연산자(&&)를 사용하여 순차적 완료를 보장
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
           $svcRestart = "sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr || true"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           
-          Write-Host "✅ [Step 3] Running Installation & Ensuring Services Start..."
-          $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
-          $svcRestart = "sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr || true"
-          $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
-          
-          # 설치 완료까지 확실히 대기
+          # 설치 완료까지 확실히 대기 (&& 연산자로 순차 실행 보장)
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $svcRestart && $fixProfile"
 
           Write-Host "🕵️ [Step 4] Finalizing Readiness Check (Port 18443)..."
-          # 💡 Runner가 직접 20회 반복하며 SSH로 상태를 묻습니다. (가장 안정적)
           $success = $false
-          for ($i = 1; $i -le 20; $i++) {
-              Write-Host "⏳ Attempt $i/20: Checking Port 18443..."
-              # SSH로 netstat 결과만 가져와서 PowerShell에서 직접 판단
-              $check = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "netstat -tpln | grep -i listen | grep -c :18443"
+          # 💡 대기 횟수를 30회로 늘려 DB 초기화 시간을 충분히 확보
+          for ($i = 1; $i -le 30; $i++) {
+              Write-Host "⏳ Attempt $i/30: Checking Port 18443..."
+              # sudo를 추가하여 포트 상태를 더 정확히 읽어옴
+              $check = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "sudo netstat -tpln | grep -i listen | grep -c :18443"
               
-              if ($check.Trim() -gt 0) {
+              if ($check.Trim() -match '^[1-9][0-9]*$') {
                   Write-Host "✅ PORT_OPEN_DETECTED! Moving to next job."
                   $success = $true
                   break
@@ -97,9 +90,6 @@ jobs:
           }
 
           if (-not $success) { Write-Error "❌ Timeout: Port 18443 did not open."; exit 1 }
-
-          if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
-          Write-Host "✨ All systems go! Proceeding to Cypress tests."
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
   # ====================================================
