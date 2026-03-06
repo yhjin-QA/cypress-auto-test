@@ -76,23 +76,23 @@ jobs:
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $svcRestart && $fixProfile"
 
           Write-Host "🕵️ [Step 4] Finalizing Readiness Check (Port 18443)..."
-          # 💡 루프 내에서 grep 성공 시 즉시 루프를 깨고 나오도록 보강
+          # 💡 -q를 사용하되, 성공 시 명확한 메시지를 출력하고 루프를 탈출합니다.
           $wait = @"
-            for i in {1..30}; do
+            for i in {1..20}; do
               if netstat -tpln | grep -i listen | grep -q :18443; then
-                echo '✅ PORT_OPEN_SUCCESS'
+                echo '✅ PORT_OPEN_DETECTED'
                 exit 0
               fi
-              echo "⏳ Waiting for port (Attempt \$i/30)..."
+              echo "⏳ Waiting for service (Attempt \$i/20)..."
               sleep 15
             done
             exit 1
           "@
-          # 💡 SSH 실행 시 -t 옵션을 추가하여 강제 대화형 모드로 실행하거나, 출력 스트림을 명확히 합니다.
+          # 💡 bash -c로 감싸서 실행하고 세션을 확실히 분리합니다.
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; bash -c '$wait'"
 
           if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
-          Write-Host "✨ Deployment task finished! Moving to Cypress Run..."
+          Write-Host "✨ All systems go! Proceeding to Cypress tests."
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
   # ====================================================
@@ -204,7 +204,7 @@ jobs:
           if-no-files-found: ignore
 
 # ====================================================
-  # [Job 2] 태스크 재시작 테스트 (단독 실행)
+  # [Job 2-1] 태스크 재시작 테스트 (단독 실행)
   # ====================================================
   restart-task-run:
     needs: cypress-run  # Job 1이 끝나야 시작
