@@ -75,14 +75,24 @@ jobs:
           # 💡 핵심 수정: 설치가 완전히 끝날 때까지 SSH 세션을 유지합니다. (nohup 제거)
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $svcRestart && $fixProfile"
 
-          Write-Host "🕵️ [Step 4] Monitoring Port (18443) for Readiness..."
-          # 설치가 끝난 직후이므로 DB 초기화 시간을 충분히 주며 포트 체크
-          $wait = "for i in {1..60}; do if netstat -tpln | grep -q 18443; then echo '✅ PORT_OPEN_SUCCESS'; exit 0; fi; echo '⏳ Service initializing... (Attempt \$i/60)'; sleep 20; done; exit 1"
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $wait"
+          Write-Host "🕵️ [Step 4] Finalizing Readiness Check (Port 18443)..."
+          # 💡 루프 내에서 grep 성공 시 즉시 루프를 깨고 나오도록 보강
+          $wait = @"
+            for i in {1..30}; do
+              if netstat -tpln | grep -i listen | grep -q :18443; then
+                echo '✅ PORT_OPEN_SUCCESS'
+                exit 0
+              fi
+              echo "⏳ Waiting for port (Attempt \$i/30)..."
+              sleep 15
+            done
+            exit 1
+          "@
+          # 💡 SSH 실행 시 -t 옵션을 추가하여 강제 대화형 모드로 실행하거나, 출력 스트림을 명확히 합니다.
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; bash -c '$wait'"
 
           if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
-          Write-Host "✨ Deployment completed and session released!"
-
+          Write-Host "✨ Deployment task finished! Moving to Cypress Run..."
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
   # ====================================================
