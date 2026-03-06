@@ -69,20 +69,10 @@ jobs:
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           
-          # 💡 사용자님의 제안 반영: 순차 정지 -> 대기 -> 순차 기동
-          # 모든 명령 끝에 ; 를 붙여 실패하더라도 다음 단계로 넘어가게 합니다.
-          $svcControl = @"
-            sudo systemctl stop logcatch_taskmgr || true;
-            sudo systemctl stop logcatch_server || true;
-            sudo systemctl stop logcatch_redis || true;
-            sleep 10;
-            sudo systemctl start logcatch_redis || true;
-            sudo systemctl start logcatch_server || true;
-            sudo systemctl start logcatch_taskmgr || true;
-            sleep 10;
-          "@
+          # 💡 줄바꿈 에러($\r) 방지를 위해 모든 명령을 한 줄로 연결
+          $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 5; sudo systemctl start logcatch_redis || true; sudo systemctl start logcatch_server || true; sudo systemctl start logcatch_taskmgr || true; sleep 5"
           
-          # 💡 전체 과정을 SSH 세션에서 실행 (마지막에 sleep 2를 두어 전송 완료 보장)
+          # 💡 전체 과정을 하나의 bash 명령어로 실행하여 세션 분리 보장
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $fixProfile && ($svcControl)"
 
           
