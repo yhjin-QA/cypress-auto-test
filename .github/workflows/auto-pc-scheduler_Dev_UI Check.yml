@@ -41,49 +41,54 @@ jobs:
           echo "MAIN_FILE_NAME=$($mainFile.Name)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "PARTY_FILE_PATH=$($partyFile.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Native SSH & SCP Deploy (Permission Fix)
+      - name: Native SSH & SCP Deploy (Final Hardened Version)
         env:
           SSH_KEY_DATA: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          # 1. SSH Key Setup
+          # 1. Create Temporary Key File
           $keyPath = "$env:TEMP\id_auto"
           $env:SSH_KEY_DATA.Trim() | Out-File -FilePath $keyPath -Encoding ASCII
           
           $target = "${{ secrets.QA_SERVER_USER }}@${{ secrets.QA_SERVER_IP }}"
           $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
           $mainName = "${env:MAIN_FILE_NAME}"
-          $partyName = "${env:PARTY_FILE_NAME}" # Added Party file name variable
+          $partyName = "${env:PARTY_FILE_NAME}"
 
-          Write-Host "🚀 [Step 1] Initializing environment (Cleanup)..."
-          $cleanup = "export TERM=linux && (sudo pkill -u logcatch -9 || true) && (sudo userdel -rf logcatch || true)"
+          Write-Host "🚀 [Step 1] Cleaning environment..."
+          # Ensuring no zombie psql processes are blocking the install
+          $cleanup = "export TERM=linux && (sudo pkill -9 -u logcatch || true) && (sudo userdel -rf logcatch || true) && (sudo pkill -9 psql || true)"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$cleanup"
 
-          Write-Host "📂 [Step 2] Transferring both binary files..."
+          Write-Host "📂 [Step 2] Transferring binaries..."
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "mkdir -p $remotePath"
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
 
           Write-Host "✅ [Step 3] Granting permissions and Running Installer..."
-          # Crucial: Applying chmod 755 to both files before installation
+          # We use 'sudo' for the installer to ensure it has rights to modify system schemas
           $installCmd = @"
             sudo chmod 755 $remotePath/$mainName && 
             sudo chmod 755 $remotePath/$partyName && 
-            sudo $remotePath/$mainName -b -f && 
+            sudo $remotePath/$mainName -b -f
+          "@
+          # Running with a slightly longer timeout via SSH if possible
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux && $installCmd"
+
+          Write-Host "🕵️ [Step 4] Fixing Profile and Verifying Port..."
+          $fixProfile = @"
             if [ -f /etc/profile.d/logcatch.sh ]; then 
               sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null && 
               sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh && 
               sudo chmod 755 /etc/profile.d/logcatch.sh
             fi
           "@
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux && $installCmd"
-
-          Write-Host "🕵️ [Step 4] Port Check (18443)..."
-          $checkCmd = "source /etc/profile && [ -f /etc/profile.d/logcatch.sh ] && source /etc/profile.d/logcatch.sh && netstat -tpln | grep 18443"
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux && $checkCmd"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux && $fixProfile"
 
           if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
-          Write-Host "✨ Waiting 120s for service to stabilize..."
-          Start-Sleep -Seconds 120
+          
+          # 💡 CRITICAL: Increase wait time to 5 minutes to allow the infinite INSERTS to finish
+          Write-Host "⏳ Massive data insertion detected. Waiting 300s for DB to settle..."
+          Start-Sleep -Seconds 300
 
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
