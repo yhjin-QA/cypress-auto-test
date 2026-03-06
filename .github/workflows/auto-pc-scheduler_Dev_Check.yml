@@ -65,15 +65,24 @@ jobs:
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
 
-          Write-Host "🚀 [Step 3] Executing Installation with Force-Disconnect (60s Timeout)..."
+          Write-Host "🚀 [Step 3] Executing Installation (Force-Disconnect after 90s)..."
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 2; (sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr > /dev/null 2>&1 &)"
 
-          # 💡 핵심 수정: 'timeout 60s'를 사용하여 SSH 세션이 60초 이상 물려있지 못하게 강제 종료시킵니다.
-          # 설치 스크립트가 100%를 찍는 데 충분한 시간인 60~90초를 부여합니다.
-          timeout 90s ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $fixProfile && $svcControl" || Write-Host "⚠️ SSH session timed out as expected, moving to Step 4."
+          # 💡 PowerShell 방식의 타임아웃 처리
+          $job = Start-Job -ScriptBlock {
+              param($keyPath, $target, $cmd)
+              ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target $cmd
+          } -ArgumentList $keyPath, $target, "export TERM=linux; $install && $fixProfile && $svcControl"
 
+          # 90초 대기 후 작업이 안 끝나면 강제 종료하고 다음 단계 진행
+          if (-not (Wait-Job $job -Timeout 90)) {
+              Write-Host "⚠️ Installation session timed out as expected (90s). Cleaning up session..."
+              Stop-Job $job
+          }
+          Remove-Job $job
+          
           Write-Host "🕵️ [Step 4] Finalizing Readiness Check (Port 18443)..."
           $success = $false
           for ($i = 1; $i -le 30; $i++) {
