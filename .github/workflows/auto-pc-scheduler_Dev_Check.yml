@@ -65,17 +65,14 @@ jobs:
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
 
-          Write-Host "✅ [Step 3] Running Installation & Ensuring Services Start..."
+          Write-Host "✅ [Step 3] Running Installation & Background Service Start..."
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
-          
-          # 💡 보완된 서비스 재시작 로직:
-          # 1. 프로필 오타 먼저 수정
-          # 2. 환경 변수 강제 적용 (source)
-          # 3. DB 안정화를 위해 10초 대기 후 서비스 재시작
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
-          $svcRestart = "source /etc/profile.d/logcatch.sh || true; sleep 10; sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr || true"
           
-          # 순서 변경: 설치 -> 프로필 수정 -> 서비스 재시작
+          # 💡 핵심 수정: 설치와 프로필 수정은 기다리되, 서비스 재시작은 백그라운드로 던집니다.
+          # nohup과 & disown을 사용하여 SSH 세션이 즉시 종료되도록 유도합니다.
+          $svcRestart = "nohup bash -c 'source /etc/profile.d/logcatch.sh || true; sleep 5; sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr' > /dev/null 2>&1 & disown"
+          
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $fixProfile && $svcRestart"
 
           Write-Host "🕵️ [Step 4] Finalizing Readiness Check (Port 18443)..."
