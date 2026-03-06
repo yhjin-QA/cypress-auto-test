@@ -69,21 +69,20 @@ jobs:
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           
-          # 💡 핵심 수정: svcRestart 명령을 SSH 세션과 완전히 독립시킵니다.
-          # 1. 쉘 스크립트 실행 후 즉시 종료되도록 ( ... ) & 를 사용
-          # 2. 모든 출력을 /dev/null로 버리고 입력은 /dev/null에서 받도록 명시 (< /dev/null)
+          # 💡 핵심 수정: 서비스 재시작 명령을 SSH 세션과 완전히 독립시킵니다.
           $svcRestart = "(nohup bash -c 'source /etc/profile.d/logcatch.sh || true; sleep 5; sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr' < /dev/null > /dev/null 2>&1 &) && sleep 1"
           
-          # SSH 실행 시 -f 옵션(배경 작업) 대신 명령 끝에 sleep을 두어 전송 후 즉시 닫히게 유도
+          # 설치 완료 후 명령줄을 즉시 닫도록 실행
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $fixProfile && $svcRestart"
 
           Write-Host "🕵️ [Step 4] Finalizing Readiness Check (Port 18443)..."
-          
           $success = $false
-          # 💡 대기 횟수를 30회로 늘려 DB 초기화 시간을 충분히 확보
+          # 💡 Runner(PowerShell)가 직접 루프를 제어합니다. (가장 안정적)
           for ($i = 1; $i -le 30; $i++) {
-              Write-Host "⏳ Attempt $i/30: Checking Port 18443..."
-              # sudo를 추가하여 포트 상태를 더 정확히 읽어옴
+              Write-Host "⏳ Attempt $i/30: Checking Port 18443 Status..."
+              
+              # SSH로 명령을 던져 결과값(라인 수)만 가져옵니다.
+              # grep -c는 매칭되는 라인의 숫자를 반환합니다.
               $check = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "sudo netstat -tpln | grep -i listen | grep -c :18443"
               
               if ($check.Trim() -match '^[1-9][0-9]*$') {
@@ -95,6 +94,9 @@ jobs:
           }
 
           if (-not $success) { Write-Error "❌ Timeout: Port 18443 did not open."; exit 1 }
+
+          if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
+          Write-Host "✨ All systems go! Proceeding to Cypress tests."
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
   # ====================================================
