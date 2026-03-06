@@ -1,8 +1,8 @@
-name: Auto-PC Work (Dev_UI)
+name: Auto-PC Work (Dev_UI&Basic)
 
 env:
   PRODUCT_NAME: "로그캐치"
-  TEST_TYPE: Dev_UI
+  TEST_TYPE: Dev
   TZ: Asia/Seoul
 
 on:
@@ -67,7 +67,7 @@ jobs:
           # 💡 핵심 수정: nohup과 disown을 사용하여 세션을 분리합니다.
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f; "
           $svcRestart = "sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr || true; "
-          $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
+          $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"          
           
           # nohup과 disown을 사용하여 SSH가 명령 완료 후 즉시 세션을 닫도록 유도
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; nohup bash -c '$install $svcRestart $fixProfile' > /dev/null 2>&1 & disown"
@@ -136,6 +136,10 @@ jobs:
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          # 2. 11번 파일을 찾아서 아예 삭제 ("*11_Basic*" 시작하는 파일들 이 러너 환경에서만 삭제됨 )
+          Get-ChildItem -Path "cypress/e2e/Basic_functions_Dev_check" -Recurse | Where-Object { $_.Name -like "*11_Basic*" } | Remove-Item -Force
+          Write-Host "✅ 11_Basic 운영 태스크 파일을 물리적으로 제거하여 실행에서 제외했습니다."
           
           npm install
           npm install cy2 mochawesome mochawesome-merge mochawesome-report-generator --save-dev
