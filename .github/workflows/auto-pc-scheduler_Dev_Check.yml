@@ -69,12 +69,12 @@ jobs:
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           
-          # 💡 수정 포인트: 명령어를 백그라운드로 던지고, 출력을 차단하여 SSH 세션이 즉시 종료되게 함
-          $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 5; (sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr > /dev/null 2>&1 &); disown; sleep 2"
+          # 💡 수정 포인트: 백그라운드 실행 시 입출력(0,1,2번 스트림)을 모두 차단하여 SSH 종료 유도
+          # 'disown' 대신 '&'와 'exit' 조합을 사용하여 세션을 즉시 해제합니다.
+          $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 2; (nohup bash -c 'sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr' >/dev/null 2>&1 &); sleep 1"
           
-          # 이제 SSH는 위의 명령어를 서버에 '전달'만 하고 바로 종료됩니다.
+          # 💡 SSH 세션이 명령어를 전달한 즉시 종료되도록 명령 구조 구성
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $fixProfile && $svcControl"
-
           
           Write-Host "🕵️ [Step 4] Finalizing Readiness Check (Port 18443)..."
           $success = $false
