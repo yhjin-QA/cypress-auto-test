@@ -54,26 +54,32 @@ jobs:
           $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
           $mainName = "${env:MAIN_FILE_NAME}"
 
-          Write-Host "🚀 [1단계] 환경 초기화 및 sudo 권한/프로필 체크..."
-          # 환경 변수를 수동으로 로드하고 기존 계정을 정리합니다.
-          $setupCmd = "source /etc/profile && source ~/.bash_profile && (sudo pkill -u logcatch -9 || true) && (sudo userdel -rf logcatch || true)"
+          Write-Host "🚀 [1단계] 환경 초기화 (기존 프로세스 및 계정 강제 정리)..."
+          # sudo를 사용하여 기존 계정과 프로세스를 확실히 제거합니다.
+          $setupCmd = "export TERM=linux && (sudo pkill -u logcatch -9 || true) && (sudo userdel -rf logcatch || true)"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$setupCmd"
 
-          Write-Host "📂 [2단계] 파일 전송..."
-          # ... (SCP 전송 로직 동일) ...
+          Write-Host "📂 [2단계] 파일 전송 (메인 + 3rdparty)..."
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "mkdir -p $remotePath"
+          scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
+          scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
 
-          Write-Host "✅ [3단계] sudo 권한으로 서버 설치 실행..."
-          # 💡 핵심: 명령 실행 전 profile을 로드하고 sudo를 붙여 실행합니다.
-          $installCmd = "source /etc/profile && chmod +x $remotePath/$mainName && sudo $remotePath/$mainName -b -f"
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$installCmd"
+          Write-Host "✅ [3단계] 서버 설치 및 환경 변수 권한 설정..."
+          # 1. 설치 실행 (sudo 권한 활용)
+          # 2. 요청하신 profile.d 권한 부여 추가
+          # 3. 환경 변수 즉시 반영(source) 후 서비스 확인
+          $installCmd = @"
+            sudo chmod +x $remotePath/${env:MAIN_FILE_NAME} && 
+            sudo $remotePath/${env:MAIN_FILE_NAME} -b -f && 
+            if [ -f /etc/profile.d/logcatch.sh ]; then 
+              sudo chmod 755 /etc/profile.d/logcatch.sh && 
+              source /etc/profile.d/logcatch.sh
+            fi
+          "@
+          
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux && $installCmd"
 
-          # 설치 후 환경 변수가 profile.d 등에 잘 들어갔는지 확인
-          Write-Host "🔍 환경 변수 적용 확인..."
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "source /etc/profile && env | grep logcatch || echo 'Path not found'"
-
-          # 4. 보안 정리 및 대기
-          if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
-          Write-Host "✨ 배포 완료! 서비스 안정을 위해 2분간 대기합니다."
+          Write-Host "✨ 모든 작업 완료! 2분간 대기 후 서비스를 확인합니다."
           Start-Sleep -Seconds 120
 
   # ====================================================
