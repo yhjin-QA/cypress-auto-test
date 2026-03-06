@@ -65,18 +65,19 @@ jobs:
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
 
-          Write-Host "✅ [Step 3] Installation & Background Service Start..."
-          # 💡 핵심 수정: nohup과 disown을 사용하여 세션을 분리합니다.
-          $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f; "
-          $svcRestart = "sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr || true; "
-          $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"          
+          Write-Host "✅ [Step 3] Running Installation & Ensuring Services Start..."
+          # 1. 설치와 서비스 재시작, 프로필 교정을 하나의 블록으로 묶음
+          # 2. & disown 대신 연산자(&&)를 사용하여 순차적 완료를 보장
+          $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
+          $svcRestart = "sudo systemctl restart logcatch_redis logcatch_server logcatch_taskmgr || true"
+          $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           
-          # nohup과 disown을 사용하여 SSH가 명령 완료 후 즉시 세션을 닫도록 유도
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; nohup bash -c '$install $svcRestart $fixProfile' > /dev/null 2>&1 & disown"
+          # 💡 핵심 수정: 설치가 완전히 끝날 때까지 SSH 세션을 유지합니다. (nohup 제거)
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install && $svcRestart && $fixProfile"
 
           Write-Host "🕵️ [Step 4] Monitoring Port (18443) for Readiness..."
-          # 포트가 열리는지만 확인하고 성공하면 즉시 종료하여 다음 Job으로 넘깁니다.
-          $wait = "for i in {1..30}; do if netstat -tpln | grep -q 18443; then echo 'PORT_OPEN'; exit 0; fi; sleep 20; done; exit 1"
+          # 설치가 끝난 직후이므로 DB 초기화 시간을 충분히 주며 포트 체크
+          $wait = "for i in {1..60}; do if netstat -tpln | grep -q 18443; then echo '✅ PORT_OPEN_SUCCESS'; exit 0; fi; echo '⏳ Service initializing... (Attempt \$i/60)'; sleep 20; done; exit 1"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $wait"
 
           if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
