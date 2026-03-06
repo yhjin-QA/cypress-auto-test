@@ -10,7 +10,7 @@ on:
     branches: [ "master" ]
   schedule:
     - cron: '5 2 * * 1-5'
-  # 👇 수동 배포 및 테스트 트리거
+  
   workflow_dispatch:
 
 jobs:
@@ -88,7 +88,7 @@ jobs:
               }
               Start-Sleep -Seconds 15
           }
-              
+
 
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
