@@ -41,7 +41,7 @@ jobs:
           echo "MAIN_FILE_NAME=$($mainFile.Name)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "PARTY_FILE_PATH=$($partyFile.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Native SSH & SCP Deploy (With Uninstall & Restart)
+      - name: Native SSH & SCP Deploy (Syntax & Uninstall Fix)
         env:
           SSH_KEY_DATA: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
@@ -54,66 +54,33 @@ jobs:
           $mainName = "${env:MAIN_FILE_NAME}"
           $partyName = "${env:PARTY_FILE_NAME}"
 
-          Write-Host "🚀 [Step 1] Cleaning up processes and Performing Uninstall..."
-          # Force kill existing processes and run uninstall command with automated input
-          $cleanup = @"
-            export TERM=linux
-            sudo pkill -9 -u logcatch || true
-            if [ -f $remotePath/logcatch.install.info ]; then
-              echo "🔄 Running Uninstaller..."
-              # Automate 'uninstall' input using echo
-              echo "uninstall" | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true
-            fi
-            sudo userdel -rf logcatch || true
-            sudo rm -rf /home/logcatch
-          "@
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$cleanup"
+          Write-Host "🚀 [Step 1] Cleanup & Automated Uninstall..."
+          # Using printf to handle interactive 'uninstall' prompt and removing line break issues
+          $cleanup = "sudo pkill -9 -u logcatch || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $cleanup"
 
-          Write-Host "📂 [Step 2] Transferring new binaries..."
+          Write-Host "📂 [Step 2] Transferring Binaries..."
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "mkdir -p $remotePath"
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
 
-          Write-Host "✅ [Step 3] Running Installation and Restarting Services..."
-          # Combined install, permission fix, and systemctl restart
-          $installAndRestart = @"
-            sudo chmod 755 $remotePath/$mainName $remotePath/$partyName
-            sudo $remotePath/$mainName -b -f
-            
-            echo "🔄 Restarting Logcatch Services..."
-            sudo systemctl stop logcatch_server || true
-            sudo systemctl stop logcatch_taskmgr || true
-            sudo systemctl stop logcatch_redis || true
-            
-            sudo systemctl start logcatch_redis
-            sudo systemctl start logcatch_server
-            sudo systemctl start logcatch_taskmgr
-            
-            # Clean up line endings for environment profile
-            if [ -f /etc/profile.d/logcatch.sh ]; then
-              sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null
-              sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh
-              sudo chmod 755 /etc/profile.d/logcatch.sh
-            fi
-          "@
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux && $installAndRestart"
+          Write-Host "✅ [Step 3] Installation & Service Control..."
+          # Consolidating commands into single lines to prevent \r syntax errors
+          $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f; "
+          $svcStop = "sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_redis || true; "
+          $svcStart = "sudo systemctl start logcatch_redis; sudo systemctl start logcatch_server; sudo systemctl start logcatch_taskmgr; "
+          $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
+          
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $install $svcStop $svcStart $fixProfile"
 
-          Write-Host "🕵️ [Step 4] Waiting for Service Port (18443)..."
-          $waitScript = @"
-            for i in {1..30}; do
-              if netstat -tpln | grep -q 18443; then
-                echo "✅ PORT_OPEN_SUCCESS"
-                exit 0
-              fi
-              echo "⏳ Still initializing... (Waiting 20s)"
-              sleep 20
-            done
-            exit 1
-          "@
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux && $waitScript"
+          Write-Host "🕵️ [Step 4] Port Monitoring (18443)..."
+          # Single-line loop prevents 'do\r' syntax errors
+          $wait = "for i in {1..30}; do if netstat -tpln | grep -q 18443; then echo '✅ PORT_OPEN_SUCCESS'; exit 0; fi; echo '⏳ Waiting for service (20s)...'; sleep 20; done; exit 1"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $wait"
 
+          # Final cleanup of local key
           if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force }
-          Write-Host "✨ Deployment and Initialization Complete!"
+          Write-Host "✨ Deployment Successful!"
   # ====================================================
   # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
   # ====================================================
