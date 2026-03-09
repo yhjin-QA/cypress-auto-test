@@ -263,13 +263,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Restart-Raw-Data # 💡 일반 테스트 아티팩트와 이름 구분
+          # 💡 패턴 매칭을 위해 이름을 맞춥니다.
+          name: Dev-Raw-Data-Restart 
           path: |
-            cypress/reports/json_logs
-            cypress/screenshots
+            cypress/reports/json_logs/*.json
+            cypress/screenshots/**
           retention-days: 1
-          if-no-files-found: ignore   
-
 
   # ====================================================
   # [Job 3] 종합 알림 (데이터 통합 & 리포트 생성)
@@ -319,8 +318,9 @@ jobs:
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
           npm install mochawesome-merge mochawesome-report-generator --no-save
+          # 💡 경로를 더 넓게(Recursive) 잡아서 어떤 구조로 내려받아졌든 다 찾게 합니다.
           cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
-          npx marge merged_report.json --reportDir ./final_report_UI --inline --charts --reportTitle "UI Check Report" --reportFilename "LogCatch_UI_Report" --saveJson=false
+          npx marge merged_report.json --reportDir ./final_report_Dev --inline --charts --reportTitle "Dev Report" --reportFilename "LogCatch_Dev_Report"
 
       - name: Send Google Chat (UI)
         if: always() 
