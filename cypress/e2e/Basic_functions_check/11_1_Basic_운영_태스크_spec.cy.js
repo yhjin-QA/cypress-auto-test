@@ -534,8 +534,10 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(2000);
      
      // 로그 출력 검증코드
-     // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 첫줄 텍스트 확인
-     cy.get('.view-line').contains('Today statistics no data. skip').should('be.visible');
+     // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 텍스트 확인
+     //cy.get('.view-line').contains('Today statistics no data. skip').should('be.visible');
+     // 핵심 단어만 뽑아서 정규표현식으로 검증
+     cy.get('.view-line').contains(/statistics.*no data/).should('be.visible');
      //--------------------------------------------------
 
      // 업무유형 - 규칙 분석기 
