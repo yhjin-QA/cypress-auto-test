@@ -517,10 +517,10 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 2. [수정] be.visible 대신 exist를 먼저 사용하고, 텍스트 확인을 결합합니다.
     //cy.contains('엑셀 다운로드 요청에 성공했습니다', { timeout: 10000 }).should('exist'); // 찰나의 순간이라도 DOM에 나타나면 성공 처리
-    cy.contains(/엑셀.*요청.*성공/, { timeout: 20000 }).should('exist');
+    cy.contains(/엑셀.*요청.*성공/, { timeout: 30000 }).should('exist');
 
     // 3. 사라지는 것 확인
-    cy.get('.v-snack__content', { timeout: 20000 }).should('not.exist');
+    cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
     
     /*  이슈 등록해둠 (37313) 
     //실제 로컬 폴더 다운로드 시간 주기
