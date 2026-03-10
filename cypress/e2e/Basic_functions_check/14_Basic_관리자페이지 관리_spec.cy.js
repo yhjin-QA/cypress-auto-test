@@ -530,7 +530,8 @@ describe('로그캐치 사이트 테스트', () => {
      //-----------------------------------------------------------------------------------
 
      // 파일 다운로드 그룹 x버튼 클릭하여 초기화 
-     cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+     cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true }); 
+     cy.wait(500);
 
      //접속이력 조회 화면 결과 파일 보고서 조회하기 -----------------------------------------------
      //파일 다운로드 그룹 클릭 
