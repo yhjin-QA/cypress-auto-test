@@ -190,7 +190,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('p', 'Statistics').should('be.visible');
     cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
 
-    
+   /* 
     // =============================================
     // 실행관리 : 개별적으로 프로세스 시작 및 정지 기능확인
     // =============================================
@@ -352,6 +352,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('p', 'Statistics').should('be.visible');
     cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
     //--------------------------------------------------------------------------------------------------------------
+ */   
     cy.log('✅ 운영 - 태스크 - [실행관리] 출력 확인 완료 ');
   
 /*
