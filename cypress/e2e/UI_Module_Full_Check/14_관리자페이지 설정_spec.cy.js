@@ -2445,9 +2445,9 @@ describe('로그캐치 사이트 테스트', () => {
     // 비활성화된 입력창 확인코드 
     cy.contains('label', '재시작 수행').closest('.v-card').find('input[disabled]').should('be.visible');
     //시간 문구확인 
-    //cy.get('.font-weight-bold').filter(':visible').contains('시간').should('be.visible');
-    //cy.get('input[aria-label="시"]').should('be.visible')
-    //cy.get('input[aria-label="분"]').should('be.visible')
+    cy.get('.font-weight-bold').filter(':visible').contains('시간').should('be.visible');
+    cy.get('input[aria-label="시"]').should('be.visible')
+    cy.get('input[aria-label="분"]').should('be.visible')
     //cy.get('input[aria-label="초"]').should('be.visible')
     // v 아이콘 확인하는 코드
     cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');

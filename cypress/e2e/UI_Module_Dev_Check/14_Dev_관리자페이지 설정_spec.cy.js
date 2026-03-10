@@ -2197,6 +2197,19 @@ describe('로그캐치 사이트 테스트', () => {
 
 */
     // ==========================================
+    // STEP : 일반모드 -> 관리자페이지 탭 진입(상단관리자 버튼 클릭) 
+    // ==========================================
+    cy.log('🚀 관리자(톱니바퀴) 버튼 클릭');
+    // 1. [검증] 톱니바퀴 아이콘이 화면에 보이는지 확인
+    // 설명: 'g-IConfig' 클래스가 설정 아이콘을 의미하는 핵심 식별자입니다.
+    cy.get('.g-IConfig').should('be.visible');
+    // 2. [클릭] 버튼 클릭
+    cy.get('.g-IConfig').should('be.visible').click({ force: true });
+    // 3. [대기] 관리자 메뉴가 펼쳐지거나 화면이 이동할 시간 대기
+    cy.wait(2000);
+    cy.log('✅ 관리자 톱니바퀴 아이콘 클릭 완료');
+
+    // ==========================================
     // STEP 14: 관리자 -설정 탭 서브메뉴 
     // ==========================================
     // 1. 관리자 페이지 사이드 메뉴 중 '설정' 버튼 클릭
@@ -2427,9 +2440,9 @@ describe('로그캐치 사이트 테스트', () => {
     // 비활성화된 입력창 확인코드 
     cy.contains('label', '재시작 수행').closest('.v-card').find('input[disabled]').should('be.visible');
     //시간 문구확인 
-    //cy.get('.font-weight-bold').filter(':visible').contains('시간').should('be.visible');
-    //cy.get('input[aria-label="시"]').should('be.visible')
-    //cy.get('input[aria-label="분"]').should('be.visible')
+    cy.get('.font-weight-bold').filter(':visible').contains('시간').should('be.visible');
+    cy.get('input[aria-label="시"]').should('be.visible')
+    cy.get('input[aria-label="분"]').should('be.visible')
     //cy.get('input[aria-label="초"]').should('be.visible')
     // v 아이콘 확인하는 코드
     cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
