@@ -348,7 +348,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('th').filter(':visible').contains('이메일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
 
-     //기능확인
+     //기능확인 - 소속조회
      // 소속(전체 )검색조건에서 이름 검색----------------------------------------------------
      // '검색 조건' 콤보박스(input)를 찾아 클릭하여 리스트를 엽니다.
      cy.get('input[aria-label="검색 조건"]').click({ force: true });
@@ -378,7 +378,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 화면에 나타난 리스트 메뉴 중에서 '아이디'을 선택
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '아이디').should('be.visible').click({ force: true });
      // '값' 입력창을 찾아 비운 뒤 '호준'을 타이핑합니다.
-     cy.get('input[aria-label="값"]').should('be.visible').clear().type('hojun');
+     cy.get('input[aria-label="값"]').should('be.visible').clear().type('loginid2');
      cy.wait(500);
 
      cy.wait(500);    
@@ -386,7 +386,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
      //검색결과 검증
-     cy.get('td', { timeout: 10000 }).contains('hojun').should('be.visible');
+     cy.get('td', { timeout: 10000 }).contains('loginid2').should('be.visible');
      //----------------------------------------------------------------------------------------------
 
 

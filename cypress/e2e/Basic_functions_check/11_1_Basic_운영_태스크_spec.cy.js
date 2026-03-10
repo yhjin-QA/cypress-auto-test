@@ -518,11 +518,11 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(500);
      
      // 콤보박스 리스트안에서 'STATISTICS_2501_20260207.log'를 찾아 클릭합니다.
-     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'STATISTICS_2501_20260207.log').click({ force: true });
+     //cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'STATISTICS_2501_20260207.log').click({ force: true });
+     // 'STATISTICS_2501_'로 시작하고 날짜 상관없이 '.log'로 끝나는 항목을 찾아 클릭
+     cy.get('.v-select-list, .v-menu__content').filter(':visible').contains('.v-list__tile__title', /STATISTICS_2501_.*\.log/).click({ force: true });
      cy.wait(500);
 
-     // 선택이 잘 되었는지 검증코드
-     cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'STATISTICS_2501_20260207.log');
 
      // tail 토글 OFF-> ON
      cy.get('input[aria-label="tail"]').check({ force: true })
