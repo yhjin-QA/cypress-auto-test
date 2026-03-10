@@ -531,7 +531,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(2000);
+     cy.wait(3000);
      
      // 로그 출력 검증코드
      // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 텍스트 확인
