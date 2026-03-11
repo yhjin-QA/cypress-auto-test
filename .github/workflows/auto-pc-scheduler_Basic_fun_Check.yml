@@ -251,7 +251,7 @@ jobs:
           npx cypress install
 
           # 2. 💡 파일 존재 여부 체크 및 예외 처리
-          $targetFile = Get-ChildItem -Path "cypress/e2e/Basic_functions_Dev_check" -Recurse | 
+          $targetFile = Get-ChildItem -Path "cypress/e2e/Basic_functions_check" -Recurse | 
                         Where-Object { $_.Name -like "*11_Basic*" } | 
                         Select-Object -First 1
 
