@@ -275,10 +275,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Basic-Raw-Data-Restart
+          # 💡 [보완] 경로를 더 유연하게 잡고, 파일이 없어도 무시하도록 설정합니다.
           path: |
-            cypress/reports/json_logs
-            cypress/screenshots
-          retention-days: 1       
+            **/reports/json_logs/*.json
+            **/screenshots/**/*.png
+          retention-days: 1
+          # 💡 [필수] 파일이 없을 때(Skip 시) 에러나 경고를 내지 않도록 설정
+          if-no-files-found: ignore
 
   # ====================================================
   # [Job 3] 종합 알림 (데이터 통합 & 리포트 생성)
