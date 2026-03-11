@@ -275,7 +275,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 기간 : 1년 선택
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '1년').should('be.visible').click({ force: true });
 
-    // 내보내기 버튼 클릭 
+    // 저장 버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
     cy.wait(1000);
 
@@ -336,7 +336,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 월 정기점검 보고서 클릭
     cy.contains('a', '월 정기점검 보고서').click({ force: true });
     cy.wait(1000);
-    // 취소버튼 클릭
+    // 내보내기 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('내보내기').click({ force: true }); 
     cy.wait(1000);
 
