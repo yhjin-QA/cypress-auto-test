@@ -4,6 +4,9 @@ env:
   PRODUCT_NAME: "로그캐치"
   TEST_TYPE: 성능(Performance)
   TZ: Asia/Seoul
+   # 👇 여기에 추가하세요! (GitHub Actions가 내부적으로 Node.js 24를 사용하도록 강제함)
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  
 
 on:
   #push:

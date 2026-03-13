@@ -5,6 +5,8 @@ env:
   #실패시 파일명 독립적으로 UI/basic 명시하기위해 꼬리표
   TEST_TYPE: 기능(Basic)
   TZ: Asia/Seoul
+  # 👇 여기에 추가하세요! (GitHub Actions가 내부적으로 Node.js 24를 사용하도록 강제함)
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
   push:

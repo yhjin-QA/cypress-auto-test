@@ -120,8 +120,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
+//depth
+/*    
     // 검색 조건 이름 입력란 확인
-    
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
@@ -175,7 +176,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(500);
   
      cy.log('✅ 시작 날짜 지정 성공');
-    
+  */  
      /*이슈 등록해둠 ( 37314)
     //개인정보유형 전체선택 문구 클릭하여 유형 선택하는 코드
     // <bug> 개인정보 유형 선택시 기존 입력했던 검색조건 초기화 되어버림. (맨티스 이슈보고 : 37120))
@@ -201,7 +202,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(500);
     cy.contains('a', '01********').filter(':visible').should('be.visible');
     cy.log('✅ 이력 - 사용자 추적 화면 출력 확인 완료!');
-  */
+    */
 
 
     // 이력 > 접속 기록 이력 서브메뉴 클릭  -----------------------
@@ -211,8 +212,9 @@ describe('로그캐치 사이트 테스트', () => {
     // 설명: .v-list__tile__title 클래스 내의 '사용자 추적' 글자를 찾아 클릭
     cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
     cy.wait(3000);
-    
-
+  
+//Depth    
+/*
     // 이력 > 접속기록 이력 > [파일 다운로드] 탭 선택
     cy.get('.tab-btn').contains('파일 다운로드').should('be.visible').click({ force: true });
     cy.wait(3000);
@@ -425,7 +427,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('tbody').filter(':visible').contains('a', '검출').should('be.visible');
     
     cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
- 
+ */
+// depth   
 
     //이력 > 접속기록 이력 > [통합]탭 선택
     cy.get('.tab-btn').contains('통합').should('be.visible').click({ force: true });
@@ -498,7 +501,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 검색버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
-
+    /*  이슈 등록해둠 (37313) 
     // 엑셀 다운로드 클릭하는 코드 
     cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
     cy.wait(500);
@@ -514,7 +517,7 @@ describe('로그캐치 사이트 테스트', () => {
     //개인정보 유형별 상세내역 포함 클릭 
     cy.get('.v-dialog--active').contains('label', '개인정보 유형별 상세 내역 포함').click({ force: true });
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-     /*  이슈 등록해둠 (37313) 
+     
     // 2. [수정] be.visible 대신 exist를 먼저 사용하고, 텍스트 확인을 결합합니다.
     //cy.contains('엑셀 다운로드 요청에 성공했습니다', { timeout: 10000 }).should('exist'); // 찰나의 순간이라도 DOM에 나타나면 성공 처리
     //cy.contains(/엑셀.*요청.*성공/, { timeout: 30000 }).should('exist');
@@ -547,6 +550,364 @@ describe('로그캐치 사이트 테스트', () => {
      */ 
     cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
 
+    // ==========================================
+    // 이력 > 통합 > 검출 팝업 (처리영역)
+    // ==========================================
+
+    //기능확인
+     // 오늘날짜 가져오기 : 검증할 행이 날짜가 흐르면서 다음페이지로 넘어갈수있는 문제 해결
+     // 1. 오늘 날짜를 YYYYMMDD 형식으로 생성
+     const today = new Date();
+     const year = today.getFullYear();
+     const month = String(today.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작하므로 +1
+     const day = String(today.getDate()).padStart(2, '0');
+
+     const formattedDate = `${year}${month}${day}`; // 예: "20260303"
+     //const targetFileName = `SQLPARSER_2001_${formattedDate}.log`;
+
+     cy.log(`🎯 오늘 검증할 날짜: ${formattedDate}`);
+
+   
+    
+
+/*
+    ////////////////////////////////////////
+    // [이력 > 통합 > 검출 팝업 > 오탐/확정 탭]
+    ////////////////////////////////////////
+    // Case1  전체 확정선택 -> 전체 오탐 선택 으로 변경하기 
+    // 표의 첫번째 행 처리 아이콘 클릭 (검출팝업)
+    // 1. 화면에 보이는 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+    cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+    // 메뉴설정
+    // 검출 팝업 '메뉴 설정'이라는 글자를 찾아 클릭
+    cy.contains('span.sub-title-title', '메뉴 설정').should('be.visible').click({ force: true });
+    // 'aria-label'이 '메뉴명'인 input 창을 찾아, 기존 글자를 모두 지우고 'depth_Test'를 입력합니다.
+    // 메뉴설정 - 메뉴명 'depth_Test' 입력
+    cy.get('input[aria-label="메뉴명"]').should('be.visible').clear().type(`Depth_Test_${formattedDate}`);
+    // 눈에 보이는 버튼들 중 '저장' 글자가 있는 것을 모두 찾은 뒤, '첫 번째' 버튼을 클릭합니다.
+    cy.get('button.v-btn').filter(':visible').contains('저장').first().click({ force: true });
+    // 2. 알림창 팝업이 눈에 보일 때까지 대기 및 검증
+    cy.contains('메뉴를 저장하시겠습니까?').should('be.visible');
+    cy.wait(500); // 팝업 애니메이션 대기
+    // 3. 알림창 안의 '확인' 버튼을 찾아 클릭!
+    cy.contains('button.v-btn:visible', '확인').click({ force: true });
+
+    //오탐확정
+    // 확정상태로 체크된 상태로 시작
+    // '전체 확정 선택' 글자가 있는 버튼을 찾아 강제 클릭합니다.
+    cy.contains('button.v-btn:visible', '전체 확정 선택').should('be.visible').click({ force: true });
+    cy.wait(500);
+
+    // 화면에 보이는 '확정' 버튼들을 모두 가져와서 반복문(each)으로 하나씩 검사합니다.
+    cy.get('button.btn-toggle-style-1').filter(':contains("확정")') // '확정' 글자가 있는 버튼만 추려냄
+    .each(($btn) => {
+      // 쏙쏙 뽑아낸 각각의 버튼들이 모두 'selected' 클래스를 가지고 있는지 깐깐하게 확인!
+       cy.wrap($btn).should('have.class', 'selected');
+     });
+
+     
+     // 전체 확정 선택 - > 전체 오탐 선택으로 변경하기
+     // 화면에 보이는 버튼(.v-btn) 중 '전체 오탐 선택' 글자가 있는 버튼을 찾아 강제 클릭합니다.
+    cy.contains('button.v-btn:visible', '전체 오탐 선택').should('be.visible').click({ force: true });
+    cy.wait(500);
+
+    // 화면에 보이는 '확정' 버튼들을 모두 가져와서 반복문(each)으로 하나씩 검사합니다.
+    cy.get('button.btn-toggle-style-1').filter(':contains("오탐")') // '확정' 글자가 있는 버튼만 추려냄
+    .each(($btn) => {
+      // 쏙쏙 뽑아낸 각각의 버튼들이 모두 'selected' 클래스를 가지고 있는지 깐깐하게 확인!
+       cy.wrap($btn).should('have.class', 'selected');
+     });
+     
+     // 오탐/확정 저장버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('저장').last().click({ force: true });
+     cy.wait(500);
+
+     // 검출창 닫기버튼 클릭
+    cy.get('button.v-btn').filter(':visible').contains('닫기').last().click({ force: true });
+    cy.wait(500);
+
+     //----------------------------------------------------------------------------------------------
+
+     //case2
+     // 전체 오탐 선택 - > 이전 선택 복구 -> 전체 확정 선택으로 변경하기
+     // 표의 첫번째 행 처리 아이콘 다시 재 클릭 
+     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+     cy.wait(500);
+
+     // '전체 확정 선택' 클릭
+    cy.contains('button.v-btn:visible', '전체 확정 선택').should('be.visible').click({ force: true });
+    cy.wait(500);
+
+    // 화면에 보이는 '확정' 버튼들을 모두 가져와서 반복문(each)으로 하나씩 검사합니다.
+    cy.get('button.btn-toggle-style-1').filter(':contains("확정")') // '확정' 글자가 있는 버튼만 추려냄
+    .each(($btn) => {
+      // 쏙쏙 뽑아낸 각각의 버튼들이 모두 'selected' 클래스를 가지고 있는지 깐깐하게 확인!
+       cy.wrap($btn).should('have.class', 'selected');
+     });
+
+      // '이전 선택 복구' 클릭
+    cy.contains('button.v-btn:visible', '이전 선택 복구').should('be.visible').click({ force: true });
+    cy.wait(500);
+
+    // 오탐 선택 상태였기에 [이전 선택 복구] 클릭 시,   오탐상태로 복구되기때문
+    // 오탐 선택 상태 검증
+    cy.get('button.btn-toggle-style-1').filter(':contains("오탐")') // '확정' 글자가 있는 버튼만 추려냄
+    .each(($btn) => {
+      // 쏙쏙 뽑아낸 각각의 버튼들이 모두 'selected' 클래스를 가지고 있는지 깐깐하게 확인!
+       cy.wrap($btn).should('have.class', 'selected');
+     });
+
+    // 다시 전체 확정 선택' 으로 변경
+    cy.contains('button.v-btn:visible', '전체 확정 선택').should('be.visible').click({ force: true });
+    cy.wait(500);
+
+    // 화면에 보이는 '확정' 버튼들을 모두 가져와서 반복문(each)으로 하나씩 검사합니다.
+    cy.get('button.btn-toggle-style-1').filter(':contains("확정")') // '확정' 글자가 있는 버튼만 추려냄
+    .each(($btn) => {
+      // 쏙쏙 뽑아낸 각각의 버튼들이 모두 'selected' 클래스를 가지고 있는지 깐깐하게 확인!
+       cy.wrap($btn).should('have.class', 'selected');
+     });
+
+     // 오탐/확정 저장버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('저장').last().click({ force: true });
+     cy.wait(500);
+  
+     // 검출창 닫기버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('닫기').last().click({ force: true });
+     cy.wait(500);
+     //-------------------------------------------------------------------------------------------  
+
+     /////////////////////////////////////////////////
+     // [이력 > 통합 > 검출 팝업 > 키워드  탭]
+     /////////////////////////////////////////////////
+     
+     
+     //Case 키워드 등록하기-------------------------------------------------------------
+     // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+     cy.wait(500);
+
+     // 키워드 탭 클릭
+     cy.contains('.v-tabs__item', '키워드').should('be.visible').click({ force: true });
+     cy.wait(500);
+
+     // 키워드 값 'Depth_test_KeyWord'를 입력
+     cy.get('input[placeholder="항목을 입력하고 Enter 를 누르세요."]').should('be.visible').last().clear().type('Depth_test_KeyWord{enter}');
+
+     // 설명  입력
+     cy.get('input[aria-label="설명"]').filter(':visible').clear().type('depth _키워드_수정삭제');
+
+     // 저장버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('저장').click({ force: true });
+     cy.wait(500);
+
+     // 저장알림창 확인
+     cy.contains('p.mb-0', '저장했습니다.').should('be.visible');
+     cy.wait(500);
+     
+     // 저장 > 알림창 안의 '확인' 버튼을 찾아 클릭!
+     cy.contains('button.v-btn:visible', '확인').click({ force: true });
+     cy.wait(500);
+
+     // 검출창 닫기버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+     cy.wait(500);
+     
+
+     // Case 키워드 수정하기 -----------------------------------------------------------------
+     // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+     cy.wait(500);
+
+     // 키워드 탭 클릭
+     cy.contains('.v-tabs__item', '키워드').should('be.visible').click({ force: true });
+     cy.wait(500);
+
+     //등록한 키워드 클릭하기  
+     //'주민등록_' 뒤에 어떤 문자(.*)가 오더라도 해당 라벨을 찾아 클릭합니다.
+     cy.contains('label.text-label', /주민등록번호_.* /).should('be.visible').click({ force: true });
+   
+     cy.wait(500);
+
+     // 입력된 이름을 수정 
+     cy.get('input[aria-label="이름"]').filter(':visible').scrollIntoView().should('be.visible').clear().type('주민등록번호_test_수정');
+     cy.wait(500);
+
+     // 입력된 설명 수정
+     cy.get('input[aria-label="설명"]').filter(':visible').clear().type('depth _키워드_수정완료');
+     cy.wait(500);
+
+     // 저장버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('저장').click({ force: true });
+     cy.wait(500);
+     
+     // 수정알림창 확인
+     cy.contains('p.mb-0', '수정했습니다.').should('be.visible');
+     cy.wait(500);
+
+     // 저장 > 알림창 안의 '확인' 버튼을 찾아 클릭!
+     cy.contains('button.v-btn:visible', '확인').click({ force: true });
+     cy.wait(500);
+
+     // 검출창 닫기버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+     cy.wait(500);
+
+     // Case 키워드 삭제하기---------------------------------------------------------------------------------
+     // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+     cy.wait(500);
+
+     // 키워드 탭 클릭
+     cy.contains('.v-tabs__item', '키워드').should('be.visible').click({ force: true });
+     cy.wait(500);
+
+     // 1. 해당 텍스트 영역을 찾아 마우스를 올립니다(Hover)
+     cy.contains('label.text-label', '주민등록번호_test_수정').closest('.vue-treeselect__label').trigger('mouseover');      
+
+     // 2. 이제 나타난 휴지통 아이콘을 찾아 클릭합니다.
+     cy.get('.fa-trash').filter(':visible').first().click({ force: true });
+
+     // 삭제 알림창 확인
+     cy.contains('삭제했습니다.', { timeout: 30000 }).should('exist');
+     
+     // 검출창 닫기버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+     cy.wait(500);
+     //--------------------------------------------------------------------------------------------
+
+     //////////////////////////////////////////////////////
+     //  [이력 > 통합 > 검출 팝업 > 불용 데이터 - 키워드 탭]
+     /////////////////////////////////////////////////////
+     // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+     cy.wait(500);
+
+     // 불용 데이터 - 키워드 탭 클릭
+     cy.contains('.v-tabs__item', '불용 데이터 - 키워드').should('be.visible').click({ force: true });
+     cy.wait(500);
+
+     //case 불용 데이터 키워드 추가하기 -----------------------------------------------------------------
+     
+     // 추가 + 동그란 플러스 버튼 클릭 
+     cy.get('.grid-add-button').should('exist').then(($btn) => {
+        $btn[0].click(); 
+           });
+
+     // 불용 데이터 상세 팝업창
+     // 불용 데이터 상세 팝업창에서 '타입' 입력창(콤보박스)을 클릭하여 목록을 펼칩니다.
+     cy.get('input[aria-label="타입"]').filter(':visible').first().invoke('val', '주민등록번호').trigger('input').trigger('change');
+     cy.wait(500); 
+
+     // 2. [추가] 이제 시스템에게 "이 글자에 해당하는 목록을 선택했어"라고 알려줘야 합니다.
+     // '주민등록번호'라는 글자를 가진 실제 리스트 아이템을 강제로 클릭!
+     cy.get('.v-list__tile__title').contains('주민등록번호').click({ force: true });
+     cy.wait(500);
+
+     // 그 후 다른 칸(키워드)을 클릭하면 보통 값이 확정됩니다.
+     cy.get('input').filter(':visible').eq(1).click({ force: true });
+
+     // 키워드 입력
+     cy.get('input[aria-label="키워드"]').filter(':visible').clear().type('주민등록번호_키워드');
+     cy.wait(500);
+
+     // 설명 입력
+     cy.get('input[aria-label="설명"]').filter(':visible').clear().type('Depth_test입니다.');
+     cy.wait(500);
+
+     // 저장버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('저장').click({ force: true });
+     cy.wait(500);
+
+     // [검증] 리스트에 수정된 키워드명이 존재하는지 확인
+     cy.contains('tr', '주민등록번호_키워드').should('be.visible');
+
+     // 검출창 닫기버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+     cy.wait(500);
+     
+     //--------------------------------------------------------------------------------------------------
+
+     //case 불용 데이터 키워드 수정하기 -----------------------------------------------------------------
+     // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+     cy.wait(500);
+
+     // 불용 데이터 - 키워드 탭 클릭
+     cy.contains('.v-tabs__item', '불용 데이터 - 키워드').should('be.visible').click({ force: true });
+     cy.wait(500);
+  
+     // '주민등록번호_키워드'라는 텍스트를 포함하고 있는 테이블 행을 찾아 수정버튼 클릭
+     cy.contains('tr', '주민등록번호_키워드').should('be.visible').last().find('i.material-icons:contains("edit")').click({ force: true });
+     cy.wait(500);
+
+     // 불용 데이터 상세 팝업창에서 '타입' 입력창선택하여 주민등록번호-> 외국인등록번호로 수정
+     cy.get('input[aria-label="타입"]').filter(':visible').first().invoke('val', '외국인등록번호').trigger('input').trigger('change');
+     cy.wait(500); 
+
+     // 2. [추가] 이제 시스템에게 "이 글자에 해당하는 목록을 선택했어"라고 알려줘야 합니다.
+     // '주민등록번호'라는 글자를 가진 실제 리스트 아이템을 강제로 클릭!
+     cy.get('.v-list__tile__title').contains('외국인등록번호').click({ force: true });
+     cy.wait(500);
+
+     // 그 후 다른 칸(키워드)을 클릭하면 보통 값이 확정됩니다.
+     cy.get('input').filter(':visible').eq(1).click({ force: true });
+
+     // 키워드 수정
+     cy.get('input[aria-label="키워드"]').filter(':visible').clear().type('주민등록번호_키워드_수정');
+     cy.wait(500);
+     // [검증] 입력한 텍스트가 value로 잘 들어가 있는지 확인
+     cy.get('input[aria-label="키워드"]').should('have.value', '주민등록번호_키워드_수정');
+
+     // 설명 수정
+     cy.get('input[aria-label="설명"]').filter(':visible').clear().type('Depth_test입니다._수정');
+     cy.wait(500);
+
+     // 저장버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('저장').click({ force: true });
+     cy.wait(500);
+
+     // [검증] 리스트에 수정된 키워드명이 존재하는지 확인
+     cy.contains('tr', '주민등록번호_키워드_수정').should('be.visible');
+     cy.wait(500);
+
+     //case 불용 데이터 키워드 수정한 행 삭제하기 -----------------------------------------------------------------
+
+     // 수정된 이름('주민등록번호_키워드_수정')이 포함된 테이블행 휴지통 아이콘 클릭
+     cy.contains('tr', '주민등록번호_키워드_수정').should('be.visible').last().find('i.fa-trash') .click({ force: true });
+     cy.wait(500);
+
+     // [검증] 표에서 해당 텍스트가 더 이상 존재하지 않는지 확인
+     cy.contains('주민등록번호_키워드_수정').should('not.exist');
+
+     // 검출창 닫기버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+     cy.wait(500);
+     //-------------------------------------------------------------------------------------------------------------
+*/
+     //////////////////////////////////////////////////////
+     //  [이력 > 통합 > 검출 팝업 > 불용 데이터 - 값 탭]
+     /////////////////////////////////////////////////////
+    // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+     cy.wait(500);
+
+     // 불용 데이터 - 키워드 탭 클릭
+     cy.contains('.v-tabs__item', '불용 데이터 - 값').should('be.visible').click({ force: true });
+     cy.wait(500);
+
+
+
+
+     
+
+
+
+
+
+
+
+/*
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
@@ -554,7 +915,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('🎉 이력 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
-
+*/
 
   });
 });  

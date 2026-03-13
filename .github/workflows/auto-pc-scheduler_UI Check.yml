@@ -8,10 +8,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  push:
-    branches: [ "master" ]
-  schedule:
-    - cron: '5 2 * * *'
+  #push:
+  #  branches: [ "master" ]
+  #schedule:
+  #  - cron: '5 2 * * *'
   workflow_dispatch:
     
 
