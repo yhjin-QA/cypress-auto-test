@@ -120,8 +120,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
-//depth
-/*    
+    
     // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
@@ -176,7 +175,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(500);
   
      cy.log('✅ 시작 날짜 지정 성공');
-  */  
+   
      /*이슈 등록해둠 ( 37314)
     //개인정보유형 전체선택 문구 클릭하여 유형 선택하는 코드
     // <bug> 개인정보 유형 선택시 기존 입력했던 검색조건 초기화 되어버림. (맨티스 이슈보고 : 37120))
@@ -213,8 +212,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
     cy.wait(3000);
   
-//Depth    
-/*
+
     // 이력 > 접속기록 이력 > [파일 다운로드] 탭 선택
     cy.get('.tab-btn').contains('파일 다운로드').should('be.visible').click({ force: true });
     cy.wait(3000);
@@ -427,8 +425,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('tbody').filter(':visible').contains('a', '검출').should('be.visible');
     
     cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
- */
-// depth   
+    
 
     //이력 > 접속기록 이력 > [통합]탭 선택
     cy.get('.tab-btn').contains('통합').should('be.visible').click({ force: true });
@@ -570,7 +567,7 @@ describe('로그캐치 사이트 테스트', () => {
    
     
 
-/*
+
     ////////////////////////////////////////
     // [이력 > 통합 > 검출 팝업 > 오탐/확정 탭]
     ////////////////////////////////////////
@@ -725,7 +722,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      //등록한 키워드 클릭하기  
      //'주민등록_' 뒤에 어떤 문자(.*)가 오더라도 해당 라벨을 찾아 클릭합니다.
-     cy.contains('label.text-label', /주민등록번호_.* /).should('be.visible').click({ force: true });
+     cy.contains('label.text-label', /주민등록번호_.*/).should('be.visible').click({ force: true });
    
      cy.wait(500);
 
@@ -884,28 +881,10 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
      cy.wait(500);
      //-------------------------------------------------------------------------------------------------------------
-*/
-     //////////////////////////////////////////////////////
-     //  [이력 > 통합 > 검출 팝업 > 불용 데이터 - 값 탭]
-     /////////////////////////////////////////////////////
-    // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
-     cy.wait(500);
-
-     // 불용 데이터 - 키워드 탭 클릭
-     cy.contains('.v-tabs__item', '불용 데이터 - 값').should('be.visible').click({ force: true });
-     cy.wait(500);
 
 
 
-
-     
-
-
-
-
-
-
+  
 
 /*
 

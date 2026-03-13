@@ -500,6 +500,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 검색버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(1000);
 
     /*  이슈 등록해둠 (37313) 
     // 엑셀 다운로드 클릭하는 코드 
@@ -896,6 +897,40 @@ describe('로그캐치 사이트 테스트', () => {
      cy.contains('.v-tabs__item', '불용 데이터 - 값').should('be.visible').click({ force: true });
      cy.wait(500);
 
+     // 추가하기  + 동그란 플러스 버튼 클릭 
+     cy.get('.grid-add-button').should('be.visible').click({ force: true });
+
+     // 불용 데이터 상세 팝업창
+     // 불용 데이터 상세 팝업창에서 '타입' 입력창(콤보박스)을 클릭하여 목록을 펼칩니다.
+     cy.get('input[aria-label="타입"]').filter(':visible').first().invoke('val', '신용카드번호').trigger('input').trigger('change');
+     cy.wait(500); 
+
+     // 2. [추가] 이제 시스템에게 "이 글자에 해당하는 목록을 선택했어"라고 알려줘야 합니다.
+     // '신용카드번호'라는 글자를 가진 실제 리스트 아이템을 강제로 클릭!
+     cy.get('.v-list__tile__title').contains('신용카드번호').click({ force: true });
+     cy.wait(500);
+
+     // 그 후 다른 칸(키워드)을 클릭하면 보통 값이 확정됩니다.
+     cy.get('input').filter(':visible').eq(1).click({ force: true });
+
+     // 값 입력
+     cy.get('input[aria-label="값"]').filter(':visible').clear().type('4469-4314-3564-3296');
+     cy.wait(500);
+
+     // 설명 입력
+     cy.get('input[aria-label="설명"]').filter(':visible').clear().type('Depth_test_신용카드번호');
+     cy.wait(500);
+
+     // 저장버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('저장').click({ force: true });
+     cy.wait(500);
+
+     // [검증] 리스트에 수정된 키워드명이 존재하는지 확인
+     cy.contains('tr', 'Depth_test_신용카드번호').should('be.visible');
+
+     // 검출창 닫기버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+     cy.wait(500);
 
 
 
