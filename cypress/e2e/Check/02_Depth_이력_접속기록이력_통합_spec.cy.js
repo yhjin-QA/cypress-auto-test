@@ -1035,6 +1035,10 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('i.material-icons').contains('close').filter(':visible').first().click({ force: true });
      cy.wait(500);
 
+     // 검출창 닫기버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+     cy.wait(500);
+
 
 /*
     // ==========================================
