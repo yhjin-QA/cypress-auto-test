@@ -211,7 +211,9 @@ describe('로그캐치 사이트 테스트', () => {
     // 설명: .v-list__tile__title 클래스 내의 '사용자 추적' 글자를 찾아 클릭
     cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
     cy.wait(3000);
-  
+
+ //depth
+ /*   
 
     // 이력 > 접속기록 이력 > [파일 다운로드] 탭 선택
     cy.get('.tab-btn').contains('파일 다운로드').should('be.visible').click({ force: true });
@@ -541,9 +543,11 @@ describe('로그캐치 사이트 테스트', () => {
      // 검증: 파일이 존재해야 함 (없으면 에러 발생)
        expect(myFile).to.not.be.undefined; 
      });
+      
+   
+     cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
 
-     */ 
-    cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
+ */
 
     // ==========================================
     // 이력 > 통합 > 검출 팝업 (처리영역)
@@ -570,7 +574,7 @@ describe('로그캐치 사이트 테스트', () => {
     // Case1  전체 확정선택 -> 전체 오탐 선택 으로 변경하기 
     // 표의 첫번째 행 처리 아이콘 클릭 (검출팝업)
     // 1. 화면에 보이는 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-    cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+    cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
     // 메뉴설정
     // 검출 팝업 '메뉴 설정'이라는 글자를 찾아 클릭
     cy.contains('span.sub-title-title', '메뉴 설정').should('be.visible').click({ force: true });
@@ -624,7 +628,7 @@ describe('로그캐치 사이트 테스트', () => {
      //case2
      // 전체 오탐 선택 - > 이전 선택 복구 -> 전체 확정 선택으로 변경하기
      // 표의 첫번째 행 처리 아이콘 다시 재 클릭 
-     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
      cy.wait(500);
 
      // '전체 확정 선택' 클릭
@@ -677,7 +681,7 @@ describe('로그캐치 사이트 테스트', () => {
      
      //Case 키워드 등록하기-------------------------------------------------------------
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+    cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 키워드 탭 클릭
@@ -709,7 +713,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      // Case 키워드 수정하기 -----------------------------------------------------------------
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+    cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 키워드 탭 클릭
@@ -748,7 +752,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      // Case 키워드 삭제하기---------------------------------------------------------------------------------
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 키워드 탭 클릭
@@ -773,7 +777,7 @@ describe('로그캐치 사이트 테스트', () => {
      //  [이력 > 통합 > 검출 팝업 > 불용 데이터 - 키워드 탭]
      /////////////////////////////////////////////////////
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+    cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 불용 데이터 - 키워드 탭 클릭
@@ -823,7 +827,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      //case 불용 데이터 키워드 수정하기 -----------------------------------------------------------------
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 불용 데이터 - 키워드 탭 클릭
@@ -881,8 +885,8 @@ describe('로그캐치 사이트 테스트', () => {
      //////////////////////////////////////////////////////
      //  [이력 > 통합 > 검출 팝업 > 불용 데이터 - 값 탭]
      /////////////////////////////////////////////////////
-    // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+     // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 불용 데이터 - 키워드 탭 클릭
@@ -927,7 +931,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      //case 불용 데이터 값 수정하기 -----------------------------------------------------------------
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 불용 데이터 - 키워드 탭 클릭
@@ -984,13 +988,15 @@ describe('로그캐치 사이트 테스트', () => {
 
 
 
+
+/*
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
     cy.log('🎉 이력 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
-
+*/
   });
 });  
 
