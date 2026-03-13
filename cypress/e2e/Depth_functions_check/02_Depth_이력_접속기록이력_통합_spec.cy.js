@@ -120,7 +120,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
-    
+  
     // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
@@ -175,8 +175,8 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(500);
   
      cy.log('✅ 시작 날짜 지정 성공');
-   
-     /*이슈 등록해둠 ( 37314)
+  
+     /* //이슈 등록해둠 ( 37314)
     //개인정보유형 전체선택 문구 클릭하여 유형 선택하는 코드
     // <bug> 개인정보 유형 선택시 기존 입력했던 검색조건 초기화 되어버림. (맨티스 이슈보고 : 37120))
     cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -414,18 +414,15 @@ describe('로그캐치 사이트 테스트', () => {
     // 3. 이제 리스트 내에서 3월 1일을 찾아 클릭합니다.
     cy.get('.v-menu__content:visible').contains('.v-list__tile__title, .v-list-item__title', '2026-03-12').click({ force: true });
     
-    
     cy.wait(1000);
     // 선택 후, 입력창(.v-select__selection)에 '2026-03-12'가 표시되는지 검증
     cy.contains('.v-select__selection', '2026-03-12').should('be.visible');
     cy.wait(1000);
-
-  
+ 
     // 표 검색결과안의 검출유형 검출 문구확인
     cy.get('tbody').filter(':visible').contains('a', '검출').should('be.visible');
     
     cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
-    
 
     //이력 > 접속기록 이력 > [통합]탭 선택
     cy.get('.tab-btn').contains('통합').should('be.visible').click({ force: true });
@@ -497,6 +494,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 검색버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(1000);
 
     /*  이슈 등록해둠 (37313) 
     // 엑셀 다운로드 클릭하는 코드 
@@ -565,9 +563,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.log(`🎯 오늘 검증할 날짜: ${formattedDate}`);
 
    
-    
-
-
+  
     ////////////////////////////////////////
     // [이력 > 통합 > 검출 팝업 > 오탐/확정 탭]
     ////////////////////////////////////////
@@ -882,11 +878,111 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(500);
      //-------------------------------------------------------------------------------------------------------------
 
+     //////////////////////////////////////////////////////
+     //  [이력 > 통합 > 검출 팝업 > 불용 데이터 - 값 탭]
+     /////////////////////////////////////////////////////
+    // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+     cy.wait(500);
 
+     // 불용 데이터 - 키워드 탭 클릭
+     cy.contains('.v-tabs__item', '불용 데이터 - 값').should('be.visible').click({ force: true });
+     cy.wait(500);
 
+     // 추가하기  + 동그란 플러스 버튼 클릭 
+     // 불용 데이터 - 키워드 + 클릭 중복방지 코드
+     cy.contains('.v-window-item', '불용 데이터 - 값').filter(':visible').find('.grid-add-button').should('be.visible').click({ force: true });
+
+     // 불용 데이터 상세 팝업창
+     // 불용 데이터 상세 팝업창에서 '타입' 입력창(콤보박스)을 클릭하여 목록을 펼칩니다.
+     cy.get('input[aria-label="타입"]').filter(':visible').first().invoke('val', '신용카드번호').trigger('input').trigger('change');
+     cy.wait(500); 
+
+     // 2. [추가] 이제 시스템에게 "이 글자에 해당하는 목록을 선택했어"라고 알려줘야 합니다.
+     // '신용카드번호'라는 글자를 가진 실제 리스트 아이템을 강제로 클릭!
+     cy.get('.v-list__tile__title').contains('신용카드번호').click({ force: true });
+     cy.wait(500);
+
+     // 그 후 다른 칸(키워드)을 클릭하면 보통 값이 확정됩니다.
+     cy.get('input').filter(':visible').eq(1).click({ force: true });
+
+     // 값 입력
+     cy.get('input[aria-label="값"]').filter(':visible').clear().type('4469-4314-3564-3296');
+     cy.wait(500);
+
+     // 설명 입력
+     cy.get('input[aria-label="설명"]').filter(':visible').clear().type('Depth_test_신용카드번호');
+     cy.wait(500);
+
+     // 저장버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('저장').click({ force: true });
+     cy.wait(500);
+
+     // [검증] 리스트에 수정된 키워드명이 존재하는지 확인
+     cy.contains('tr', 'Depth_test_신용카드번호').should('be.visible');
+
+     // 검출창 닫기버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+     cy.wait(500);
+
+     //case 불용 데이터 값 수정하기 -----------------------------------------------------------------
+     // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+     cy.get('tbody tr').filter(':visible').first().find('i.g-IConfig').click({ force: true });
+     cy.wait(500);
+
+     // 불용 데이터 - 키워드 탭 클릭
+     cy.contains('.v-tabs__item', '불용 데이터 - 값').should('be.visible').click({ force: true });
+     cy.wait(500);
   
+     // 'Depth_test_신용카드번호'라는 텍스트를 포함하고 있는 테이블 행을 찾아 수정버튼 클릭
+     cy.contains('tr', 'Depth_test_신용카드번호').should('be.visible').last().find('i.material-icons:contains("edit")').click({ force: true });
+     cy.wait(500);
 
-/*
+     // 불용 데이터 상세 팝업창에서 '타입' 입력창선택하여 주민등록번호-> 외국인등록번호로 수정
+     cy.get('input[aria-label="타입"]').filter(':visible').first().invoke('val', '계좌 번호').trigger('input').trigger('change');
+     cy.wait(500); 
+
+     // 2. [추가] 이제 시스템에게 "이 글자에 해당하는 목록을 선택했어"라고 알려줘야 합니다.
+     // '주민등록번호'라는 글자를 가진 실제 리스트 아이템을 강제로 클릭!
+     cy.get('.v-list__tile__title').contains('계좌 번호').click({ force: true });
+     cy.wait(500);
+
+     // 그 후 다른 칸(키워드)을 클릭하면 보통 값이 확정됩니다.
+     cy.get('input').filter(':visible').eq(1).click({ force: true });
+
+     // 값 수정
+     cy.get('input[aria-label="값"]').filter(':visible').clear().type('475-6025314-6-985');
+     cy.wait(500);
+     // [검증] 입력한 텍스트가 value로 잘 들어가 있는지 확인
+     cy.get('input[aria-label="값"]').should('have.value', '475-6025314-6-985');
+
+     // 설명 수정
+     cy.get('input[aria-label="설명"]').filter(':visible').clear().type('Depth_test_계좌번호_수정');
+     cy.wait(500);
+
+     // 저장버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('저장').click({ force: true });
+     cy.wait(500);
+
+     // [검증] 리스트에 수정된 키워드명이 존재하는지 확인
+     cy.contains('tr', 'Depth_test_계좌번호_수정').should('be.visible');
+     cy.wait(500);
+
+     //case 불용 데이터 값 수정한 행 삭제하기 -----------------------------------------------------------------
+
+     // 수정된 이름('Depth_test_계좌번호_수정')이 포함된 테이블행 휴지통 아이콘 클릭
+     cy.contains('tr', 'Depth_test_계좌번호_수정').should('be.visible').last().find('i.fa-trash') .click({ force: true });
+     cy.wait(500);
+
+     // [검증] 표에서 해당 텍스트가 더 이상 존재하지 않는지 확인
+     cy.contains('Depth_test_계좌번호_수정').should('not.exist');
+
+     // 검출창 닫기버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+     cy.wait(500);
+     //-------------------------------------------------------------------------------------------------------------
+
+
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
@@ -894,7 +990,6 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('🎉 이력 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
-*/
 
   });
 });  
