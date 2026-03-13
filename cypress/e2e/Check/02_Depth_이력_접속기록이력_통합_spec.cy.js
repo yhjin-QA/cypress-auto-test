@@ -575,6 +575,10 @@ describe('로그캐치 사이트 테스트', () => {
     // 표의 첫번째 행 처리 아이콘 클릭 (검출팝업)
     // 1. 화면에 보이는 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+    cy.wait(500);
+    
+/*
+
     // 메뉴설정
     // 검출 팝업 '메뉴 설정'이라는 글자를 찾아 클릭
     cy.contains('span.sub-title-title', '메뉴 설정').should('be.visible').click({ force: true });
@@ -722,7 +726,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      //등록한 키워드 클릭하기  
      //'주민등록_' 뒤에 어떤 문자(.*)가 오더라도 해당 라벨을 찾아 클릭합니다.
-     cy.contains('label.text-label', /주민등록번호_.*/).should('be.visible').click({ force: true });
+     cy.contains('label.text-label', /주민등록번호_.* /).should('be.visible').click({ force: true });
    
      cy.wait(500);
 
@@ -985,8 +989,51 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
      cy.wait(500);
      //-------------------------------------------------------------------------------------------------------------
+*/
 
+     //////////////////////////////////////////////////////
+     // 검출 팝업 경고아이콘 (HTTP상세 팝업 )
+     /////////////////////////////////////////////////////
+     // 경고창 아이콘 클릭 (HTTP상세 팝업)
+     cy.get('i.g.g-IMajorAlert').filter(':visible').should('exist').click({ force: true }); // 다른 요소에 겹쳐있을 경우를 대비해 force 옵션 사용
+     cy.wait(500); 
+     
+     //HTTP Request 탭 클릭---------------------
+     cy.contains('span.tab-title', 'HTTP Request').should('be.visible').click({ force: true });
+     cy.wait(500); 
 
+     // 'referer'라는 텍스트를 가진 행(tr)을 찾아서 검증합니다.
+     cy.contains('tr', 'referer').should('be.visible')
+     .within(() => {
+       // 그 행 안에서 URL 값이 포함되어 있는지 확인
+       cy.contains('http://10.10.54.22:8080/cop/logcatch/selectexcessCheck.do').should('exist');
+      });
+
+     //HTTP Request 탭 클릭---------------------
+     cy.contains('span.tab-title', 'HTTP Response').should('be.visible').click({ force: true });
+     cy.wait(500);
+
+     // 'Connection'라는 텍스트를 가진 행(tr)을 찾아서 검증합니다.
+     cy.contains('tr', 'Connection').should('be.visible')
+     .within(() => {
+       // 그 행 안에서 URL 값이 포함되어 있는지 확인
+       cy.contains('keep-alive').should('exist');
+      });
+
+     //HTTP Request 탭 클릭------------------------
+     cy.contains('span.tab-title', 'SQL').should('be.visible').click({ force: true });
+     cy.wait(500);
+
+     cy.contains('tr', 'menuNo').should('exist').invoke('text') // <tr> 내부의 모든 텍스트를 가져옴
+     .then((text) => {
+      // 공백을 제거하고 우리가 원하는 숫자들이 포함되어 있는지 확인
+      const cleanedText = text.replace(/\s/g, ''); // 모든 공백/줄바꿈 제거
+      expect(cleanedText).to.include('11,12,21,31,32,41');
+     });
+
+     // 검출팝업 왼쪽 HTTP 상세 팝업 닫기 
+     cy.get('i.material-icons').contains('close').filter(':visible').first().click({ force: true });
+     cy.wait(500);
 
 
 /*

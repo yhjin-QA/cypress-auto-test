@@ -986,6 +986,50 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(500);
      //-------------------------------------------------------------------------------------------------------------
 
+     //////////////////////////////////////////////////////
+     // 검출 팝업 경고아이콘 (HTTP상세 팝업 )
+     /////////////////////////////////////////////////////
+     // 경고창 아이콘 클릭 (HTTP상세 팝업)
+     cy.get('i.g.g-IMajorAlert').filter(':visible').should('exist').click({ force: true }); // 다른 요소에 겹쳐있을 경우를 대비해 force 옵션 사용
+     cy.wait(500); 
+     
+     //HTTP Request 탭 클릭---------------------
+     cy.contains('span.tab-title', 'HTTP Request').should('be.visible').click({ force: true });
+     cy.wait(500); 
+
+     // 'referer'라는 텍스트를 가진 행(tr)을 찾아서 검증합니다.
+     cy.contains('tr', 'referer').should('be.visible')
+     .within(() => {
+       // 그 행 안에서 URL 값이 포함되어 있는지 확인
+       cy.contains('http://10.10.54.22:8080/cop/logcatch/selectexcessCheck.do').should('exist');
+      });
+
+     //HTTP Request 탭 클릭---------------------
+     cy.contains('span.tab-title', 'HTTP Response').should('be.visible').click({ force: true });
+     cy.wait(500);
+
+     // 'Connection'라는 텍스트를 가진 행(tr)을 찾아서 검증합니다.
+     cy.contains('tr', 'Connection').should('be.visible')
+     .within(() => {
+       // 그 행 안에서 URL 값이 포함되어 있는지 확인
+       cy.contains('keep-alive').should('exist');
+      });
+
+     //HTTP Request 탭 클릭------------------------
+     cy.contains('span.tab-title', 'SQL').should('be.visible').click({ force: true });
+     cy.wait(500);
+
+     cy.contains('tr', 'menuNo').should('exist').invoke('text') // <tr> 내부의 모든 텍스트를 가져옴
+     .then((text) => {
+      // 공백을 제거하고 우리가 원하는 숫자들이 포함되어 있는지 확인
+      const cleanedText = text.replace(/\s/g, ''); // 모든 공백/줄바꿈 제거
+      expect(cleanedText).to.include('11,12,21,31,32,41');
+     });
+
+     // 검출팝업 왼쪽 HTTP 상세 팝업 닫기 
+     cy.get('i.material-icons').contains('close').filter(':visible').first().click({ force: true });
+     cy.wait(500);
+
 
 
 
