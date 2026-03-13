@@ -567,7 +567,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.log(`🎯 오늘 검증할 날짜: ${formattedDate}`);
 
    
-  
+  /*
     ////////////////////////////////////////
     // [이력 > 통합 > 검출 팝업 > 오탐/확정 탭]
     ////////////////////////////////////////
@@ -577,7 +577,6 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
     cy.wait(500);
     
-/*
 
     // 메뉴설정
     // 검출 팝업 '메뉴 설정'이라는 글자를 찾아 클릭
@@ -994,6 +993,10 @@ describe('로그캐치 사이트 테스트', () => {
      //////////////////////////////////////////////////////
      // 검출 팝업 경고아이콘 (HTTP상세 팝업 )
      /////////////////////////////////////////////////////
+     // 1. 화면에 보이는 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+    cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+    cy.wait(500);
+
      // 경고창 아이콘 클릭 (HTTP상세 팝업)
      cy.get('i.g.g-IMajorAlert').filter(':visible').should('exist').click({ force: true }); // 다른 요소에 겹쳐있을 경우를 대비해 force 옵션 사용
      cy.wait(500); 

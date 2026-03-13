@@ -989,6 +989,10 @@ describe('로그캐치 사이트 테스트', () => {
      //////////////////////////////////////////////////////
      // 검출 팝업 경고아이콘 (HTTP상세 팝업 )
      /////////////////////////////////////////////////////
+     // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+     
+     cy.wait(500);
      // 경고창 아이콘 클릭 (HTTP상세 팝업)
      cy.get('i.g.g-IMajorAlert').filter(':visible').should('exist').click({ force: true }); // 다른 요소에 겹쳐있을 경우를 대비해 force 옵션 사용
      cy.wait(500); 
@@ -1035,16 +1039,13 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(500);
 
 
-
-
-/*
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
     cy.log('🎉 이력 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
-*/
+
   });
 });  
 
