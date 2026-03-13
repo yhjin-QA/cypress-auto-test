@@ -412,12 +412,12 @@ describe('로그캐치 사이트 테스트', () => {
     .wait(500); // 데이터가 로드되거나 렌더링될 시간 대기
 
     // 3. 이제 리스트 내에서 3월 1일을 찾아 클릭합니다.
-    cy.get('.v-menu__content:visible').contains('.v-list__tile__title, .v-list-item__title', '2026-03-01').click({ force: true });
+    cy.get('.v-menu__content:visible').contains('.v-list__tile__title, .v-list-item__title', '2026-03-12').click({ force: true });
     
     
     cy.wait(1000);
-    // 선택 후, 입력창(.v-select__selection)에 '2026-03-01'가 표시되는지 검증
-    cy.contains('.v-select__selection', '2026-03-01').should('be.visible');
+    // 선택 후, 입력창(.v-select__selection)에 '2026-03-12'가 표시되는지 검증
+    cy.contains('.v-select__selection', '2026-03-12').should('be.visible');
     cy.wait(1000);
 
   
