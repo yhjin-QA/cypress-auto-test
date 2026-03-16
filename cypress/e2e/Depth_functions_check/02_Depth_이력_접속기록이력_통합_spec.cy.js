@@ -1060,6 +1060,32 @@ describe('로그캐치 사이트 테스트', () => {
      // 검출창 닫기버튼 클릭
      cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
      cy.wait(500);
+     //-------------------------------------------------------------------------------------------------------------------
+
+      //////////////////////////////////////////////////////
+     // 전체 화면 아이콘 클릭 (전체화면 - 다시 크기 줄이기 )
+     /////////////////////////////////////////////////////
+     // 화면에 보이는 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+     cy.wait(500);
+
+     // 'fullscreen' 텍스트를 가진 material-icons 아이콘을 찾아 클릭합니다.
+     cy.contains('i.material-icons', 'fullscreen').filter(':visible').should('be.visible').click({ force: true });
+
+     // [검증] 창이 실제로 커졌는지 검증
+     cy.get('.v-dialog').should('have.class', 'v-dialog--fullscreen');
+     cy.wait(1000);
+
+     // 'fullscreen_exit' 텍스트를 가진 아이콘을 찾아 클릭하여 전체 화면을 해제합니다.
+     cy.contains('i.material-icons', 'fullscreen_exit').filter(':visible').should('be.visible').click({ force: true });
+
+     // [검증] 창이 실제로 작아졌는지 검증
+     cy.get('.v-dialog').should('not.have.class', 'v-dialog--fullscreen');
+     cy.wait(1000);
+
+     // 검출창 닫기버튼 클릭
+     cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+     cy.wait(500);
 
 
     // ==========================================
