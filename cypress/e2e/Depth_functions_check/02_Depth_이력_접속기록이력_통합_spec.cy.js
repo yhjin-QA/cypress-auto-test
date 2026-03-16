@@ -167,14 +167,19 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(500);
     cy.log('✅ 팝업 닫기 성공');
 
-     // 기간 - 시작 날짜 달력 지정하기 
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-     cy.wait(500);
-     // 1일 클릭
-     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
-     cy.wait(500);
-  
-     cy.log('✅ 시작 날짜 지정 성공');
+     //기능확인
+    //달력표를 펼침  월/일 지정  
+    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    cy.wait(500);
+    // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
+    cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
+
+    // 2. '2월'이라는 글자를 찾아 클릭합니다.
+    cy.get('.v-date-picker-table--month').filter(':visible').contains('2월').click({ force: true });
+    // 달력 1일 클릭
+    cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').closest('.v-btn').click({ force: true });
+    //달력창 닫기
+    cy.get('body').type('{esc}');
   
      /* //이슈 등록해둠 ( 37314)
     //개인정보유형 전체선택 문구 클릭하여 유형 선택하는 코드
@@ -565,6 +570,24 @@ describe('로그캐치 사이트 테스트', () => {
      //const targetFileName = `SQLPARSER_2001_${formattedDate}.log`;
 
      cy.log(`🎯 오늘 검증할 날짜: ${formattedDate}`);
+
+     //기능확인
+    //달력표를 펼침  월/일 지정  
+    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    cy.wait(500);
+    // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
+    cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
+
+    // 2. '2월'이라는 글자를 찾아 클릭합니다.
+    cy.get('.v-date-picker-table--month').filter(':visible').contains('2월').click({ force: true });
+    // 달력 1일 클릭
+    cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').closest('.v-btn').click({ force: true });
+    //달력창 닫기
+    cy.get('body').type('{esc}');
+
+     // 검색버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(1000);
 
    
   
