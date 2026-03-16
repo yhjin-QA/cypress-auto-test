@@ -754,7 +754,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(500);
 
      // 입력된 설명 수정
-     cy.get('input[aria-label="설명"]').filter(':visible').clear().type('depth _키워드_수정완료');
+     cy.get('input[aria-label="설명"]').filter(':visible').clear().type('depth_키워드_수정완료');
      cy.wait(500);
 
      // 저장버튼 클릭
