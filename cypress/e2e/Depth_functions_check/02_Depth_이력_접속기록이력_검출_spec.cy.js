@@ -154,59 +154,10 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('개인정보 값').should('be.visible');
     cy.get('th').filter(':visible').contains('조회').should('be.visible');
 
-    //기능동작확인 ------------------------------------------------------------------
-    // 클릭동작 
-    //cy.get('.v-input__icon--append').filter(':visible').find('.material-icons').contains('arrow_drop_down').click({ force: true });
-    //cy.get('label').filter(':visible').contains('업무시스템').closest('.v-input').find('.v-input__slot').click({ force: true });
-    //부서/소속 클릭하여 전체 선택 
-    cy.get('.material-icons').filter(':visible').contains('settings').click({ force: true });
-    cy.wait(500);
-    cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').closest('.v-list__tile').click({ force: true });
-    // 화면 본문(body)에 ESC 키 전송 (팝업창 닫는 동작 )
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-    cy.log('✅ 팝업 닫기 성공');
-
-     //기능확인
-    //달력표를 펼침  월/일 지정  
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.wait(500);
-    // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
-    cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
-
-    // 2. '2월'이라는 글자를 찾아 클릭합니다.
-    cy.get('.v-date-picker-table--month').filter(':visible').contains('2월').click({ force: true });
-    // 달력 1일 클릭
-    cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').closest('.v-btn').click({ force: true });
-    //달력창 닫기
-    cy.get('body').type('{esc}');
-  
-     /* //이슈 등록해둠 ( 37314)
-    //개인정보유형 전체선택 문구 클릭하여 유형 선택하는 코드
-    // <bug> 개인정보 유형 선택시 기존 입력했던 검색조건 초기화 되어버림. (맨티스 이슈보고 : 37120))
-    cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
-    cy.get('.v-list__tile__title').contains('휴대전화번호').scrollIntoView().should('be.visible').click({ force: true });
-    //휴대번호 입력 수행
-    cy.get('input[aria-label="010"]').filter(':visible').clear().type('010');
-    cy.get('input[aria-label="중간 번호 숫자 4개"]').filter(':visible').clear().type('4197');
-    cy.get('input[aria-label="끝 번호 숫자 4개"]').filter(':visible').clear().type('7524');
-
-
-    // 사용자계정에 admin 입력 
-    //cy.get('input[aria-label="사용자 계정"]').filter(':visible').clear().type('admin');
-     cy.wait(500);
-    // 사용자 IP에 10.10.0.237 입력 
-    cy.get('input[aria-label="사용자 IP"]').filter(':visible').clear().type('10.10.54.5');
-
-    // 검색버튼 클릭 
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-
-    // 실제 휴대폰 전화번호 검색결과가 조회되는지 확인하는 코드
-    cy.wait(500);
-    cy.contains('a', '01********').filter(':visible').should('be.visible');
-    cy.log('✅ 이력 - 사용자 추적 화면 출력 확인 완료!');
-    */
+    // ==========================================
+    // 테스트 자동화시나리오
+    // 이력 -  접속기록 이력 자동화 시니라오 테스트 
+    // ==========================================
 
 
     // 이력 > 접속 기록 이력 서브메뉴 클릭  -----------------------
@@ -296,7 +247,7 @@ describe('로그캐치 사이트 테스트', () => {
     .scrollTo('bottom', { duration: 1000 }) // 1초 동안 부드럽게 끝까지 내리기
     .wait(500); // 데이터가 로드되거나 렌더링될 시간 대기
 
-    // 3. 이제 리스트 내에서 3월 1일을 찾아 클릭합니다.
+    // 3. 이제 리스트 내에서 3월 12일을 찾아 클릭합니다.
     cy.get('.v-menu__content:visible').contains('.v-list__tile__title, .v-list-item__title', '2026-03-12').click({ force: true });
     
     cy.wait(1000);
@@ -318,8 +269,6 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
      cy.wait(500);
 
-
- 
 
     
     cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
