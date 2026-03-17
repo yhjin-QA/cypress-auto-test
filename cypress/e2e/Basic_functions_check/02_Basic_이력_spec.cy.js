@@ -173,12 +173,15 @@ describe('로그캐치 사이트 테스트', () => {
      // 1일 클릭
      cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
      cy.wait(500);
+
+     // 검색버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
   
      cy.log('✅ 시작 날짜 지정 성공');
     
-     /*이슈 등록해둠 ( 37314)
+     /*맨티스 이슈 등록해둠 ( 37314)
     //개인정보유형 전체선택 문구 클릭하여 유형 선택하는 코드
-    // <bug> 개인정보 유형 선택시 기존 입력했던 검색조건 초기화 되어버림. (맨티스 이슈보고 : 37120))
+    //	0037314: 개인정보 유형 휴대전화번호 선택 후 검색 시 정상동작하지 않는 문제
     cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
     cy.get('.v-list__tile__title').contains('휴대전화번호').scrollIntoView().should('be.visible').click({ force: true });
