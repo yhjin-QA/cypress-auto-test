@@ -761,6 +761,24 @@ describe('로그캐치 사이트 테스트', () => {
      cy.contains('.v-tabs__item', '불용 데이터 - 키워드').should('be.visible').click({ force: true });
      cy.wait(500);
 
+     //재시도하는과정에서 기존행 남아있는경우 예외처리 ---------------
+     // 1. '주민등록번호_키워드'가 포함된 행이 있는지 먼저 확인합니다.
+     cy.get('body').then(($body) => {
+     if ($body.text().includes('주민등록번호_키워드')) {
+      // 데이터가 존재할 경우에만 삭제 진행
+     cy.contains('tr', '주민등록번호_키워드').should('be.visible').last().find('i.fa-trash') .click({ force: true });
+     cy.wait(500);
+
+     // [검증] 해당 텍스트가 화면에서 사라졌는지 확인
+     cy.contains('주민등록번호_키워드').should('not.exist');
+     cy.log('기존에 남아있던 불용 데이터를 성공적으로 삭제했습니다.');
+     } else {
+     // 데이터가 없으면 로그만 남기고 다음 단계로 넘어감
+     cy.log('삭제할 데이터가 이미 존재하지 않습니다. 진행합니다.');
+      }
+      });
+     //------------------------------------------------------------------
+
      //case 불용 데이터 키워드 추가하기 -----------------------------------------------------------------
      
      // 추가 + 동그란 플러스 버튼 클릭 
@@ -862,6 +880,7 @@ describe('로그캐치 사이트 테스트', () => {
      //////////////////////////////////////////////////////
      //  [이력 > 통합 > 검출 팝업 > 불용 데이터 - 값 탭]
      /////////////////////////////////////////////////////
+     
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
      cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
      cy.wait(500);
@@ -869,6 +888,24 @@ describe('로그캐치 사이트 테스트', () => {
      // 불용 데이터 - 키워드 탭 클릭
      cy.contains('.v-tabs__item', '불용 데이터 - 값').should('be.visible').click({ force: true });
      cy.wait(500);
+
+     //재시도하는과정에서 기존행 남아있는경우 예외처리 ---------------
+     // 1. 'Depth_test_신용카드번호'가 포함된 행이 있는지 먼저 확인합니다.
+     cy.get('body').then(($body) => {
+     if ($body.text().includes('Depth_test_신용카드번호')) {
+      // 데이터가 존재할 경우에만 삭제 진행
+     cy.contains('tr', 'Depth_test_신용카드번호').should('be.visible').last().find('i.fa-trash') .click({ force: true });
+     cy.wait(500);
+
+     // [검증] 해당 텍스트가 화면에서 사라졌는지 확인
+     cy.contains('Depth_test_신용카드번호').should('not.exist');
+     cy.log('기존에 남아있던 불용 데이터를 성공적으로 삭제했습니다.');
+     } else {
+     // 데이터가 없으면 로그만 남기고 다음 단계로 넘어감
+     cy.log('삭제할 데이터가 이미 존재하지 않습니다. 진행합니다.');
+      }
+      });
+     //------------------------------------------------------------------
 
      // 추가하기  + 동그란 플러스 버튼 클릭 
      // 불용 데이터 - 키워드 + 클릭 중복방지 코드
@@ -919,7 +956,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.contains('tr', 'Depth_test_신용카드번호').should('be.visible').last().find('i.material-icons:contains("edit")').click({ force: true });
      cy.wait(500);
 
-     // 불용 데이터 상세 팝업창에서 '타입' 입력창선택하여 주민등록번호-> 계좌번호 수정
+     // 불용 데이터 상세 팝업창에서 '타입' 입력창선택하여 신용카드번호-> 계좌번호 수정
      cy.get('input[aria-label="타입"]').filter(':visible').first().invoke('val', '계좌 번호').trigger('input').trigger('change');
      cy.wait(500); 
 
@@ -950,6 +987,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(500);
 
      //case 불용 데이터 값 수정한 행 삭제하기 -----------------------------------------------------------------
+    
 
      // 수정된 이름('Depth_test_계좌번호_수정')이 포함된 테이블행 휴지통 아이콘 클릭
      cy.contains('tr', 'Depth_test_계좌번호_수정').should('be.visible').last().find('i.fa-trash') .click({ force: true });
@@ -1045,7 +1083,7 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 이력 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 이력 - 접속기록 이력 - 통합 검출팝업 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 

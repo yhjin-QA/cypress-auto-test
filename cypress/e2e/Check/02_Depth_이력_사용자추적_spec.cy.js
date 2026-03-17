@@ -175,32 +175,6 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     
-     /* //이슈 등록해둠 ( 37314)
-    //개인정보유형 전체선택 문구 클릭하여 유형 선택하는 코드
-    cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
-    cy.get('.v-list__tile__title').contains('휴대전화번호').scrollIntoView().should('be.visible').click({ force: true });
-    //휴대번호 입력 수행
-    cy.get('input[aria-label="010"]').filter(':visible').clear().type('010');
-    cy.get('input[aria-label="중간 번호 숫자 4개"]').filter(':visible').clear().type('4197');
-    cy.get('input[aria-label="끝 번호 숫자 4개"]').filter(':visible').clear().type('7524');
-
-
-    // 사용자계정에 admin 입력 
-    //cy.get('input[aria-label="사용자 계정"]').filter(':visible').clear().type('admin');
-     cy.wait(500);
-    // 사용자 IP에 10.10.0.237 입력 
-    cy.get('input[aria-label="사용자 IP"]').filter(':visible').clear().type('10.10.54.5');
-
-    // 검색버튼 클릭 
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-
-    // 실제 휴대폰 전화번호 검색결과가 조회되는지 확인하는 코드
-    cy.wait(500);
-    cy.contains('a', '01********').filter(':visible').should('be.visible');
-    cy.log('✅ 이력 - 사용자 추적 화면 출력 확인 완료!');
-    */
-
     
     // ==========================================
     // 업무시스템 조회
@@ -628,6 +602,35 @@ describe('로그캐치 사이트 테스트', () => {
     // [검증] 검색 결과 검증
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().should('contain', 'No matching records found');
+    //-----------------------------------------------------------------------------------------------------------------------
+
+    // 개인정보 유형 조회  - 휴대전화번호 -----------------------------------------------------------------------------------------
+     
+    //개인정보유형 전체선택  클릭하여 유형 선택하는 코드 
+    cy.get('input[aria-label="개인정보 유형"]').filter(':visible').click({ force: true });
+    cy.wait(500);
+    
+    // 개인정보유형 리스트중 휴대전화번호 선택
+    cy.get('.v-list__tile__title').contains('휴대전화번호').scrollIntoView().should('be.visible').click({ force: true });
+    cy.wait(500);
+
+    //휴대번호 입력 수행
+    cy.get('input[aria-label="010"]').filter(':visible').clear().type('010').blur();
+    cy.wait(500);
+    cy.get('input[aria-label="중간 번호 숫자 4개"]').filter(':visible').clear().type('4197').blur();
+    cy.wait(500);
+    cy.get('input[aria-label="끝 번호 숫자 4개"]').filter(':visible').clear().type('7524').blur();
+    cy.wait(500);
+
+    //검색버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(1000);
+
+    // [검증] 검색 결과 검증
+    // 첫 번째 행 정밀 검증
+    cy.get('tbody tr').filter(':visible').first().within(() => {
+    cy.contains('a', '01********').filter(':visible').should('be.visible');
+     }); 
     //-----------------------------------------------------------------------------------------------------------------------
 
 
