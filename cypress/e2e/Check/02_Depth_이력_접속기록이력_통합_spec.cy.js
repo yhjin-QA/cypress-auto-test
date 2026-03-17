@@ -551,7 +551,7 @@ describe('로그캐치 사이트 테스트', () => {
     // Case1  전체 확정선택 -> 전체 오탐 선택 으로 변경하기 
     // 표의 첫번째 행 처리 아이콘 클릭 (검출팝업)
     // 1. 화면에 보이는 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-    cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+    cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 10000 }).should('be.visible').click({ force: true });
     // 메뉴설정
     // 검출 팝업 '메뉴 설정'이라는 글자를 찾아 클릭
     cy.contains('span.sub-title-title', '메뉴 설정').should('be.visible').click({ force: true });
@@ -605,7 +605,7 @@ describe('로그캐치 사이트 테스트', () => {
      //case2
      // 전체 오탐 선택 - > 이전 선택 복구 -> 전체 확정 선택으로 변경하기
      // 표의 첫번째 행 처리 아이콘 다시 재 클릭 
-     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 10000 }).should('be.visible').click({ force: true });
      cy.wait(500);
 
      // '전체 확정 선택' 클릭
@@ -658,7 +658,7 @@ describe('로그캐치 사이트 테스트', () => {
      
      //Case 키워드 등록하기-------------------------------------------------------------
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-    cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 10000 }).should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 키워드 탭 클릭
@@ -666,7 +666,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(500);
 
      // 키워드 값 'Depth_test_KeyWord'를 입력
-     cy.get('input[placeholder="항목을 입력하고 Enter 를 누르세요."]').should('be.visible').last().clear().type('Depth_test_KeyWord{enter}');
+     cy.get('input[placeholder="항목을 입력하고 Enter 를 누르세요."]').filter(':visible').last().clear().type('Depth_test_KeyWord{enter}');
 
      // 설명  입력
      cy.get('input[aria-label="설명"]').filter(':visible').clear().type('depth _키워드_수정삭제');
@@ -690,7 +690,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      // Case 키워드 수정하기 -----------------------------------------------------------------
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-    cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 10000 }).should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 키워드 탭 클릭
@@ -729,7 +729,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      // Case 키워드 삭제하기---------------------------------------------------------------------------------
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 10000 }).should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 키워드 탭 클릭
@@ -754,7 +754,7 @@ describe('로그캐치 사이트 테스트', () => {
      //  [이력 > 통합 > 검출 팝업 > 불용 데이터 - 키워드 탭]
      /////////////////////////////////////////////////////
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-    cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 10000 }).should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 불용 데이터 - 키워드 탭 클릭
@@ -822,7 +822,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      //case 불용 데이터 키워드 수정하기 -----------------------------------------------------------------
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+    cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 10000 }).should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 불용 데이터 - 키워드 탭 클릭
@@ -882,7 +882,7 @@ describe('로그캐치 사이트 테스트', () => {
      /////////////////////////////////////////////////////
      
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 10000 }).should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 불용 데이터 - 키워드 탭 클릭
@@ -941,11 +941,12 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 검출창 닫기버튼 클릭
      cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      //case 불용 데이터 값 수정하기 -----------------------------------------------------------------
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+     //cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 10000 }).should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 불용 데이터 - 키워드 탭 클릭
@@ -1005,8 +1006,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 검출 팝업 경고아이콘 (HTTP상세 팝업 )
      /////////////////////////////////////////////////////
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
-     
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 10000 }).should('be.visible').click({ force: true });
      cy.wait(500);
      // 경고창 아이콘 클릭 (HTTP상세 팝업)
      cy.get('i.g.g-IMajorAlert').filter(':visible').should('exist').click({ force: true }); // 다른 요소에 겹쳐있을 경우를 대비해 force 옵션 사용
@@ -1058,7 +1058,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 전체 화면 아이콘 클릭 (전체화면 - 다시 크기 줄이기 )
      /////////////////////////////////////////////////////
      // 화면에 보이는 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
+     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 10000 }).should('be.visible').click({ force: true });
      cy.wait(500);
 
      // 'fullscreen' 텍스트를 가진 material-icons 아이콘을 찾아 클릭합니다.
