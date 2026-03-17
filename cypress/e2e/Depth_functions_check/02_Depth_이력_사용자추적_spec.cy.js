@@ -662,7 +662,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="정보 사용자"]').filter(':visible').click({ force: true });
     cy.wait(500);
 
-    // '테스터'라고 직접 타이핑 (필터링 유도)
+    // '호준'라고 직접 타이핑 (필터링 유도)
     cy.get('input[aria-label="정보 사용자"]').filter(':visible').type('호준');
     cy.wait(800); // 필터링된 결과가 나타날 때까지 대기
 
