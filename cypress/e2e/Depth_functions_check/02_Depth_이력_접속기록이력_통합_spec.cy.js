@@ -552,19 +552,45 @@ describe('로그캐치 사이트 테스트', () => {
     // 표의 첫번째 행 처리 아이콘 클릭 (검출팝업)
     // 1. 화면에 보이는 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
-    // 메뉴설정
+    cy.wait(1000);
+
+    // 메뉴설정 클릭
     // 검출 팝업 '메뉴 설정'이라는 글자를 찾아 클릭
-    cy.contains('span.sub-title-title', '메뉴 설정').should('be.visible').click({ force: true });
+    //cy.contains('span.sub-title-title', '메뉴 설정').should('be.visible').click({ force: true });
+    cy.get('i.v-icon.sub-title-icon.fa-angle-right').filter(':visible').first().click({ force: true });
+
+    // 메뉴명 자동등록 체크항목이 보일시 예외처리----------------------------------------
+    // 1. 화면 전체(body)를 잡고 내부를 검사합니다.
+    cy.get('body').then(($body) => {
+  
+     // 2. '메뉴명 자동 등록'이라는 텍스트를 가진 label이 존재하는지 개수를 확인합니다.
+     if ($body.find('label:contains("메뉴명 자동 등록")').length > 0) {
+    cy.log('⚠️ "메뉴명 자동 등록" 항목이 화면에 보입니다. 체크 해제를 진행합니다.');
+    
+    // 3. 존재할 경우에만 기존 코드를 실행하여 체크를 해제합니다.
+    cy.wrap($body).contains('label', '메뉴명 자동 등록').closest('.v-input').find('input[type="checkbox"]').uncheck({ force: true });
+    cy.wait(500); // 상태 반영 대기
+    
+    } else {
+    // 4. 요소가 없으면 에러를 내지 않고 로그만 찍은 뒤 자연스럽게 다음 코드로 넘어갑니다.
+    cy.log('✅ "메뉴명 자동 등록" 항목이 화면에 없습니다. 무시하고 패스합니다!');
+    }
+    });
+
     // 'aria-label'이 '메뉴명'인 input 창을 찾아, 기존 글자를 모두 지우고 'depth_Test'를 입력합니다.
     // 메뉴설정 - 메뉴명 'depth_Test' 입력
     cy.get('input[aria-label="메뉴명"]').should('be.visible').clear().type(`Depth_Test_${formattedDate}`);
+    cy.wait(500);
+
     // 눈에 보이는 버튼들 중 '저장' 글자가 있는 것을 모두 찾은 뒤, '첫 번째' 버튼을 클릭합니다.
     cy.get('button.v-btn').filter(':visible').contains('저장').first().click({ force: true });
+     cy.wait(500);
     // 2. 알림창 팝업이 눈에 보일 때까지 대기 및 검증
     cy.contains('메뉴를 저장하시겠습니까?').should('be.visible');
     cy.wait(500); // 팝업 애니메이션 대기
     // 3. 알림창 안의 '확인' 버튼을 찾아 클릭!
     cy.contains('button.v-btn:visible', '확인').click({ force: true });
+    cy.wait(500);
 
     //오탐확정
     // 확정상태로 체크된 상태로 시작
