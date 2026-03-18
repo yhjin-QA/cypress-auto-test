@@ -767,23 +767,11 @@ describe('로그캐치 사이트 테스트', () => {
      cy.contains('.v-tabs__item', '불용 데이터 - 키워드').should('be.visible').click({ force: true });
      cy.wait(500);
 
-     //재시도하는과정에서 기존행 남아있는경우 예외처리 ---------------
-     // 1. '주민등록번호_키워드'가 포함된 행이 있는지 먼저 확인합니다.
-     cy.get('body').then(($body) => {
-     if ($body.text().includes('주민등록번호_키워드')) {
-      // 데이터가 존재할 경우에만 삭제 진행
-     cy.contains('tr', '주민등록번호_키워드').should('be.visible').last().find('i.fa-trash') .click({ force: true });
-     cy.wait(500);
+     // 표가 화면에 나타날 때까지 대기 (데이터 로딩 기다림)
+     cy.get('tbody').filter(':visible').last().as('activeTable');
+     cy.get('@activeTable', { timeout: 10000 }).should('not.contain', 'No data');
+     cy.wait(1000); // 렌더링 안정화를 위한 짧은 대기
 
-     // [검증] 해당 텍스트가 화면에서 사라졌는지 확인
-     cy.contains('주민등록번호_키워드').should('not.exist');
-     cy.log('기존에 남아있던 불용 데이터를 성공적으로 삭제했습니다.');
-     } else {
-     // 데이터가 없으면 로그만 남기고 다음 단계로 넘어감
-     cy.log('삭제할 데이터가 이미 존재하지 않습니다. 진행합니다.');
-      }
-      });
-     //------------------------------------------------------------------
 
      //case 불용 데이터 키워드 추가하기 -----------------------------------------------------------------
      
@@ -895,23 +883,11 @@ describe('로그캐치 사이트 테스트', () => {
      cy.contains('.v-tabs__item', '불용 데이터 - 값').should('be.visible').click({ force: true });
      cy.wait(500);
 
-     //재시도하는과정에서 기존행 남아있는경우 예외처리 ---------------
-     // 1. 'Depth_test_신용카드번호'가 포함된 행이 있는지 먼저 확인합니다.
-     cy.get('body').then(($body) => {
-     if ($body.text().includes('Depth_test_신용카드번호')) {
-      // 데이터가 존재할 경우에만 삭제 진행
-     cy.contains('tr', 'Depth_test_신용카드번호').should('be.visible').last().find('i.fa-trash') .click({ force: true });
-     cy.wait(500);
-
-     // [검증] 해당 텍스트가 화면에서 사라졌는지 확인
-     cy.contains('Depth_test_신용카드번호').should('not.exist');
-     cy.log('기존에 남아있던 불용 데이터를 성공적으로 삭제했습니다.');
-     } else {
-     // 데이터가 없으면 로그만 남기고 다음 단계로 넘어감
-     cy.log('삭제할 데이터가 이미 존재하지 않습니다. 진행합니다.');
-      }
-      });
-     //------------------------------------------------------------------
+     // 표가 화면에 나타날 때까지 대기 (데이터 로딩 기다림)
+     cy.get('tbody').filter(':visible').last().as('activeTable');
+     cy.get('@activeTable', { timeout: 10000 }).should('not.contain', 'No data');
+     cy.wait(1000); // 렌더링 안정화를 위한 짧은 대기
+  
 
      // 추가하기  + 동그란 플러스 버튼 클릭 
      // 불용 데이터 - 키워드 + 클릭 중복방지 코드
@@ -944,14 +920,15 @@ describe('로그캐치 사이트 테스트', () => {
 
      // [검증] 리스트에 수정된 개인정보유형 값 존재하는지 확인
      cy.contains('tr', 'Depth_test_신용카드번호').should('be.visible');
+     cy.wait(500);
 
      // 검출창 닫기버튼 클릭
-     cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+     //cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+     cy.get('button.v-btn').filter(':contains("닫기")').filter(':visible').last().click({ force: true });
      cy.wait(1000);
 
      //case 불용 데이터 값 수정하기 -----------------------------------------------------------------
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     //cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig').should('be.visible').click({ force: true });
      cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
      cy.wait(500);
 
