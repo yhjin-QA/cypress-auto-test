@@ -772,6 +772,27 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('@activeTable', { timeout: 10000 }).should('not.contain', 'No data');
      cy.wait(1000); // 렌더링 안정화를 위한 짧은 대기
 
+     // 기존 남은 행 삭제 예외처리-------------------------------
+     cy.wait(1000); // 화면 안정화 대기
+     function deleteKeywordData() {
+       // 🌟 [핵심] body 대신 현재 눈에 보이는 탭(.v-window-item:visible)만 잡습니다.
+       cy.get('.v-window-item').filter(':visible').then(($activeTab) => {
+         // 활성화된 탭 안에서만 '주민등록번호'를 찾습니다.
+         const $targetRows = $activeTab.find('tr:contains("주민등록번호")');
+         if ($targetRows.length > 0) {
+           cy.log(`⚠️ 삭제할 데이터 발견! (현재 탭에 ${$targetRows.length}개 존재)`);
+            // 🌟 [핵심] 삭제할 때도 활성화된 탭 안(.wrap)에서만 찾도록 가둡니다.
+           cy.wrap($activeTab).contains('tr', '주민등록번호').last().find('i.fa-trash').click({ force: true });
+           cy.wait(1500); 
+           deleteKeywordData(); // 다시 자신을 호출
+         } else {
+           cy.log('✅ "주민등록번호" 관련 모든 불용 데이터 삭제 완료!');
+         }
+       });
+      }
+      deleteKeywordData(); // 함수 실행!
+     //-------------------------------------------------------
+
 
      //case 불용 데이터 키워드 추가하기 -----------------------------------------------------------------
      
@@ -887,6 +908,26 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('tbody').filter(':visible').last().as('activeTable');
      cy.get('@activeTable', { timeout: 10000 }).should('not.contain', 'No data');
      cy.wait(1000); // 렌더링 안정화를 위한 짧은 대기
+
+     // 기존 남은 행 삭제 예외처리-------------------------------
+     cy.wait(1000); // 화면 안정화 대기
+     function deleteValueData() {
+     // 🌟 [핵심] 마찬가지로 현재 눈에 보이는 탭만 잡습니다.
+       cy.get('.v-window-item').filter(':visible').then(($activeTab) => {
+         const $targetRows = $activeTab.find('tr:contains("신용카드번호")');
+         if ($targetRows.length > 0) {
+           cy.log(`⚠️ 삭제할 데이터 발견! (현재 탭에 ${$targetRows.length}개 존재)`);
+      
+           cy.wrap($activeTab).contains('tr', '신용카드번호').last().find('i.fa-trash').click({ force: true });
+           cy.wait(1500); 
+           deleteValueData(); // 다시 자신을 호출
+         } else {
+           cy.log('✅ "신용카드번호" 관련 모든 불용 데이터 삭제 완료!');
+         }
+       });
+      }
+      deleteValueData(); // 함수 실행!
+    //-------------------------------------------------------
   
 
      // 추가하기  + 동그란 플러스 버튼 클릭 
