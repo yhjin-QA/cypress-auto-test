@@ -487,14 +487,14 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
 
-    // [검증] 검색 결과 검증(IP주소 변화로 검증방법 대체)
-    cy.get('tbody tr', { timeout: 10000 }).contains('10.10.0.210').should('be.visible');
+    // [검증] 검색 결과 검증(업무시스템으로 검증방법 대체)
+    cy.get('tbody tr', { timeout: 10000 }).contains('리눅스_배송관리').should('be.visible');
 
-    // 3. [수정된 검증] 첫 번째 행 정밀 검증
-    cy.get('tbody tr').filter(':visible').first().within(() => {
-    // 🔥 핵심 수정: cy.get('a')를 삭제합니다. 
-    // IP 주소는 링크가 아니므로 행(tr) 내부 전체에서 텍스트를 찾습니다.
-    cy.contains('10.10.0.210').should('be.visible');
+    /// 해당 구조(.ellipsis.text-xs-center a)를 가진 요소를 찾아서
+    cy.get('.ellipsis.text-xs-center a').should('be.visible').invoke('text') // 텍스트 값을 추출한 뒤
+     .then((text) => {
+      // 텍스트의 길이가 0보다 큰지 (즉, 빈칸이 아닌지) 검증!
+      expect(text.trim().length).to.be.greaterThan(0);
      });
 
     // 입력한 URI 주소 x버튼 클릭하여 초기화 

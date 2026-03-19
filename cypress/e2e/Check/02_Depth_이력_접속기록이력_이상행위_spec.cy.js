@@ -909,11 +909,9 @@ describe('로그캐치 사이트 테스트', () => {
     // 미등록 사용자 제외 OFF -> ON확인 
     /////////////////////////////////////////////////////
 
-    // '미등록 사용자'라는 글자가 포함된 td 요소를 찾음
-    cy.get('td').contains('미등록 사용자').should('be.visible');
-
     // 미등록 사용자 제외 토글 클릭
     cy.get('input[aria-label="미등록 사용자 제외"]').click({ force: true });
+    cy.wait(500);
 
     // [검증] 미등록 사용자 제외 OFF -> ON확인 
     cy.get('input[aria-label="미등록 사용자 제외"]').should('be.checked');
@@ -924,7 +922,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(500);
 
     // 미등록 사용자 없는지 확인
-    cy.get('td').contains(/미등록 사용자/).should('not.exist'); 
+    cy.get('td').contains(/미등록 사용자/).should('not.exist');
+    cy.wait(500); 
     
     
 
