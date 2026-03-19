@@ -701,7 +701,8 @@ describe('로그캐치 사이트 테스트', () => {
     //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
     cy.wait(500);
     // 데이터 이력있을시
-    cy.contains('tr', '권한 외 메뉴 접근').should('contain', 'test_auto_권한 외 메뉴 접근') .find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+    cy.contains('tr', '권한 외 메뉴 접근',{ timeout: 15000 }).should('contain', 'test_auto_권한 외 메뉴 접근') .find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+    cy.wait(2000);
     // 데이터 이력없을시
     // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
     //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
@@ -857,9 +858,15 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(500);
     // 데이터 이력있을시
     //cy.contains('tr', '파일다운로드').should('contain', 'test_auto_파일다운로드') .find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+    // 1. 타임아웃을 넉넉히 주고 해당 행을 찾습니다.
+    cy.contains('tr', '파일다운로드', { timeout: 15000 }).should('contain', 'test_auto_파일다운로드')
+    .within(() => { 
+     // 검증 포인트 1: 아이콘의 정확한 종류(MinorAlert)와 빨간색 색상 검증
+     cy.get('i.g-IMinorAlert').should('be.visible').and('have.css', 'color', 'rgb(244, 67, 54)'); 
+     });
     // 데이터 이력없을시
     // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
-    cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
+    //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
 
 
     //////////////////////////////////////////////////////
