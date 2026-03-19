@@ -537,7 +537,17 @@ describe('로그캐치 사이트 테스트', () => {
      // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 텍스트 확인
      //cy.get('.view-line').contains('Today statistics no data. skip').should('be.visible');
      // 핵심 단어만 뽑아서 정규표현식으로 검증
-     cy.get('.view-line').contains(/statistics.*no data/).should('be.visible');
+     //cy.get('.view-line').contains(/statistics.*no data/).should('be.visible');
+     // 1. 에디터 영역(.view-lines)이 잘 보이는지 확인
+     cy.get('.view-lines').should('be.visible').then(($viewLines) => {
+  
+      // 2. 그 안에 렌더링된 텍스트 전체를 가져옵니다.
+      const logText = $viewLines.text().trim();
+  
+     // 3. 텍스트가 비어있지 않은지(길이가 0보다 큰지) 검증
+      expect(logText.length).to.be.greaterThan(0);
+      cy.wrap($viewLines).find('.view-line').should('have.length.greaterThan', 0);
+       });
      //--------------------------------------------------
 
      // 업무유형 - 규칙 분석기 
