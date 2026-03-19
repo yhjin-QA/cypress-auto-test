@@ -64,7 +64,8 @@ describe('로그캐치 사이트 테스트', () => {
     // 설명: 버튼 클릭보다 엔터키가 '중복 클릭'이나 '이동 에러'가 훨씬 적게 발생합니다.
     //cy.get('input[type="password"]').should('be.visible').click();
     //cy.get('input[type="password"]').type('{enter}');
-    
+
+
     //아이디 비번 직접 입력하는 방식-------------------
     // id가 'id'인 입력칸을 화면에서 찾고, 기존 값을 지운 뒤 'hojun'을 입력합니다.
     cy.get('#id').should('be.visible').clear().type('hojun');
