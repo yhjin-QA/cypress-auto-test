@@ -396,10 +396,11 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-          # 1. JSON 파일이 있는지 먼저 확인
-          if (-not (Test-Path "all_raw_data") -or (Get-ChildItem "all_raw_data\**\*.json" -ErrorAction SilentlyContinue).Count -eq 0) {
-              Write-Host "⚠️ [INFO] 통합할 JSON 리포트 파일이 없습니다. (설치 실패 또는 스킵)"
-              # 빈 결과 파일이라도 생성하여 다음 단계 에러 방지
+          # 💡 [핵심 보완] JSON 파일이 있는지 먼저 확인 (설치 실패 시 대응)
+          $reportDir = "all_raw_data"
+          if (-not (Test-Path $reportDir) -or (Get-ChildItem -Path "$reportDir\**\*.json" -ErrorAction SilentlyContinue).Count -eq 0) {
+              Write-Host "⚠️ [INFO] No JSON report file to integrate. (Test not executed due to installation step error)"
+              # 빈 배열을 가진 더미 JSON 생성하여 이후 단계 에러 방지
               "[]" | Out-File -FilePath "merged_report.json" -Encoding UTF8
               exit 0
           }
@@ -414,7 +415,9 @@ jobs:
       - name: Send Google Chat (UI)
         if: always() 
         env:
-          JOB_STATUS: ${{ needs.cypress-run.result }}
+          # 💡 설치 작업과 테스트 작업의 결과를 모두 가져옵니다.
+          DEPLOY_STATUS: ${{ needs.deploy-qa.result }}
+          CYPRESS_STATUS: ${{ needs.cypress-run.result }}
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "확인결과"
@@ -424,62 +427,42 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          $jobStatus = "${{ env.JOB_STATUS }}".ToLower()
+          $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
+          $cypressStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
+          
           $reportFolder = "all_raw_data/reports/json_logs"
           $screenshotPath = "all_raw_data/screenshots"
           
           $isActuallyFailed = $false
-          $finalFailCount = 0
-          $realFailedSpecs = @()
+          $statusDetail = ""
 
-          if (Test-Path $screenshotPath) {
-              $failedScreenshots = Get-ChildItem -Path $screenshotPath -Recurse -Filter "*(failed)*.png"
-              if ($failedScreenshots.Count -gt 0) {
+          # 1️⃣ [설치 단계 체크] 설치 자체가 실패한 경우
+          if ($deployStatus -ne "success" -and $deployStatus -ne "skipped") {
+              $isActuallyFailed = $true
+              $statusDetail = "❌ [설치 실패] 설치 스크립트 에러 (main.sh 문법 오류 등)"
+          }
+          # 2️⃣ [테스트 단계 체크] 설치는 됐는데 테스트에서 실패가 난 경우
+          else {
+              if (Test-Path $screenshotPath) {
+                  $failedScreenshots = Get-ChildItem -Path $screenshotPath -Recurse -Filter "*(failed)*.png"
+                  if ($failedScreenshots.Count -gt 0) {
+                      $isActuallyFailed = $true
+                      $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
+                      $statusDetail = "FAIL: $($failedScreenshots.Count) script ( $($failNames -join ', ') )"
+                  }
+              }
+              
+              # 스크린샷은 없는데 작업 자체가 실패한 경우 (시스템 에러 등)
+              if (-not $isActuallyFailed -and ($cypressStatus -eq "failure" -or $cypressStatus -eq "cancelled")) {
                   $isActuallyFailed = $true
-                  $potentialFailSpecs = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-                  
-                  if (Test-Path $reportFolder) {
-                      foreach ($specName in $potentialFailSpecs) {
-                          $isRealFail = $false
-                          $relatedReports = Get-ChildItem -Path $reportFolder -Filter "report_*.json"
-                          foreach ($report in $relatedReports) {
-                              try {
-                                  $rawJson = Get-Content $report.FullName -Raw -Encoding UTF8
-                                  if ([string]::IsNullOrWhiteSpace($rawJson)) { continue }
-                                  $content = $rawJson | ConvertFrom-Json -ErrorAction Stop
-                                  if ($content.results[0].fullFile -like "*$specName*" -and [int]$content.stats.failures -gt 0) {
-                                      $isRealFail = $true
-                                      break
-                                  }
-                              } catch { continue }
-                          }
-                          if ($isRealFail) { $realFailedSpecs += $specName }
-                      }
-                  } else { $realFailedSpecs = $potentialFailSpecs }
+                  $statusDetail = "⚠️ [테스트 중단] 테스트 실행 중 오류 발생"
               }
           }
 
-          if ($isActuallyFailed) {
-              $finalFailCount = $realFailedSpecs.Count
-              if ($finalFailCount -eq 0 -and $jobStatus -ne "success") {
-                  $finalFailCount = 1
-                  $realFailedSpecs = @("Detected by System")
-              }
-          }
+          # 3️⃣ 최종 타이틀 결정
+          $title = if ($isActuallyFailed) { $env:MSG_FAIL } else { $env:MSG_SUCCESS }
 
-          # 상태 결정
-          if ($isActuallyFailed -and $finalFailCount -gt 0) {
-              $title = $env:MSG_FAIL
-              $fileNameString = if ($realFailedSpecs.Count -gt 0) { $realFailedSpecs -join ", " } else { "Unknown Spec" }
-              $statusDetail = "FAIL: $finalFailCount script ( $fileNameString )"
-              "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          } else {
-              $title = $env:MSG_SUCCESS
-              $statusDetail = ""
-              "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          }
-
-          # 메시지 조립 (Here-String 방식으로 따옴표 에러 방지)
+          # 메시지 조립
           $pName = $env:PRODUCT_NAME
           $tType = $env:TEST_TYPE
           $mTitle = $env:MSG_TITLE
@@ -487,7 +470,6 @@ jobs:
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           $url = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
 
-          # 👇 여기가 에러가 났던 부분입니다. 구조를 완전히 안전하게 바꿨습니다.
           $msgBody = @"
           $title $pName $tType $mTitle ($time)
           $statusDetail
