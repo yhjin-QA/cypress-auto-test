@@ -185,7 +185,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
-     //왜 2개 정보사용자?? (맨티스 이슈보고 : 37121 )
+     //왜 2개 정보사용자?? (맨티스 이슈보고 : 37121 > 현행 유지 고객사 요청사항) 
      cy.get('input[aria-label="정보 사용자"][role="combobox"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]:not([role="combobox"])').filter(':visible').should('be.visible');
      //cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
@@ -243,7 +243,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
 
-    /*  이슈 등록해둠 (37313) 
+    /*  맨티스 이슈 등록해둠 - v3.0.4_r34865 (37313) 
     // 엑셀 다운로드 클릭하는 코드 
     cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
     cy.wait(500);
@@ -267,7 +267,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 3. 사라지는 것 확인
     cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
     
-    /*  이슈 등록해둠 (37313) 
+    /* 맨티스  이슈 등록해둠 (37313) 
     //실제 로컬 폴더 다운로드 시간 주기
     cy.wait(7000);
     

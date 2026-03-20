@@ -264,7 +264,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
     cy.wait(500);
 
-    // 리스트에서 '리눅스_배송관리'가 나타날 때까지 기다리고 클릭
+    // 리스트에서 'JEUS_tester3'가 나타날 때까지 기다리고 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'JEUS_tester3', { timeout: 10000 }).should('be.visible').click({ force: true });
     cy.wait(500);
     // 3. 선택 후 메뉴 닫기 (필요시)
@@ -390,7 +390,7 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // 파일경로 검색 - 타겟 :  /home/logcatch/data/explanationFiles/data
     // ==========================================
-    // 파일명 검색에 tester3 입력 
+    // 파일경로 검색에 tester3 입력 
     cy.get('input[aria-label="파일 경로"]').filter(':visible').clear().type('/home/logcatch/data/explanationFiles/data');
     cy.wait(500);
 
@@ -486,8 +486,63 @@ describe('로그캐치 사이트 테스트', () => {
      // 검증: 파일이 존재해야 함 (없으면 에러 발생)
        expect(myFile,'다운로드 폴더 내에 해당 패턴의 파일이 존재해야 합니다.').to.not.be.undefined; 
      });
+    
 
+    // ==========================================
+    // 복합 조회 - 모든 검색필드 조건 다 넣고 조회
+    // ==========================================
 
+    // 업무시스템 클릭하여 리스트 열기
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+    cy.wait(500);
+
+    // 리스트에서 'JEUS_tester3'가 나타날 때까지 기다리고 클릭
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'JEUS_tester3', { timeout: 10000 }).should('be.visible').click({ force: true });
+    cy.wait(500);
+    // 리스트에서 '리눅스_배송관리'가 나타날 때까지 기다리고 클릭
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_배송관리', { timeout: 10000 }).should('be.visible').click({ force: true });
+    cy.wait(500);
+    // 3. 선택 후 메뉴 닫기 (필요시)
+    cy.get('body').type('{esc}');
+
+    // 시작 IP 입력 
+    cy.get('input[aria-label="시작 IP"]').filter(':visible').clear().type('10.10.1.101');
+    cy.wait(500);
+
+    // 종료 IP 입력 
+    cy.get('input[aria-label="종료 IP"]').filter(':visible').clear().type('10.10.1.101');
+    cy.wait(500);
+
+    // URI 주소에 입력 
+    cy.get('input[aria-label="URI"]').filter(':visible').clear().type('/file-download-pdf');
+    cy.wait(500);
+
+    // 파일명 검색에 tester3-20260318160556.pdf 입력 
+    cy.get('input[aria-label="파일명"]').filter(':visible').clear().type('tester3-20260318160556.pdf');
+    cy.wait(500);
+
+    // 파일경로 검색에 /home/logcatch/data/explanationFiles/data 입력 
+    cy.get('input[aria-label="파일 경로"]').filter(':visible').clear().type('/home/logcatch/data/explanationFiles/data');
+    cy.wait(500);
+
+    //검색 버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(500);
+
+    // 검색 결과 로딩대기
+    cy.get('tbody tr', { timeout: 15000 }).should('be.visible');
+
+     //[검증] 첫 번째 행 정밀 검증 
+    cy.get('tbody tr',).filter(':visible').first().within(() => {
+
+     cy.contains('10.10.1.101').should('be.visible'); 
+     cy.get('span.ellipsis.text-xs-left').contains(/tester3-20260318160556.pdf/) .should('be.visible');
+     cy.contains('/file-download-pdf').should('be.visible');
+     
+    });
+    cy.wait(500);
+
+    
 
 
     // ==========================================
