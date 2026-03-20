@@ -2,7 +2,7 @@ name: Auto-PC Work (Dev_RELEASE_UI)
 
 env:
   PRODUCT_NAME: "로그캐치"
-  TEST_TYPE: Dev_Release
+  TEST_TYPE: Dev_RELEASE
   TZ: Asia/Seoul
    # 👇 여기에 추가하세요! (GitHub Actions가 내부적으로 Node.js 24를 사용하도록 강제함)
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -73,6 +73,22 @@ jobs:
           # 2순위: 앞 버전이 같을 경우, 뒤의 '_r34905' 숫자 부분을 [int]로 캐스팅하여 최신 빌드 비교
           $versions = $allMatches | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique
           $latestVersion = $versions | Sort-Object { [version]($_ -replace '_r.*', '') }, { [int]($_ -replace '.*_r', '') } | Select-Object -Last 1
+
+          # 💡 [핵심 추가] 리눅스 서버에 기록된 마지막 설치 버전 확인
+          Write-Host "🕵️ 서버에 설치된 현재 버전 확인 중..."
+          $installedVersion = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "cat $remotePath/last_installed_version.txt 2>/dev/null || echo 'none'"
+          $installedVersion = $installedVersion.Trim()
+
+          if ($installedVersion -eq $latestVersion) {
+            Write-Host "✨ [SKIP] 현재 설치된 버전($installedVersion)이 최신입니다. 작업을 종료합니다."
+            # 이후 단계들을 실행하지 않도록 설정 (GitHub Actions 환경 변수에 기록)
+            echo "SKIP_INSTALL=true" >> $env:GITHUB_ENV
+            exit 0
+          } else {
+            Write-Host "🚀 [NEW] 새 버전이 발견되었습니다! ($installedVersion -> $latestVersion)"
+            echo "SKIP_INSTALL=false" >> $env:GITHUB_ENV
+            echo "LATEST_VERSION=$latestVersion" >> $env:GITHUB_ENV
+          }
           
           Write-Host "✅ NEW ALPHA VERSION : $latestVersion"
 
@@ -102,6 +118,7 @@ jobs:
       - name: 🚀 Native SSH Deploy (Redmine Direct Download)
         env:
           SSH_KEY_DATA: ${{ secrets.SSH_PRIVATE_KEY }}
+        if: env.SKIP_INSTALL != 'true'
         run: |
           # SSH 접속 준비
           $keyPath = "$env:TEMP\id_auto"
@@ -166,6 +183,17 @@ jobs:
           
           # 💡 포트가 끝내 안 열리면 워크플로우를 실패 처리하여 원인을 바로 알 수 있게 합니다.
           if (-not $success) {
+              Write-Error "❌ 18443 포트가 열리지 않았습니다. 설치 로그를 확인해 주세요."
+              exit 1
+          }
+
+          # [기존 Step 4 포트 대기 로직 바로 뒤에 추가]
+          
+          if ($success) {
+              Write-Host "📝 [Step 5] 설치 성공 버전 서버에 기록: $env:LATEST_VERSION"
+              # 리눅스 서버에 텍스트 파일로 버전 저장
+             ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "echo $env:LATEST_VERSION > $remotePath/last_installed_version.txt"
+          } else {
               Write-Error "❌ 18443 포트가 열리지 않았습니다. 설치 로그를 확인해 주세요."
               exit 1
           }
