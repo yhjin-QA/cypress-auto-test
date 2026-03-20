@@ -8,10 +8,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '5 2 * * 1-5'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '5 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -28,71 +28,119 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Find Latest Build & 3rdparty Files
+      - name: 🔍 Find Latest Build from Redmine
         run: |
-          $deployFolder = "C:\Auto_Deploy"
-          # 1. 메인 엔진 파일 찾기
-          $mainFile = Get-ChildItem -Path $deployFolder -Filter "logcatch_linux_*.bin" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-          # 2. 동일한 버전의 3rdparty 파일 찾기
-          $partyFile = Get-ChildItem -Path $deployFolder -Filter "logcatch_3rdparty_*.bin" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-          if (!$mainFile -or !$partyFile) { Write-Error "❌ 필요한 파일이 부족합니다."; exit 1 }
+          $loginUrl = "https://project.warevalley.com/login"
+          $repoBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/show/logcatch/ALPHA/logcatch"
+          
+          # GitHub Secrets에서 아이디/비밀번호 로드
+          $userId = "${{ secrets.REDMINE_USER_ID }}"
+          $userPw = "${{ secrets.REDMINE_PW }}"
 
-          echo "MAIN_FILE_PATH=$($mainFile.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "MAIN_FILE_NAME=$($mainFile.Name)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "PARTY_FILE_PATH=$($partyFile.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          if (Test-Path cookies.txt) { Remove-Item cookies.txt }
 
-      - name: Native SSH & SCP Deploy (Session Disconnect Fix)
+          Write-Host "1️⃣ 레드마인 로그인 및 보안 토큰 추출 중..."
+          $loginHtml = (curl.exe -k -s -c cookies.txt $loginUrl) -join "`n"
+          
+          $token = ""
+          if ($loginHtml -match 'name="csrf-token" content="([^"]+)"' -or $loginHtml -match 'name="authenticity_token" value="([^"]+)"') {
+              $token = $matches[1]
+          } else {
+              Write-Error "❌ 보안 토큰을 찾을 수 없습니다."
+              exit 1
+          }
+
+          Write-Host "2️⃣ 세션 쿠키 생성 및 로그인 승인 중..."
+          curl.exe -k -s -b cookies.txt -c cookies.txt `
+                   --data-urlencode "username=$userId" `
+                   --data-urlencode "password=$userPw" `
+                   --data-urlencode "authenticity_token=$token" `
+                   $loginUrl > $null
+
+          Write-Host "3️⃣ 최신 버전 폴더명 탐색 중..."
+          $repoHtml = (curl.exe -k -s -b cookies.txt $repoBaseUrl) -join "`n"
+          $folderPattern = '([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_r[0-9]+)'
+          $allMatches = [regex]::Matches($repoHtml, $folderPattern)
+          
+          if ($allMatches.Count -eq 0) { Write-Error "❌ 버전 폴더를 찾을 수 없습니다."; exit 1 }
+          $latestVersion = $allMatches[$allMatches.Count - 1].Groups[1].Value
+          Write-Host "✅ 발견된 최신 버전: $latestVersion"
+
+          Write-Host "4️⃣ 폴더 내 설치 파일(.bin) 이름 추출 중..."
+          $folderUrl = "$repoBaseUrl/$latestVersion"
+          $folderHtml = (curl.exe -k -s -b cookies.txt $folderUrl) -join "`n"
+          
+          $mainFilePattern = '(logcatch_linux_x86-64_[^\"]+\.bin)'
+          $partyFilePattern = '(logcatch_3rdparty_linux_x86-64_[^\"]+\.bin)'
+          
+          $mainFileName = [regex]::Match($folderHtml, $mainFilePattern).Groups[1].Value
+          $partyFileName = [regex]::Match($folderHtml, $partyFilePattern).Groups[1].Value
+
+          if (!$mainFileName -or !$partyFileName) { 
+              Write-Error "❌ 최신 폴더($latestVersion)에서 bin 파일을 찾을 수 없습니다."
+              exit 1 
+          }
+
+          Write-Host "✅ 메인 파일: $mainFileName"
+          Write-Host "✅ 서드파티 파일: $partyFileName"
+
+          # 다른 Step에서 쓸 수 있도록 환경 변수에 등록
+          echo "LATEST_VERSION=$latestVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "MAIN_FILE_NAME=$mainFileName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "PARTY_FILE_NAME=$partyFileName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: 🚀 Native SSH Deploy (Redmine Direct Download)
         env:
           SSH_KEY_DATA: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          # 1. SSH Key Setup (Same as before)
+          # SSH 접속 준비
           $keyPath = "$env:TEMP\id_auto"
           $env:SSH_KEY_DATA.Trim() | Out-File -FilePath $keyPath -Encoding ASCII
-          
           $target = "${{ secrets.QA_SERVER_USER }}@${{ secrets.QA_SERVER_IP }}"
           $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
           $mainName = "${env:MAIN_FILE_NAME}"
           $partyName = "${env:PARTY_FILE_NAME}"
+          
+          $auth = "${{ secrets.REDMINE_USER_ID }}:${{ secrets.REDMINE_PW }}"
 
-          Write-Host "🚀 [Step 1] Cleanup & Automated Uninstall..."
-          # 1. 기존 DB 데이터 및 설정 파일 완전 강제 삭제 추가
-          # 2. 기존 프로세스 및 유저 정리
+          Write-Host "🚀 [Step 1] 기존 설치 환경 초기화..."
           $cleanup = "sudo rm -f /etc/profile.d/logcatch.sh; sudo pkill -9 -u logcatch || true; sudo pkill -9 postgres || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch /var/lib/pgsql"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $cleanup"
 
-          Write-Host "📂 [Step 2] Transferring Binaries..."
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "mkdir -p $remotePath"
-          scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:MAIN_FILE_PATH}" "${target}:${remotePath}/"
-          scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath "${env:PARTY_FILE_PATH}" "${target}:${remotePath}/"
+          Write-Host "📥 [Step 2] QA 서버가 레드마인에서 파일을 직접 다운로드..."
+          # 💡 웹 UI(/show/)가 아닌 실제 파일 데이터(/raw/) 주소 사용
+          $rawBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/raw/logcatch/ALPHA/logcatch/${env:LATEST_VERSION}"
+          
+          # 리눅스 서버에서 직접 curl -u 옵션으로 다운로드
+          $downloadCmd = "mkdir -p $remotePath && curl -k -u '$auth' -o $remotePath/$mainName $rawBaseUrl/$mainName && curl -k -u '$auth' -o $remotePath/$partyName $rawBaseUrl/$partyName"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$downloadCmd"
 
-          Write-Host "🚀 [Step 3] Executing Installation (Force-Disconnect after 90s)..."
+          Write-Host "🚀 [Step 3] 설치 스크립트 실행 (최대 90초 대기)..."
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 2; (sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr > /dev/null 2>&1 &)"
 
-          # 💡 PowerShell 방식의 타임아웃 처리
           $job = Start-Job -ScriptBlock {
               param($keyPath, $target, $cmd)
               ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target $cmd
           } -ArgumentList $keyPath, $target, "export TERM=linux; $install && $fixProfile && $svcControl"
 
-          # 90초 대기 후 작업이 안 끝나면 강제 종료하고 다음 단계 진행
           if (-not (Wait-Job $job -Timeout 90)) {
-              Write-Host "⚠️ Installation session timed out as expected (90s). Cleaning up session..."
+              Write-Host "⚠️ 설치 시간(90초) 경과. 세션 강제 종료 후 다음 단계 진행..."
               Stop-Job $job
           }
           Remove-Job $job
 
-          Write-Host "🕵️ [Step 4] Finalizing Readiness Check (Port 18443)..."
+          Write-Host "🕵️ [Step 4] 포트(18443) 기동 대기..."
           $success = $false
           for ($i = 1; $i -le 30; $i++) {
               Write-Host "⏳ Attempt $i/30: Polling Port 18443..."
-              # 이 짧은 SSH 세션은 결과만 받고 즉시 닫힙니다.
               $check = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "sudo netstat -tpln | grep -i listen | grep -c :18443"
-              
               if ($check.Trim() -match '^[1-9][0-9]*$') {
-                  Write-Host "✅ PORT_OPEN_DETECTED! Moving to Cypress Job."
+                  Write-Host "✅ 포트 오픈 감지! 설치 완료. Cypress 테스트로 넘어갑니다."
                   $success = $true
                   break
               }
@@ -274,6 +322,7 @@ jobs:
             cypress/reports/json_logs/*.json
             cypress/screenshots/**
           retention-days: 1
+          if-no-files-found: ignore
 
   # ====================================================
   # [Job 3] 종합 알림 (데이터 통합 & 리포트 생성)
