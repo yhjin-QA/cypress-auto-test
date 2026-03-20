@@ -353,7 +353,7 @@ jobs:
   # [Job 3] 종합 알림 (데이터 통합 & 리포트 생성)
   # ====================================================
   notify-result:
-    needs: [cypress-run, restart-task-run] # 💡 두 Job이 모두 끝나야 실행
+    needs: [deploy-qa, cypress-run, restart-task-run] # 💡 두 Job이 모두 끝나야 실행
     if: always()
     runs-on: [self-hosted, PC-Auto]
     
@@ -430,6 +430,10 @@ jobs:
           # 1️⃣ 기본 상태값 추출 (대소문자 구분 없이 비교하기 위해 소문자로 변환)
           $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
           $cypressStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
+
+          # 디버깅용 출력 (실행 로그에서 실제로 어떤 값이 들어오는지 볼 수 있습니다)
+          Write-Host "DEBUG - Deploy Status: [$deployStatus]"
+          Write-Host "DEBUG - Cypress Status: [$cypressStatus]"
 
           $isActuallyFailed = $false
           $statusDetail = ""
