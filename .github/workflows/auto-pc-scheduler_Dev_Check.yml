@@ -113,18 +113,20 @@ jobs:
           $cleanup = "sudo rm -f /etc/profile.d/logcatch.sh; sudo pkill -9 -u logcatch || true; sudo pkill -9 postgres || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch /var/lib/pgsql; rm -f $remotePath/*.bin"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $cleanup"
 
-
-          Write-Host "📥 [Step 2] QA 서버에 접근 권한(Cookie) 전달 및 파일 다운로드..."
-          # 💡 [핵심 추가] 윈도우 러너가 생성한 'cookies.txt'를 리눅스 서버로 먼저 전송!
+          Write-Host "📥 [Step 2] QA 서버에 접근 권한(Cookie) 전달 및 파일 다운로드 (안정성 강화)..."
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath cookies.txt "${target}:${remotePath}/cookies.txt"
 
           $rawBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/raw/logcatch/ALPHA/logcatch/${env:LATEST_VERSION}"
           
-          # 💡 [핵심 수정] 리눅스 서버가 전달받은 쿠키(-b 옵션)를 사용해 다운로드하도록 변경
-          $downloadCmd = "curl -k -b $remotePath/cookies.txt -o $remotePath/$mainName $rawBaseUrl/$mainName && curl -k -b $remotePath/cookies.txt -o $remotePath/$partyName $rawBaseUrl/$partyName"
+          # 💡 [네트워크 끊김 완벽 방어] 
+          # -f : 다운로드 실패 시 가짜 파일(HTML) 생성 방지
+          # --retry 3 : 끊기거나 실패하면 최대 3번까지 자동으로 다시 시도
+          # --retry-delay 2 : 재시도 전 2초 대기
+          $downloadCmd = "curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$mainName $rawBaseUrl/$mainName && curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$partyName $rawBaseUrl/$partyName"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$downloadCmd"
 
           Write-Host "🚀 [Step 3] 설치 스크립트 실행 (최대 180초 대기)..."
+          # 💡 다시 원래대로 정확한 파일명 지정 (다운로드가 완벽히 성공했을 때만 실행되므로 안전함)
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 2; (sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr > /dev/null 2>&1 &)"
