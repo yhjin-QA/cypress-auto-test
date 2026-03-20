@@ -42,7 +42,7 @@ jobs:
 
           if (Test-Path cookies.txt) { Remove-Item cookies.txt }
 
-          Write-Host "1️⃣ Redmine Login 및 보안 토큰 추출 중..."
+          Write-Host "1️⃣ 레드마인 로그인 및 보안 토큰 추출 중..."
           $loginHtml = (curl.exe -k -s -c cookies.txt $loginUrl) -join "`n"
           
           $token = ""
@@ -60,16 +60,21 @@ jobs:
                    --data-urlencode "authenticity_token=$token" `
                    $loginUrl > $null
 
-          Write-Host "3️⃣ new Alpha version 폴더명 탐색 중..."
+          Write-Host "3️⃣ 진짜 최신 버전 폴더명 수학적 탐색 중..."
           $repoHtml = (curl.exe -k -s -b cookies.txt $repoBaseUrl) -join "`n"
           $folderPattern = '([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_r[0-9]+)'
           $allMatches = [regex]::Matches($repoHtml, $folderPattern)
           
           if ($allMatches.Count -eq 0) { Write-Error "❌ 버전 폴더를 찾을 수 없습니다."; exit 1 }
-          $latestVersion = $allMatches[$allMatches.Count - 1].Groups[1].Value
-          Write-Host "✅ Serach new Alpha Version : $latestVersion"
+          
+          # 💡 [핵심 변경] 단순히 맨 밑의 값을 가져오지 않고, 추출된 버전들을 중복 제거한 뒤
+          # '_r' 뒤의 숫자(예: 34905)를 정수(int)로 변환하여 크기 순으로 정렬 후 가장 큰 값을 뽑습니다.
+          $versions = $allMatches | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique
+          $latestVersion = $versions | Sort-Object { [int]($_ -replace '.*_r', '') } | Select-Object -Last 1
+          
+          Write-Host "✅ Search New Alpha Version : $latestVersion"
 
-          Write-Host "4️⃣ 폴더 내 설치 파일(.bin) 이름 추출 중..."
+          Write-Host "4️⃣ Folder install file (.bin) name Searching..."
           $folderUrl = "$repoBaseUrl/$latestVersion"
           $folderHtml = (curl.exe -k -s -b cookies.txt $folderUrl) -join "`n"
           
@@ -84,8 +89,8 @@ jobs:
               exit 1 
           }
 
-          Write-Host "✅ Main File: $mainFileName"
-          Write-Host "✅ 3party File: $partyFileName"
+          Write-Host "✅ Main File : $mainFileName"
+          Write-Host "✅ 3parth File : $partyFileName"
 
           # 다른 Step에서 쓸 수 있도록 환경 변수에 등록
           echo "LATEST_VERSION=$latestVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
