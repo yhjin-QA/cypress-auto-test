@@ -437,27 +437,33 @@ jobs:
           $statusDetail = ""
 
           # 1️⃣ [설치 단계 체크] 설치 자체가 실패한 경우
-          if ($deployStatus -ne "success" -and $deployStatus -ne "skipped") {
+          if ($deployStatus -eq "failure") {
               $isActuallyFailed = $true
-              $statusDetail = "❌ [설치 실패] 설치 스크립트 에러 (main.sh 문법 오류 등)"
+              # 💡 팁: 단순 문법 오류가 아니라 '설치 단계 실패'임을 알리고 로그 확인 유도
+              $statusDetail = "❌ [설치 단계 실패] 설치 중 오류 발생 (로그 확인 필요)"
           }
-          # 2️⃣ [테스트 단계 체크] 설치는 됐는데 테스트에서 실패가 난 경우
+          elseif ($deployStatus -eq "cancelled") {
+              $isActuallyFailed = $true
+              $statusDetail = "🛑 [작업 취소] 사용자에 의해 또는 시스템에 의해 배포 취소"
+          }
+          # 2️⃣ [테스트 단계 체크] 설치는 성공했지만 테스트에서 문제가 생긴 경우
           else {
               if (Test-Path $screenshotPath) {
                   $failedScreenshots = Get-ChildItem -Path $screenshotPath -Recurse -Filter "*(failed)*.png"
                   if ($failedScreenshots.Count -gt 0) {
                       $isActuallyFailed = $true
                       $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-                      $statusDetail = "FAIL: $($failedScreenshots.Count) script ( $($failNames -join ', ') )"
+                      $statusDetail = "🔍 [테스트 실패] $($failedScreenshots.Count)개 시나리오 실패 ( $($failNames -join ', ') )"
                   }
               }
               
-              # 스크린샷은 없는데 작업 자체가 실패한 경우 (시스템 에러 등)
-              if (-not $isActuallyFailed -and ($cypressStatus -eq "failure" -or $cypressStatus -eq "cancelled")) {
+              # 설치는 됐는데 테스트 작업 자체가 실패한 경우
+              if (-not $isActuallyFailed -and ($cypressStatus -eq "failure")) {
                   $isActuallyFailed = $true
-                  $statusDetail = "⚠️ [테스트 중단] 테스트 실행 중 오류 발생"
+                  $statusDetail = "⚠️ [테스트 중단] Cypress 실행 중 시스템 오류"
               }
           }
+
 
           # 3️⃣ 최종 타이틀 결정
           $title = if ($isActuallyFailed) { $env:MSG_FAIL } else { $env:MSG_SUCCESS }
