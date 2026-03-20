@@ -49,7 +49,7 @@ jobs:
 
           if (Test-Path cookies.txt) { Remove-Item cookies.txt }
 
-          Write-Host "1️⃣ 레드마인 로그인 중..."
+          Write-Host "1️⃣ Redmine logining..."
           $loginHtml = (curl.exe -k -s -c cookies.txt $loginUrl) -join "`n"
           $token = if ($loginHtml -match 'name="authenticity_token" value="([^"]+)"') { $matches[1] } else { "" }
 
@@ -59,28 +59,28 @@ jobs:
                    --data-urlencode "authenticity_token=$token" `
                    $loginUrl > $null
 
-          Write-Host "2️⃣ 최신 버전 탐색 중..."
+          Write-Host "2️⃣ New Version Searching..."
           $repoHtml = (curl.exe -k -s -b cookies.txt $repoBaseUrl) -join "`n"
           $folderPattern = '([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_r[0-9]+)'
           $allMatches = [regex]::Matches($repoHtml, $folderPattern)
-          if ($allMatches.Count -eq 0) { Write-Error "❌ 버전을 찾을 수 없습니다."; exit 1 }
+          if ($allMatches.Count -eq 0) { Write-Error "❌ Cannot find version."; exit 1 }
           
           $versions = $allMatches | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique
           $latestVersion = $versions | Sort-Object { [version]($_ -replace '_r.*', '') }, { [int]($_ -replace '.*_r', '') } | Select-Object -Last 1
 
           # 💡 [필수 수정 2] SSH 명령어에 큰따옴표(")를 꼭 넣어야 합니다.
-          Write-Host "3️⃣ 서버 설치 버전 확인 중..."
+          Write-Host "3️⃣ Server Version install checking..."
           $installedVersion = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "cat $remotePath/last_installed_version.txt 2>/dev/null || echo none"
           
           if ($null -eq $installedVersion) { $installedVersion = "none" }
           $installedVersion = $installedVersion.ToString().Trim()
 
           if ($installedVersion -eq $latestVersion) {
-            Write-Host "✨ [SKIP] 현재 버전($installedVersion)이 최신입니다."
+            Write-Host "✨ [SKIP] Now Version($installedVersion) Latest Version."
             echo "SKIP_INSTALL=true" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             exit 0
           } else {
-            Write-Host "🚀 [NEW] 새 버전 발견: $latestVersion"
+            Write-Host "🚀 [NEW] New Version Find: $latestVersion"
             echo "SKIP_INSTALL=false" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             echo "LATEST_VERSION=$latestVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             
@@ -107,11 +107,11 @@ jobs:
           $mainName = "${env:MAIN_FILE_NAME}"
           $partyName = "${env:PARTY_FILE_NAME}"
 
-          Write-Host "🚀 [Step 1] 기존 설치 환경 초기화 및 이전 설치 파일(.bin) 청소..."
+          Write-Host "🚀 [Step 1] Initialize existing installation environment and clean previous installation files (.bin)...."
           $cleanup = "sudo rm -f /etc/profile.d/logcatch.sh; sudo pkill -9 -u logcatch || true; sudo pkill -9 postgres || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch /var/lib/pgsql; rm -f $remotePath/*.bin"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $cleanup"
 
-          Write-Host "📥 [Step 2] QA 서버에 접근 권한(Cookie) 전달 및 파일 다운로드 (안정성 강화)..."
+          Write-Host "📥 [Step 2] Delivery of access permissions (Cookies) to the QA server and file download (enhanced stability)..."
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath cookies.txt "${target}:${remotePath}/cookies.txt"
 
           # (수정 후) 👇 ALPHA를 RELEASE로 변경!
@@ -124,7 +124,7 @@ jobs:
           $downloadCmd = "curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$mainName $rawBaseUrl/$mainName && curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$partyName $rawBaseUrl/$partyName"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$downloadCmd"
 
-          Write-Host "🚀 [Step 3] 설치 스크립트 실행 (최대 180초 대기)..."
+          Write-Host "🚀 [Step 3] Run installation script (wait up to 180 seconds)...."
           # 💡 다시 원래대로 정확한 파일명 지정 (다운로드가 완벽히 성공했을 때만 실행되므로 안전함)
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
@@ -137,7 +137,7 @@ jobs:
 
           # 💡 타임아웃을 90초에서 180초(3분)로 넉넉하게 늘렸습니다.
           if (-not (Wait-Job $job -Timeout 180)) {
-              Write-Host "⚠️ 설치 시간(180초) 경과. 세션 강제 종료 후 다음 단계 진행..."
+              Write-Host "⚠️ Installation time (180 seconds) elapsed. Force close session and proceed to the next step...."
               Stop-Job $job
           }
           
@@ -147,13 +147,13 @@ jobs:
           Write-Host "=========================================================="
           Remove-Job $job
 
-          Write-Host "🕵️ [Step 4] 포트(18443) 기동 대기..."
+          Write-Host "🕵️ [Step 4] Port (18443) waiting to start..."
           $success = $false
           for ($i = 1; $i -le 30; $i++) {
               Write-Host "⏳ Attempt $i/30: Polling Port 18443..."
               $check = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "sudo netstat -tpln | grep -i listen | grep -c :18443"
               if ($check.Trim() -match '^[1-9][0-9]*$') {
-                  Write-Host "✅ 포트 오픈 감지! 설치 완료. Cypress 테스트로 넘어갑니다."
+                  Write-Host "✅ Port open detected! Installation complete. Proceeding to Cypress test."
                   $success = $true
                   break
               }
@@ -162,18 +162,18 @@ jobs:
           
           # 💡 포트가 끝내 안 열리면 워크플로우를 실패 처리하여 원인을 바로 알 수 있게 합니다.
           if (-not $success) {
-              Write-Error "❌ 18443 포트가 열리지 않았습니다. 설치 로그를 확인해 주세요."
+              Write-Error "❌ 18443 The port is not open. Please check the installation log."
               exit 1
           }
 
           # [기존 Step 4 포트 대기 로직 바로 뒤에 추가]
           
           if ($success) {
-              Write-Host "📝 [Step 5] 설치 성공 버전 서버에 기록: $env:LATEST_VERSION"
+              Write-Host "📝 [Step 5] Record successful installation version on server: $env:LATEST_VERSION"
               # 리눅스 서버에 텍스트 파일로 버전 저장
              ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "echo $env:LATEST_VERSION > $remotePath/last_installed_version.txt"
           } else {
-              Write-Error "❌ 18443 포트가 열리지 않았습니다. 설치 로그를 확인해 주세요."
+              Write-Error "❌ 18443 The port is not open. Please check the installation log."
               exit 1
           }
 
