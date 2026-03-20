@@ -1,8 +1,8 @@
-name: Auto-PC Work (Dev_ALPHA_UI)
+name: Auto-PC Work (Dev_RELEASE_UI)
 
 env:
   PRODUCT_NAME: "로그캐치"
-  TEST_TYPE: Dev_ALPHA
+  TEST_TYPE: Dev_Release
   TZ: Asia/Seoul
    # 👇 여기에 추가하세요! (GitHub Actions가 내부적으로 Node.js 24를 사용하도록 강제함)
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -34,7 +34,8 @@ jobs:
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
           $loginUrl = "https://project.warevalley.com/login"
-          $repoBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/show/logcatch/ALPHA/logcatch"
+          # (수정 후) 👇 ALPHA를 RELEASE로 변경!
+          $repoBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/show/logcatch/RELEASE/logcatch"
           
           # GitHub Secrets에서 아이디/비밀번호 로드
           $userId = "${{ secrets.REDMINE_USER_ID }}"
@@ -117,7 +118,8 @@ jobs:
           Write-Host "📥 [Step 2] QA 서버에 접근 권한(Cookie) 전달 및 파일 다운로드 (안정성 강화)..."
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath cookies.txt "${target}:${remotePath}/cookies.txt"
 
-          $rawBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/raw/logcatch/ALPHA/logcatch/${env:LATEST_VERSION}"
+          # (수정 후) 👇 ALPHA를 RELEASE로 변경!
+          $rawBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/raw/logcatch/RELEASE/logcatch/${env:LATEST_VERSION}"
           
           # 💡 [네트워크 끊김 완벽 방어] 
           # -f : 다운로드 실패 시 가짜 파일(HTML) 생성 방지
