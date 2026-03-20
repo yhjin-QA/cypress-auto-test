@@ -42,7 +42,7 @@ jobs:
 
           if (Test-Path cookies.txt) { Remove-Item cookies.txt }
 
-          Write-Host "1️⃣ 레드마인 로그인 및 보안 토큰 추출 중..."
+          Write-Host "1️⃣ Redmine Login 및 보안 토큰 추출 중..."
           $loginHtml = (curl.exe -k -s -c cookies.txt $loginUrl) -join "`n"
           
           $token = ""
@@ -60,14 +60,14 @@ jobs:
                    --data-urlencode "authenticity_token=$token" `
                    $loginUrl > $null
 
-          Write-Host "3️⃣ 최신 버전 폴더명 탐색 중..."
+          Write-Host "3️⃣ new Alpha version 폴더명 탐색 중..."
           $repoHtml = (curl.exe -k -s -b cookies.txt $repoBaseUrl) -join "`n"
           $folderPattern = '([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_r[0-9]+)'
           $allMatches = [regex]::Matches($repoHtml, $folderPattern)
           
           if ($allMatches.Count -eq 0) { Write-Error "❌ 버전 폴더를 찾을 수 없습니다."; exit 1 }
           $latestVersion = $allMatches[$allMatches.Count - 1].Groups[1].Value
-          Write-Host "✅ 발견된 최신 버전: $latestVersion"
+          Write-Host "✅ Serach new Alpha Version : $latestVersion"
 
           Write-Host "4️⃣ 폴더 내 설치 파일(.bin) 이름 추출 중..."
           $folderUrl = "$repoBaseUrl/$latestVersion"
@@ -84,8 +84,8 @@ jobs:
               exit 1 
           }
 
-          Write-Host "✅ 메인 파일: $mainFileName"
-          Write-Host "✅ 서드파티 파일: $partyFileName"
+          Write-Host "✅ Main File: $mainFileName"
+          Write-Host "✅ 3party File: $partyFileName"
 
           # 다른 Step에서 쓸 수 있도록 환경 변수에 등록
           echo "LATEST_VERSION=$latestVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -103,19 +103,19 @@ jobs:
           $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
           $mainName = "${env:MAIN_FILE_NAME}"
           $partyName = "${env:PARTY_FILE_NAME}"
-          
-          $auth = "${{ secrets.REDMINE_USER_ID }}:${{ secrets.REDMINE_PW }}"
 
           Write-Host "🚀 [Step 1] 기존 설치 환경 초기화..."
           $cleanup = "sudo rm -f /etc/profile.d/logcatch.sh; sudo pkill -9 -u logcatch || true; sudo pkill -9 postgres || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch /var/lib/pgsql"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $cleanup"
 
-          Write-Host "📥 [Step 2] QA 서버가 레드마인에서 파일을 직접 다운로드..."
-          # 💡 웹 UI(/show/)가 아닌 실제 파일 데이터(/raw/) 주소 사용
+          Write-Host "📥 [Step 2] QA 서버에 접근 권한(Cookie) 전달 및 파일 다운로드..."
+          # 💡 [핵심 추가] 윈도우 러너가 생성한 'cookies.txt'를 리눅스 서버로 먼저 전송!
+          scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath cookies.txt "${target}:${remotePath}/cookies.txt"
+
           $rawBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/raw/logcatch/ALPHA/logcatch/${env:LATEST_VERSION}"
           
-          # 리눅스 서버에서 직접 curl -u 옵션으로 다운로드
-          $downloadCmd = "mkdir -p $remotePath && curl -k -u '$auth' -o $remotePath/$mainName $rawBaseUrl/$mainName && curl -k -u '$auth' -o $remotePath/$partyName $rawBaseUrl/$partyName"
+          # 💡 [핵심 수정] 리눅스 서버가 전달받은 쿠키(-b 옵션)를 사용해 다운로드하도록 변경
+          $downloadCmd = "curl -k -b $remotePath/cookies.txt -o $remotePath/$mainName $rawBaseUrl/$mainName && curl -k -b $remotePath/cookies.txt -o $remotePath/$partyName $rawBaseUrl/$partyName"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$downloadCmd"
 
           Write-Host "🚀 [Step 3] 설치 스크립트 실행 (최대 90초 대기)..."
