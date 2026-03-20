@@ -60,19 +60,20 @@ jobs:
                    --data-urlencode "authenticity_token=$token" `
                    $loginUrl > $null
 
-          Write-Host "3️⃣ 진짜 최신 버전 폴더명 수학적 탐색 중..."
+          Write-Host "진짜 최신 버전 폴더명 수학적 탐색 중 (버전+리비전 완벽 비교)..."
           $repoHtml = (curl.exe -k -s -b cookies.txt $repoBaseUrl) -join "`n"
           $folderPattern = '([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_r[0-9]+)'
           $allMatches = [regex]::Matches($repoHtml, $folderPattern)
           
           if ($allMatches.Count -eq 0) { Write-Error "❌ 버전 폴더를 찾을 수 없습니다."; exit 1 }
           
-          # 💡 [핵심 변경] 단순히 맨 밑의 값을 가져오지 않고, 추출된 버전들을 중복 제거한 뒤
-          # '_r' 뒤의 숫자(예: 34905)를 정수(int)로 변환하여 크기 순으로 정렬 후 가장 큰 값을 뽑습니다.
+          # 💡 [궁극의 정렬 로직] 
+          # 1순위: 앞의 '3.1.0.0' 부분을 [version] 타입으로 캐스팅하여 메이저/마이너 버전부터 비교
+          # 2순위: 앞 버전이 같을 경우, 뒤의 '_r34905' 숫자 부분을 [int]로 캐스팅하여 최신 빌드 비교
           $versions = $allMatches | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique
-          $latestVersion = $versions | Sort-Object { [int]($_ -replace '.*_r', '') } | Select-Object -Last 1
+          $latestVersion = $versions | Sort-Object { [version]($_ -replace '_r.*', '') }, { [int]($_ -replace '.*_r', '') } | Select-Object -Last 1
           
-          Write-Host "✅ Search New Alpha Version : $latestVersion"
+          Write-Host "✅ NEW ALPHA VERSION : $latestVersion"
 
           Write-Host "4️⃣ Folder install file (.bin) name Searching..."
           $folderUrl = "$repoBaseUrl/$latestVersion"
