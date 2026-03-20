@@ -1,8 +1,8 @@
-name: Auto-PC Work (Dev_UI&Basic)
+name: Auto-PC Work (Dev_ALPHA_UI)
 
 env:
   PRODUCT_NAME: "로그캐치"
-  TEST_TYPE: Dev
+  TEST_TYPE: Dev_ALPHA
   TZ: Asia/Seoul
    # 👇 여기에 추가하세요! (GitHub Actions가 내부적으로 Node.js 24를 사용하도록 강제함)
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -89,8 +89,8 @@ jobs:
               exit 1 
           }
 
-          Write-Host "✅ Main File : $mainFileName"
-          Write-Host "✅ 3parth File : $partyFileName"
+          Write-Host "✅Main File : $mainFileName"
+          Write-Host "✅3rd party File : $partyFileName"
 
           # 다른 Step에서 쓸 수 있도록 환경 변수에 등록
           echo "LATEST_VERSION=$latestVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -109,9 +109,10 @@ jobs:
           $mainName = "${env:MAIN_FILE_NAME}"
           $partyName = "${env:PARTY_FILE_NAME}"
 
-          Write-Host "🚀 [Step 1] 기존 설치 환경 초기화..."
-          $cleanup = "sudo rm -f /etc/profile.d/logcatch.sh; sudo pkill -9 -u logcatch || true; sudo pkill -9 postgres || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch /var/lib/pgsql"
+          Write-Host "🚀 [Step 1] 기존 설치 환경 초기화 및 이전 설치 파일(.bin) 청소..."
+          $cleanup = "sudo rm -f /etc/profile.d/logcatch.sh; sudo pkill -9 -u logcatch || true; sudo pkill -9 postgres || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch /var/lib/pgsql; rm -f $remotePath/*.bin"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $cleanup"
+
 
           Write-Host "📥 [Step 2] QA 서버에 접근 권한(Cookie) 전달 및 파일 다운로드..."
           # 💡 [핵심 추가] 윈도우 러너가 생성한 'cookies.txt'를 리눅스 서버로 먼저 전송!
