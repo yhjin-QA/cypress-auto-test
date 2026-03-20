@@ -118,7 +118,7 @@ jobs:
           $downloadCmd = "curl -k -b $remotePath/cookies.txt -o $remotePath/$mainName $rawBaseUrl/$mainName && curl -k -b $remotePath/cookies.txt -o $remotePath/$partyName $rawBaseUrl/$partyName"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$downloadCmd"
 
-          Write-Host "🚀 [Step 3] 설치 스크립트 실행 (최대 90초 대기)..."
+          Write-Host "🚀 [Step 3] 설치 스크립트 실행 (최대 180초 대기)..."
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 2; (sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr > /dev/null 2>&1 &)"
@@ -126,12 +126,18 @@ jobs:
           $job = Start-Job -ScriptBlock {
               param($keyPath, $target, $cmd)
               ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target $cmd
-          } -ArgumentList $keyPath, $target, "export TERM=linux; $install && $fixProfile && $svcControl"
+          } -ArgumentList $keyPath, $target, "export TERM=linux; ls -lh $remotePath; $install && $fixProfile && $svcControl"
 
-          if (-not (Wait-Job $job -Timeout 90)) {
-              Write-Host "⚠️ 설치 시간(90초) 경과. 세션 강제 종료 후 다음 단계 진행..."
+          # 💡 타임아웃을 90초에서 180초(3분)로 넉넉하게 늘렸습니다.
+          if (-not (Wait-Job $job -Timeout 180)) {
+              Write-Host "⚠️ 설치 시간(180초) 경과. 세션 강제 종료 후 다음 단계 진행..."
               Stop-Job $job
           }
+          
+          # 💡 [핵심 추가] 가려져 있던 리눅스 설치 로그를 화면에 낱낱이 출력합니다!
+          Write-Host "📜 ================= [ real install log result ] ================="
+          Receive-Job $job
+          Write-Host "=========================================================="
           Remove-Job $job
 
           Write-Host "🕵️ [Step 4] 포트(18443) 기동 대기..."
@@ -145,6 +151,12 @@ jobs:
                   break
               }
               Start-Sleep -Seconds 15
+          }
+          
+          # 💡 포트가 끝내 안 열리면 워크플로우를 실패 처리하여 원인을 바로 알 수 있게 합니다.
+          if (-not $success) {
+              Write-Error "❌ 18443 포트가 열리지 않았습니다. 설치 로그를 확인해 주세요."
+              exit 1
           }
 
 
