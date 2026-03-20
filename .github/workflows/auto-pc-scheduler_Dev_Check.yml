@@ -427,45 +427,48 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
+          # 1️⃣ 기본 상태값 추출 (대소문자 구분 없이 비교하기 위해 소문자로 변환)
           $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
           $cypressStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
-          
-          $reportFolder = "all_raw_data/reports/json_logs"
-          $screenshotPath = "all_raw_data/screenshots"
-          
+
           $isActuallyFailed = $false
           $statusDetail = ""
 
-          # 1 [설치 단계 체크] 설치 자체가 실패한 경우
+          # 2️⃣ [설치 단계 체크] 
           if ($deployStatus -eq "failure") {
               $isActuallyFailed = $true
-              # 💡 팁: 단순 문법 오류가 아니라 '설치 단계 실패'임을 알리고 로그 확인 유도
-              $statusDetail = " [Installation Step Failed] Error occurred during installation (Log check required)"
+              $statusDetail = "❌ [Installation Failed] Error occurred during installation (Log check required)"
           }
           elseif ($deployStatus -eq "cancelled") {
               $isActuallyFailed = $true
-              $statusDetail = " [Cancel Action] Cancel deployment by user or system"
+              $statusDetail = "🛑 [Cancel Action] Deployment was cancelled"
           }
-          # 2[테스트 단계 체크] 설치는 성공했지만 테스트에서 문제가 생긴 경우
+          # 💡 [핵심 추가] 설치가 성공하지 않았는데 failure도 아니라면(예: skipped) 테스트가 안 돈 것이므로 실패로 간주
+          elseif ($deployStatus -ne "success") {
+              $isActuallyFailed = $true
+              $statusDetail = "⚠️ [Not Executed] Installation step did not complete successfully"
+          }
+          
+          # 3️⃣ [테스트 단계 체크] 설치는 성공했을 때만 테스트 결과를 상세히 봅니다.
           else {
+              # 스크린샷 파일 확인
               if (Test-Path $screenshotPath) {
                   $failedScreenshots = Get-ChildItem -Path $screenshotPath -Recurse -Filter "*(failed)*.png"
                   if ($failedScreenshots.Count -gt 0) {
                       $isActuallyFailed = $true
                       $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-                      $statusDetail = " [Test failed] $($failedScreenshots.Count) Scenario failure ( $($failNames -join ', ') )"
+                      $statusDetail = "🔍 [Test Failed] $($failedScreenshots.Count) Scenario failure ( $($failNames -join ', ') )"
                   }
               }
               
-              # 설치는 됐는데 테스트 작업 자체가 실패한 경우
-              if (-not $isActuallyFailed -and ($cypressStatus -eq "failure")) {
+              # 스크린샷은 없는데 테스트 작업 자체가 실패/취소된 경우
+              if (-not $isActuallyFailed -and ($cypressStatus -eq "failure" -or $cypressStatus -eq "cancelled")) {
                   $isActuallyFailed = $true
-                  $statusDetail = " [Test Stopped] System error while running Cypress"
+                  $statusDetail = "⚠️ [Test Stopped] System error or cancellation while running Cypress"
               }
           }
 
-
-          # 3️⃣ 최종 타이틀 결정
+          # 4️⃣ 최종 타이틀 결정 (매우 중요!)
           $title = if ($isActuallyFailed) { $env:MSG_FAIL } else { $env:MSG_SUCCESS }
 
           # 메시지 조립
