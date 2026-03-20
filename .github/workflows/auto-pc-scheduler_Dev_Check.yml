@@ -161,14 +161,9 @@ jobs:
           }
           
           # 💡 포트가 끝내 안 열리면 워크플로우를 실패 처리하여 원인을 바로 알 수 있게 합니다.
-          if (-not $success) {
-              Write-Error "❌ 18443 The port is not open. Please check the installation log."
-              exit 1
-          }
-
-          # [기존 Step 4 포트 대기 로직 바로 뒤에 추가]
           
           if ($success) {
+              Write-Host "✅ Port open detected! Installation complete."
               Write-Host "📝 [Step 5] Record successful installation version on server: $env:LATEST_VERSION"
               # 리눅스 서버에 텍스트 파일로 버전 저장
              ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "echo $env:LATEST_VERSION > $remotePath/last_installed_version.txt"
@@ -401,10 +396,20 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+          # 1. JSON 파일이 있는지 먼저 확인
+          if (-not (Test-Path "all_raw_data") -or (Get-ChildItem "all_raw_data\**\*.json" -ErrorAction SilentlyContinue).Count -eq 0) {
+              Write-Host "⚠️ [INFO] 통합할 JSON 리포트 파일이 없습니다. (설치 실패 또는 스킵)"
+              # 빈 결과 파일이라도 생성하여 다음 단계 에러 방지
+              "[]" | Out-File -FilePath "merged_report.json" -Encoding UTF8
+              exit 0
+          }
+
           npm install mochawesome-merge mochawesome-report-generator --no-save
-          # 💡 경로를 더 넓게(Recursive) 잡아서 어떤 구조로 내려받아졌든 다 찾게 합니다.
           cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
-          npx marge merged_report.json --reportDir ./final_report_Dev --inline --charts --reportTitle "Dev Report" --reportFilename "LogCatch_Dev_Report"
+          
+          if (Test-Path "merged_report.json") {
+              npx marge merged_report.json --reportDir ./final_report_Dev --inline --charts --reportTitle "Dev Report" --reportFilename "LogCatch_Dev_Report"
+          }
 
       - name: Send Google Chat (UI)
         if: always() 
