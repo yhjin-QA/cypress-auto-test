@@ -8,10 +8,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  push:
-    branches: [ "master" ]
-  schedule:
-    - cron: '5 2 * * 1-5'
+  #push:
+  #  branches: [ "master" ]
+  #schedule:
+  #  - cron: '5 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -441,16 +441,16 @@ jobs:
           # 2️⃣ [설치 단계 체크] 
           if ($deployStatus -eq "failure") {
               $isActuallyFailed = $true
-              $statusDetail = "❌ [Installation Failed] Error occurred during installation (Log check required)"
+              $statusDetail = "[Installation Failed] Error occurred during installation (Log check required)"
           }
           elseif ($deployStatus -eq "cancelled") {
               $isActuallyFailed = $true
-              $statusDetail = "🛑 [Cancel Action] Deployment was cancelled"
+              $statusDetail = " [Cancel Action] Deployment was cancelled"
           }
           # 💡 [핵심 추가] 설치가 성공하지 않았는데 failure도 아니라면(예: skipped) 테스트가 안 돈 것이므로 실패로 간주
           elseif ($deployStatus -ne "success") {
               $isActuallyFailed = $true
-              $statusDetail = "⚠️ [Not Executed] Installation step did not complete successfully"
+              $statusDetail = " [Not Executed] Installation step did not complete successfully"
           }
           
           # 3️⃣ [테스트 단계 체크] 설치는 성공했을 때만 테스트 결과를 상세히 봅니다.
@@ -461,14 +461,14 @@ jobs:
                   if ($failedScreenshots.Count -gt 0) {
                       $isActuallyFailed = $true
                       $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-                      $statusDetail = "🔍 [Test Failed] $($failedScreenshots.Count) Scenario failure ( $($failNames -join ', ') )"
+                      $statusDetail = "[Test Failed] $($failedScreenshots.Count) Scenario failure ( $($failNames -join ', ') )"
                   }
               }
               
               # 스크린샷은 없는데 테스트 작업 자체가 실패/취소된 경우
               if (-not $isActuallyFailed -and ($cypressStatus -eq "failure" -or $cypressStatus -eq "cancelled")) {
                   $isActuallyFailed = $true
-                  $statusDetail = "⚠️ [Test Stopped] System error or cancellation while running Cypress"
+                  $statusDetail = " [Test Stopped] System error or cancellation while running Cypress"
               }
           }
 
