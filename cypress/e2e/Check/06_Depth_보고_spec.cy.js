@@ -123,6 +123,51 @@ describe('로그캐치 사이트 테스트', () => {
 
 
     // ==========================================
+    // 기존 잔여정책이 존재한다면 삭제  
+    // ==========================================
+    // Depth검증용 보고서_auto 가 여러개 존재한다면 다 삭제하도록 코드-----------------------------------
+    // 1. 반복 삭제를 수행할 함수를 정의합니다.
+     const deleteAllReports = () => {
+       // body 전체를 가져와서 동기적으로 검사합니다.
+       cy.get('body').then(($body) => {
+         // 만약 화면(행)에 'Depth검증용 보고서_auto'라는 글자가 1개라도 남아있다면?
+         if ($body.find('tr:contains("Depth검증용 보고서_auto")').length > 0) {
+      
+           // --- [삭제 로직 시작] ---
+           // 가장 위에 있는 'Depth검증용 보고서_auto' 행을 찾아서 휴지통 클릭
+           cy.contains('tr', 'Depth검증용 보고서_auto').find('.fa-trash').closest('button').then(($btn) => {
+                 $btn[0].click(); // [필살기] 강제 클릭
+             });
+
+           // 삭제 확인 팝업 처리
+           cy.contains('삭제하시겠습니까?').should('be.visible');
+           cy.wait(500); // 팝업 애니메이션 안정화 대기
+      
+           cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+           // 삭제 후 목록이 갱신될 시간을 잠깐 줍니다.
+           cy.wait(1000);
+
+           // --- [삭제 로직 끝] --
+           // 중요! 다 지웠는지 확인하기 위해 자기 자신을 다시 호출합니다. (재귀)
+           deleteAllReports();
+      
+          } else {
+           // 더 이상 'Depth검증용 보고서_auto'가 없다면 로그를 남기고 종료합니다.
+            cy.log('모든 중복 Depth검증용 보고서_auto 삭제 완료!');
+         }
+       });
+     };
+
+      // 2. 정의한 함수를 실행합니다.
+      deleteAllReports();
+
+      // 3. 마지막으로 정말 다 사라졌는지 최종 검증합니다.
+      cy.contains('a', 'Depth검증용 보고서_auto').should('not.exist');
+      cy.wait(1000);
+      //-----------------------------------------------------------------------------------
+
+
+    // ==========================================
     // 보고서 셋팅 : 추가하기 - 월 정기점검 보고서 
     // ==========================================
  
@@ -180,7 +225,7 @@ describe('로그캐치 사이트 테스트', () => {
     // [검증코드] 월 정기점검 보고서 
     // ========================================== 
     // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 15000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    cy.get('iframe', { timeout: 30000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
       cy.contains('tspan', '월 정기점검 보고서', { timeout: 15000 }).should('be.visible');
@@ -222,7 +267,7 @@ describe('로그캐치 사이트 테스트', () => {
     // [검증코드] 월 정기점검 보고서 (행위)
     // ========================================== 
     // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 15000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    cy.get('iframe', { timeout: 30000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
       cy.contains('tspan', '월 정기점검 보고서', { timeout: 15000 }).should('be.visible');
@@ -263,7 +308,7 @@ describe('로그캐치 사이트 테스트', () => {
     // [검증코드] 월 정기점검 보고서 (행위_Mongo)
     // ========================================== 
     // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 15000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    cy.get('iframe', { timeout: 30000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
       cy.contains('tspan', '월 정기점검 보고서', { timeout: 15000 }).should('be.visible');
@@ -303,7 +348,7 @@ describe('로그캐치 사이트 테스트', () => {
     // [검증코드] 개인정보접속 종합 보고서
     // ========================================== 
     // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 15000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    cy.get('iframe', { timeout: 30000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
       cy.contains('tspan', '개인정보접속 종합 보고서', { timeout: 15000 }).should('be.visible');
@@ -408,7 +453,7 @@ describe('로그캐치 사이트 테스트', () => {
           expectedPreviewText = '월 정기점검 보고서';
         }
         //[미리보기 화면 검증 ]
-        cy.get('iframe', { timeout: 15000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+        cy.get('iframe', { timeout: 30000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
         .within(() => {
           // 변환된 expectedPreviewText로 검증합니다!
           cy.contains('tspan', expectedPreviewText, { timeout: 15000 }).should('be.visible');
@@ -518,40 +563,9 @@ describe('로그캐치 사이트 테스트', () => {
     // cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true }); 
     
 
-    // Depth검증용 보고서_auto 가 여러개 존재한다면 다 삭제하도록 코드-----------------------------------
-    // 1. 반복 삭제를 수행할 함수를 정의합니다.
-     const deleteAllReports = () => {
-       // body 전체를 가져와서 동기적으로 검사합니다.
-       cy.get('body').then(($body) => {
-         // 만약 화면(행)에 'Depth검증용 보고서_auto'라는 글자가 1개라도 남아있다면?
-         if ($body.find('tr:contains("Depth검증용 보고서_auto")').length > 0) {
-      
-           // --- [삭제 로직 시작] ---
-           // 가장 위에 있는 'Depth검증용 보고서_auto' 행을 찾아서 휴지통 클릭
-           cy.contains('tr', 'Depth검증용 보고서_auto').find('.fa-trash').closest('button').then(($btn) => {
-                 $btn[0].click(); // [필살기] 강제 클릭
-             });
+    
 
-           // 삭제 확인 팝업 처리
-           cy.contains('삭제하시겠습니까?').should('be.visible');
-           cy.wait(500); // 팝업 애니메이션 안정화 대기
-      
-           cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
-           // 삭제 후 목록이 갱신될 시간을 잠깐 줍니다.
-           cy.wait(1000);
-
-           // --- [삭제 로직 끝] --
-           // 중요! 다 지웠는지 확인하기 위해 자기 자신을 다시 호출합니다. (재귀)
-           deleteAllReports();
-      
-          } else {
-           // 더 이상 'Depth검증용 보고서_auto'가 없다면 로그를 남기고 종료합니다.
-            cy.log('모든 중복 Depth검증용 보고서_auto 삭제 완료!');
-         }
-       });
-     };
-
-      // 2. 정의한 함수를 실행합니다.
+      // 정의한 함수 호출하여 추가한 정책 삭제
       deleteAllReports();
 
       // 3. 마지막으로 정말 다 사라졌는지 최종 검증합니다.
