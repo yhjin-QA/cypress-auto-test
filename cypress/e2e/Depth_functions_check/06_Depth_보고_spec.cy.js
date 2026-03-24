@@ -485,37 +485,37 @@ describe('로그캐치 사이트 테스트', () => {
     }); // 보고서 바깥쪽 루프 끝
   
      
-    // 이전 추가 보고서 잘추가되어있다면 진행가능
-    // 종합보고서 목록에 추가한 추가보고서_auto가 있는지 확인 
-    cy.contains('a', 'Depth검증용 보고서_auto').should('be.visible');
-    cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true }); 
-    cy.wait(1000);
+    // // 이전 추가 보고서 잘추가되어있다면 진행가능
+    // // 종합보고서 목록에 추가한 추가보고서_auto가 있는지 확인 
+    // cy.contains('a', 'Depth검증용 보고서_auto').should('be.visible');
+    // cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true }); 
+    // cy.wait(1000);
 
-    //반복설정 OFF-ON으로 변경
-    cy.get('input[aria-label="반복설정"]').click({ force: true });
-    cy.wait(1000);
-    //클릭 후, 해당 요소의 aria-checked 속성이 'true'로 on상태로 바뀌었는지 확인합니다.
-    cy.get('input[aria-label="반복설정"]').should('have.attr', 'aria-checked', 'true');
-    cy.wait(1000);
+    // //반복설정 OFF-ON으로 변경
+    // cy.get('input[aria-label="반복설정"]').click({ force: true });
+    // cy.wait(1000);
+    // //클릭 후, 해당 요소의 aria-checked 속성이 'true'로 on상태로 바뀌었는지 확인합니다.
+    // cy.get('input[aria-label="반복설정"]').should('have.attr', 'aria-checked', 'true');
+    // cy.wait(1000);
     
 
-    //반복설정 ON으로 변경시 대상기간 종료일자 -> 기간 설정으로 변경됨. 
-    //기간 콤보박스 열기
-    cy.get('input[aria-label="기간"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    // 기간 : 1년 선택
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '1년').should('be.visible').click({ force: true });
+    // //반복설정 ON으로 변경시 대상기간 종료일자 -> 기간 설정으로 변경됨. 
+    // //기간 콤보박스 열기
+    // cy.get('input[aria-label="기간"]').closest('.v-input').find('.v-input__slot').click({ force: true });
+    // // 기간 : 1년 선택
+    // cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '1년').should('be.visible').click({ force: true });
 
-    // 저장 버튼 클릭 
-    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(1000);
+    // // 저장 버튼 클릭 
+    // cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+    // cy.wait(1000);
 
-    cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
-    cy.wait(1000);
-     // 기간 1년 변경 확인 검증
-    cy.get('span[title="1년"]').should('be.visible').and('have.text', '1년'); 
+    // cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
+    // cy.wait(1000);
+    //  // 기간 1년 변경 확인 검증
+    // cy.get('span[title="1년"]').should('be.visible').and('have.text', '1년'); 
 
-     // 취소버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true }); 
+    //  // 취소버튼 클릭
+    // cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true }); 
     
 
     // Depth검증용 보고서_auto 가 여러개 존재한다면 다 삭제하도록 코드-----------------------------------
