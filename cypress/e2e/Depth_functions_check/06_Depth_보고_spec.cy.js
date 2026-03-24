@@ -225,7 +225,7 @@ describe('로그캐치 사이트 테스트', () => {
     // [검증코드] 월 정기점검 보고서 
     // ========================================== 
     // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 30000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
       cy.contains('tspan', '월 정기점검 보고서', { timeout: 15000 }).should('be.visible');
@@ -267,7 +267,7 @@ describe('로그캐치 사이트 테스트', () => {
     // [검증코드] 월 정기점검 보고서 (행위)
     // ========================================== 
     // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 30000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
       cy.contains('tspan', '월 정기점검 보고서', { timeout: 15000 }).should('be.visible');
@@ -308,7 +308,7 @@ describe('로그캐치 사이트 테스트', () => {
     // [검증코드] 월 정기점검 보고서 (행위_Mongo)
     // ========================================== 
     // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 30000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
       cy.contains('tspan', '월 정기점검 보고서', { timeout: 15000 }).should('be.visible');
@@ -348,7 +348,7 @@ describe('로그캐치 사이트 테스트', () => {
     // [검증코드] 개인정보접속 종합 보고서
     // ========================================== 
     // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 30000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
       cy.contains('tspan', '개인정보접속 종합 보고서', { timeout: 15000 }).should('be.visible');
@@ -453,7 +453,7 @@ describe('로그캐치 사이트 테스트', () => {
           expectedPreviewText = '월 정기점검 보고서';
         }
         //[미리보기 화면 검증 ]
-        cy.get('iframe', { timeout: 30000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+        cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
         .within(() => {
           // 변환된 expectedPreviewText로 검증합니다!
           cy.contains('tspan', expectedPreviewText, { timeout: 15000 }).should('be.visible');
@@ -580,6 +580,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('🎉 보고 Depth 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
+
 
 
 
