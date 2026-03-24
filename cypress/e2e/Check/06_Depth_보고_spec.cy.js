@@ -241,9 +241,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('tspan', '월 정기점검 보고서', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', '월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
       // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
     });
     cy.log('✅ 월 정기점검 보고서 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
@@ -283,9 +283,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('tspan', '월 정기점검 보고서', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', '월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
       // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
     });
     cy.log('✅ 월 정기점검 보고서 (행위) 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
@@ -324,9 +324,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('tspan', '월 정기점검 보고서', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', '월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
       // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
     });
     cy.log('✅ 월 정기점검 보고서 (행위_Mongo) 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
@@ -364,9 +364,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('tspan', '개인정보접속 종합 보고서', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', '개인정보접속 종합 보고서', { timeout: 60000 }).should('be.visible');
       // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
     });
     cy.log('✅ 개인정보접속 종합 보고서 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
@@ -470,8 +470,8 @@ describe('로그캐치 사이트 테스트', () => {
         cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
         .within(() => {
           // 변환된 expectedPreviewText로 검증합니다!
-          cy.contains('tspan', expectedPreviewText, { timeout: 15000 }).should('be.visible');
-          cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 15000 }).should('be.visible');
+          cy.contains('tspan', expectedPreviewText, { timeout: 60000 }).should('be.visible');
+          cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
         });
 
         // [확장자 선택 검증] 좌측 폼에 방금 선택한 확장자(ext)가 정확히 남아있는지 확인

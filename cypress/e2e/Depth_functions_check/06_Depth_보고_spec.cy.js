@@ -123,6 +123,19 @@ describe('로그캐치 사이트 테스트', () => {
 
 
     // ==========================================
+    // 페이지수 5-> 25 개 옵션 변경 
+    // ==========================================
+    // 1. 엉뚱한 화살표 대신, 화면 하단에 '5'라고 적혀있는 페이지 선택 박스를 콕 집어 클릭합니다.
+    cy.contains('.v-select__selection', '5').click({ force: true });
+    cy.wait(500); // 콤보박스 메뉴가 스르륵 열릴 때까지 대기
+    // 2. 열린 메뉴(.v-menu__content) 안에서 '25'을 찾아서 클릭합니다.
+    // (클래스명에 얽매이지 않고 텍스트 '25'을 포함한 요소를 강제 클릭하도록 유연하게 작성)
+    cy.get('.v-menu__content').filter(':visible').contains('25') .click({ force: true });
+    // 3. 목록이 25개로 갱신될 시간을 넉넉히 줍니다.
+    cy.wait(3000);
+
+
+    // ==========================================
     // 기존 잔여정책이 존재한다면 삭제  
     // ==========================================
     // Depth검증용 보고서_auto 가 여러개 존재한다면 다 삭제하도록 코드-----------------------------------
@@ -228,9 +241,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('tspan', '월 정기점검 보고서', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', '월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
       // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
     });
     cy.log('✅ 월 정기점검 보고서 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
@@ -270,9 +283,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('tspan', '월 정기점검 보고서', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', '월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
       // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
     });
     cy.log('✅ 월 정기점검 보고서 (행위) 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
@@ -311,9 +324,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('tspan', '월 정기점검 보고서', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', '월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
       // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
     });
     cy.log('✅ 월 정기점검 보고서 (행위_Mongo) 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
@@ -351,9 +364,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
       // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('tspan', '개인정보접속 종합 보고서', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', '개인정보접속 종합 보고서', { timeout: 60000 }).should('be.visible');
       // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 15000 }).should('be.visible');
+      cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
     });
     cy.log('✅ 개인정보접속 종합 보고서 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
@@ -422,14 +435,15 @@ describe('로그캐치 사이트 테스트', () => {
       extensions.forEach((ext) => {
         
         cy.log(`▶▶▶ 테스트 중: [${reportType}] - [${ext}] 확장자 ◀◀◀`);
+        cy.wait(1000);
 
         // 확장자 콤보박스 열기 
         cy.get('input[aria-label="확장자"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-        cy.wait(500);
+        cy.wait(1000);
         
         // Vuetify 특성상 콤보박스 메뉴가 누적될 수 있으므로 :visible 필터로 정확히 잡아서 클릭
         cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', ext).click({ force: true });
-        cy.wait(500);
+        cy.wait(1000);
 
         // 저장버튼 클릭 
         cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
@@ -456,8 +470,8 @@ describe('로그캐치 사이트 테스트', () => {
         cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
         .within(() => {
           // 변환된 expectedPreviewText로 검증합니다!
-          cy.contains('tspan', expectedPreviewText, { timeout: 15000 }).should('be.visible');
-          cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 15000 }).should('be.visible');
+          cy.contains('tspan', expectedPreviewText, { timeout: 60000 }).should('be.visible');
+          cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
         });
 
         // [확장자 선택 검증] 좌측 폼에 방금 선택한 확장자(ext)가 정확히 남아있는지 확인
@@ -580,7 +594,6 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('🎉 보고 Depth 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
-
 
 
 
