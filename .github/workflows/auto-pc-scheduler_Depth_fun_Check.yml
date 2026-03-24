@@ -155,6 +155,8 @@ jobs:
           COMMIT_INFO_MESSAGE: ${{ github.event.head_commit.message }}
           NO_COLOR: 1
           CI: true
+          CYPRESS_CACHE_FOLDER: ${{ github.workspace }}\.cypress-cache
+          TEMP: ${{ github.workspace }}\.temp
         continue-on-error: true # 에러가 나도 업로드는 해야 함
         run: |
           # 1. 인코딩 강제 설정 (한글 파일명 인식용)
