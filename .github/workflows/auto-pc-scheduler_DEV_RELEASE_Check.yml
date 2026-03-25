@@ -139,7 +139,7 @@ jobs:
           $downloadCmd = "curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$mainName $rawBaseUrl/$mainName && curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$partyName $rawBaseUrl/$partyName"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$downloadCmd"
 
-          Write-Host "🚀 [Step 3] Run installation script (Background Job with 180s Timeout)...."
+          Write-Host "[Step 3] Run installation script (Background Job with 300s Timeout)...."
           
           # [Step 3] 수정 부분
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo LANG=C LC_ALL=C $remotePath/$mainName -b -f"
