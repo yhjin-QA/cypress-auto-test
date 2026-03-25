@@ -469,55 +469,48 @@ jobs:
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-
-          # 💡 [핵심 추가] 스크린샷 경로 변수 정의
-          # 이전 단계에서 download-artifact를 통해 'all_raw_data'에 모두 모았습니다.
-          $screenshotPath = "all_raw_data/screenshots"
           
-          # 1️⃣ 기본 상태값 추출 (대소문자 구분 없이 비교하기 위해 소문자로 변환)
-          $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
-          $cypressStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
-
-          # 디버깅용 출력 (실행 로그에서 실제로 어떤 값이 들어오는지 볼 수 있습니다)
-          Write-Host "DEBUG - Deploy Status: [$deployStatus]"
-          Write-Host "DEBUG - Cypress Status: [$cypressStatus]"
-
           $isActuallyFailed = $false
-          $statusDetail = ""
+          $finalFailCount = 0
+          $failNames = @()
 
-          # 2️⃣ [설치 단계 체크] 
+          Write-Host "============= [Debug Log Start] ============="
+          
+          # 1. 설치 단계(deploy-qa) 실패 여부 먼저 확인
+          $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
           if ($deployStatus -eq "failure") {
               $isActuallyFailed = $true
-              $statusDetail = "[Installation Failed] Error occurred during installation (Log check required)"
+              $failNames = @("Installation Failed")
           }
-          elseif ($deployStatus -eq "cancelled") {
-              $isActuallyFailed = $true
-              $statusDetail = " [Cancel Action] Deployment was cancelled"
-          }
-          # 💡 [핵심 추가] 설치가 성공하지 않았는데 failure도 아니라면(예: skipped) 테스트가 안 돈 것이므로 실패로 간주
-          elseif ($deployStatus -ne "success") {
-              $isActuallyFailed = $true
-              $statusDetail = " [Not Executed] Installation step did not complete successfully"
-          }
-          
-          # 3️⃣ [테스트 단계 체크] 설치는 성공했을 때만 테스트 결과를 상세히 봅니다.
+          # 2. 설치가 성공했다면 JSON 리포트 분석
           else {
-              # 스크린샷 파일 확인
-              if (Test-Path $screenshotPath) {
-                  $failedScreenshots = Get-ChildItem -Path $screenshotPath -Recurse -Filter "*(failed)*.png"
-                  if ($failedScreenshots.Count -gt 0) {
-                      $isActuallyFailed = $true
-                      $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-                      $statusDetail = "[Test Failed] $($failedScreenshots.Count) Scenario failure ( $($failNames -join ', ') )"
-                  }
-              }
-              
-              # 스크린샷은 없는데 테스트 작업 자체가 실패/취소된 경우
-              if (-not $isActuallyFailed -and ($cypressStatus -eq "failure" -or $cypressStatus -eq "cancelled")) {
-                  $isActuallyFailed = $true
-                  $statusDetail = " [Test Stopped] System error or cancellation while running Cypress"
+              if (Test-Path "merged_report.json") {
+                  try {
+                      $jsonObj = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+                      $finalFailCount = [int]$jsonObj.stats.failures
+                      Write-Host "Report parsed. Actual failures: $finalFailCount"
+
+                      if ($finalFailCount -gt 0) {
+                          $isActuallyFailed = $true
+                          # 실패한 시나리오 명 추출 (스크린샷 폴더 기준)
+                          $failedScreenshots = Get-ChildItem -Path "all_raw_data/screenshots" -Recurse -Filter "*(failed)*.png"
+                          if ($failedScreenshots.Count -gt 0) {
+                              $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
+                          }
+                      }
+                  } catch { Write-Host "JSON parsing error." }
               }
           }
+
+          # 3. 시스템 오류/취소 핸들링
+          $jobStatus = "${{ env.JOB_STATUS }}".ToLower()
+          if (-not $isActuallyFailed -and ($jobStatus -eq "cancelled" -or $jobStatus -eq "failure")) {
+              $isActuallyFailed = $true
+              $failNames = @("System Error or Cancelled")
+          }
+          Write-Host "============== [Debug Log End] =============="
+
+
 
           # 최종 타이틀 결정 (매우 중요!)
           $title = if ($isActuallyFailed) { $env:MSG_FAIL } else { $env:MSG_SUCCESS }

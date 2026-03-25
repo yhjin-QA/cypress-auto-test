@@ -36,6 +36,23 @@ describe('로그캐치 사이트 테스트', () => {
     cy.visit('https://10.10.54.21:18443/logcatch/login');
     cy.wait(4000); // 로딩 대기
 
+    ////////////새로고침코드//////
+      cy.get('body').then(($body) => {
+      // 만약 입력창이 안 보인다면? (흰 화면 상태라면?)
+      if ($body.find('input[aria-label="사용자 계정"]').length === 0) {
+        cy.log('🔴 화면 렌더링 실패 감지! 페이지를 새로고침합니다.');
+    
+      // 새로고침 실행
+      cy.reload();
+    
+      // 다시 한번 안정화 대기
+      cy.wait(2000);
+      } else {
+        cy.log('🟢 화면이 정상적으로 로드되었습니다.');
+      }
+     });
+     //////////////////////////////////////
+
     // 2. 아이디 입력
     cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
 
