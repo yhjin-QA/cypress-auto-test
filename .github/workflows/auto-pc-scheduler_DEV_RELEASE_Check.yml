@@ -20,6 +20,9 @@ jobs:
   # ====================================================
   deploy-qa:
     runs-on: [self-hosted, PC-Auto]
+    outputs:
+      # 👇 다음 Job들이 읽을 수 있도록 변수를 밖으로 빼줍니다.
+      skip_all: ${{ steps.check_version.outputs.skip_all }}
     defaults:
       run:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
@@ -29,6 +32,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🔍 Find Latest Build from Redmine
+        id: check_version # ID 추가
         env:
           SSH_KEY_DATA: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
@@ -76,16 +80,26 @@ jobs:
           if ($null -eq $installedVersion) { $installedVersion = "none" }
           $installedVersion = $installedVersion.ToString().Trim()
 
+          # 👇 여기서부터 수정 (기존 if문을 이 블록으로 교체)
           if ($installedVersion -eq $latestVersion) {
-            Write-Host "✨ [SKIP] Now Version($installedVersion) Latest Version."
+            Write-Host "[SKIP] The currently installed version ($installedVersion) is the latest. Stopping all operations."
+            
+            # 💡 중요: 다음 Job들이 읽을 수 있도록 skip_all을 true로 설정
+            echo "skip_all=true" >> $env:GITHUB_OUTPUT
+            
+            # 현재 스텝 내에서 쓸 환경변수도 세팅
             echo "SKIP_INSTALL=true" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             exit 0
           } else {
-            Write-Host "🚀 [NEW] New Version Find: $latestVersion"
+            Write-Host "🚀 [NEW] New version found : $latestVersion"
+            
+            # 💡 중요: 진행해야 하므로 skip_all을 false로 설정
+            echo "skip_all=false" >> $env:GITHUB_OUTPUT
+            
             echo "SKIP_INSTALL=false" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             echo "LATEST_VERSION=$latestVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             
-            # 파일명 추출
+            # 파일명 추출 로직 
             $folderUrl = "$repoBaseUrl/$latestVersion"
             $folderHtml = (curl.exe -k -s -b cookies.txt $folderUrl) -join "`n"
             $mainFileName = [regex]::Match($folderHtml, '(logcatch_linux_x86-64_[^\"]+\.bin)').Groups[1].Value
@@ -204,6 +218,8 @@ jobs:
   # ====================================================
   cypress-run:
     needs: deploy-qa # 👇 [핵심] deploy-qa 작업이 완전히 끝난 후에만 실행되도록 설정
+    # 👇 새 버전이 아닐 경우 이 Job 실행 안 함
+    if: needs.deploy-qa.outputs.skip_all != 'true'
     runs-on: [self-hosted, PC-Auto]
     strategy:
       fail-fast: false
@@ -314,7 +330,8 @@ jobs:
   # ====================================================
   restart-task-run:
     needs: cypress-run  # Job 2이 끝나야 시작
-    if: always()        
+    # 👇 새 버전이 아닐 경우 이 Job 실행 안 함
+    if: needs.deploy-qa.outputs.skip_all != 'true'        
     runs-on: [self-hosted, PC-Auto]
     # 👇 [추가] cy2 실행을 위한 환경 변수 복사
     env:
