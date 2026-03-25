@@ -125,30 +125,25 @@ jobs:
           $downloadCmd = "curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$mainName $rawBaseUrl/$mainName && curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$partyName $rawBaseUrl/$partyName"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$downloadCmd"
 
-          Write-Host "🚀 [Step 3] Run installation script (with Locale Fix)...."
-          # 💡 로캘 변수를 명시적으로 추가하여 설치 실행
-          $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo LANG=ko_KR.utf8 LC_ALL=ko_KR.utf8 $remotePath/$mainName -b -f"
-          
+          Write-Host "🚀 [Step 3] Run installation script (Real-time output mode)...."
+          # 💡 LANG=C 옵션을 추가하여 로캘 충돌을 원천 차단합니다.
+          $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo LANG=C LC_ALL=C $remotePath/$mainName -b -f"     
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 2; (sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr > /dev/null 2>&1 &)"
 
-          $job = Start-Job -ScriptBlock {
-          param($keyPath, $target, $cmd)
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target $cmd
-          } -ArgumentList $keyPath, $target, "export TERM=linux; ls -lh $remotePath; $install && $fixProfile && $svcControl"
+          # 💡 [핵심 수정] Start-Job을 제거하고 ssh를 직접 호출합니다.
+          # 이를 통해 모든 설치 로그(PostgreSQL 초기화 등)가 실시간으로 출력됩니다.
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; ls -lh $remotePath; $install && $fixProfile && $svcControl"
 
-          # 💡 타임아웃을 90초에서 180초(3분)로 넉넉하게 늘렸습니다.
-          if (-not (Wait-Job $job -Timeout 180)) {
-              Write-Host "⚠️ Installation time (180 seconds) elapsed. Force close session and proceed to the next step...."
-              Stop-Job $job
-          }
-          
-          # 💡 [핵심 추가] 가려져 있던 리눅스 설치 로그를 화면에 낱낱이 출력합니다!
-          Write-Host "📜 ================= [ real install log result ] ================="
-          Receive-Job $job
+          # 2. 💡 실시간 실행 (Start-Job 없이 바로 호출)
+          # 이 한 줄이 실행되는 동안 리눅스의 설치 로그가 실시간으로 GitHub 화면에 찍힙니다.
+          Write-Host "📜 ================= [ Real-time Install Log Start ] ================="
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; ls -lh $remotePath; $install && $fixProfile && $svcControl"
           Write-Host "=========================================================="
-          Remove-Job $job
 
+          Write-Host "✅ Installation command execution finished. Proceeding to port check..."
+
+        
           Write-Host "🕵️ [Step 4] Port (18443) waiting to start..."
           $success = $false
           for ($i = 1; $i -le 30; $i++) {
