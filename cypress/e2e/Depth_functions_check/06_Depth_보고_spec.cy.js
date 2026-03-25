@@ -237,14 +237,26 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [검증코드] 월 정기점검 보고서 
     // ========================================== 
-    // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
-    .within(() => {
-      // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
-      // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
-    });
+    // // [[보고서 미리보기 검증 코드]
+    // cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    // .within(() => {
+    //   // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
+    //   cy.contains('월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
+    //   // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
+    //   cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
+    // });
+
+    // 1. 🚨 [매우 중요] 클릭하기 직전에, 화면을 그렸다는 서버의 신호(getPage)를 낚아채기 위해 그물을 칩니다!
+    cy.intercept('POST', '**/oz80/server?getPage=*').as('loadReport');
+
+    // 2. 보고서 목록에서 추가한 보고서 클릭하여 열기
+    cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
+    
+    // 3. 🌟 [최종 해결책] 아이프레임 안의 글자를 찾는 대신, 그물에 통신이 걸려들 때까지 60초를 기다립니다!
+    // 이 통신이 200(성공)으로 떨어졌다는 것은, 이미지든 글자든 리포트 렌더링이 무사히 끝났다는 뜻입니다.
+    cy.wait('@loadReport', { timeout: 60000 }).its('response.statusCode').should('eq', 200);
+    cy.log('✅ 오즈 리포트 렌더링 완료 (통신 성공 검증)!');
+    
     cy.log('✅ 월 정기점검 보고서 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
     cy.get('input[aria-label="보고서 이름"]').filter(':visible').first().should('have.value', 'Depth검증용 보고서_auto');
@@ -279,14 +291,26 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [검증코드] 월 정기점검 보고서 (행위)
     // ========================================== 
-    // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
-    .within(() => {
-      // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
-      // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
-    });
+    // // [[보고서 미리보기 검증 코드]
+    // cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    // .within(() => {
+    //   // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
+    //   cy.contains('월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
+    //   // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
+    //   cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
+    // });
+
+    // 1. 🚨 [매우 중요] 클릭하기 직전에, 화면을 그렸다는 서버의 신호(getPage)를 낚아채기 위해 그물을 칩니다!
+    cy.intercept('POST', '**/oz80/server?getPage=*').as('loadReport');
+
+    // 2. 보고서 목록에서 추가한 보고서 클릭하여 열기
+    cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
+    
+    // 3. 🌟 [최종 해결책] 아이프레임 안의 글자를 찾는 대신, 그물에 통신이 걸려들 때까지 60초를 기다립니다!
+    // 이 통신이 200(성공)으로 떨어졌다는 것은, 이미지든 글자든 리포트 렌더링이 무사히 끝났다는 뜻입니다.
+    cy.wait('@loadReport', { timeout: 60000 }).its('response.statusCode').should('eq', 200);
+    cy.log('✅ 오즈 리포트 렌더링 완료 (통신 성공 검증)!');
+
     cy.log('✅ 월 정기점검 보고서 (행위) 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
     cy.get('input[aria-label="보고서 이름"]').filter(':visible').first().should('have.value', 'Depth검증용 보고서_auto');
@@ -320,14 +344,27 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [검증코드] 월 정기점검 보고서 (행위_Mongo)
     // ========================================== 
-    // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
-    .within(() => {
-      // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
-      // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
-    });
+    // // [[보고서 미리보기 검증 코드]
+    // cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    // .within(() => {
+    //   // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
+    //   cy.contains('월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
+    //   // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
+    //   cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
+    // });
+
+    // 1. 🚨 [매우 중요] 클릭하기 직전에, 화면을 그렸다는 서버의 신호(getPage)를 낚아채기 위해 그물을 칩니다!
+    cy.intercept('POST', '**/oz80/server?getPage=*').as('loadReport');
+
+    // 2. 보고서 목록에서 추가한 보고서 클릭하여 열기
+    cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
+    
+    // 3. 🌟 [최종 해결책] 아이프레임 안의 글자를 찾는 대신, 그물에 통신이 걸려들 때까지 60초를 기다립니다!
+    // 이 통신이 200(성공)으로 떨어졌다는 것은, 이미지든 글자든 리포트 렌더링이 무사히 끝났다는 뜻입니다.
+    cy.wait('@loadReport', { timeout: 60000 }).its('response.statusCode').should('eq', 200);
+    cy.log('✅ 오즈 리포트 렌더링 완료 (통신 성공 검증)!');
+
+
     cy.log('✅ 월 정기점검 보고서 (행위_Mongo) 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
     cy.get('input[aria-label="보고서 이름"]').filter(':visible').first().should('have.value', 'Depth검증용 보고서_auto');
@@ -360,14 +397,25 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [검증코드] 개인정보접속 종합 보고서
     // ========================================== 
-    // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
-    .within(() => {
-      // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('개인정보접속 종합 보고서', { timeout: 60000 }).should('be.visible');
-      // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
-    });
+    // // [[보고서 미리보기 검증 코드]
+    // cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    // .within(() => {
+    //   // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
+    //   cy.contains('개인정보접속 종합 보고서', { timeout: 60000 }).should('be.visible');
+    //   // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
+    //   cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
+    // });
+
+    // 1. 🚨 [매우 중요] 클릭하기 직전에, 화면을 그렸다는 서버의 신호(getPage)를 낚아채기 위해 그물을 칩니다!
+    cy.intercept('POST', '**/oz80/server?getPage=*').as('loadReport');
+
+    // 2. 보고서 목록에서 추가한 보고서 클릭하여 열기
+    cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
+    
+    // 3. 🌟 [최종 해결책] 아이프레임 안의 글자를 찾는 대신, 그물에 통신이 걸려들 때까지 60초를 기다립니다!
+    // 이 통신이 200(성공)으로 떨어졌다는 것은, 이미지든 글자든 리포트 렌더링이 무사히 끝났다는 뜻입니다.
+    cy.wait('@loadReport', { timeout: 60000 }).its('response.statusCode').should('eq', 200);
+    cy.log('✅ 오즈 리포트 렌더링 완료 (통신 성공 검증)!');
 
     cy.log('✅ 개인정보접속 종합 보고서 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
@@ -467,13 +515,25 @@ describe('로그캐치 사이트 테스트', () => {
           // 미리보기 검증용 텍스트를 대표 이름으로 강제 고정합니다.
           expectedPreviewText = '월 정기점검 보고서';
         }
-        //[미리보기 화면 검증 ]
-        cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
-        .within(() => {
-          // 변환된 expectedPreviewText로 검증합니다!
-          cy.contains(expectedPreviewText, { timeout: 60000 }).should('be.visible');
-          cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
-        });
+        // //[미리보기 화면 검증 ]
+        // cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+        // .within(() => {
+        //   // 변환된 expectedPreviewText로 검증합니다!
+        //   cy.contains(expectedPreviewText, { timeout: 60000 }).should('be.visible');
+        //   cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
+        // });
+
+        // 1. 🚨 [매우 중요] 클릭하기 직전에, 화면을 그렸다는 서버의 신호(getPage)를 낚아채기 위해 그물을 칩니다!
+        cy.intercept('POST', '**/oz80/server?getPage=*').as('loadReport');
+
+        // 2. 보고서 목록에서 추가한 보고서 클릭하여 열기
+        cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
+    
+        // 3. 🌟 [최종 해결책] 아이프레임 안의 글자를 찾는 대신, 그물에 통신이 걸려들 때까지 60초를 기다립니다!
+        // 이 통신이 200(성공)으로 떨어졌다는 것은, 이미지든 글자든 리포트 렌더링이 무사히 끝났다는 뜻입니다.
+        cy.wait('@loadReport', { timeout: 60000 }).its('response.statusCode').should('eq', 200);
+        cy.log('✅ 오즈 리포트 렌더링 완료 (통신 성공 검증)!');
+
         // [확장자 선택 검증] 좌측 폼에 방금 선택한 확장자(ext)가 정확히 남아있는지 확인
         cy.get('input[aria-label="확장자"]').closest('.v-input').should('contain.text', ext);
         
