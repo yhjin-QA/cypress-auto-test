@@ -377,47 +377,34 @@ jobs:
           $finalFailCount = 0
           $realFailedSpecs = @()
 
-          # [1단계] 경로 상관없이 모든 실패 스크린샷 긁어오기 (경로 문제 해결!)
-          $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*(failed)*.png"
-          
-          if ($failedScreenshots.Count -gt 0) {
-              $potentialFailSpecs = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-              
-              # [2단계] 사용자님의 기존 예외 처리 유지! (Flaky 필터링: 재시도해서 성공했으면 무시)
-              foreach ($specName in $potentialFailSpecs) {
-                  $isRealFail = $false
-                  # 경로 상관없이 모든 json 리포트를 찾아서 검증합니다.
-                  $relatedReports = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json"
-                  
-                  foreach ($report in $relatedReports) {
-                      try {
-                          $rawJson = Get-Content $report.FullName -Raw -Encoding UTF8
-                          if ([string]::IsNullOrWhiteSpace($rawJson)) { continue }
-                          
-                          $content = $rawJson | ConvertFrom-Json -ErrorAction Stop
-                          
-                          # 리포트 내에 해당 스펙이 있고, 최종 실패 카운트가 0보다 클 때만 '진짜 실패'로 인정!
-                          if ($content.results[0].fullFile -like "*$specName*" -and [int]$content.stats.failures -gt 0) {
-                              $isRealFail = $true
-                              break
-                          }
-                      } catch { continue }
+          # 💡 [핵심 1] 가장 확실한 데이터: 병합된 최종 리포트의 전체 실패 카운트를 확인합니다.
+          if (Test-Path "merged_report.json") {
+              try {
+                  $mergedJson = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+                  if ([int]$mergedJson.stats.failures -gt 0) {
+                      $isActuallyFailed = $true
+                      $finalFailCount = [int]$mergedJson.stats.failures
                   }
-                  if ($isRealFail) { $realFailedSpecs += $specName }
+              } catch { Write-Host "JSON 파싱 에러 무시" }
+          }
+
+          # 💡 [핵심 2] 스크린샷 폴더에서 에러가 발생한 스크립트 파일 이름만 가져옵니다.
+          $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*(failed)*.png"
+          if ($failedScreenshots.Count -gt 0) {
+              $realFailedSpecs = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
+              
+              # (예외 방어) 만약 리포트 카운트는 0인데, 작업 자체가 취소/에러 났다면 스크린샷을 믿습니다.
+              if ($finalFailCount -eq 0 -and $jobStatus -ne "success") {
+                  $isActuallyFailed = $true
+                  $finalFailCount = $realFailedSpecs.Count
               }
           }
 
-          # [3단계] 최종 판정 및 숫자 보정 (기존 예외 처리 유지)
-          if ($realFailedSpecs.Count -gt 0) {
+          # 💡 [핵심 3] 시스템 강제 종료 (Cancel 등) 처리
+          if (-not $isActuallyFailed -and ($jobStatus -eq "cancelled" -or $jobStatus -eq "failure")) {
               $isActuallyFailed = $true
-              $finalFailCount = $realFailedSpecs.Count
-          }
-          
-          # 시스템 다운 등으로 스크린샷은 없는데 Job 자체가 실패한 경우 예외 처리
-          if (-not $isActuallyFailed -and $jobStatus -ne "success") {
-              $isActuallyFailed = $true
-              $finalFailCount = 1
-              $realFailedSpecs = @("Detected by System")
+              if ($finalFailCount -eq 0) { $finalFailCount = 1 }
+              if ($realFailedSpecs.Count -eq 0) { $realFailedSpecs = @("작업 중단(Cancelled) 또는 시스템 에러") }
           }
 
           # 4. 최종 상태 결정 및 메시지 조립
