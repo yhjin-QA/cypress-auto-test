@@ -152,7 +152,7 @@ jobs:
           }
           
           # 4. 💡 로그 출력 (에러 방지 처리가 추가된 버전)
-          Write-Host "📜 ================= [ Install Log Summary ] ================="
+          Write-Host "================= [ Install Log Summary ] ================="
           try {
               # -ErrorAction SilentlyContinue 를 추가하여 로그 내부의 경고가 에러를 유발하지 않게 함
               $logData = Receive-Job $job -ErrorAction SilentlyContinue
@@ -169,7 +169,7 @@ jobs:
 
           # 5. 💡 강제 성공 처리 및 즉시 다음 단계 진행
           $env:LASTEXITCODE = 0
-          Write-Host "✅ Installation step finished. Moving to Port Polling..."
+          Write-Host " Installation step finished. Moving to Port Polling..."
 
           
           Write-Host " [Step 4] Port (18443) waiting to start..."
