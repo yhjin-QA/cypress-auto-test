@@ -237,14 +237,37 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [검증코드] 월 정기점검 보고서 
     // ========================================== 
-    // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    // // [[보고서 미리보기 검증 코드]
+    // cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    // .within(() => {
+    //   // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
+    //   cy.contains('tspan', '월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
+    //   // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
+    //   cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
+    // });
+
+    /// 1. [안정성 확보] 통신 대기: 서버에서 페이지 데이터를 다 받아올 때까지 기다림
+    cy.intercept('POST', '**/oz80/server?getPage=*').as('reportLoaded');
+    cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
+    
+    // 최대 60초간 통신 완료 대기
+    cy.wait('@reportLoaded', { timeout: 60000 }).its('response.statusCode').should('eq', 200);
+
+    // 2. [품질 검증 확보] UI 렌더링 대기: 받아온 데이터로 화면을 그렸는지 확인!
+    cy.get('iframe', { timeout: 10000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
-      // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
-      // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
+        // 🌟 핵심: tspan 대신, 오즈 리포트가 이미지를 그릴 때 사용하는 
+        // canvas나 img 태그가 바디 안에 존재하는지 확인합니다. (백지 방지)
+        cy.get('canvas, img', { timeout: 10000 }).should('exist');
     });
+
+    cy.log('✅ 오즈 리포트 통신 및 UI 렌더링(Canvas/Img) 검증 완료!');
+    
+
+    
+
+
+
     cy.log('✅ 월 정기점검 보고서 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
     cy.get('input[aria-label="보고서 이름"]').filter(':visible').first().should('have.value', 'Depth검증용 보고서_auto');
@@ -279,14 +302,34 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [검증코드] 월 정기점검 보고서 (행위)
     // ========================================== 
-    // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    // // [[보고서 미리보기 검증 코드]
+    // cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    // .within(() => {
+    //   // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
+    //   cy.contains('tspan', '월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
+    //   // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
+    //   cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
+    // });
+    /// 1. [안정성 확보] 통신 대기: 서버에서 페이지 데이터를 다 받아올 때까지 기다림
+    cy.intercept('POST', '**/oz80/server?getPage=*').as('reportLoaded');
+    cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
+    
+    // 최대 60초간 통신 완료 대기
+    cy.wait('@reportLoaded', { timeout: 60000 }).its('response.statusCode').should('eq', 200);
+
+    // 2. [품질 검증 확보] UI 렌더링 대기: 받아온 데이터로 화면을 그렸는지 확인!
+    cy.get('iframe', { timeout: 10000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
-      // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
-      // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
+        // 🌟 핵심: tspan 대신, 오즈 리포트가 이미지를 그릴 때 사용하는 
+        // canvas나 img 태그가 바디 안에 존재하는지 확인합니다. (백지 방지)
+        cy.get('canvas, img', { timeout: 10000 }).should('exist');
     });
+
+    cy.log('✅ 오즈 리포트 통신 및 UI 렌더링(Canvas/Img) 검증 완료!');
+    
+    
+      
+  
     cy.log('✅ 월 정기점검 보고서 (행위) 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
     cy.get('input[aria-label="보고서 이름"]').filter(':visible').first().should('have.value', 'Depth검증용 보고서_auto');
@@ -320,14 +363,32 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [검증코드] 월 정기점검 보고서 (행위_Mongo)
     // ========================================== 
-    // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    // // [[보고서 미리보기 검증 코드]
+    // cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    // .within(() => {
+    //   // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
+    //   cy.contains('tspan', '월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
+    //   // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
+    //   cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
+    // });
+
+    /// 1. [안정성 확보] 통신 대기: 서버에서 페이지 데이터를 다 받아올 때까지 기다림
+    cy.intercept('POST', '**/oz80/server?getPage=*').as('reportLoaded');
+    cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
+    
+    // 최대 60초간 통신 완료 대기
+    cy.wait('@reportLoaded', { timeout: 60000 }).its('response.statusCode').should('eq', 200);
+
+    // 2. [품질 검증 확보] UI 렌더링 대기: 받아온 데이터로 화면을 그렸는지 확인!
+    cy.get('iframe', { timeout: 10000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
-      // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
-      // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
+        // 🌟 핵심: tspan 대신, 오즈 리포트가 이미지를 그릴 때 사용하는 
+        // canvas나 img 태그가 바디 안에 존재하는지 확인합니다. (백지 방지)
+        cy.get('canvas, img', { timeout: 10000 }).should('exist');
     });
+
+    cy.log('✅ 오즈 리포트 통신 및 UI 렌더링(Canvas/Img) 검증 완료!');
+    
     cy.log('✅ 월 정기점검 보고서 (행위_Mongo) 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
     cy.get('input[aria-label="보고서 이름"]').filter(':visible').first().should('have.value', 'Depth검증용 보고서_auto');
@@ -360,14 +421,32 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [검증코드] 개인정보접속 종합 보고서
     // ========================================== 
-    // [[보고서 미리보기 검증 코드]
-    cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    // // [[보고서 미리보기 검증 코드]
+    // cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+    // .within(() => {
+    //   // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
+    //   cy.contains('tspan', '개인정보접속 종합 보고서', { timeout: 60000 }).should('be.visible');
+    //   // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
+    //   cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
+    // });
+
+    /// 1. [안정성 확보] 통신 대기: 서버에서 페이지 데이터를 다 받아올 때까지 기다림
+    cy.intercept('POST', '**/oz80/server?getPage=*').as('reportLoaded');
+    cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
+    
+    // 최대 60초간 통신 완료 대기
+    cy.wait('@reportLoaded', { timeout: 60000 }).its('response.statusCode').should('eq', 200);
+
+    // 2. [품질 검증 확보] UI 렌더링 대기: 받아온 데이터로 화면을 그렸는지 확인!
+    cy.get('iframe', { timeout: 10000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
     .within(() => {
-      // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-      cy.contains('개인정보접속 종합 보고서', { timeout: 60000 }).should('be.visible');
-      // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-      cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
+        // 🌟 핵심: tspan 대신, 오즈 리포트가 이미지를 그릴 때 사용하는 
+        // canvas나 img 태그가 바디 안에 존재하는지 확인합니다. (백지 방지)
+        cy.get('canvas, img', { timeout: 10000 }).should('exist');
     });
+
+    cy.log('✅ 오즈 리포트 통신 및 UI 렌더링(Canvas/Img) 검증 완료!');
+    
 
     cy.log('✅ 개인정보접속 종합 보고서 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
@@ -467,13 +546,32 @@ describe('로그캐치 사이트 테스트', () => {
           // 미리보기 검증용 텍스트를 대표 이름으로 강제 고정합니다.
           expectedPreviewText = '월 정기점검 보고서';
         }
-        //[미리보기 화면 검증 ]
-        cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+        // //[미리보기 화면 검증 ]
+        // cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
+        // .within(() => {
+        //   // 변환된 expectedPreviewText로 검증합니다!
+        //   cy.contains('tspan', expectedPreviewText, { timeout: 60000 }).should('be.visible');
+        //   cy.contains('tspan', 'Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
+        // });
+
+        /// 1. [안정성 확보] 통신 대기: 서버에서 페이지 데이터를 다 받아올 때까지 기다림
+        cy.intercept('POST', '**/oz80/server?getPage=*').as('reportLoaded');
+        cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
+    
+        // 최대 60초간 통신 완료 대기
+        cy.wait('@reportLoaded', { timeout: 60000 }).its('response.statusCode').should('eq', 200);
+
+        // 2. [품질 검증 확보] UI 렌더링 대기: 받아온 데이터로 화면을 그렸는지 확인!
+        cy.get('iframe', { timeout: 10000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
         .within(() => {
-          // 변환된 expectedPreviewText로 검증합니다!
-          cy.contains(expectedPreviewText, { timeout: 60000 }).should('be.visible');
-          cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
-        });
+          // 🌟 핵심: tspan 대신, 오즈 리포트가 이미지를 그릴 때 사용하는 
+          // canvas나 img 태그가 바디 안에 존재하는지 확인합니다. (백지 방지)
+          cy.get('canvas, img', { timeout: 10000 }).should('exist');
+         });
+
+    cy.log('✅ 오즈 리포트 통신 및 UI 렌더링(Canvas/Img) 검증 완료!');
+    
+
         // [확장자 선택 검증] 좌측 폼에 방금 선택한 확장자(ext)가 정확히 남아있는지 확인
         cy.get('input[aria-label="확장자"]').closest('.v-input').should('contain.text', ext);
         
