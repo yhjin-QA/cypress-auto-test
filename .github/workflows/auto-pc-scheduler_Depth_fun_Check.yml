@@ -375,26 +375,27 @@ jobs:
           $finalFailCount = 0
           $failNames = @()
 
-          Write-Host "============= [판정 디버그 로그] ============="
-          # 1️⃣ 절대적 기준: 통합 리포트(merged_report.json)의 실패 카운트 확인
+          Write-Host "============= [Debug Log Start] ============="
+          
+          # 1. Parse merged JSON report
           if (Test-Path "merged_report.json") {
               try {
                   $jsonText = Get-Content "merged_report.json" -Raw -Encoding UTF8
                   $jsonObj = $jsonText | ConvertFrom-Json
                   $finalFailCount = [int]$jsonObj.stats.failures
-                  Write-Host "✅ 리포트 파싱 성공 -> 실제 실패 수: $finalFailCount"
+                  Write-Host "Report parsed. Actual failures: $finalFailCount"
 
                   if ($finalFailCount -gt 0) {
                       $isActuallyFailed = $true
                   }
               } catch {
-                  Write-Host "⚠️ JSON 리포트 파싱 에러 발생"
+                  Write-Host "JSON parsing error ignored."
               }
           } else {
-              Write-Host "⚠️ merged_report.json 파일을 찾을 수 없습니다."
+              Write-Host "merged_report.json not found."
           }
 
-          # 2️⃣ 보조 기준: 실패가 확인되었다면, 스크린샷 폴더명에서 에러 스크립트 이름 추출
+          # 2. Extract script names from screenshot folders
           if ($isActuallyFailed) {
               $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*(failed)*.png"
               if ($failedScreenshots.Count -eq 0) {
@@ -403,28 +404,27 @@ jobs:
               
               if ($failedScreenshots.Count -gt 0) {
                   $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-                  # 변수 안에 괄호를 넣지 않고 밖에서 안전하게 문자열로 합칩니다.
                   $joinedNames = $failNames -join ", "
-                  Write-Host "✅ 추출된 에러 스크립트 이름: $joinedNames"
+                  Write-Host "Failed script names: $joinedNames"
               } else {
-                  $failNames = @("이름 추출 불가 (리포트 확인 요망)")
-                  Write-Host "⚠️ 스크린샷을 찾지 못해 이름을 추출할 수 없습니다."
+                  $failNames = @("Unknown Spec")
+                  Write-Host "No screenshots found."
               }
           }
 
-          # 3️⃣ 비정상 에러(시스템 강제 중단, 스크립트 뻗음 등) 방어
+          # 3. Handle system crash or cancel
           $jobStatus = "${{ env.JOB_STATUS }}".ToLower()
-          Write-Host "👉 Job 1(cypress-run)의 최종 상태: $jobStatus"
+          Write-Host "Job 1 status: $jobStatus"
 
           if (-not $isActuallyFailed -and ($jobStatus -eq "cancelled" -or $jobStatus -eq "failure")) {
               $isActuallyFailed = $true
               $finalFailCount = 1
-              $failNames = @("작업 중단 또는 시스템 에러")
-              Write-Host "✅ 시스템 상태로 인해 강제 실패 처리됨"
+              $failNames = @("System Error or Cancelled")
+              Write-Host "Forced fail due to system status."
           }
-          Write-Host "=============================================="
+          Write-Host "============== [Debug Log End] =============="
 
-          # 4️⃣ 최종 상태 결정 및 메시지 조립
+          # 4. Determine final status
           if ($isActuallyFailed) {
               $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*")
               $joinedNames = $failNames -join ", "
@@ -436,29 +436,32 @@ jobs:
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           }
 
+          # 5. Assemble and send message (Safely using array joining)
           $pName = $env:PRODUCT_NAME
           $tType = $env:TEST_TYPE
           $mTitle = $env:MSG_TITLE
           $time = $env:NOW
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # URL 파싱 로직 분리 (안전성 강화)
           if (Test-Path "downloaded_url/run_url.txt") {
               $url = (Get-Content "downloaded_url/run_url.txt" -Raw).Trim()
           } else {
               $url = "http://10.10.54.5:8080/projects"
           }
           
-          # 메시지 텍스트 조립 로직 분리 (안전성 강화)
+          $msgLines = @()
+          $msgLines += "$title $pName $tType $mTitle ($time)"
           if ($statusDetail -ne "") {
-              $msgText = "$title $pName $tType $mTitle ($time)`n$statusDetail`n`n${env:LABEL_DASH} : $url`n${env:LABEL_GIT} : $runUrl"
-          } else {
-              $msgText = "$title $pName $tType $mTitle ($time)`n`n${env:LABEL_DASH} : $url`n${env:LABEL_GIT} : $runUrl"
+              $msgLines += $statusDetail
           }
+          $msgLines += ""
+          $msgLines += "${env:LABEL_DASH} : $url"
+          $msgLines += "${env:LABEL_GIT} : $runUrl"
+          
+          $msgText = $msgLines -join "`n"
 
-          # 5️⃣ 메시지 발송
           $body = @{ text = $msgText } | ConvertTo-Json -Compress
-          Invoke-RestMethod -Uri '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
+          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
 
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: always() && env.FINAL_STATUS == 'FAIL'
