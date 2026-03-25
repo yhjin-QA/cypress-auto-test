@@ -118,7 +118,7 @@ jobs:
           # (수정 후)  ALPHA를 RELEASE로 변경!
           $rawBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/raw/logcatch/RELEASE/logcatch/${env:LATEST_VERSION}"
           
-          # 💡 [네트워크 끊김 완벽 방어] 
+          #  [네트워크 끊김 완벽 방어] 
           # -f : 다운로드 실패 시 가짜 파일(HTML) 생성 방지
           # --retry 3 : 끊기거나 실패하면 최대 3번까지 자동으로 다시 시도
           # --retry-delay 2 : 재시도 전 2초 대기
@@ -127,25 +127,26 @@ jobs:
 
           Write-Host "🚀 [Step 3] Run installation script (Background Job with 180s Timeout)...."
           
-          # 1. 명령어 정의 (로캘 수정 및 서비스 비동기 실행 포함)
+          # [Step 3] 수정 부분
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo LANG=C LC_ALL=C $remotePath/$mainName -b -f"
-          $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
-          $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 2; (sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr > /dev/null 2>&1 &)"
+          
+          # 프로필 수정 후 권한 보강
+          $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
+          
+          # 서비스 제어: 비동기(&) 보다는 직접 restart 명령어를 순차적으로 실행 (직관적 에러 확인을 위해)
+          $svcControl = "sudo systemctl daemon-reload; sudo systemctl restart logcatch_redis; sleep 3; sudo systemctl restart logcatch_server; sleep 3; sudo systemctl restart logcatch_taskmgr"
 
-          $fullCmd = "export TERM=linux; ls -lh $remotePath; $install && $fixProfile && $svcControl"
+          $fullCmd = "export TERM=linux; $install && $fixProfile && $svcControl"
 
-          # 2. 💡 PowerShell이 stderr(경고) 때문에 멈추지 않도록 설정
           $job = Start-Job -ScriptBlock {
               param($keyPath, $target, $cmd)
-              # 에러가 발생해도 계속 진행하도록 세션 내 설정
               $ErrorActionPreference = "Continue" 
-              # 2>&1을 사용하여 에러 출력을 일반 출력으로 병합 (PowerShell 오해 방지)
               ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$cmd 2>&1"
           } -ArgumentList $keyPath, $target, $fullCmd
 
-          # 3. 180초(3분) 대기 및 강제 종료 로직
-          if (-not (Wait-Job $job -Timeout 180)) {
-              Write-Host " [TIMEOUT] 180 seconds elapsed. Force closing SSH session and proceeding to Port Check..."
+          # 💡 타임아웃을 300초(5분)로 늘려 서비스 안착 시간을 확보합니다.
+          if (-not (Wait-Job $job -Timeout 300)) {
+              Write-Host "⚠️ [TIMEOUT] 300s elapsed. 포트 체크로 넘어갑니다."
               Stop-Job $job
           } else {
               Write-Host " Installation job finished naturally."
