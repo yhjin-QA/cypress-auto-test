@@ -145,23 +145,31 @@ jobs:
 
           # 3. 180초(3분) 대기 및 강제 종료 로직
           if (-not (Wait-Job $job -Timeout 180)) {
-              Write-Host "⚠️ [TIMEOUT] 180 seconds elapsed. Force closing SSH session and proceeding to Port Check..."
+              Write-Host " [TIMEOUT] 180 seconds elapsed. Force closing SSH session and proceeding to Port Check..."
               Stop-Job $job
           } else {
-              Write-Host "✅ Installation job finished naturally."
+              Write-Host " Installation job finished naturally."
           }
           
-          # 4. 로그 출력 및 종료 코드 확인 방지
+          # 4. 💡 로그 출력 (에러 방지 처리가 추가된 버전)
           Write-Host "📜 ================= [ Install Log Summary ] ================="
-          $log = Receive-Job $job
-          $log
+          try {
+              # -ErrorAction SilentlyContinue 를 추가하여 로그 내부의 경고가 에러를 유발하지 않게 함
+              $logData = Receive-Job $job -ErrorAction SilentlyContinue
+              if ($logData) {
+                  # 텍스트로 변환하여 출력 (에러 객체가 아닌 단순 문자열로 취급)
+                  $logData | Out-String | Write-Host
+              }
+          } catch {
+              Write-Host " There were some warnings while retrieving the logs, but we ignored them and proceeded."
+          }
           Write-Host "=============================================================="
+          
           Remove-Job $job
 
-          # 💡 경고 메시지가 있었더라도 설치는 성공했으므로 성공 코드로 종료
+          # 5. 💡 강제 성공 처리 및 즉시 다음 단계 진행
           $env:LASTEXITCODE = 0
-          Write-Host "✅ Moving to [Step 4] Port Polling..."
-          exit 0
+          Write-Host "✅ Installation step finished. Moving to Port Polling..."
 
           
           Write-Host " [Step 4] Port (18443) waiting to start..."
