@@ -461,6 +461,7 @@ jobs:
           # 💡 설치 작업과 테스트 작업의 결과를 모두 가져옵니다.
           DEPLOY_STATUS: ${{ needs.deploy-qa.result }}
           CYPRESS_STATUS: ${{ needs.cypress-run.result }}
+          VERSION_NAME: ${{ env.LATEST_VERSION }}
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "확인결과"
@@ -519,12 +520,13 @@ jobs:
           $pName = $env:PRODUCT_NAME
           $tType = $env:TEST_TYPE
           $mTitle = $env:MSG_TITLE
+          $vName = $env:VERSION_NAME
           $time = $env:NOW
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           $url = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
 
           $msgBody = @"
-          $title $pName $tType $mTitle ($time)
+          $title $pName $tType $mTitle ($vName) ($time)
           $statusDetail
 
           ${env:LABEL_DASH} : $url
