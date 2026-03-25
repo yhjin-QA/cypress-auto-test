@@ -397,7 +397,7 @@ jobs:
   # ====================================================
   notify-result:
     needs: [deploy-qa, cypress-run, restart-task-run] # 💡 두 Job이 모두 끝나야 실행
-    if: always()
+    if: always() && needs.deploy-qa.outputs.skip_all != 'true'
     runs-on: [self-hosted, PC-Auto]
     
     defaults:

@@ -2214,13 +2214,14 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // 1. 관리자 페이지 사이드 메뉴 중 '설정' 버튼 클릭
     cy.log('--- [설정] 메뉴 클릭 ---');
-    cy.contains('button.side-menu', '설정').should('be.visible').click({ force: true });
+    //cy.contains('button.side-menu', '설정').should('be.visible').click({ force: true });
+    cy.contains('span', '설정').closest('button.side-menu').click({ force: true });
     // 설정 > 패스워드 규칙 서브메뉴 클릭 
     cy.wait(2000)
     cy.log('--- 서브메뉴 [패스워드 규칙] 클릭 ---');
-    //cy.get('.v-list__tile__title').filter(':contains("패스워드 규칙")').filter(':visible').click({ force: true });
+    cy.get('.v-list__tile__title').filter(':contains("패스워드 규칙")').filter(':visible').click({ force: true });
     //cy.contains('.v-list__tile__title', '패스워드 규칙').should('be.visible').closest('a, .v-list__tile').click({ force: true });
-    cy.contains('패스워드 규칙', { timeout: 10000 }).should('be.visible').click({ force: true });
+    //cy.contains('패스워드 규칙', { timeout: 10000 }).should('be.visible').click({ force: true });
     cy.wait(2000); // 화면 전환 대기
   
     cy.log('--- 화면 검증 시작 ---');
