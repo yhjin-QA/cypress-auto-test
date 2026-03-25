@@ -23,6 +23,8 @@ jobs:
     outputs:
       # 👇 다음 Job들이 읽을 수 있도록 변수를 밖으로 빼줍니다.
       skip_all: ${{ steps.check_version.outputs.skip_all }}
+      # 👇 [추가] 버전명을 외부로 내보냅니다.
+      version: ${{ steps.check_version.outputs.version }}
     defaults:
       run:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
@@ -139,7 +141,7 @@ jobs:
           $downloadCmd = "curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$mainName $rawBaseUrl/$mainName && curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$partyName $rawBaseUrl/$partyName"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$downloadCmd"
 
-          Write-Host "[Step 3] Run installation script (Background Job with 300s Timeout)...."
+          Write-Host "[Step 3] Run installation script (Background Job with 240s Timeout)...."
           
           # [Step 3] 수정 부분
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo LANG=C LC_ALL=C $remotePath/$mainName -b -f"
@@ -158,9 +160,9 @@ jobs:
               ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$cmd 2>&1"
           } -ArgumentList $keyPath, $target, $fullCmd
 
-          # 💡 타임아웃을 300초(5분)로 늘려 서비스 안착 시간을 확보합니다.
-          if (-not (Wait-Job $job -Timeout 300)) {
-              Write-Host "⚠️ [TIMEOUT] 300s elapsed. 포트 체크로 넘어갑니다."
+          # 💡 타임아웃을 240초(4분)로 늘려 서비스 안착 시간을 확보합니다.
+          if (-not (Wait-Job $job -Timeout 240)) {
+              Write-Host "⚠️ [TIMEOUT] 240s elapsed. 포트 체크로 넘어갑니다."
               Stop-Job $job
           } else {
               Write-Host " Installation job finished naturally."
@@ -461,7 +463,8 @@ jobs:
           # 💡 설치 작업과 테스트 작업의 결과를 모두 가져옵니다.
           DEPLOY_STATUS: ${{ needs.deploy-qa.result }}
           CYPRESS_STATUS: ${{ needs.cypress-run.result }}
-          VERSION_NAME: ${{ env.LATEST_VERSION }}
+          # 👇 [수정] outputs에서 버전명을 가져옵니다.
+          VERSION_NAME: ${{ needs.deploy-qa.outputs.version }}
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "확인결과"

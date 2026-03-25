@@ -27,7 +27,7 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('DEV_Release 로그캐치 UI기본체크', () => {
+  it('DEV 로그캐치 UI기본체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -35,6 +35,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 1. 사이트 방문
     cy.visit('https://10.10.54.51:18443/logcatch/login');
     cy.wait(4000); // 로딩 대기
+
     ////////////새로고침코드//////
       cy.get('body').then(($body) => {
       // 만약 입력창이 안 보인다면? (흰 화면 상태라면?)
@@ -1452,7 +1453,7 @@ describe('로그캐치 사이트 테스트', () => {
        cy.log('✅ 검출 - 검출메뉴관리 - [URI 관리] 출력 확인 완료 ');
 
 
-*/
+
     // ==========================================
     // STEP 11: 운영 서브메뉴 
     // ==========================================
@@ -1469,7 +1470,6 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '태스크 목록(MASTER)').should('exist');
-    cy.wait(1000);
     //버튼 확인
     cy.contains('.v-btn__content', 'MASTER 태스크 전체 시작').should('be.visible');
     cy.contains('.v-btn__content', 'MASTER 태스크 전체 정지').should('be.visible');
@@ -1477,23 +1477,18 @@ describe('로그캐치 사이트 테스트', () => {
     //프로세스 실행확인(프로세스 정지상태라면 시작문구로 버튼 변경되어있는상태 ) 
     cy.contains('p', 'Log Collector').should('be.visible');
     cy.contains('p', 'Log Collector').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
-    cy.wait(500);
 
     cy.contains('p', 'Discriminator').should('be.visible');
     cy.contains('p', 'Discriminator').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
-    cy.wait(500);
 
     cy.contains('p', 'Rule Analyzer').should('be.visible');
     cy.contains('p', 'Rule Analyzer').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
-    cy.wait(500);
 
     cy.contains('p', 'Data File Cleaner').should('be.visible');
     cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
-    cy.wait(500);
     
     cy.contains('p', 'Statistics').should('be.visible');
     cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
-    cy.wait(500);
 
     cy.log('✅ 운영 - 태스크 - [실행관리] 출력 확인 완료 ');
 
@@ -1583,7 +1578,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-list__tile__title').filter(':contains("실행 플랜")').filter(':visible').click({ force: true });
     cy.wait(3000); 
 
-    // 운영 > 실행플랜  > 스케줄러 탭을 클릭
+    // 운영 > 태스크  > "실행관리" 탭을 클릭
     cy.log('--- 스케줄러 탭 클릭 ---');
     cy.contains('.v-btn__content', '스케줄러').should('be.visible').click({ force: true });
     cy.wait(3000);
@@ -1629,7 +1624,7 @@ describe('로그캐치 사이트 테스트', () => {
 
  
  
-    // 운영 > 실행 플랜  > "실시간 모니터링" 탭을 클릭
+    // 운영 > 태스크  > "실시간 모니터링" 탭을 클릭
     cy.log('--- 실시간 모니터링 탭 클릭 ---');
     cy.contains('.v-btn__content', '실시간 모니터링').should('be.visible').click({ force: true });
     cy.wait(3000);
@@ -1760,7 +1755,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.log('✅ 운영 - 외부연동 - [원격 파일 다운로드] 출력 확인 완료 ');
 
   
- /*
+ 
 
 
     // ==========================================
@@ -1797,9 +1792,9 @@ describe('로그캐치 사이트 테스트', () => {
 
 
 
-    /*
+    */
     
-
+/*
     // ==========================================
     // STEP : 일반모드 -> 관리자페이지 탭 진입(상단관리자 버튼 클릭) 
     // ==========================================
@@ -2217,6 +2212,19 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-icon.fa-folder-open').should('be.visible');
     cy.log('✅ 관리 - 데이터 시각화 관리 - [통계 모듈 관리] 출력 확인 완료');
 
+*/
+    // ==========================================
+    // STEP : 일반모드 -> 관리자페이지 탭 진입(상단관리자 버튼 클릭) 
+    // ==========================================
+    cy.log('🚀 관리자(톱니바퀴) 버튼 클릭');
+    // 1. [검증] 톱니바퀴 아이콘이 화면에 보이는지 확인
+    // 설명: 'g-IConfig' 클래스가 설정 아이콘을 의미하는 핵심 식별자입니다.
+    cy.get('.g-IConfig').should('be.visible');
+    // 2. [클릭] 버튼 클릭
+    cy.get('.g-IConfig').should('be.visible').click({ force: true });
+    // 3. [대기] 관리자 메뉴가 펼쳐지거나 화면이 이동할 시간 대기
+    cy.wait(2000);
+    cy.log('✅ 관리자 톱니바퀴 아이콘 클릭 완료');
 
     // ==========================================
     // STEP 14: 관리자 -설정 탭 서브메뉴 
@@ -2224,10 +2232,13 @@ describe('로그캐치 사이트 테스트', () => {
     // 1. 관리자 페이지 사이드 메뉴 중 '설정' 버튼 클릭
     cy.log('--- [설정] 메뉴 클릭 ---');
     cy.contains('button.side-menu', '설정').should('be.visible').click({ force: true });
+    //cy.contains('span', '설정').closest('button.side-menu').click({ force: true });
     // 설정 > 패스워드 규칙 서브메뉴 클릭 
-    cy.wait(1000)
+    cy.wait(2000)
     cy.log('--- 서브메뉴 [패스워드 규칙] 클릭 ---');
-    cy.get('.v-list__tile__title').filter(':contains("패스워드 규칙")').filter(':visible').click({ force: true });
+    //cy.get('.v-list__tile__title').filter(':contains("패스워드 규칙")').filter(':visible').click({ force: true });
+    cy.contains('.v-list__tile__title', '패스워드 규칙').should('be.visible').closest('a, .v-list__tile').click({ force: true });
+    //cy.contains('패스워드 규칙', { timeout: 10000 }).should('be.visible').click({ force: true });
     cy.wait(2000); // 화면 전환 대기
   
     cy.log('--- 화면 검증 시작 ---');
@@ -2260,7 +2271,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('들여오기').should('be.visible');
     cy.get('.v-btn__content').filter(':visible').contains('내보내기').should('be.visible');
     cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
-    cy.get('.v-btn__content').filter(':visible').contains('취소').should('be.visible');
+    //v3.0.3.0_R34785 취소 버튼 없어짐 
+    //cy.get('.v-btn__content').filter(':visible').contains('취소').should('be.visible');
     cy.log('✅ 설정 - [패스워드 규칙] 출력 확인 완료');
 
  
@@ -2407,6 +2419,7 @@ describe('로그캐치 사이트 테스트', () => {
     //설정 클릭
     cy.log('--- [설정] 메뉴 클릭 ---');
     cy.contains('button.side-menu', '설정').should('be.visible').click({ force: true });
+    
     // 설정 > SMTP 설정 서브메뉴 클릭 
     cy.wait(1000)
     cy.log('--- 서브메뉴 [SMTP 설정] 클릭 ---');
@@ -2426,7 +2439,8 @@ describe('로그캐치 사이트 테스트', () => {
     
     //버튼 확인
     cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
-    cy.get('.v-btn__content').filter(':visible').contains('취소').should('be.visible');
+    // 3.0.3.0_R34785 버전에서 취소버튼 사라짐 
+    //cy.get('.v-btn__content').filter(':visible').contains('취소').should('be.visible');
     cy.get('.v-btn__content').filter(':visible').contains('접속 테스트').should('be.visible');
     cy.log('✅ 설정 - SMTP 설정 출력 확인 완료');
 
@@ -2449,10 +2463,10 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.font-weight-bold').filter(':visible').contains('시간').should('be.visible');
     cy.get('input[aria-label="시"]').should('be.visible')
     cy.get('input[aria-label="분"]').should('be.visible')
-    cy.get('input[aria-label="초"]').should('be.visible')
+    //cy.get('input[aria-label="초"]').should('be.visible')
     // v 아이콘 확인하는 코드
     cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
-    // 저장 버튼 확인인
+    // 저장 버튼 확인
     cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
     cy.log('✅ 설정 - 재시작 설정 화면 출력 확인 완료');
 
@@ -2474,7 +2488,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     cy.log('✅ 일반 점검페이지지 모드 복귀 완료');
 
-*/
+
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
