@@ -516,7 +516,7 @@ jobs:
           # 최종 타이틀 결정 (매우 중요!)
           $title = if ($isActuallyFailed) { $env:MSG_FAIL } else { $env:MSG_SUCCESS }
 
-          # 메시지 조립
+          # 구글챗 메시지 조립
           $pName = $env:PRODUCT_NAME
           $tType = $env:TEST_TYPE
           $mTitle = $env:MSG_TITLE
