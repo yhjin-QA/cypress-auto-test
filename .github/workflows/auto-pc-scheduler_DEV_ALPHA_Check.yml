@@ -8,10 +8,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  push:
-    branches: [ "master" ]
-  schedule:
-    - cron: '5 2 * * 1-5'
+  #push:
+  #  branches: [ "master" ]
+  #schedule:
+  #  - cron: '5 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -451,6 +451,10 @@ jobs:
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          # 💡 [핵심 추가] 스크린샷 경로 변수 정의
+          # 이전 단계에서 download-artifact를 통해 'all_raw_data'에 모두 모았습니다.
+          $screenshotPath = "all_raw_data/cypress/screenshots"
           
           # 1️⃣ 기본 상태값 추출 (대소문자 구분 없이 비교하기 위해 소문자로 변환)
           $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
