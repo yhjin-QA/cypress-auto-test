@@ -8,10 +8,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '5 2 * * 1-5'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '5 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -108,14 +108,14 @@ jobs:
           $mainName = "${env:MAIN_FILE_NAME}"
           $partyName = "${env:PARTY_FILE_NAME}"
 
-          Write-Host "🚀 [Step 1] Initialize existing installation environment and clean previous installation files (.bin)...."
+          Write-Host " [Step 1] Initialize existing installation environment and clean previous installation files (.bin)...."
           $cleanup = "sudo rm -f /etc/profile.d/logcatch.sh; sudo pkill -9 -u logcatch || true; sudo pkill -9 postgres || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch /var/lib/pgsql; rm -f $remotePath/*.bin"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $cleanup"
 
-          Write-Host "📥 [Step 2] Delivery of access permissions (Cookies) to the QA server and file download (enhanced stability)..."
+          Write-Host " [Step 2] Delivery of access permissions (Cookies) to the QA server and file download (enhanced stability)..."
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath cookies.txt "${target}:${remotePath}/cookies.txt"
 
-          # (수정 후) 👇 ALPHA 변경!
+          # (수정 후)  ALPHA 변경!
           $rawBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/show/logcatch/ALPHA/logcatch/${env:LATEST_VERSION}"
           
           # 💡 [네트워크 끊김 완벽 방어] 
@@ -125,36 +125,60 @@ jobs:
           $downloadCmd = "curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$mainName $rawBaseUrl/$mainName && curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$partyName $rawBaseUrl/$partyName"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$downloadCmd"
 
-          Write-Host "🚀 [Step 3] Run installation script (wait up to 180 seconds)...."
-          # 💡 다시 원래대로 정확한 파일명 지정 (다운로드가 완벽히 성공했을 때만 실행되므로 안전함)
-          $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo $remotePath/$mainName -b -f"
+          Write-Host "🚀 [Step 3] Run installation script (Background Job with 180s Timeout)...."
+          
+          # 1. 명령어 정의 (로캘 수정 및 서비스 비동기 실행 포함)
+          $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo LANG=C LC_ALL=C $remotePath/$mainName -b -f"
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 2; (sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr > /dev/null 2>&1 &)"
 
+          $fullCmd = "export TERM=linux; ls -lh $remotePath; $install && $fixProfile && $svcControl"
+
+          # 2. 💡 PowerShell이 stderr(경고) 때문에 멈추지 않도록 설정
           $job = Start-Job -ScriptBlock {
               param($keyPath, $target, $cmd)
-              ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target $cmd
-          } -ArgumentList $keyPath, $target, "export TERM=linux; ls -lh $remotePath; $install && $fixProfile && $svcControl"
+              # 에러가 발생해도 계속 진행하도록 세션 내 설정
+              $ErrorActionPreference = "Continue" 
+              # 2>&1을 사용하여 에러 출력을 일반 출력으로 병합 (PowerShell 오해 방지)
+              ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$cmd 2>&1"
+          } -ArgumentList $keyPath, $target, $fullCmd
 
-          # 💡 타임아웃을 90초에서 180초(3분)로 넉넉하게 늘렸습니다.
+          # 3. 180초(3분) 대기 및 강제 종료 로직
           if (-not (Wait-Job $job -Timeout 180)) {
-              Write-Host "⚠️ Installation time (180 seconds) elapsed. Force close session and proceed to the next step...."
+              Write-Host " [TIMEOUT] 180 seconds elapsed. Force closing SSH session and proceeding to Port Check..."
               Stop-Job $job
+          } else {
+              Write-Host " Installation job finished naturally."
           }
           
-          # 💡 [핵심 추가] 가려져 있던 리눅스 설치 로그를 화면에 낱낱이 출력합니다!
-          Write-Host "📜 ================= [ real install log result ] ================="
-          Receive-Job $job
-          Write-Host "=========================================================="
+          # 4. 💡 로그 출력 (에러 방지 처리가 추가된 버전)
+          Write-Host "================= [ Install Log Summary ] ================="
+          try {
+              # -ErrorAction SilentlyContinue 를 추가하여 로그 내부의 경고가 에러를 유발하지 않게 함
+              $logData = Receive-Job $job -ErrorAction SilentlyContinue
+              if ($logData) {
+                  # 텍스트로 변환하여 출력 (에러 객체가 아닌 단순 문자열로 취급)
+                  $logData | Out-String | Write-Host
+              }
+          } catch {
+              Write-Host " There were some warnings while retrieving the logs, but we ignored them and proceeded."
+          }
+          Write-Host "=============================================================="
+          
           Remove-Job $job
 
-          Write-Host "🕵️ [Step 4] Port (18443) waiting to start..."
+          # 5. 💡 강제 성공 처리 및 즉시 다음 단계 진행
+          $env:LASTEXITCODE = 0
+          Write-Host " Installation step finished. Moving to Port Polling..."
+
+          
+          Write-Host " [Step 4] Port (18443) waiting to start..."
           $success = $false
           for ($i = 1; $i -le 30; $i++) {
-              Write-Host "⏳ Attempt $i/30: Polling Port 18443..."
+              Write-Host " Attempt $i/30: Polling Port 18443..."
               $check = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "sudo netstat -tpln | grep -i listen | grep -c :18443"
               if ($check.Trim() -match '^[1-9][0-9]*$') {
-                  Write-Host "✅ Port open detected! Installation complete. Proceeding to Cypress test."
+                  Write-Host " Port open detected! Installation complete. Proceeding to Cypress test."
                   $success = $true
                   break
               }
@@ -164,8 +188,8 @@ jobs:
           # 💡 포트가 끝내 안 열리면 워크플로우를 실패 처리하여 원인을 바로 알 수 있게 합니다.
           
           if ($success) {
-              Write-Host "✅ Port open detected! Installation complete."
-              Write-Host "📝 [Step 5] Record successful installation version on server: $env:LATEST_VERSION"
+              Write-Host " Port open detected! Installation complete."
+              Write-Host " [Step 5] Record successful installation version on server: $env:LATEST_VERSION"
               # 리눅스 서버에 텍스트 파일로 버전 저장
              ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "echo $env:LATEST_VERSION > $remotePath/last_installed_version.txt"
           } else {

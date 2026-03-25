@@ -175,10 +175,10 @@ jobs:
           Write-Host " [Step 4] Port (18443) waiting to start..."
           $success = $false
           for ($i = 1; $i -le 30; $i++) {
-              Write-Host "⏳ Attempt $i/30: Polling Port 18443..."
+              Write-Host " Attempt $i/30: Polling Port 18443..."
               $check = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "sudo netstat -tpln | grep -i listen | grep -c :18443"
               if ($check.Trim() -match '^[1-9][0-9]*$') {
-                  Write-Host "✅ Port open detected! Installation complete. Proceeding to Cypress test."
+                  Write-Host " Port open detected! Installation complete. Proceeding to Cypress test."
                   $success = $true
                   break
               }
@@ -188,8 +188,8 @@ jobs:
           # 💡 포트가 끝내 안 열리면 워크플로우를 실패 처리하여 원인을 바로 알 수 있게 합니다.
           
           if ($success) {
-              Write-Host "✅ Port open detected! Installation complete."
-              Write-Host "📝 [Step 5] Record successful installation version on server: $env:LATEST_VERSION"
+              Write-Host " Port open detected! Installation complete."
+              Write-Host " [Step 5] Record successful installation version on server: $env:LATEST_VERSION"
               # 리눅스 서버에 텍스트 파일로 버전 저장
              ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "echo $env:LATEST_VERSION > $remotePath/last_installed_version.txt"
           } else {
@@ -451,6 +451,10 @@ jobs:
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          # 💡 [핵심 추가] 스크린샷 경로 변수 정의
+          # 이전 단계에서 download-artifact를 통해 'all_raw_data'에 모두 모았습니다.
+          $screenshotPath = "all_raw_data/cypress/screenshots"
           
           # 1️⃣ 기본 상태값 추출 (대소문자 구분 없이 비교하기 위해 소문자로 변환)
           $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
