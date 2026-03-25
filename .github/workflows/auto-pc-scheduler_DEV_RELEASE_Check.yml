@@ -108,14 +108,14 @@ jobs:
           $mainName = "${env:MAIN_FILE_NAME}"
           $partyName = "${env:PARTY_FILE_NAME}"
 
-          Write-Host "🚀 [Step 1] Initialize existing installation environment and clean previous installation files (.bin)...."
+          Write-Host " [Step 1] Initialize existing installation environment and clean previous installation files (.bin)...."
           $cleanup = "sudo rm -f /etc/profile.d/logcatch.sh; sudo pkill -9 -u logcatch || true; sudo pkill -9 postgres || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch /var/lib/pgsql; rm -f $remotePath/*.bin"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $cleanup"
 
-          Write-Host "📥 [Step 2] Delivery of access permissions (Cookies) to the QA server and file download (enhanced stability)..."
+          Write-Host " [Step 2] Delivery of access permissions (Cookies) to the QA server and file download (enhanced stability)..."
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath cookies.txt "${target}:${remotePath}/cookies.txt"
 
-          # (수정 후) 👇 ALPHA를 RELEASE로 변경!
+          # (수정 후)  ALPHA를 RELEASE로 변경!
           $rawBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/raw/logcatch/RELEASE/logcatch/${env:LATEST_VERSION}"
           
           # 💡 [네트워크 끊김 완벽 방어] 
@@ -125,26 +125,28 @@ jobs:
           $downloadCmd = "curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$mainName $rawBaseUrl/$mainName && curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$partyName $rawBaseUrl/$partyName"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$downloadCmd"
 
-          Write-Host "🚀 [Step 3] Run installation script (Real-time output mode)...."
+          Write-Host "[Step 3] Run installation script (Real-time output mode)...."
           # 💡 LANG=C 옵션을 추가하여 로캘 충돌을 원천 차단합니다.
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo LANG=C LC_ALL=C $remotePath/$mainName -b -f"     
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo sed -i 's/expot/export/g' /etc/profile.d/logcatch.sh.tmp; sudo sed -i 's/fo poc in/for poc in/g' /etc/profile.d/logcatch.sh.tmp; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
-          $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 2; (sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr > /dev/null 2>&1 &)"
-
+          # 💡 수정 1: 모든 출력을 /dev/null로 버리고, 세션과 완전히 분리(nohup 또는 &)
+          $svcControl = "sudo systemctl stop logcatch_taskmgr || true; sudo systemctl stop logcatch_server || true; sudo systemctl stop logcatch_redis || true; sleep 2; (sudo systemctl start logcatch_redis && sudo systemctl start logcatch_server && sudo systemctl start logcatch_taskmgr > /dev/null 2>&1 < /dev/null &)"
+          
           # 💡 [핵심 수정] Start-Job을 제거하고 ssh를 직접 호출합니다.
           # 이를 통해 모든 설치 로그(PostgreSQL 초기화 등)가 실시간으로 출력됩니다.
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; ls -lh $remotePath; $install && $fixProfile && $svcControl"
 
           # 2. 💡 실시간 실행 (Start-Job 없이 바로 호출)
           # 이 한 줄이 실행되는 동안 리눅스의 설치 로그가 실시간으로 GitHub 화면에 찍힙니다.
-          Write-Host "📜 ================= [ Real-time Install Log Start ] ================="
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; ls -lh $remotePath; $install && $fixProfile && $svcControl"
+          Write-Host "================= [ Real-time Install Log Start ] ================="
+          # 💡 수정 2: ssh 명령어에 -n 옵션 추가 (입력을 끊어 세션 종료 유도)
+          ssh -n -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; ls -lh $remotePath; $install && $fixProfile && $svcControl"
           Write-Host "=========================================================="
 
-          Write-Host "✅ Installation command execution finished. Proceeding to port check..."
+          Write-Host " Installation command execution finished. Proceeding to port check..."
 
         
-          Write-Host "🕵️ [Step 4] Port (18443) waiting to start..."
+          Write-Host " [Step 4] Port (18443) waiting to start..."
           $success = $false
           for ($i = 1; $i -le 30; $i++) {
               Write-Host "⏳ Attempt $i/30: Polling Port 18443..."
