@@ -283,12 +283,14 @@ describe('로그캐치 사이트 테스트', () => {
     // 검색 조건 이름 입력란 확인
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="경보 등급"]').filter(':visible').should('be.visible');
-    //토글문구확인 
-    cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
+    //토글문구확인
+    //v3.0.5.0_r34908 -> 제외됨. 
+    //cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
     //검색버튼 존재확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // 문구확인 
-    cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
+    // 문구확인
+    //v3.0.5.0_r34908 -> 제외됨.
+    //cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
     //표열 문구확인
     cy.get('th').filter(':visible').contains('접근이력 일시').should('be.visible');
     cy.get('th').filter(':visible').contains('사용자').should('be.visible');
@@ -333,8 +335,9 @@ describe('로그캐치 사이트 테스트', () => {
      
     //검색버튼 존재확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // 문구확인 
-    cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
+    // 문구확인
+    //v3.0.5.0_r34908 -> 제외됨. 
+    //cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
     //표열 문구확인
     cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
     cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
@@ -382,7 +385,8 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('전체 건수').should('be.visible');
      //토글 문구 확인
      cy.get('label').filter(':visible').contains('개인정보').should('be.visible');
-     cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
+     //v3.0.5.0_r34908 -> 제외됨.
+     //cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
      //표열 문구확인
      cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
      cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
