@@ -483,10 +483,9 @@ jobs:
               npx marge merged_report.json --reportDir ./final_report_Dev --inline --charts --reportTitle "Dev Report" --reportFilename "LogCatch_Dev_Report"
           }
 
-      - name: Send Google Chat (Integrated Logic)
+      - name: Send Google Chat (Safe String Version)
         if: always() 
         env:
-          # 사용자님의 env 설정을 그대로 유지합니다.
           DEPLOY_STATUS: ${{ needs.deploy-qa.result }}
           CYPRESS_STATUS: ${{ needs.cypress-run.result }}
           VERSION_NAME: ${{ needs.deploy-qa.outputs.version }}
@@ -496,24 +495,36 @@ jobs:
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
         run: |
-          # 1. 인코딩 강제 설정 (UTF8)
+          # 1. 인코딩 강제 설정
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
+          # 2. GitHub 변수를 파워쉘 내부 변수로 안전하게 복사 (반드시 따옴표로 감쌈)
+          $vName      = "${{ env.VERSION_NAME }}"
+          $pName      = "${{ env.PRODUCT_NAME }}"
+          $tType      = "${{ env.TEST_TYPE }}"
+          $mTitle     = "${{ env.MSG_TITLE }}"
+          $time       = "${{ env.NOW }}"
+          $msgSuccess = "${{ env.MSG_SUCCESS }}"
+          $msgFail    = "${{ env.MSG_FAIL }}"
+          $labelDash  = "${{ env.LABEL_DASH }}"
+          $labelGit   = "${{ env.LABEL_GIT }}"
+          $webhookUrl = "${{ secrets.GOOGLE_CHAT_WEBHOOK }}"
+
           $isActuallyFailed = $false
           $finalFailCount = 0
           $failNames = @()
 
-          Write-Host "============= [🔍 통합 분석 시작] ============="
+          Write-Host "============= [🔍 데이터 분석 시작] ============="
           
-          # [Step 1] 배포 단계(Job 1) 결과 확인
+          # [Step 1] 배포 단계 결과 확인
           $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
           if ($deployStatus -eq "failure") {
               $isActuallyFailed = $true
               $failNames = @("Deployment Stage Error")
           }
           else {
-              # [Step 2] 통합 리포트(merged_report.json) 분석
+              # [Step 2] 통합 리포트 분석
               if (Test-Path "merged_report.json") {
                   try {
                       $jsonObj = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -522,56 +533,46 @@ jobs:
                   } catch { Write-Host "JSON parsing skipped." }
               }
 
-              # [Step 3] 실패가 있다면 스크린샷 폴더에서 파일명 추출 (백업 로직)
-              if ($isActuallyFailed -or "${{ env.CYPRESS_STATUS }}".ToLower() -ne "success") {
-                  $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*(failed)*.png"
+              # [Step 3] 실패가 있다면 스크린샷 폴더에서 파일명 추출
+              $cypressStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
+              if ($isActuallyFailed -or $cypressStatus -ne "success") {
+                  $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*(failed)*.png" -ErrorAction SilentlyContinue
                   if ($failedScreenshots.Count -gt 0) {
                       $isActuallyFailed = $true
                       $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-                  } elseif ("${{ env.CYPRESS_STATUS }}".ToLower() -eq "failure") {
+                  } elseif ($cypressStatus -eq "failure" -or $cypressStatus -eq "cancelled") {
                       $isActuallyFailed = $true
                       $failNames = @("System Crash or Timeout")
                   }
               }
           }
 
-          # [Step 4] 메시지 데이터 조립 (사용자 env 활용)
-          $pName  = "${{ env.PRODUCT_NAME }}"
-          $tType  = "${{ env.TEST_TYPE }}"
-          $vName  = "${{ env.VERSION_NAME }}"
-          $mTitle = "${{ env.MSG_TITLE }}"
-          $time   = "${{ env.NOW }}"
-          
+          # [Step 4] 메시지 타이틀 및 본문 결정
           if ($isActuallyFailed) {
-              $title = "${{ env.MSG_FAIL }} $pName $tType $mTitle (v$vName)"
+              $title = "$msgFail $pName $tType $mTitle (v$vName)"
               $joinedNames = if ($failNames.Count -gt 0) { $failNames -join ", " } else { "Unknown" }
               $statusDetail = "FAIL: $finalFailCount script ( $joinedNames )"
           } else {
-              $title = "${{ env.MSG_SUCCESS }} $pName $tType $mTitle (v$vName)"
+              $title = "$msgSuccess $pName $tType $mTitle (v$vName)"
               $statusDetail = "" 
           }
 
-          # [Step 5] 메시지 라인 구성 (가장 안전한 배열 방식)
-          $dashLabel = "${{ env.LABEL_DASH }}"
-          $gitLabel  = "${{ env.LABEL_GIT }}"
-          $dashUrl   = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
-          $runUrl    = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # [Step 5] 메시지 라인 구성
+          $dashUrl = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
+          $runUrl  = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           $msgLines = @()
           $msgLines += "$title"
           $msgLines += "($time)"
           if ($statusDetail -ne "") { $msgLines += "$statusDetail" }
           $msgLines += ""
-          $msgLines += "$dashLabel : $dashUrl"
-          $msgLines += "$gitLabel : $runUrl"
+          $msgLines += "$labelDash : $dashUrl"
+          $msgLines += "$labelGit : $runUrl"
           
           $finalText = $msgLines -join "`n"
 
-          # [Step 6] UTF8 바이트 변환 후 전송 (한글 깨짐 방어의 핵심)
+          # [Step 6] 전송 (에러 방지를 위해 줄바꿈 백틱 제거하고 한 줄로 실행)
           $payload = @{ text = $finalText } | ConvertTo-Json -Compress
           $utf8Bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
           
-          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" `
-                            -Method Post `
-                            -ContentType "application/json; charset=utf-8" `
-                            -Body $utf8Bytes
+          Invoke-RestMethod -Uri "$webhookUrl" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes
