@@ -481,11 +481,12 @@ jobs:
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
         run: |
-          $OutputEncoding = [System.Text.Encoding]::UTF8
+         $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
           $isActuallyFailed = $false
           $statusDetail = "" 
+          $reportFailures = 0
 
           Write-Host "============= [Debug Log Start] ============="
           
@@ -495,48 +496,50 @@ jobs:
               $isActuallyFailed = $true
               $statusDetail = "[Installation Failed] Error occurred during server deployment."
           }
-          # 2. 테스트 결과 분석 (실패 파일 유무를 1순위로 변경)
+          # 2. 테스트 결과 전수 조사
           else {
-              # 🚩 [변경] 실제 실패 스크린샷이 있는지 전수 조사
-              $failedScreenshots = Get-ChildItem -Path "all_raw_data\**\*(failed)*.png" -ErrorAction SilentlyContinue
-              
-              # 🚩 [핵심 로직] 실패 스크린샷이 발견되면 무조건 실패로 간주
-              if ($failedScreenshots) {
-                  $isActuallyFailed = $true
-                  $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-                  $statusDetail = "[Test Failed] Scenario failure: ( $($failNames -join ', ') )"
-                  Write-Host "Real failures detected by screenshots."
-              } 
-              else {
-                  # 스크린샷이 없을 때만 리포트를 참고하여 최종 확인
-                  $hasReport = Test-Path "merged_report.json"
-                  $reportFailures = 0
-                  if ($hasReport) {
-                      try {
-                          $jsonObj = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
-                          $reportFailures = [int]$jsonObj.stats.failures
-                      } catch { }
-                  }
+              # 💡 [핵심 보완] 다운로드된 모든 JSON 파일을 개별적으로 읽어 실패 건수를 합산합니다.
+              $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json"
+              Write-Host "Found $($jsonFiles.Count) report files."
 
-                  if ($reportFailures -gt 0) {
-                      $isActuallyFailed = $true
-                      $statusDetail = "[Test Failed] $reportFailures scenarios failed (Check dashboard)."
-                  } else {
-                      # 리포트도 0, 스크린샷도 없어야만 성공
-                      $jobStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
-                      if ($jobStatus -eq "cancelled" -or $jobStatus -eq "failure") {
-                          if (-not $hasReport) {
-                              $isActuallyFailed = $true
-                              $statusDetail = "[System Error] Execution stopped or unknown error."
-                          } else {
-                              # 리포트 0, 스크린샷 0인데 Job이 실패면 이것이 진짜 Flaky(재시도 성공)입니다.
-                              $isActuallyFailed = $false
-                              $statusDetail = "[All Passed] All scenarios passed (Flaky recovered)."
-                          }
-                      } else {
-                          $isActuallyFailed = $false
-                          $statusDetail = "[All Passed] All scenarios passed."
+              foreach ($file in $jsonFiles) {
+                  try {
+                      $obj = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+                      if ($obj.stats.failures -ne $null) {
+                          $reportFailures += [int]$obj.stats.failures
                       }
+                  } catch { Write-Host "Error parsing: $($file.Name)" }
+              }
+              Write-Host "Total Confirmed Failures: $reportFailures"
+
+              # 🚩 판단 1: 리포트상 실패가 1개라도 있는 경우 (진짜 실패)
+              if ($reportFailures -gt 0) {
+                  $isActuallyFailed = $true
+                  # 실패 파일명을 찾기 위해 스크린샷 폴더 조사
+                  $failedScreenshots = Get-ChildItem -Path "all_raw_data\**\*(failed)*.png" -ErrorAction SilentlyContinue
+                  if ($failedScreenshots) {
+                      $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
+                      $statusDetail = "[Test Failed] $reportFailures Scenario failure: ( $($failNames -join ', ') )"
+                  } else {
+                      $statusDetail = "[Test Failed] $reportFailures Scenario(s) failed (Check dashboard for details)."
+                  }
+              } 
+              # 🚩 판단 2: 리포트 실패가 0인 경우 (성공 혹은 Flaky 혹은 시스템에러)
+              else {
+                  $jobStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
+                  if ($jobStatus -eq "failure" -or $jobStatus -eq "cancelled") {
+                      if ($jsonFiles.Count -eq 0) {
+                          # 리포트 파일 자체가 없으면 실행 도중 크래시 발생한 것임
+                          $isActuallyFailed = $true
+                          $statusDetail = "[System Error] No report data found. Execution crashed."
+                      } else {
+                          # 💡 [Flaky 예외처리] 리포트 파일은 존재하고 실패가 모두 0인데 Job만 failure인 경우
+                          $isActuallyFailed = $false
+                          $statusDetail = "[All Passed] All scenarios passed (Flaky recovered)."
+                      }
+                  } else {
+                      $isActuallyFailed = $false
+                      $statusDetail = "[All Passed] All scenarios passed."
                   }
               }
           }
