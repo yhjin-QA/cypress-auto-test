@@ -365,9 +365,10 @@ describe('로그캐치 사이트 테스트', () => {
      // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
-     //왜 2개 정보사용자??
+     //왜 2개 정보사용자?? 
+     //v3.0.5_r34908  버전에서 정보 사용자 중복 없어짐 
      cy.get('input[aria-label="정보 사용자"][role="combobox"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="정보 사용자"]:not([role="combobox"])').filter(':visible').should('be.visible');
+     //cy.get('input[aria-label="정보 사용자"]:not([role="combobox"])').filter(':visible').should('be.visible');
      //cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');

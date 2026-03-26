@@ -396,12 +396,14 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
     cy.log('--- 기간 내 시작/종료 달력 아이콘 검증 ---');
-    // 1. label 중에서 '기간'이면서, 실제로 화면에 보이는(visible) 요소의 부모를 찾습니다.
-    cy.contains('label', '기간').filter(':visible').closest('.v-input').within(() => {
-      // 2. 그 안에서 아이콘 검증
-      cy.get('.v-icon').contains('event').eq(0).should('be.visible');
-      cy.get('.v-icon').contains('event').eq(1).should('be.visible');
+    cy.get('.v-icon:contains("event")').filter(':visible').should('have.length.at.least', 2) // 최소 2개(시작일, 종료일) 이상 있는지 확인
+    .then(($icons) => {
+    // 2. 첫 번째 아이콘(시작일)이 화면에 보이는지 확인
+    cy.wrap($icons).eq(0).should('be.visible');
+    // 3. 두 번째 아이콘(종료일)이 화면에 보이는지 확인
+    cy.wrap($icons).eq(1).should('be.visible');
      });
+    cy.log('✅ 시작/종료일 달력 아이콘 노출 확인 완료');
      // 버튼확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     //검색 조건 입력문구 확인
