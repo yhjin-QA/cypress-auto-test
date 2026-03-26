@@ -324,7 +324,8 @@ describe('로그캐치 사이트 테스트', () => {
      //3.0.3.0_R34785에서 해당항목 사라짐 
      //cy.get('input[aria-label="개인정보 건수"]').filter(':visible').should('be.visible');
      //토글문구 확인
-     cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
+     //v3.0.5.0_r34908 -> 제외됨. 
+     //cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
      // like버튼 확인
      // v3.0.4.0_R34865 like ->  포함 문구로 버튼문구 변경됨.
      // 사용자 계정은 변경되지않음 맨티스 이슈등록필요  
