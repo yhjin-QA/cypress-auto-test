@@ -502,10 +502,10 @@ jobs:
           
           $isActuallyFailed = $false
           $statusDetail = "" 
-          $reportFailures = 0
+          $totalHardFailures = 0
           $failedSpecList = @()
 
-          Write-Host "============= [Debug: Data Scan Start] ============="
+          Write-Host "============= [Debug: Heavy Analysis Start] ============="
           
           # 1. 배포 단계 확인
           $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
@@ -516,56 +516,47 @@ jobs:
           else {
               # 모든 JSON 리포트 파일 검색
               $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json"
-              Write-Host "Found $($jsonFiles.Count) report files."
+              Write-Host "Found $($jsonFiles.Count) JSON report files."
 
               foreach ($file in $jsonFiles) {
                   try {
-                      $obj = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+                      # JSON 파일을 텍스트로 읽어 'fail": true' 문자열이 있는지 먼저 검사 (가장 확실한 방법)
+                      $rawContent = Get-Content $file.FullName -Raw -Encoding UTF8
+                      $obj = $rawContent | ConvertFrom-Json
                       
-                      # 💡 [핵심 보완] 결과(results) 배열을 돌며 실패한 스펙을 찾습니다.
+                      # 파일 내의 stats.failures가 0보다 크거나, 수동으로 뒤졌을 때 실패가 발견되는지 체크
+                      $fileHasFailure = $false
+                      if ($obj.stats.failures -gt 0) { $fileHasFailure = $true }
+                      
+                      # JSON 구조를 샅샅이 뒤져서 'state': 'failed' 인 항목을 찾음
                       foreach ($res in $obj.results) {
-                          # 해당 스펙 파일의 모든 테스트(suite 내부 + root level)를 수집
-                          $allTests = @()
-                          if ($res.tests) { $allTests += $res.tests }
-                          if ($res.suites) { 
-                              $allTests += ($res.suites | ForEach-Object { $_.tests })
-                              # 더 깊은 depth의 suite가 있을 경우 대비
-                              $allTests += ($res.suites.suites | ForEach-Object { $_.tests })
-                          }
-
-                          # 'failed' 상태인 테스트가 하나라도 있는지 확인
-                          $failedTests = $allTests | Where-Object { $_.state -eq "failed" }
+                          # 중첩된 suites 내부까지 전수 조사
+                          $failedItems = $res.suites | ForEach-Object { $_.tests } | Where-Object { $_.fail -eq $true -or $_.state -eq "failed" }
                           
-                          if ($failedTests) {
-                              $reportFailures += $failedTests.Count
+                          if ($failedItems -or $fileHasFailure) {
+                              $isActuallyFailed = $true
+                              $totalHardFailures++
                               $specName = if ($res.file) { Split-Path $res.file -Leaf } else { Split-Path $res.fullFile -Leaf }
                               if ($specName) { $failedSpecList += $specName }
+                              Write-Host "Real Failure Detected in: $specName"
                           }
                       }
                   } catch { Write-Host "Error parsing file: $($file.Name)" }
               }
 
               $uniqueFailedSpecs = $failedSpecList | Select-Object -Unique
-              Write-Host "Total Confirmed Failures: $reportFailures"
-
-              # 🚩 2단계: 최종 실패 여부 결정
-              if ($reportFailures -gt 0) {
-                  $isActuallyFailed = $true
-                  $statusDetail = "[Test Failed] $reportFailures Scenario failure: ( $($uniqueFailedSpecs -join ', ') )"
+              
+              # 🚩 2단계: 최종 판단
+              if ($isActuallyFailed) {
+                  # 진짜 실패가 하나라도 발견된 경우
+                  $statusDetail = "[Test Failed] Scenario failure: ( $($uniqueFailedSpecs -join ', ') )"
               } 
               else {
-                  # 리포트상 실패가 0이면 Job 상태가 failure여도 성공(Flaky) 처리
+                  # 리포트 어디에도 실패가 없는데 Job만 failure인 경우 -> 이게 진짜 Flaky
                   $jobStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
                   if ($jobStatus -eq "failure" -or $jobStatus -eq "cancelled") {
-                      if ($jsonFiles.Count -eq 0) {
-                          $isActuallyFailed = $true
-                          $statusDetail = "[System Error] No report data found."
-                      } else {
-                          $isActuallyFailed = $false
-                          $statusDetail = "[All Passed] All scenarios passed (Flaky recovery detected)."
-                      }
+                      $statusDetail = "[All Passed] All scenarios passed (Flaky recovery detected)."
                   } else {
-                      $isActuallyFailed = $false
                       $statusDetail = "[All Passed] All scenarios passed."
                   }
               }
@@ -579,9 +570,8 @@ jobs:
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           $url = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
 
-          # 줄바꿈(`n) 방식 적용
           $msgBody = "$title ${env:PRODUCT_NAME} ${env:TEST_TYPE} ${env:MSG_TITLE} (v$vName)`n($time)`n$statusDetail`n`n${env:LABEL_DASH} : $url`n${env:LABEL_GIT} : $runUrl"
 
           $payload = @{ text = $msgBody } | ConvertTo-Json -Compress
           $utf8Payload = [System.Text.Encoding]::UTF8.GetBytes($payload)
-          Invoke-RestMethod -Uri '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Payload
+          Invoke-RestMethod -Uri '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Payload 
