@@ -483,7 +483,7 @@ jobs:
               npx marge merged_report.json --reportDir ./final_report_Dev --inline --charts --reportTitle "Dev Report" --reportFilename "LogCatch_Dev_Report"
           }
 
-      - name: Send Google Chat (Absolute Final Fix)
+      - name: Send Google Chat (Final Layout)
         if: always() 
         env:
           WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
@@ -502,78 +502,80 @@ jobs:
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
           $isActuallyFailed = $false
-          $realHardFailSpecs = @()
+          $failedSpecNames = @()
 
-          Write-Host "============= [🔍 리포트 직접 분석 시작] ============="
+          Write-Host "============= [🔍 최종 레이아웃 분석 시작] ============="
           
           # [Step 1] 배포 단계 확인
           if ($env:DEPLOY_STATUS.ToLower() -eq "failure") {
               $isActuallyFailed = $true
-              $realHardFailSpecs = @("Deployment Stage Error")
+              $failedSpecNames = @("Deployment Stage Error")
           }
           else {
-              # [Step 2] 모든 JSON 리포트 파일 전수 조사
+              # [Step 2] 모든 JSON 리포트 전수 조사
               $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue
               
               foreach ($file in $jsonFiles) {
                   try {
                       $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
-                      
-                      # 해당 리포트에 실패 기록이 있는지 확인
+                      # 최종 실패 수치가 1 이상인 파일만 처리
                       if ([int]$content.stats.failures -gt 0) {
                           foreach ($res in $content.results) {
-                              # 스펙 내 테스트들 중 하나라도 최종 상태가 'failed' 인지 확인
-                              # suites 내부의 tests와 root 레벨의 tests를 모두 체크
-                              $allTests = @()
-                              if ($res.tests) { $allTests += $res.tests }
-                              if ($res.suites) { $allTests += ($res.suites | ForEach-Object { $_.tests }) }
-                              
-                              if ($allTests | Where-Object { $_.fail -eq $true -or $_.state -eq "failed" }) {
-                                  $isActuallyFailed = $true
-                                  # 파일 경로에서 파일명만 추출 (경로 구분자 통합 처리)
+                              # 리포트 내부에 실제 실패(fail: true)가 있는 스펙 추출
+                              $resRaw = $res | ConvertTo-Json -Depth 10
+                              if ($resRaw -match '"fail":\s*true' -or $resRaw -match '"state":\s*"failed"') {
                                   $fPath = if ($res.file) { $res.file } else { $res.fullFile }
                                   $fName = Split-Path ($fPath -replace '\\', '/') -Leaf
-                                  if ($fName) { $realHardFailSpecs += $fName }
+                                  if ($fName) { $failedSpecNames += $fName }
                               }
                           }
                       }
                   } catch { }
               }
               
-              # 중복 제거
-              $realHardFailSpecs = $realHardFailSpecs | Select-Object -Unique
+              $uniqueFailures = $failedSpecNames | Select-Object -Unique
 
-              # [Step 3] 예외 처리 (리포트에는 없으나 Job이 실패한 경우 - 시스템 장애)
-              if ($realHardFailSpecs.Count -eq 0 -and ($env:CYPRESS_STATUS.ToLower() -eq "failure" -or $env:CYPRESS_STATUS.ToLower() -eq "cancelled")) {
+              # [Step 3] 예외 처리: 리포트엔 실패가 없는데 Job이 실패한 경우 (시스템 장애 등)
+              if ($uniqueFailures.Count -eq 0 -and ($env:CYPRESS_STATUS.ToLower() -eq "failure" -or $env:CYPRESS_STATUS.ToLower() -eq "cancelled")) {
                   $isActuallyFailed = $true
-                  $realHardFailSpecs = @("System Error or Crash")
+                  $uniqueFailures = @("System Error or Crash")
+              } elseif ($uniqueFailures.Count -gt 0) {
+                  $isActuallyFailed = $true
               }
           }
 
-          # [Step 4] 메시지 데이터 조립
-          $finalCount = $realHardFailSpecs.Count
-          if ($isActuallyFailed -and $finalCount -gt 0) {
-              $title = "$($env:MSG_FAIL) $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:VERSION_NAME))"
-              $joinedNames = $realHardFailSpecs -join ", "
-              $statusDetail = "FAIL: $finalCount script ( $joinedNames )"
+          # [Step 4] 메시지 조립 (건수 체크 제외 레이아웃)
+          $pName  = "$env:PRODUCT_NAME"
+          $tType  = "$env:TEST_TYPE"
+          $vName  = "$env:VERSION_NAME"
+          $mTitle = "$env:MSG_TITLE"
+          $time   = "$env:NOW"
+          
+          if ($isActuallyFailed) {
+              $title = "$env:MSG_FAIL $pName $tType $mTitle (v$vName)"
+              $specListString = $uniqueFailures -join ", "
+              # 요청하신 레이아웃: FAIL: ( 파일명 )
+              $statusDetail = "FAIL: ( $specListString )"
           } else {
-              $title = "$($env:MSG_SUCCESS) $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:VERSION_NAME))"
+              $title = "$env:MSG_SUCCESS $pName $tType $mTitle (v$vName)"
               $statusDetail = "" 
           }
 
-          # [Step 5] 메시지 구성 및 전송
+          # [Step 5] 메시지 구성
           $dashUrl = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
           $runUrl  = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           $msgLines = @()
           $msgLines += "$title"
-          $msgLines += "($($env:NOW))"
+          $msgLines += "($time)"
           if ($statusDetail -ne "") { $msgLines += "$statusDetail" }
           $msgLines += ""
-          $msgLines += "$($env:LABEL_DASH) : $dashUrl"
-          $msgLines += "$($env:LABEL_GIT) : $runUrl"
+          $msgLines += "$env:LABEL_DASH : $dashUrl"
+          $msgLines += "$env:LABEL_GIT : $runUrl"
           
           $finalText = $msgLines -join "`n"
+
+          # [Step 6] 전송 (UTF8 바이트 전송)
           $payload = @{ text = $finalText } | ConvertTo-Json -Compress
           $utf8Bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
           Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes

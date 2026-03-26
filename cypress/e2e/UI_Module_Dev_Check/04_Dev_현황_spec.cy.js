@@ -464,11 +464,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.c-headline', '검색 조건',{ timeout: 10000 }).should('exist');
 
     // 현황 > 종합현황  > [정보 사용자별] 탭 클릭 
-    // 🌟 [추가] 로딩 오버레이가 사라질 때까지 대기
-    // v-overlay--active가 'not.exist' 하거나 'not.be.visible' 할 때까지 기다립니다.
-    //cy.get('.v-overlay--active', { timeout: 10000 }).should('not.exist');
+    //cy.contains('.tab-title', '정보사용자 별').click({ force: true });
     //cy.get('.tab-title').filter(':visible').should('be.visible').contains('정보사용자 별').click();
-    //cy.wait(3000);
+    cy.contains('.tab-title', '정보사용자 별', { timeout: 10000 }).should('be.visible').click({ force: true });
     cy.log('--- 기간 내 시작/종료 달력 아이콘 검증 ---');
     cy.get('.v-icon:contains("event")').filter(':visible').should('have.length.at.least', 2) // 최소 2개(시작일, 종료일) 이상 있는지 확인
     .then(($icons) => {
