@@ -487,6 +487,7 @@ jobs:
           $isActuallyFailed = $false
           $finalFailCount = 0
           $failNames = @()
+          $statusDetail = ""
 
           Write-Host "============= [Debug Log Start] ============="
           
@@ -541,7 +542,8 @@ jobs:
           $url = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
 
           $msgBody = @"
-          $title $pName $tType $mTitle ($vName) ($time)
+          $title $pName $tType $mTitle (v$vName) 
+          ($time)
           $statusDetail
 
           ${env:LABEL_DASH} : $url
