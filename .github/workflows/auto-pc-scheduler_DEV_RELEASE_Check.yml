@@ -145,7 +145,7 @@ jobs:
           $downloadCmd = "curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$mainName $rawBaseUrl/$mainName && curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$partyName $rawBaseUrl/$partyName"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$downloadCmd"
 
-          Write-Host "[Step 3] Run installation script (Background Job with 240s Timeout)...."
+          Write-Host "[Step 3] Run installation script (Background Job with 180s Timeout)...."
           
           # [Step 3] 수정 부분
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo LANG=C LC_ALL=C $remotePath/$mainName -b -f"
@@ -164,9 +164,9 @@ jobs:
               ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$cmd 2>&1"
           } -ArgumentList $keyPath, $target, $fullCmd
 
-          # 💡 타임아웃을 240초(4분)로 늘려 서비스 안착 시간을 확보합니다.
-          if (-not (Wait-Job $job -Timeout 240)) {
-              Write-Host "[TIMEOUT] 240s elapsed. Next step Port Check"
+          # 💡 타임아웃을 180초(3분)로 늘려 서비스 안착 시간을 확보합니다.
+          if (-not (Wait-Job $job -Timeout 180)) {
+              Write-Host "[TIMEOUT] 180s elapsed. Next step Port Check"
               Stop-Job $job
           } else {
               Write-Host " Installation job finished naturally."
@@ -481,68 +481,77 @@ jobs:
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
         run: |
+          run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
+          # 💡 [초기화] 모든 변수를 최상단에서 명확히 선언합니다.
           $isActuallyFailed = $false
           $finalFailCount = 0
           $failNames = @()
-          $statusDetail = ""
+          $statusDetail = "" 
 
           Write-Host "============= [Debug Log Start] ============="
           
-          # 1. 설치 단계(deploy-qa) 실패 여부 먼저 확인
+          # 1. 설치 단계(deploy-qa) 결과 확인
           $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
           if ($deployStatus -eq "failure") {
               $isActuallyFailed = $true
-              $failNames = @("Installation Failed")
+              $statusDetail = "[설치 실패] 서버 배포 단계 에러"
           }
-          # 2. 설치가 성공했다면 JSON 리포트 분석
+          # 2. 설치 성공 시 테스트 리포트 분석
           else {
-              if (Test-Path "merged_report.json") {
+              # 💡merged_report.json이 없을 수도 있으므로, 리포트와 스크린샷을 동시에 체크합니다.
+              $hasReport = Test-Path "merged_report.json"
+              $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*(failed)*.png"
+
+              if ($hasReport) {
                   try {
                       $jsonObj = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
                       $finalFailCount = [int]$jsonObj.stats.failures
-                      Write-Host "Report parsed. Actual failures: $finalFailCount"
-
-                      if ($finalFailCount -gt 0) {
-                          $isActuallyFailed = $true
-                          # 실패한 시나리오 명 추출 (스크린샷 폴더 기준)
-                          $failedScreenshots = Get-ChildItem -Path "all_raw_data/screenshots" -Recurse -Filter "*(failed)*.png"
-                          if ($failedScreenshots.Count -gt 0) {
-                              $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-                              # 💡 [추가] 이 줄이 있어야 구글 챗 메시지에 실패 파일명이 나옵니다.
-                              $statusDetail = "[Test Failed] $finalFailCount Scenario failure ( $($failNames -join ', ') )"
-                          }
-                      }
+                      Write-Host "Report Failures: $finalFailCount"
+                      
+                      if ($finalFailCount -gt 0) { $isActuallyFailed = $true }
                   } catch { Write-Host "JSON parsing error." }
+              }
+
+              # 💡 리포트상 실패가 있거나, 리포트가 없더라도 실패 스크린샷이 발견되면 실패로 간주
+              if ($isActuallyFailed -or ($failedScreenshots.Count -gt 0)) {
+                  $isActuallyFailed = $true
+                  if ($failedScreenshots.Count -gt 0) {
+                      # 파일명 추출 (중복 제거)
+                      $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
+                      $statusDetail = "[Test Failed] Scenario failure ( $($failNames -join ', ') )"
+                  } else {
+                      $statusDetail = "[Test Failed] 시나리오 실패 (파일명 추출 불가)"
+                  }
+              } else {
+                  $statusDetail = "[All Passed] 모든 테스트 성공"
               }
           }
 
-          # 3. 시스템 오류/취소 핸들링
+          # 3. 시스템 오류 핸들링
           $jobStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           if (-not $isActuallyFailed -and ($jobStatus -eq "cancelled" -or $jobStatus -eq "failure")) {
               $isActuallyFailed = $true
-              $failNames = @("System Error or Cancelled")
+              $statusDetail = "[System Error] 실행 중 중단 또는 시스템 오류"
           }
           Write-Host "============== [Debug Log End] =============="
 
-
-
-          # 최종 타이틀 결정 (매우 중요!)
+          # 최종 타이틀 결정
           $title = if ($isActuallyFailed) { $env:MSG_FAIL } else { $env:MSG_SUCCESS }
 
-          # 구글챗 메시지 조립
-          $pName = $env:PRODUCT_NAME
-          $tType = $env:TEST_TYPE
+          # 구글챗 메시지 조립 (v 추가 및 줄바꿈 적용)
+          $pName  = $env:PRODUCT_NAME
+          $tType  = $env:TEST_TYPE
           $mTitle = $env:MSG_TITLE
-          $vName = $env:VERSION_NAME
-          $time = $env:NOW
+          $vName  = $env:VERSION_NAME
+          $time   = $env:NOW
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          $url = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
+          $url    = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
 
           $msgBody = @"
-          $title $pName $tType $mTitle (v$vName) 
+          $title $pName $tType $mTitle (v$vName)
           ($time)
           $statusDetail
 
