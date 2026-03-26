@@ -1488,7 +1488,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(500);
 
     cy.contains('p', 'Data File Cleaner').should('be.visible');
-    cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
+    cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '시작').should('be.visible');
     cy.wait(500);
     
     cy.contains('p', 'Statistics').should('be.visible');
