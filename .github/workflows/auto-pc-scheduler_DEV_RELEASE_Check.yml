@@ -489,13 +489,13 @@ jobs:
 
           Write-Host "============= [Debug Log Start] ============="
           
-          # 1. Check Deployment Status (deploy-qa)
+          # 1. 설치 단계(deploy-qa) 결과 확인
           $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
           if ($deployStatus -eq "failure") {
               $isActuallyFailed = $true
               $statusDetail = "[Installation Failed] Error occurred during server deployment."
           }
-          # 2. Analyze Test Results (if deployment succeeded)
+          # 2. 설치 성공 시 테스트 결과 분석
           else {
               $hasReport = Test-Path "merged_report.json"
               $reportFailures = 0
@@ -504,23 +504,26 @@ jobs:
                   try {
                       $jsonObj = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
                       $reportFailures = [int]$jsonObj.stats.failures
-                      Write-Host "Reported Failures: $reportFailures"
+                      Write-Host "Reported Failures from JSON: $reportFailures"
                   } catch { Write-Host "JSON parsing error." }
               }
 
-              # 💡 Priority 1: If there are actual failures in the report, show failed specs.
-              if ($reportFailures -gt 0) {
+              # 💡 핵심: 리포트상 실패가 있거나, 리포트와 상관없이 실패 스크린샷이 발견되면 'Test Failed'로 간주
+              $failedScreenshots = Get-ChildItem -Path "all_raw_data\**\*(failed)*.png" -ErrorAction SilentlyContinue
+              
+              if ($reportFailures -gt 0 -or ($failedScreenshots.Count -gt 0)) {
                   $isActuallyFailed = $true
-                  $failedScreenshots = Get-ChildItem -Path "all_raw_data\**\*(failed)*.png" -ErrorAction SilentlyContinue
                   
-                  if ($failedScreenshots) {
+                  if ($failedScreenshots.Count -gt 0) {
+                      # 🚩 스크린샷 파일이 있는 경우 파일명을 추출합니다.
                       $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-                      $statusDetail = "[Test Failed] Scenario failure: ( $($failNames -join ', ') )"
+                      $statusDetail = "[Test Failed] $($failedScreenshots.Count) Scenario failure ( $($failNames -join ', ') )"
                   } else {
-                      $statusDetail = "[Test Failed] $reportFailures scenario(s) failed. (Cannot extract filenames)"
+                      # 🚩 스크린샷은 없지만 리포트상 실패가 있는 경우
+                      $statusDetail = "[Test Failed] $reportFailures Scenario failure (Check dashboard for details)"
                   }
               } 
-              # 💡 Priority 2: If report has 0 failures, check if the job itself crashed.
+              # 3. 리포트/스크린샷 모두 깨끗한데 Job 자체가 failure인 경우 (진짜 시스템 오류)
               else {
                   $jobStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
                   if ($jobStatus -eq "cancelled" -or $jobStatus -eq "failure") {
@@ -528,13 +531,13 @@ jobs:
                       $statusDetail = "[System Error] Execution stopped or unknown system error occurred."
                   } else {
                       $isActuallyFailed = $false
-                      $statusDetail = "[All Passed] All scenarios passed successfully. (Including Flaky recovery)"
+                      $statusDetail = "[All Passed] All scenarios passed successfully."
                   }
               }
           }
           Write-Host "============== [Debug Log End] =============="
 
-          # Final Title & Message Assembly
+          # 최종 타이틀 및 메시지 조립
           $title  = if ($isActuallyFailed) { $env:MSG_FAIL } else { $env:MSG_SUCCESS }
           $pName  = $env:PRODUCT_NAME
           $tType  = $env:TEST_TYPE
@@ -544,6 +547,7 @@ jobs:
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           $url    = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
 
+          # 💡 히어 스트링 구조 수정 (줄바꿈 최적화)
           $msgBody = @"
           $title $pName $tType $mTitle (v$vName)
           ($time)
