@@ -401,6 +401,12 @@ jobs:
     needs: [deploy-qa, cypress-run, restart-task-run] # 💡 두 Job이 모두 끝나야 실행
     if: always() && needs.deploy-qa.outputs.skip_all != 'true'
     runs-on: [self-hosted, PC-Auto]
+    env:
+      DEPLOY_STATUS: ${{ needs.deploy-qa.result }}
+      CYPRESS_STATUS: ${{ needs.cypress-run.result }}
+      # 👇 [수정] outputs에서 버전명을 가져옵니다.
+      VERSION_NAME: ${{ needs.deploy-qa.outputs.version }}
+
     
     defaults:
       run:
