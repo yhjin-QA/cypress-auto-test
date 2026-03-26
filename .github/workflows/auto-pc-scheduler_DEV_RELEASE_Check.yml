@@ -484,68 +484,58 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          # 💡 [초기화] 모든 변수를 최상단에서 명확히 선언합니다.
           $isActuallyFailed = $false
-          $finalFailCount = 0
-          $failNames = @()
           $statusDetail = "" 
 
           Write-Host "============= [Debug Log Start] ============="
           
-          # 1. 설치 단계(deploy-qa) 결과 확인
+          # 1. Check Deployment Status (deploy-qa)
           $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
           if ($deployStatus -eq "failure") {
               $isActuallyFailed = $true
-              $statusDetail = "[설치 실패] 서버 배포 단계 에러"
+              $statusDetail = "[Installation Failed] Error occurred during server deployment."
           }
-          # 2. 설치 성공 시 테스트 리포트 분석
+          # 2. Analyze Test Results (if deployment succeeded)
           else {
               $hasReport = Test-Path "merged_report.json"
               $reportFailures = 0
 
-              # 1단계: 리포트 파일 파싱
               if ($hasReport) {
                   try {
                       $jsonObj = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
                       $reportFailures = [int]$jsonObj.stats.failures
                       Write-Host "Reported Failures: $reportFailures"
-                  } catch { 
-                      Write-Host "JSON parsing error." 
-                  }
+                  } catch { Write-Host "JSON parsing error." }
               }
 
-              # 2단계: 최종 판단 (리포트 실패가 0보다 클 때만 스크린샷 분석)
+              # 💡 Priority 1: If there are actual failures in the report, show failed specs.
               if ($reportFailures -gt 0) {
                   $isActuallyFailed = $true
-                  # 💡 진짜 실패했을 때만 스크린샷 폴더에서 파일명을 가져옵니다.
                   $failedScreenshots = Get-ChildItem -Path "all_raw_data\**\*(failed)*.png" -ErrorAction SilentlyContinue
                   
                   if ($failedScreenshots) {
                       $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-                      $statusDetail = "[Test Failed] Scenario failure ( $($failNames -join ', ') )"
+                      $statusDetail = "[Test Failed] Scenario failure: ( $($failNames -join ', ') )"
                   } else {
-                      $statusDetail = "[Test Failed] $reportFailures Scenario failed (파일명 추출 불가)"
+                      $statusDetail = "[Test Failed] $reportFailures scenario(s) failed. (Cannot extract filenames)"
                   }
               } 
-              # 💡 [Flaky 예외처리] 리포트 실패가 0이라면 스크린샷이 있어도 무시 (성공 처리)
+              # 💡 Priority 2: If report has 0 failures, check if the job itself crashed.
               else {
-                  $isActuallyFailed = $false
-                  $statusDetail = "[All Passed] 모든 테스트 성공 (Flaky 복구 포함)"
+                  $jobStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
+                  if ($jobStatus -eq "cancelled" -or $jobStatus -eq "failure") {
+                      $isActuallyFailed = $true
+                      $statusDetail = "[System Error] Execution stopped or unknown system error occurred."
+                  } else {
+                      $isActuallyFailed = $false
+                      $statusDetail = "[All Passed] All scenarios passed successfully. (Including Flaky recovery)"
+                  }
               }
-          }
-
-          # 3. 시스템 오류 핸들링
-          $jobStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
-          if (-not $isActuallyFailed -and ($jobStatus -eq "cancelled" -or $jobStatus -eq "failure")) {
-              $isActuallyFailed = $true
-              $statusDetail = "[System Error] 실행 중 중단 또는 시스템 오류"
           }
           Write-Host "============== [Debug Log End] =============="
 
-          # 최종 타이틀 결정
-          $title = if ($isActuallyFailed) { $env:MSG_FAIL } else { $env:MSG_SUCCESS }
-
-          # 구글챗 메시지 조립 (v 추가 및 줄바꿈 적용)
+          # Final Title & Message Assembly
+          $title  = if ($isActuallyFailed) { $env:MSG_FAIL } else { $env:MSG_SUCCESS }
           $pName  = $env:PRODUCT_NAME
           $tType  = $env:TEST_TYPE
           $mTitle = $env:MSG_TITLE
