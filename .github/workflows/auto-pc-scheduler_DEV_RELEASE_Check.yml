@@ -483,7 +483,7 @@ jobs:
               npx marge merged_report.json --reportDir ./final_report_Dev --inline --charts --reportTitle "Dev Report" --reportFilename "LogCatch_Dev_Report"
           }
 
-      - name: Send Google Chat (Flaky Filtered)
+      - name: Send Google Chat (Final Spec Name Fix)
         if: always() 
         env:
           WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
@@ -504,7 +504,7 @@ jobs:
           $isActuallyFailed = $false
           $realHardFailSpecs = @()
 
-          Write-Host "============= [🔍 Flaky 필터링 분석 시작] ============="
+          Write-Host "============= [🔍 파일명 매칭 분석 시작] ============="
           
           # [Step 1] 배포 단계 확인
           if ($env:DEPLOY_STATUS.ToLower() -eq "failure") {
@@ -512,49 +512,49 @@ jobs:
               $realHardFailSpecs = @("Deployment Stage Error")
           }
           else {
-              # [Step 2] 모든 리포트 파일 로드
+              # [Step 2] 리포트 및 스크린샷 데이터 수집
               $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue
-              
-              # [Step 3] 스크린샷이 찍힌 파일들 찾기 (후보군)
               $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*(failed)*.png" -ErrorAction SilentlyContinue
+              
+              # 스크린샷 폴더명(스펙명) 추출
               $potentialSpecs = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
 
               foreach ($spec in $potentialSpecs) {
-                  $isThisSpecFlaky = $true # 기본적으로 Flaky라고 가정
-                  
+                  $isRealFail = $false
+                  # 💡 대소문자 무시 및 경로 구분자 통합 매칭
+                  $cleanSpec = $spec.Replace("\", "/").Trim()
+
                   foreach ($file in $jsonFiles) {
                       try {
                           $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
                           foreach ($res in $content.results) {
-                              # 리포트 내파일명과 스크린샷 폴더명이 매칭되는지 확인
-                              if (($res.fullFile -like "*$spec*" -or $res.file -like "*$spec*")) {
-                                  # 💡 핵심: 해당 스펙의 리포트에서 failures가 0보다 커야 '진짜 실패'
-                                  if ([int]$content.stats.failures -gt 0) {
-                                      $isThisSpecFlaky = $false
-                                      break
-                                  }
+                              $resFile = ($res.fullFile + $res.file).Replace("\", "/")
+                              
+                              # 스펙명이 리포트 경로에 포함되어 있고, 해당 리포트에 실제 실패가 기록된 경우
+                              if ($resFile -like "*$cleanSpec*" -and [int]$content.stats.failures -gt 0) {
+                                  $isRealFail = $true
+                                  break
                               }
                           }
                       } catch { }
-                      if (-not $isThisSpecFlaky) { break }
+                      if ($isRealFail) { break }
                   }
 
-                  if (-not $isThisSpecFlaky) {
+                  if ($isRealFail) {
                       $realHardFailSpecs += $spec
                       $isActuallyFailed = $true
                   }
               }
 
-              # [Step 4] 리포트에는 없지만 시스템이 뻗은 경우 체크
+              # [Step 3] 예외 처리 (리포트에는 없으나 Job이 실패한 경우)
               if ($realHardFailSpecs.Count -eq 0 -and ($env:CYPRESS_STATUS.ToLower() -eq "failure" -or $env:CYPRESS_STATUS.ToLower() -eq "cancelled")) {
                   $isActuallyFailed = $true
-                  $realHardFailSpecs = @("System Crash or Timeout")
+                  $realHardFailSpecs = @("System Error or Crash")
               }
           }
 
-          # [Step 5] 메시지 데이터 조립
+          # [Step 4] 메시지 조립
           $finalCount = $realHardFailSpecs.Count
-
           if ($isActuallyFailed -and $finalCount -gt 0) {
               $title = "$($env:MSG_FAIL) $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:VERSION_NAME))"
               $joinedNames = $realHardFailSpecs -join ", "
@@ -564,7 +564,7 @@ jobs:
               $statusDetail = "" 
           }
 
-          # [Step 6] 메시지 구성 및 전송
+          # [Step 5] 메시지 구성 및 전송
           $dashUrl = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
           $runUrl  = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
@@ -577,7 +577,6 @@ jobs:
           $msgLines += "$($env:LABEL_GIT) : $runUrl"
           
           $finalText = $msgLines -join "`n"
-
           $payload = @{ text = $finalText } | ConvertTo-Json -Compress
           $utf8Bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
           Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes
