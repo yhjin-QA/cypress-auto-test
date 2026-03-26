@@ -145,7 +145,7 @@ jobs:
           $downloadCmd = "curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$mainName $rawBaseUrl/$mainName && curl -k -f --retry 3 --retry-delay 2 -b $remotePath/cookies.txt -o $remotePath/$partyName $rawBaseUrl/$partyName"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$downloadCmd"
 
-          Write-Host "[Step 3] Run installation script (Background Job with 180s Timeout)...."
+          Write-Host "[Step 3] Run installation script (Background Job with 120s Timeout)...."
           
           # [Step 3] 수정 부분
           $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo LANG=C LC_ALL=C $remotePath/$mainName -b -f"
@@ -164,9 +164,9 @@ jobs:
               ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$cmd 2>&1"
           } -ArgumentList $keyPath, $target, $fullCmd
 
-          # 💡 타임아웃을 180초(3분)로 늘려 서비스 안착 시간을 확보합니다.
-          if (-not (Wait-Job $job -Timeout 180)) {
-              Write-Host "[TIMEOUT] 180s elapsed. Next step Port Check"
+          # 💡 타임아웃을 120초(2분)로 늘려 서비스 안착 시간을 확보합니다.
+          if (-not (Wait-Job $job -Timeout 120)) {
+              Write-Host "[TIMEOUT] 120s elapsed. Next step Port Check"
               Stop-Job $job
           } else {
               Write-Host " Installation job finished naturally."
@@ -555,14 +555,8 @@ jobs:
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           $url    = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
 
-          $msgBody = @"
-          $title $pName $tType $mTitle (v$vName)
-          ($time)
-          $statusDetail
-
-          ${env:LABEL_DASH} : $url
-          ${env:LABEL_GIT} : $runUrl
-          "@
+          # 줄바꿈을 위해 `n (백틱+n)을 사용합니다.
+          $msgBody = "$title $pName $tType $mTitle (v$vName)`n($time)`n$statusDetail`n`n${env:LABEL_DASH} : $url`n${env:LABEL_GIT} : $runUrl"
 
           $payload = @{ text = $msgBody } | ConvertTo-Json -Compress
           $utf8Payload = [System.Text.Encoding]::UTF8.GetBytes($payload)
