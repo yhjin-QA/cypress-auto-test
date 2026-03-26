@@ -88,6 +88,8 @@ jobs:
             
             # 💡 중요: 다음 Job들이 읽을 수 있도록 skip_all을 true로 설정
             echo "skip_all=true" >> $env:GITHUB_OUTPUT
+            # 💡 [필수 추가] 스킵할 때도 현재 버전을 다음 Job으로 넘겨줍니다.
+            echo "version=$installedVersion" >> $env:GITHUB_OUTPUT
             
             # 현재 스텝 내에서 쓸 환경변수도 세팅
             echo "SKIP_INSTALL=true" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -97,6 +99,8 @@ jobs:
             
             # 💡 중요: 진행해야 하므로 skip_all을 false로 설정
             echo "skip_all=false" >> $env:GITHUB_OUTPUT
+            # 💡 [필수 추가] 새 버전을 다음 Job으로 넘겨줍니다.
+            echo "version=$latestVersion" >> $env:GITHUB_OUTPUT
             
             echo "SKIP_INSTALL=false" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             echo "LATEST_VERSION=$latestVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -162,7 +166,7 @@ jobs:
 
           # 💡 타임아웃을 240초(4분)로 늘려 서비스 안착 시간을 확보합니다.
           if (-not (Wait-Job $job -Timeout 240)) {
-              Write-Host "⚠️ [TIMEOUT] 240s elapsed. 포트 체크로 넘어갑니다."
+              Write-Host "[TIMEOUT] 240s elapsed. Next step Port Check"
               Stop-Job $job
           } else {
               Write-Host " Installation job finished naturally."
@@ -506,6 +510,8 @@ jobs:
                           $failedScreenshots = Get-ChildItem -Path "all_raw_data/screenshots" -Recurse -Filter "*(failed)*.png"
                           if ($failedScreenshots.Count -gt 0) {
                               $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
+                              # 💡 [추가] 이 줄이 있어야 구글 챗 메시지에 실패 파일명이 나옵니다.
+                              $statusDetail = "[Test Failed] $finalFailCount Scenario failure ( $($failNames -join ', ') )"
                           }
                       }
                   } catch { Write-Host "JSON parsing error." }
@@ -513,7 +519,7 @@ jobs:
           }
 
           # 3. 시스템 오류/취소 핸들링
-          $jobStatus = "${{ env.JOB_STATUS }}".ToLower()
+          $jobStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           if (-not $isActuallyFailed -and ($jobStatus -eq "cancelled" -or $jobStatus -eq "failure")) {
               $isActuallyFailed = $true
               $failNames = @("System Error or Cancelled")
