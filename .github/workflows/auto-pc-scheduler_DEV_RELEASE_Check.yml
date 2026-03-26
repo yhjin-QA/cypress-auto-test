@@ -483,12 +483,16 @@ jobs:
               npx marge merged_report.json --reportDir ./final_report_Dev --inline --charts --reportTitle "Dev Report" --reportFilename "LogCatch_Dev_Report"
           }
 
-      - name: Send Google Chat (Safe String Version)
+      - name: Send Google Chat (Fixed Encoding & Spec)
         if: always() 
         env:
+          # 💡 모든 변수를 여기서 정의하여 PowerShell로 안전하게 전달합니다.
+          WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
           DEPLOY_STATUS: ${{ needs.deploy-qa.result }}
           CYPRESS_STATUS: ${{ needs.cypress-run.result }}
           VERSION_NAME: ${{ needs.deploy-qa.outputs.version }}
+          PRODUCT_NAME: "로그캐치"
+          TEST_TYPE: "Dev_RELEASE"
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "확인결과"
@@ -499,32 +503,20 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          # 2. GitHub 변수를 파워쉘 내부 변수로 안전하게 복사 (반드시 따옴표로 감쌈)
-          $vName      = "${{ env.VERSION_NAME }}"
-          $pName      = "${{ env.PRODUCT_NAME }}"
-          $tType      = "${{ env.TEST_TYPE }}"
-          $mTitle     = "${{ env.MSG_TITLE }}"
-          $time       = "${{ env.NOW }}"
-          $msgSuccess = "${{ env.MSG_SUCCESS }}"
-          $msgFail    = "${{ env.MSG_FAIL }}"
-          $labelDash  = "${{ env.LABEL_DASH }}"
-          $labelGit   = "${{ env.LABEL_GIT }}"
-          $webhookUrl = "${{ secrets.GOOGLE_CHAT_WEBHOOK }}"
-
+          # 2. 분석용 변수 초기화
           $isActuallyFailed = $false
           $finalFailCount = 0
           $failNames = @()
 
-          Write-Host "============= [🔍 데이터 분석 시작] ============="
+          Write-Host "============= [🔍 데이터 통합 분석 시작] ============="
           
-          # [Step 1] 배포 단계 결과 확인
-          $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
-          if ($deployStatus -eq "failure") {
+          # [Step 1] 배포 단계(Job 1) 결과 확인
+          if ($env:DEPLOY_STATUS.ToLower() -eq "failure") {
               $isActuallyFailed = $true
               $failNames = @("Deployment Stage Error")
           }
           else {
-              # [Step 2] 통합 리포트 분석
+              # [Step 2] 통합 리포트(merged_report.json) 분석
               if (Test-Path "merged_report.json") {
                   try {
                       $jsonObj = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -534,7 +526,7 @@ jobs:
               }
 
               # [Step 3] 실패가 있다면 스크린샷 폴더에서 파일명 추출
-              $cypressStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
+              $cypressStatus = $env:CYPRESS_STATUS.ToLower()
               if ($isActuallyFailed -or $cypressStatus -ne "success") {
                   $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*(failed)*.png" -ErrorAction SilentlyContinue
                   if ($failedScreenshots.Count -gt 0) {
@@ -547,32 +539,33 @@ jobs:
               }
           }
 
-          # [Step 4] 메시지 타이틀 및 본문 결정
+          # [Step 4] 메시지 조립
           if ($isActuallyFailed) {
-              $title = "$msgFail $pName $tType $mTitle (v$vName)"
+              $title = "$($env:MSG_FAIL) $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:VERSION_NAME))"
               $joinedNames = if ($failNames.Count -gt 0) { $failNames -join ", " } else { "Unknown" }
               $statusDetail = "FAIL: $finalFailCount script ( $joinedNames )"
           } else {
-              $title = "$msgSuccess $pName $tType $mTitle (v$vName)"
+              $title = "$($env:MSG_SUCCESS) $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:VERSION_NAME))"
               $statusDetail = "" 
           }
 
-          # [Step 5] 메시지 라인 구성
+          # [Step 5] 메시지 라인 구성 (가장 안전한 배열 join 방식)
           $dashUrl = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
           $runUrl  = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           $msgLines = @()
           $msgLines += "$title"
-          $msgLines += "($time)"
+          $msgLines += "($($env:NOW))"
           if ($statusDetail -ne "") { $msgLines += "$statusDetail" }
           $msgLines += ""
-          $msgLines += "$labelDash : $dashUrl"
-          $msgLines += "$labelGit : $runUrl"
+          $msgLines += "$($env:LABEL_DASH) : $dashUrl"
+          $msgLines += "$($env:LABEL_GIT) : $runUrl"
           
           $finalText = $msgLines -join "`n"
 
-          # [Step 6] 전송 (에러 방지를 위해 줄바꿈 백틱 제거하고 한 줄로 실행)
+          # [Step 6] 전송 (URL과 바이트 배열 전송으로 특수문자/인코딩 완벽 방어)
           $payload = @{ text = $finalText } | ConvertTo-Json -Compress
           $utf8Bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
           
-          Invoke-RestMethod -Uri "$webhookUrl" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes
+          # 💡 줄바꿈 백틱을 쓰지 않고 한 줄로 실행하여 terminator 에러를 방지합니다.
+          Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes
