@@ -489,55 +489,57 @@ jobs:
 
           Write-Host "============= [Debug Log Start] ============="
           
-          # 1. Check Deployment Status (deploy-qa)
+          # 1. 설치 단계 확인
           $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
           if ($deployStatus -eq "failure") {
               $isActuallyFailed = $true
               $statusDetail = "[Installation Failed] Error occurred during server deployment."
           }
-          # 2. Analyze Test Results
+          # 2. 테스트 결과 분석 (실패 파일 유무를 1순위로 변경)
           else {
-              $hasReport = Test-Path "merged_report.json"
-              $reportFailures = 0
-
-              if ($hasReport) {
-                  try {
-                      $jsonObj = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
-                      $reportFailures = [int]$jsonObj.stats.failures
-                      Write-Host "Confirmed Failures from JSON: $reportFailures"
-                  } catch { Write-Host "JSON parsing error." }
-              }
-
-              # 💡 [Flaky 예외처리] 리포트상 실패가 0이라면 무조건 '성공' 판정
-              if ($reportFailures -eq 0) {
-                  $jobStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
-                  if ($jobStatus -eq "cancelled" -or $jobStatus -eq "failure") {
-                      if (-not $hasReport) {
-                          $isActuallyFailed = $true
-                          $statusDetail = "[System Error] Execution stopped or unknown system error."
-                      } else {
-                          # Flaky Recovery Case
-                          $isActuallyFailed = $false
-                          $statusDetail = "[All Passed] All scenarios passed (Flaky recovered)."
-                      }
-                  } else {
-                      $isActuallyFailed = $false
-                      $statusDetail = "[All Passed] All scenarios passed."
-                  }
-              } 
-              # 💡 진짜 실패가 있는 경우에만 파일명을 추출하여 출력
-              else {
+              # 🚩 [변경] 실제 실패 스크린샷이 있는지 전수 조사
+              $failedScreenshots = Get-ChildItem -Path "all_raw_data\**\*(failed)*.png" -ErrorAction SilentlyContinue
+              
+              # 🚩 [핵심 로직] 실패 스크린샷이 발견되면 무조건 실패로 간주
+              if ($failedScreenshots) {
                   $isActuallyFailed = $true
-                  $failedScreenshots = Get-ChildItem -Path "all_raw_data\**\*(failed)*.png" -ErrorAction SilentlyContinue
-                  if ($failedScreenshots) {
-                      $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-                      $statusDetail = "[Test Failed] $reportFailures Scenario failure ( $($failNames -join ', ') )"
+                  $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
+                  $statusDetail = "[Test Failed] Scenario failure: ( $($failNames -join ', ') )"
+                  Write-Host "Real failures detected by screenshots."
+              } 
+              else {
+                  # 스크린샷이 없을 때만 리포트를 참고하여 최종 확인
+                  $hasReport = Test-Path "merged_report.json"
+                  $reportFailures = 0
+                  if ($hasReport) {
+                      try {
+                          $jsonObj = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+                          $reportFailures = [int]$jsonObj.stats.failures
+                      } catch { }
+                  }
+
+                  if ($reportFailures -gt 0) {
+                      $isActuallyFailed = $true
+                      $statusDetail = "[Test Failed] $reportFailures scenarios failed (Check dashboard)."
                   } else {
-                      $statusDetail = "[Test Failed] $reportFailures Scenario failure"
+                      # 리포트도 0, 스크린샷도 없어야만 성공
+                      $jobStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
+                      if ($jobStatus -eq "cancelled" -or $jobStatus -eq "failure") {
+                          if (-not $hasReport) {
+                              $isActuallyFailed = $true
+                              $statusDetail = "[System Error] Execution stopped or unknown error."
+                          } else {
+                              # 리포트 0, 스크린샷 0인데 Job이 실패면 이것이 진짜 Flaky(재시도 성공)입니다.
+                              $isActuallyFailed = $false
+                              $statusDetail = "[All Passed] All scenarios passed (Flaky recovered)."
+                          }
+                      } else {
+                          $isActuallyFailed = $false
+                          $statusDetail = "[All Passed] All scenarios passed."
+                      }
                   }
               }
           }
-
           Write-Host "============== [Debug Log End] =============="
 
           # 최종 타이틀 및 메시지 조립
