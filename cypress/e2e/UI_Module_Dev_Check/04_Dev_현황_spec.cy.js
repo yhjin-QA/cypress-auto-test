@@ -462,7 +462,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건',{ timeout: 10000 }).should('exist');
+
     // 현황 > 종합현황  > [정보 사용자별] 탭 클릭 
+    // 🌟 [추가] 로딩 오버레이가 사라질 때까지 대기
+    // v-overlay--active가 'not.exist' 하거나 'not.be.visible' 할 때까지 기다립니다.
+    cy.get('.v-overlay--active', { timeout: 10000 }).should('not.exist');
     cy.get('.tab-title').filter(':visible').should('be.visible').contains('정보사용자 별').click();
     cy.wait(3000);
     cy.log('--- 기간 내 시작/종료 달력 아이콘 검증 ---');

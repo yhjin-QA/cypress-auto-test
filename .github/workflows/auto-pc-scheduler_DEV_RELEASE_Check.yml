@@ -498,81 +498,90 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
+          # 1. 초기 변수 설정
           $isActuallyFailed = $false
-          $statusDetail = "" 
+          $statusDetail = "No test results found."
           $failedSpecList = @()
-          $totalFailCount = 0
+          $reportFailures = 0
 
-          Write-Host "============= [🔍 정밀 데이터 분석 시작] ============="
+          Write-Host "============= [Step 1: Data Analyzing] ============="
           
-          # 1. 설치 단계 확인
           $deployStatus = "${{ env.DEPLOY_STATUS }}".ToLower()
           if ($deployStatus -eq "failure") {
               $isActuallyFailed = $true
-              $statusDetail = "[Installation Failed] 서버 배포 단계에서 에러가 발생했습니다."
+              $statusDetail = "[Installation Failed] Deployment stage error."
           }
           else {
-              # 모든 리포트 파일 검색
               $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue
-              Write-Host "발견된 리포트 파일 수: $($jsonFiles.Count)개"
-
-              foreach ($file in $jsonFiles) {
-                  # 💡 [핵심] JSON을 텍스트로 읽어 실패 증거를 직접 찾습니다.
-                  $raw = Get-Content $file.FullName -Raw -Encoding UTF8
-                  
-                  # 텍스트 내에 "fail": true 가 있는지 체크 (Mochawesome의 실패 표식)
-                  if ($raw -match '"fail":\s*true' -or $raw -match '"failures":\s*([1-9][0-9]*)') {
-                      $isActuallyFailed = $true
-                      
-                      # 실패한 파일명을 뽑기 위해 객체로 변환
-                      $obj = $raw | ConvertFrom-Json
-                      foreach ($res in $obj.results) {
-                          # 해당 스펙 조각 내에 실패가 있는지 텍스트로 재확인
-                          $resRaw = $res | ConvertTo-Json -Depth 10
-                          if ($resRaw -match '"fail":\s*true') {
-                              $fPath = if ($res.file) { $res.file } else { $res.fullFile }
-                              if ($fPath) {
-                                  $specName = Split-Path $fPath -Leaf
-                                  $failedSpecList += $specName
-                                  Write-Host "⚠️ 실패 발견: $specName"
-                              }
-                              # 실패 건수 누적 (정규식으로 추출)
-                              if ($raw -match '"failures":\s*([1-9][0-9]*)') {
-                                  $totalFailCount += [int]$matches[1]
+              if ($null -eq $jsonFiles -or $jsonFiles.Count -eq 0) {
+                  $isActuallyFailed = $true
+                  $statusDetail = "[System Error] No report files downloaded."
+              }
+              else {
+                  foreach ($file in $jsonFiles) {
+                      try {
+                          $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+                          foreach ($res in $content.results) {
+                              # 재귀적으로 모든 테스트를 뒤져서 'fail: true'가 있는지 확인
+                              $allTests = @()
+                              $allTests += $res.tests
+                              if ($res.suites) { $allTests += ($res.suites | ForEach-Object { $_.tests }) }
+                              if ($res.suites.suites) { $allTests += ($res.suites.suites | ForEach-Object { $_.tests }) }
+                              
+                              $realFails = $allTests | Where-Object { $_.fail -eq $true }
+                              if ($realFails) {
+                                  $reportFailures += $realFails.Count
+                                  $fName = if ($res.file) { Split-Path $res.file -Leaf } else { Split-Path $res.fullFile -Leaf }
+                                  $failedSpecList += $fName
+                                  $isActuallyFailed = $true
                               }
                           }
+                      } catch { Write-Host "Skip unreadable file: $($file.Name)" }
+                  }
+                  
+                  if ($isActuallyFailed) {
+                      $uniqueSpecs = $failedSpecList | Select-Object -Unique
+                      $specString = $uniqueSpecs -join ", "
+                      $statusDetail = "[Test Failed] $reportFailures Scenario failure: ( $specString )"
+                  } else {
+                      $jobStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
+                      if ($jobStatus -eq "failure" -or $jobStatus -eq "cancelled") {
+                          $statusDetail = "[All Passed] All scenarios passed (Flaky recovery detected)."
+                      } else {
+                          $statusDetail = "[All Passed] All scenarios passed."
                       }
                   }
               }
-
-              $uniqueFailedSpecs = $failedSpecList | Select-Object -Unique
-              
-              # 🚩 최종 판단
-              if ($isActuallyFailed) {
-                  $failDisplayCount = if ($totalFailCount -gt 0) { $totalFailCount } else { $uniqueFailedSpecs.Count }
-                  $statusDetail = "[Test Failed] $failDisplayCount Scenario failure: ( $($uniqueFailedSpecs -join ', ') )"
-              } 
-              else {
-                  # 리포트 어디에도 실패가 없는데 Job 상태만 실패인 경우 = 100% Flaky(재시도 성공)
-                  $jobStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
-                  if ($jobStatus -eq "failure" -or $jobStatus -eq "cancelled") {
-                      $statusDetail = "[All Passed] All scenarios passed (Flaky recovery detected)."
-                  } else {
-                      $statusDetail = "[All Passed] All scenarios passed."
-                  }
-              }
           }
-          Write-Host "============= [📊 분석 종료] ============="
 
-          # 메시지 조립
-          $title = if ($isActuallyFailed) { $env:MSG_FAIL } else { $env:MSG_SUCCESS }
-          $vName = $env:VERSION_NAME
-          $time  = $env:NOW
+          Write-Host "============= [Step 2: Message Assembly] ============="
+          
+          # 변수 준비
+          $title = if ($isActuallyFailed) { "${{ env.MSG_FAIL }}" } else { "${{ env.MSG_SUCCESS }}" }
+          $time  = "${{ env.NOW }}"
+          $vName = "${{ env.VERSION_NAME }}"
+          $pName = "${{ env.PRODUCT_NAME }}"
+          $tType = "${{ env.TEST_TYPE }}"
+          $mTitle = "${{ env.MSG_TITLE }}"
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          $url = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
+          $dashUrl = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
 
-          $msgBody = "$title ${env:PRODUCT_NAME} ${env:TEST_TYPE} ${env:MSG_TITLE} (v$vName)`n($time)`n$statusDetail`n`n${env:LABEL_DASH} : $url`n${env:LABEL_GIT} : $runUrl"
+          # 💡 [안전한 메시지 생성] 배열을 만든 뒤 합치는 방식을 사용하여 따옴표/특수문자 에러 방지
+          $msgLines = @(
+              "$title $pName $tType $mTitle (v$vName)",
+              "($time)",
+              "$statusDetail",
+              "",
+              "${{ env.LABEL_DASH }} : $dashUrl",
+              "${{ env.LABEL_GIT }} : $runUrl"
+          )
+          $finalMsg = $msgLines -join "`n"
 
-          $payload = @{ text = $msgBody } | ConvertTo-Json -Compress
-          $utf8Payload = [System.Text.Encoding]::UTF8.GetBytes($payload)
-          Invoke-RestMethod -Uri '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Payload
+          # 💡 [JSON 전송]
+          $payload = @{ text = $finalMsg } | ConvertTo-Json -Compress
+          $bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
+          
+          Invoke-RestMethod -Uri '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' `
+                            -Method Post `
+                            -ContentType "application/json; charset=utf-8" `
+                            -Body $bytes
