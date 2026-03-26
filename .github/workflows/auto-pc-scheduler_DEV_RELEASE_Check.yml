@@ -483,7 +483,7 @@ jobs:
               npx marge merged_report.json --reportDir ./final_report_Dev --inline --charts --reportTitle "Dev Report" --reportFilename "LogCatch_Dev_Report"
           }
 
-      - name: Send Google Chat (Final Spec Name Fix)
+      - name: Send Google Chat (Absolute Final Fix)
         if: always() 
         env:
           WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
@@ -504,7 +504,7 @@ jobs:
           $isActuallyFailed = $false
           $realHardFailSpecs = @()
 
-          Write-Host "============= [🔍 파일명 매칭 분석 시작] ============="
+          Write-Host "============= [🔍 리포트 직접 분석 시작] ============="
           
           # [Step 1] 배포 단계 확인
           if ($env:DEPLOY_STATUS.ToLower() -eq "failure") {
@@ -512,48 +512,45 @@ jobs:
               $realHardFailSpecs = @("Deployment Stage Error")
           }
           else {
-              # [Step 2] 리포트 및 스크린샷 데이터 수집
+              # [Step 2] 모든 JSON 리포트 파일 전수 조사
               $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue
-              $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*(failed)*.png" -ErrorAction SilentlyContinue
               
-              # 스크린샷 폴더명(스펙명) 추출
-              $potentialSpecs = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
-
-              foreach ($spec in $potentialSpecs) {
-                  $isRealFail = $false
-                  # 💡 대소문자 무시 및 경로 구분자 통합 매칭
-                  $cleanSpec = $spec.Replace("\", "/").Trim()
-
-                  foreach ($file in $jsonFiles) {
-                      try {
-                          $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+              foreach ($file in $jsonFiles) {
+                  try {
+                      $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+                      
+                      # 해당 리포트에 실패 기록이 있는지 확인
+                      if ([int]$content.stats.failures -gt 0) {
                           foreach ($res in $content.results) {
-                              $resFile = ($res.fullFile + $res.file).Replace("\", "/")
+                              # 스펙 내 테스트들 중 하나라도 최종 상태가 'failed' 인지 확인
+                              # suites 내부의 tests와 root 레벨의 tests를 모두 체크
+                              $allTests = @()
+                              if ($res.tests) { $allTests += $res.tests }
+                              if ($res.suites) { $allTests += ($res.suites | ForEach-Object { $_.tests }) }
                               
-                              # 스펙명이 리포트 경로에 포함되어 있고, 해당 리포트에 실제 실패가 기록된 경우
-                              if ($resFile -like "*$cleanSpec*" -and [int]$content.stats.failures -gt 0) {
-                                  $isRealFail = $true
-                                  break
+                              if ($allTests | Where-Object { $_.fail -eq $true -or $_.state -eq "failed" }) {
+                                  $isActuallyFailed = $true
+                                  # 파일 경로에서 파일명만 추출 (경로 구분자 통합 처리)
+                                  $fPath = if ($res.file) { $res.file } else { $res.fullFile }
+                                  $fName = Split-Path ($fPath -replace '\\', '/') -Leaf
+                                  if ($fName) { $realHardFailSpecs += $fName }
                               }
                           }
-                      } catch { }
-                      if ($isRealFail) { break }
-                  }
-
-                  if ($isRealFail) {
-                      $realHardFailSpecs += $spec
-                      $isActuallyFailed = $true
-                  }
+                      }
+                  } catch { }
               }
+              
+              # 중복 제거
+              $realHardFailSpecs = $realHardFailSpecs | Select-Object -Unique
 
-              # [Step 3] 예외 처리 (리포트에는 없으나 Job이 실패한 경우)
+              # [Step 3] 예외 처리 (리포트에는 없으나 Job이 실패한 경우 - 시스템 장애)
               if ($realHardFailSpecs.Count -eq 0 -and ($env:CYPRESS_STATUS.ToLower() -eq "failure" -or $env:CYPRESS_STATUS.ToLower() -eq "cancelled")) {
                   $isActuallyFailed = $true
                   $realHardFailSpecs = @("System Error or Crash")
               }
           }
 
-          # [Step 4] 메시지 조립
+          # [Step 4] 메시지 데이터 조립
           $finalCount = $realHardFailSpecs.Count
           if ($isActuallyFailed -and $finalCount -gt 0) {
               $title = "$($env:MSG_FAIL) $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:VERSION_NAME))"
