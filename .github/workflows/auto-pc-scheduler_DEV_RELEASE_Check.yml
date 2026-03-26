@@ -553,7 +553,6 @@ jobs:
                   }
               }
           }
-
           Write-Host "============= [Step 2: Message Assembly] ============="
           
           # 변수 준비
