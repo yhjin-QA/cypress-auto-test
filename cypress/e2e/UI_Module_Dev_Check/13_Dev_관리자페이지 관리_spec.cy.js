@@ -1887,7 +1887,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
     // 타이틀 확인
     //cy.contains('span', '인사정보(OFF)').filter(':visible').should('be.visible');
-    cy.get('span').filter(':visible').contains('(인사정보OFF)').should('be.visible');
+    cy.get('span').filter(':visible').contains('인사정보(OFF)').should('be.visible');
     cy.get('span').filter(':visible').contains('데이터베이스').should('be.visible');
     cy.get('span').filter(':visible').contains('Log Tracer').should('be.visible');
     cy.get('span').filter(':visible').contains('이상행위정책').should('be.visible');

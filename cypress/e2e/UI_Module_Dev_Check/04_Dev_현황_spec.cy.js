@@ -395,10 +395,14 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.tab-btn').contains('정보사용자 별').should('be.visible').click({ force: true });
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    cy.log('--- 기간 내 시작/종료 달력 아이콘 검증 ---');
+      // 1. '기간' 라벨을 가진 부모 박스를 먼저 찾습니다.
+      cy.contains('.v-input', '기간').filter(':visible').within(() => { 
+      // 2. 그 안에서 첫 번째 달력 아이콘(시작일) 확인
+      cy.get('.v-icon').contains('event').eq(0).should('be.visible');
+      // 3. 그 안에서 두 번째 달력 아이콘(종료일) 확인
+      cy.get('.v-icon').contains('event').eq(1).should('be.visible');
+    });
      // 버튼확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     //검색 조건 입력문구 확인
