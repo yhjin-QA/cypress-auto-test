@@ -481,7 +481,6 @@ jobs:
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
         run: |
-         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
