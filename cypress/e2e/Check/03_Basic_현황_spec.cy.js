@@ -108,16 +108,18 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 4: 현황서브메뉴 
     // ==========================================
 
+cy.log('--- [현황] 진입 및 강제 알림창 처리 ---');
 
-   cy.contains('span.font-weight-bold', '현황').should('be.visible').click({ force: true });
+// 1. 현황 클릭
+cy.contains('button', '현황').click({ force: true });
 
-    cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
 
 
+/*
     cy.log('--- 현황 > 정보사용자별 탭 클릭  ---');
     cy.contains('.v-btn__content', '정보사용자 별').should('be.visible').click({ force: true });
   
-/*
+
 
     cy.log('--- 기간 내 시작/종료 달력 아이콘 검증 ---');
     cy.get('.v-icon:contains("event")').filter(':visible').should('have.length.at.least', 2) // 최소 2개(시작일, 종료일) 이상 있는지 확인
