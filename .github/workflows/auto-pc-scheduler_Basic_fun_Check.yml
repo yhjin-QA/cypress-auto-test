@@ -289,13 +289,13 @@ jobs:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
 
     steps:
-      # 👇 [필수 추가] 이 단계가 없으면 이전 테스트 결과(Basic)와 현재 결과(UI)가 뒤섞입니다!
+      # 👇 [필수 추가] 이 단계가 없으면 이전 테스트 결과(Depth)와 현재 결과(UI)가 뒤섞입니다!
       - name: 🧹 기존 데이터 청소 (Clean Workspace)
         run: |
           Write-Host "이전 작업의 잔여 데이터를 삭제합니다..."
           Remove-Item -Path "all_raw_data" -Recurse -Force -ErrorAction SilentlyContinue
-          # 👇 [수정] final_report_Basic 폴더를 청소
-          Remove-Item -Path "final_report_Basic" -Recurse -Force -ErrorAction SilentlyContinue
+          # 👇 [수정] final_report_Depth 폴더를 청소
+          Remove-Item -Path "final_report_Depth" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "downloaded_url" -Recurse -Force -ErrorAction SilentlyContinue
           Write-Host "Clear Finish!"
 
@@ -314,7 +314,7 @@ jobs:
       - name: Download All Raw Data
         uses: actions/download-artifact@v4
         with:
-          pattern: Basic-Raw-Data-*
+          pattern: Depth-Raw-Data-*
           path: all_raw_data
           merge-multiple: true
 
@@ -334,103 +334,113 @@ jobs:
           cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
           
           # 2. HTML 생성
-          # 여기에 --reportFilename "LogCatch_Basic_fun_Report" 추가
-          npx marge merged_report.json --reportDir ./final_report_Basic --inline --charts --reportTitle "Basic Function Report" --reportFilename "LogCatch_Basic_fun_Report" --saveJson=false
+          # 여기에 --reportFilename "LogCatch_Depth_fun_Report" 추가
+          npx marge merged_report.json --reportDir ./final_report_Depth --inline --charts --reportTitle "Depth Function Report" --reportFilename "LogCatch_Depth_fun_Report" --saveJson=false
 
-      - name: Send Google Chat (Basic Fixed)
+      - name: Send Google Chat (Depth)
         if: always() 
         env:
-          WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
-          CYPRESS_STATUS: ${{ needs.cypress-run.result }}
-          PRODUCT_NAME: "로그캐치 기능(Basic)"
+          JOB_STATUS: ${{ needs.cypress-run.result }}
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "시나리오 확인결과"
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
-          NOW: ${{ env.NOW }}
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          $failedSpecNames = @()
-          $totalFailCount = 0
+          $isActuallyFailed = $false
+          $finalFailCount = 0
+          $failNames = @()
 
-          Write-Host "============= [🔍 데이터 전수 조사 시작] ============="
-
-          # 1. 모든 JSON 리포트 파일을 찾아서 실패 수치 합산
-          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue
-          Write-Host "찾은 리포트 파일 개수: $($jsonFiles.Count)"
-
-          foreach ($file in $jsonFiles) {
+          Write-Host "============= [Debug Log Start] ============="
+          
+          # 1. Parse merged JSON report
+          if (Test-Path "merged_report.json") {
               try {
-                  $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
-                  $fileFailures = [int]$content.stats.failures
-                  
-                  if ($fileFailures -gt 0) {
-                      $totalFailCount += $fileFailures
-                      Write-Host "실패 발견: $($file.Name) ($fileFailures 건)"
-                      
-                      # 실패한 파일명 추출
-                      foreach ($res in $content.results) {
-                          $resRaw = $res | ConvertTo-Json -Depth 10
-                          if ($resRaw -match '"fail":\s*true' -or $resRaw -match '"state":\s*"failed"') {
-                              $fPath = if ($res.file) { $res.file } else { $res.fullFile }
-                              $fName = Split-Path ($fPath -replace '\\', '/') -Leaf
-                              if ($fName) { $failedSpecNames += $fName }
-                          }
-                      }
+                  $jsonText = Get-Content "merged_report.json" -Raw -Encoding UTF8
+                  $jsonObj = $jsonText | ConvertFrom-Json
+                  $finalFailCount = [int]$jsonObj.stats.failures
+                  Write-Host "Report parsed. Actual failures: $finalFailCount"
+
+                  if ($finalFailCount -gt 0) {
+                      $isActuallyFailed = $true
                   }
               } catch {
-                  Write-Host "파일 읽기 실패: $($file.Name)"
+                  Write-Host "JSON parsing error ignored."
+              }
+          } else {
+              Write-Host "merged_report.json not found."
+          }
+
+          # 2. Extract script names from screenshot folders
+          if ($isActuallyFailed) {
+              $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*(failed)*.png"
+              if ($failedScreenshots.Count -eq 0) {
+                  $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.png"
+              }
+              
+              if ($failedScreenshots.Count -gt 0) {
+                  $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
+                  $joinedNames = $failNames -join ", "
+                  Write-Host "Failed script names: $joinedNames"
+              } else {
+                  $failNames = @("Unknown Spec")
+                  Write-Host "No screenshots found."
               }
           }
 
-          $uniqueFailures = $failedSpecNames | Select-Object -Unique
-          
-          # ⭐ [핵심 판정] 리포트에서 실패가 1개라도 발견되면 무조건 실패!
-          $isActuallyFailed = $false
-          if ($totalFailCount -gt 0 -or $uniqueFailures.Count -gt 0) {
-              $isActuallyFailed = $true
-          } 
-          # 리포트엔 없는데 Job이 비정상 종료된 경우 (Crash 등)
-          elseif ("${{ needs.cypress-run.result }}".ToLower() -ne "success") {
-              $isActuallyFailed = $true
-          }
+          # 3. Handle system crash or cancel
+          $jobStatus = "${{ env.JOB_STATUS }}".ToLower()
+          Write-Host "Job 1 status: $jobStatus"
 
-          # 2. 메시지 조립
-          $time = "$env:NOW"
+          if (-not $isActuallyFailed -and ($jobStatus -eq "cancelled" -or $jobStatus -eq "failure")) {
+              $isActuallyFailed = $true
+              $finalFailCount = 1
+              $failNames = @("System Error or Cancelled")
+              Write-Host "Forced fail due to system status."
+          }
+          Write-Host "============== [Debug Log End] =============="
+
+          # 4. Determine final status
           if ($isActuallyFailed) {
+              $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*")
+              $joinedNames = $failNames -join ", "
+              $statusDetail = "FAIL: $finalFailCount script ( $joinedNames )"
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-              $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*") + " $($env:PRODUCT_NAME) $($env:MSG_TITLE)"
-              $specList = if ($uniqueFailures.Count -gt 0) { $uniqueFailures -join ", " } else { "System Error or Crash" }
-              $statusDetail = "FAIL: ( $specList )"
           } else {
-              $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*") + " $($env:PRODUCT_NAME) $($env:MSG_TITLE)"
+              $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*")
               $statusDetail = ""
+              "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           }
 
-          # 3. 대시보드 URL (전체 폴더 검색)
-          $dashUrl = "http://10.10.54.5:8080/projects"
-          $urlFile = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "run_url.txt" | Select-Object -First 1
-          if ($urlFile) { $dashUrl = (Get-Content $urlFile.FullName -Raw).Trim() }
-
+          # 5. Assemble and send message (Safely using array joining)
+          $pName = $env:PRODUCT_NAME
+          $tType = $env:TEST_TYPE
+          $mTitle = $env:MSG_TITLE
+          $time = $env:NOW
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          $msgLines = @()
-          if ($isActuallyFailed) {
-              $msgLines += "$title"
-              $msgLines += "($time)"
-              $msgLines += "$statusDetail"
+          if (Test-Path "downloaded_url/run_url.txt") {
+              $url = (Get-Content "downloaded_url/run_url.txt" -Raw).Trim()
           } else {
-              $msgLines += "$title ($time)"
+              $url = "http://10.10.54.5:8080/projects"
+          }
+          
+          $msgLines = @()
+          $msgLines += "$title $pName $tType $mTitle ($time)"
+          if ($statusDetail -ne "") {
+              $msgLines += $statusDetail
           }
           $msgLines += ""
-          $msgLines += "$env:LABEL_DASH : $dashUrl"
-          $msgLines += "$env:LABEL_GIT : $runUrl"
+          $msgLines += "${env:LABEL_DASH} : $url"
+          $msgLines += "${env:LABEL_GIT} : $runUrl"
           
-          $payload = @{ text = ($msgLines -join "`n") } | ConvertTo-Json -Compress
-          Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($payload))
+          $msgText = $msgLines -join "`n"
+
+          $body = @{ text = $msgText } | ConvertTo-Json -Compress
+          Invoke-RestMethod -Uri "${{ secrets.GOOGLE_CHAT_WEBHOOK }}" -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
 
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: always() && env.FINAL_STATUS == 'FAIL'
