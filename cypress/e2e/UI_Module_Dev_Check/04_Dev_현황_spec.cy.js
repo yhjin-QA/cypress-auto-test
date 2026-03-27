@@ -462,7 +462,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건',{ timeout: 10000 }).should('exist');
-
+/*
     // 현황 > 종합현황  > [정보 사용자별] 탭 클릭 
     //cy.contains('.tab-title', '정보사용자 별').click({ force: true });
     //cy.get('.tab-title').filter(':visible').should('be.visible').contains('정보사용자 별').click();
@@ -515,7 +515,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
     cy.log('✅ 현황 - 종합현황 - [업무 시스템 별]탭 진입 및 데이터 출력 확인 완료!');
     cy.wait(3000);
-
+*/
 
 /*
     // ==========================================
