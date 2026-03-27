@@ -483,9 +483,10 @@ jobs:
               npx marge merged_report.json --reportDir ./final_report_Dev --inline --charts --reportTitle "Dev Report" --reportFilename "LogCatch_Dev_Report"
           }
 
-      - name: Send Google Chat (Final Layout)
+      - name: Send Google Chat (Fixed Encoding & Spec)
         if: always() 
         env:
+          # 💡 모든 변수를 여기서 정의하여 PowerShell로 안전하게 전달합니다.
           WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
           DEPLOY_STATUS: ${{ needs.deploy-qa.result }}
           CYPRESS_STATUS: ${{ needs.cypress-run.result }}
@@ -498,84 +499,73 @@ jobs:
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
         run: |
+          # 1. 인코딩 강제 설정
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
+          # 2. 분석용 변수 초기화
           $isActuallyFailed = $false
-          $failedSpecNames = @()
+          $finalFailCount = 0
+          $failNames = @()
 
-          Write-Host "============= [🔍 최종 레이아웃 분석 시작] ============="
+          Write-Host "============= [🔍 데이터 통합 분석 시작] ============="
           
-          # [Step 1] 배포 단계 확인
+          # [Step 1] 배포 단계(Job 1) 결과 확인
           if ($env:DEPLOY_STATUS.ToLower() -eq "failure") {
               $isActuallyFailed = $true
-              $failedSpecNames = @("Deployment Stage Error")
+              $failNames = @("Deployment Stage Error")
           }
           else {
-              # [Step 2] 모든 JSON 리포트 전수 조사
-              $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue
-              
-              foreach ($file in $jsonFiles) {
+              # [Step 2] 통합 리포트(merged_report.json) 분석
+              if (Test-Path "merged_report.json") {
                   try {
-                      $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
-                      # 최종 실패 수치가 1 이상인 파일만 처리
-                      if ([int]$content.stats.failures -gt 0) {
-                          foreach ($res in $content.results) {
-                              # 리포트 내부에 실제 실패(fail: true)가 있는 스펙 추출
-                              $resRaw = $res | ConvertTo-Json -Depth 10
-                              if ($resRaw -match '"fail":\s*true' -or $resRaw -match '"state":\s*"failed"') {
-                                  $fPath = if ($res.file) { $res.file } else { $res.fullFile }
-                                  $fName = Split-Path ($fPath -replace '\\', '/') -Leaf
-                                  if ($fName) { $failedSpecNames += $fName }
-                              }
-                          }
-                      }
-                  } catch { }
+                      $jsonObj = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+                      $finalFailCount = [int]$jsonObj.stats.failures
+                      if ($finalFailCount -gt 0) { $isActuallyFailed = $true }
+                  } catch { Write-Host "JSON parsing skipped." }
               }
-              
-              $uniqueFailures = $failedSpecNames | Select-Object -Unique
 
-              # [Step 3] 예외 처리: 리포트엔 실패가 없는데 Job이 실패한 경우 (시스템 장애 등)
-              if ($uniqueFailures.Count -eq 0 -and ($env:CYPRESS_STATUS.ToLower() -eq "failure" -or $env:CYPRESS_STATUS.ToLower() -eq "cancelled")) {
-                  $isActuallyFailed = $true
-                  $uniqueFailures = @("System Error or Crash")
-              } elseif ($uniqueFailures.Count -gt 0) {
-                  $isActuallyFailed = $true
+              # [Step 3] 실패가 있다면 스크린샷 폴더에서 파일명 추출
+              $cypressStatus = $env:CYPRESS_STATUS.ToLower()
+              if ($isActuallyFailed -or $cypressStatus -ne "success") {
+                  $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*(failed)*.png" -ErrorAction SilentlyContinue
+                  if ($failedScreenshots.Count -gt 0) {
+                      $isActuallyFailed = $true
+                      $failNames = $failedScreenshots | ForEach-Object { Split-Path $_.Directory -Leaf } | Select-Object -Unique
+                  } elseif ($cypressStatus -eq "failure" -or $cypressStatus -eq "cancelled") {
+                      $isActuallyFailed = $true
+                      $failNames = @("System Crash or Timeout")
+                  }
               }
           }
 
-          # [Step 4] 메시지 조립 (건수 체크 제외 레이아웃)
-          $pName  = "$env:PRODUCT_NAME"
-          $tType  = "$env:TEST_TYPE"
-          $vName  = "$env:VERSION_NAME"
-          $mTitle = "$env:MSG_TITLE"
-          $time   = "$env:NOW"
-          
+          # [Step 4] 메시지 조립
           if ($isActuallyFailed) {
-              $title = "$env:MSG_FAIL $pName $tType $mTitle (v$vName)"
-              $specListString = $uniqueFailures -join ", "
-              # 요청하신 레이아웃: FAIL: ( 파일명 )
-              $statusDetail = "FAIL: ( $specListString )"
+              $title = "$($env:MSG_FAIL) $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:VERSION_NAME))"
+              $joinedNames = if ($failNames.Count -gt 0) { $failNames -join ", " } else { "Unknown" }
+              $statusDetail = "FAIL Script: ( $joinedNames )"
           } else {
-              $title = "$env:MSG_SUCCESS $pName $tType $mTitle (v$vName)"
+              $title = "$($env:MSG_SUCCESS) $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:VERSION_NAME))"
               $statusDetail = "" 
           }
 
-          # [Step 5] 메시지 구성
+          # [Step 5] 메시지 라인 구성 (가장 안전한 배열 join 방식)
           $dashUrl = if (Test-Path "downloaded_url/run_url.txt") { (Get-Content "downloaded_url/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
           $runUrl  = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           $msgLines = @()
           $msgLines += "$title"
-          $msgLines += "($time)"
+          $msgLines += "($($env:NOW))"
           if ($statusDetail -ne "") { $msgLines += "$statusDetail" }
           $msgLines += ""
-          $msgLines += "$env:LABEL_DASH : $dashUrl"
-          $msgLines += "$env:LABEL_GIT : $runUrl"
+          $msgLines += "$($env:LABEL_DASH) : $dashUrl"
+          $msgLines += "$($env:LABEL_GIT) : $runUrl"
           
           $finalText = $msgLines -join "`n"
 
-          # [Step 6] 전송 (UTF8 바이트 전송)
+          # [Step 6] 전송 (URL과 바이트 배열 전송으로 특수문자/인코딩 완벽 방어)
           $payload = @{ text = $finalText } | ConvertTo-Json -Compress
           $utf8Bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
+          
+          # 💡 줄바꿈 백틱을 쓰지 않고 한 줄로 실행하여 terminator 에러를 방지합니다.
           Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes
