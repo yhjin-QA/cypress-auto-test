@@ -396,11 +396,19 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.tab-btn').contains('정보사용자 별').should('be.visible').click({ force: true });
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-     // 버튼확인
+    
+    // v3.0.5.0_r34908 에서 달력 아이콘 검증코드 수정
+    cy.log('--- 기간 내 시작/종료 달력 아이콘 검증 ---');
+    cy.get('.v-icon:contains("event")').filter(':visible').should('have.length.at.least', 2) // 최소 2개(시작일, 종료일) 이상 있는지 확인
+    .then(($icons) => {
+    // 2. 첫 번째 아이콘(시작일)이 화면에 보이는지 확인
+    cy.wrap($icons).eq(0).should('be.visible');
+    // 3. 두 번째 아이콘(종료일)이 화면에 보이는지 확인
+    cy.wrap($icons).eq(1).should('be.visible');
+     });
+    cy.log('✅ 시작/종료일 달력 아이콘 노출 확인 완료');
+    
+    // 버튼확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     //검색 조건 입력문구 확인
     cy.get('label').filter(':visible').contains('기간').should('be.visible');
