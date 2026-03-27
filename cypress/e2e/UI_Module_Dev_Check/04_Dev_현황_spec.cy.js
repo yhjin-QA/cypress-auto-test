@@ -462,11 +462,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건',{ timeout: 10000 }).should('exist');
-/*
+
     // 현황 > 종합현황  > [정보 사용자별] 탭 클릭 
-    //cy.contains('.tab-title', '정보사용자 별').click({ force: true });
-    //cy.get('.tab-title').filter(':visible').should('be.visible').contains('정보사용자 별').click();
-    cy.contains('.tab-title', '정보사용자 별', { timeout: 10000 }).should('be.visible').click({ force: true });
+    cy.contains('span.tab-title', '정보사용자 별').should('be.visible').click({ force: true });
     cy.log('--- 기간 내 시작/종료 달력 아이콘 검증 ---');
     cy.get('.v-icon:contains("event")').filter(':visible').should('have.length.at.least', 2) // 최소 2개(시작일, 종료일) 이상 있는지 확인
     .then(($icons) => {
@@ -485,7 +483,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 현황 - 종합현황 - [정보 사용자별]탭 진입 및 데이터 출력 확인 완료!');
     
     // 현황 > 종합현황  > [부서 별] 탭 클릭 
-    cy.get('.tab-title').filter(':visible').should('be.visible').contains('부서 별').click();
+    cy.contains('span.tab-title', '부서 별').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
@@ -501,7 +499,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 현황 - 종합현황 - [부서 별]탭 진입 및 데이터 출력 확인 완료!');
 
     // 현황 > 종합현황  > [업무시스템 별] 탭 클릭 
-    cy.get('.tab-title').filter(':visible').contains('업무 시스템 별').click();
+    cy.contains('span.tab-title', '업무 시스템 별').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
@@ -515,7 +513,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
     cy.log('✅ 현황 - 종합현황 - [업무 시스템 별]탭 진입 및 데이터 출력 확인 완료!');
     cy.wait(3000);
-*/
+
 
 /*
     // ==========================================
