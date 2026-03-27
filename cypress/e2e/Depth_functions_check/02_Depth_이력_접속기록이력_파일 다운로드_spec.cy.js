@@ -194,7 +194,6 @@ describe('로그캐치 사이트 테스트', () => {
      
      //토글
      cy.get('.v-label').filter(':visible').contains('개인정보').should('be.visible');
-     cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
      
      // 포함 버튼 확인 
      cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
@@ -206,7 +205,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     //개인정보 문구 확인
     cy.get('label').filter(':visible').contains('개인정보').should('be.visible');
-    cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
+    
     //표열 문구확인
     cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
     cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
@@ -423,28 +422,63 @@ describe('로그캐치 사이트 테스트', () => {
 
 
     //////////////////////////////////////////////////////
-    // 미등록 사용자 제외 OFF -> ON확인 
+    // 사용자 상태 검색 
     /////////////////////////////////////////////////////
+    
+     //사용자 상태 클릭
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
+     cy.wait(500);
 
-    cy.contains('a.ellipsis', '(미등록 사용자)').should('be.visible');
-    cy.contains('a.ellipsis', '(호준)').should('be.visible');
+     // 사용자 상태 리스트 중 '등록' 선택
+    cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '등록').click({ force: true });
+    cy.wait(1000); // 선택 후 리스트가 닫히는 시간 확보
 
-    // 미등록 사용자 제외 토글 클릭
-    cy.get('input[aria-label="미등록 사용자 제외"]').click({ force: true });
-    cy.wait(500);
+     //검색버튼 클릭
+     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+     cy.wait(1000);
 
-    // [검증] 미등록 사용자 제외 OFF -> ON확인 
-    cy.get('input[aria-label="미등록 사용자 제외"]').should('be.checked');
-    cy.wait(1000);
+     // 첫 번째 행 정밀 검증코드 
+    cy.get('tbody tr').filter(':visible').first().within(() => {
+    cy.get('a').contains('진윤호(yunho)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+     });
 
-    //검색버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    cy.wait(500);
+     // 사용자 상태 - 미등록  선택----------------------------------------------- 
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
+     cy.wait(500);
 
-    // 미등록 사용자 없는지 확인
-    cy.contains('td', '(미등록 사용자)', { timeout: 10000 }).should('not.exist');
-    cy.contains('td', '(호준)', { timeout: 10000 }).should('not.exist');
-    cy.wait(500); 
+     // 사용자 상태 리스트 중 '미등록' 선택
+    cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '미등록').click({ force: true });
+    cy.wait(1000); // 선택 후 리스트가 닫히는 시간 확보
+
+     //검색버튼 클릭
+     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+     cy.wait(1000);
+
+     // [검증] 검색 결과 검증
+     cy.get('a').contains('(미등록 사용자)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+     cy.get('a').contains('(호준)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    
+
+      // 사용자 상태 - 전체 선택----------------------------------------------- 
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
+     cy.wait(500);
+
+     // 사용자 상태 리스트 중 '전체' 선택
+    cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '전체').click({ force: true });
+    cy.wait(1000); // 선택 후 리스트가 닫히는 시간 확보
+
+     //검색버튼 클릭
+     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+     cy.wait(1000);
+
+    // [검증] 검색 결과 검증
+    cy.get('a').contains('(호준)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('(미등록 사용자)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('진윤호(yunho)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    
+    //----------------------------------------------------------------------------------------------
+    
+
     
     //////////////////////////////////////////////////////
     // 받기버튼 파일다운로드 확인

@@ -185,16 +185,14 @@ describe('로그캐치 사이트 테스트', () => {
      // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
-     //왜 2개 정보사용자?? (맨티스 이슈보고 : 37121 )
      cy.get('input[aria-label="정보 사용자"][role="combobox"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="정보 사용자"]:not([role="combobox"])').filter(':visible').should('be.visible');
-     //cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="접속 메뉴"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="개인정보 건수"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="개인정보 건수"]').parents('.v-input').find('.v-chip__content').contains('이상').should('be.visible');
+      cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');
 
     //검색 버튼 존재확인 
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
@@ -202,7 +200,6 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('전체 건수').should('be.visible');
     //토글 문구 확인
     cy.get('label').filter(':visible').contains('개인정보').should('be.visible');
-    cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
     //표열 문구확인
     cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
     cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
@@ -243,7 +240,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
 
-    /*  맨티스 이슈 등록해둠 - v3.0.4_r34865  (37313) 
+    //맨티스 이슈 등록해둠 - v3.0.4_r34865 (37313) 
     // 엑셀 다운로드 클릭하는 코드 
     cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
     cy.wait(500);
@@ -267,7 +264,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 3. 사라지는 것 확인
     cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
     
-    /*  맨티스 이슈 등록해둠 (37313) 
+    // 맨티스  이슈 등록해둠 (37313) 
     //실제 로컬 폴더 다운로드 시간 주기
     cy.wait(7000);
     
@@ -291,7 +288,7 @@ describe('로그캐치 사이트 테스트', () => {
       
    
      cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
-      */
+      
 
     // ==========================================
     // 이력 > 통합 > 검출 팝업 (처리영역)

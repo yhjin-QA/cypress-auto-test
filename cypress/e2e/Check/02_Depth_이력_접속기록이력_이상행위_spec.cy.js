@@ -169,63 +169,6 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
     cy.wait(3000);
 
- //depth
- /*   
-
-    // 이력 > 접속기록 이력 > [파일 다운로드] 탭 선택
-    cy.get('.tab-btn').contains('파일 다운로드').should('be.visible').click({ force: true });
-    cy.wait(3000);
-    cy.log('--- 화면 검증 시작 ---');
-    cy.get('.tab-btn').contains('파일 다운로드').closest('button').should('not.have.class', 'inactive');
-    // 'c-headline' 클래스를 가진 요소 중에 '파일 다운로드' 글자가 존재하는지 확인
-    cy.contains('.c-headline', '파일 다운로드').should('exist');
-    // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-     // 종료날짜 달력 아이콘확인
-     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-     // 검색 조건 이름 입력란 확인
-     cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="시작 IP"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="종료 IP"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="파일명"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="파일 경로"]').filter(':visible').should('be.visible');
-     
-     //토글
-     cy.get('.v-label').filter(':visible').contains('개인정보').should('be.visible');
-     cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
-     
-     // 포함 버튼 확인 
-     cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
-     cy.get('input[aria-label="파일명"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
-     cy.get('input[aria-label="파일 경로"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
-     
-    
-     //검색 버튼 존재확인 
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    //개인정보 문구 확인
-    cy.get('label').filter(':visible').contains('개인정보').should('be.visible');
-    cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
-    //표열 문구확인
-    cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
-    cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
-    cy.get('th').filter(':visible').contains('사용자 IP').should('be.visible');
-    cy.get('th').filter(':visible').contains('URL').should('be.visible');
-    cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
-    cy.get('th').filter(':visible').contains('파일명').should('be.visible');
-    cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('개인정보 상세').should('be.visible');
-    cy.get('th').filter(':visible').contains('확인').should('be.visible');
-    cy.get('th').filter(':visible').contains('받기').should('be.visible');
-
-    //기능동작
-    //검색버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-
-    cy.log('✅ 이력 - 파일 다운로드 탭 진입 및 데이터 출력 확인 완료!');
-
- */
-//depth
 
     // 이력 > 접속기록 이력 > [이상행위] 탭 선택
     cy.get('.tab-btn').contains('이상행위').should('be.visible').click({ force: true });
@@ -241,12 +184,11 @@ describe('로그캐치 사이트 테스트', () => {
     // 검색 조건 이름 입력란 확인
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="경보 등급"]').filter(':visible').should('be.visible');
-    //토글문구확인 
-    cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
+    cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');
+  
     //검색버튼 존재확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // 문구확인 
-    cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
+    
     //표열 문구확인
     cy.get('th').filter(':visible').contains('접근이력 일시').should('be.visible');
     cy.get('th').filter(':visible').contains('사용자').should('be.visible');
@@ -365,7 +307,77 @@ describe('로그캐치 사이트 테스트', () => {
     //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
     cy.wait(500);
     cy.contains('tr', '업무 시간 외 접속').should('contain', 'test_auto_업무 시간 외 접속') .find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+    
+    //////////////////////////////////////////////////////
+     // 이상행위 : 업무 시간 외 접속 (경보등급 : 심각,경계,주의) - 사용자 상태 조합 검증(전체 선택)
+     /////////////////////////////////////////////////////
+    
+     //사용자 상태 클릭 --------------------------------------------------------------------------
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
+     cy.wait(1000);
 
+    // 사용자 상태 리스트 중 '전체' 선택
+    cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '전체').click({ force: true });
+    cy.wait(1000); // 선택 후 리스트가 닫히는 시간 확보
+
+    //검색버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(1000);
+ 
+    //검증코드
+     cy.log('--- [핵심 검증] 미등록 사용자 & 업무 시간 외 접속 행 확인 ---');
+     cy.contains('tbody tr', '(미등록 사용자)').filter(':contains("업무 시간 외 접속")').filter(':contains("소명 불필요")')     
+      .within(() => {
+        cy.get('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)'); // 연두색 아이콘 확인
+        cy.contains('td', '미존재').should('be.visible');
+      });
+
+     // 특정 사용자(제흔휴) 검증
+     cy.contains('tr', /제흔휴.*업무 시간 외 접속/).find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+     //----------------------------------------------------------------------------------------------------------------------------------------------
+      //사용자 상태 클릭 --------------------------------------------------------------------------
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
+     cy.wait(1000);
+
+    // 사용자 상태 리스트 중 '등록' 선택
+    cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '등록').click({ force: true });
+    cy.wait(1000); // 선택 후 리스트가 닫히는 시간 확보
+
+    //검색버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(1000);
+ 
+     //검증코드
+     // (미등록 사용자)와 '업무 시간 외 접속'이 포함된 tr이 아예 존재하지 않아야 함
+     cy.contains('tbody tr', /(미등록 사용자).*업무 시간 외 접속/).should('not.exist');
+     // 특정 사용자(제흔휴) 검증
+     cy.contains('tr', /제흔휴.*업무 시간 외 접속/).find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+
+     //사용자 상태 클릭 --------------------------------------------------------------------------
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
+     cy.wait(1000);
+
+    // 사용자 상태 리스트 중 '미등록' 선택
+    cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '미등록').click({ force: true });
+    cy.wait(1000); // 선택 후 리스트가 닫히는 시간 확보
+
+    //검색버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(1000);
+ 
+     //검증코드
+     cy.contains('tr', /(미등록 사용자).*업무 시간 외 접속/).find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+     cy.contains('tr', /제흔휴.*업무 시간 외 접속/).should('not.exist');
+    
+     //사용자 상태 초기화 -  전체 선택
+    //사용자 상태 클릭 --------------------------------------------------------------------------
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
+     cy.wait(1000);
+
+    // 사용자 상태 리스트 중 '전체' 선택
+    cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '전체').click({ force: true });
+    cy.wait(1000); // 선택 후 리스트가 닫히는 시간 확보
+   
 
     //////////////////////////////////////////////////////
     // 이상행위 : 장기 미접속 사용자  (경보등급 : 심각,경계,주의)
@@ -911,26 +923,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(500);
     
-   
-    //////////////////////////////////////////////////////
-    // 미등록 사용자 제외 OFF -> ON확인 
-    /////////////////////////////////////////////////////
 
-    // 미등록 사용자 제외 토글 클릭
-    cy.get('input[aria-label="미등록 사용자 제외"]').click({ force: true });
-    cy.wait(500);
-
-    // [검증] 미등록 사용자 제외 OFF -> ON확인 
-    cy.get('input[aria-label="미등록 사용자 제외"]').should('be.checked');
-    cy.wait(1000);
-
-    //검색버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    cy.wait(500);
-
-    // 미등록 사용자 없는지 확인
-    cy.get('td').contains(/미등록 사용자/).should('not.exist');
-    cy.wait(500); 
     
     
 

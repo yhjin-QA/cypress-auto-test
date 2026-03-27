@@ -504,7 +504,7 @@ describe('로그캐치 사이트 테스트', () => {
    // 1. 화면에 존재하는 모든 차트(ApexCharts 도화지)를 찾은 뒤,
    // '두 번째(아래쪽)' 차트를 선택합니다. (0=위쪽 부서별 차트, 1=아래쪽 사용자 차트)
    // 그중 두 번째 막대(0부터 시작하므로 인덱스 1 = '이노희' 님)를 강제 클릭합니다.
-   cy.get('.apexcharts-canvas').eq(3).find('path.apexcharts-bar-area').eq(1).click({ force: true });
+   cy.get('.apexcharts-canvas').eq(3).find('path.apexcharts-bar-area').eq(0).click({ force: true });
    cy.wait(500);
    //팝업창의 본문 내용('상세 페이지로 이동하시겠습니까?')이 맞는지 검증
    cy.contains('p.mb-0:visible', '상세 페이지로 이동하시겠습니까?').should('be.visible');

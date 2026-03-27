@@ -633,6 +633,74 @@ describe('로그캐치 사이트 테스트', () => {
      }); 
     //-----------------------------------------------------------------------------------------------------------------------
 
+    // ==========================================
+    // 사용자 상태 
+    // ==========================================
+    ////개인정보유형 전체선택  클릭하여 유형 선택하는 코드 
+    cy.get('input[aria-label="개인정보 유형"]').filter(':visible').click({ force: true });
+    cy.wait(500);
+    
+    // 개인정보유형 리스트 초기화
+    cy.get('.v-list__tile__title').contains('전체 선택').scrollIntoView().should('be.visible').click({ force: true });
+    cy.wait(500);
+
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
+     cy.wait(500);
+
+     // 사용자 상태 - 등록  선택----------------------------------------------------------
+     cy.get('.v-list__tile__title').contains('등록').should('be.visible').click({ force: true });
+     cy.wait(500);
+
+     //검색버튼 클릭
+     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+     cy.wait(1000);
+
+     // 첫 번째 행 정밀 검증코드 
+    cy.get('tbody tr').filter(':visible').first().within(() => {
+    cy.get('a').contains('호준 (hojun)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+     });
+
+     // 사용자 상태 - 미등록  선택----------------------------------------------- 
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
+     cy.wait(500);
+
+     cy.get('.v-list__tile__title').contains('미등록').should('be.visible').click({ force: true });
+     cy.wait(500);
+
+     //검색버튼 클릭
+     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+     cy.wait(1000);
+
+    // [검증] 검색 결과 검증
+    // 첫 번째 행 정밀 검증
+   // 첫 번째 행 정밀 검증코드 
+    cy.get('tbody tr').filter(':visible').first().within(() => {
+       cy.get('a').contains('미등록 부서').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+       cy.get('a').contains('미등록 사용자 (호준)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+     });
+
+      // 사용자 상태 - 전체 선택----------------------------------------------- 
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
+     cy.wait(500);
+
+     cy.get('.v-list__tile__title').contains('전체').should('be.visible').click({ force: true });
+     cy.wait(500);
+
+     //검색버튼 클릭
+     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+     cy.wait(1000);
+
+    // [검증] 검색 결과 검증
+    // 첫 번째 행 정밀 검증
+   // 첫 번째 행 정밀 검증코드 
+    // 첫 번째 행 정밀 검증코드 
+    cy.get('tbody tr').filter(':visible').first().within(() => {
+       cy.get('a').contains('호준 (hojun)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+       cy.contains('a', '미등록 부서').should('not.exist');
+       cy.contains('a', '미등록 사용자 (호준)').should('not.exist');
+     });
+    //----------------------------------------------------------------------------------------------
+    
 
     // ==========================================
     // 복합 조회 - 모든 검색필드 조건 다 넣고 조회
@@ -702,6 +770,13 @@ describe('로그캐치 사이트 테스트', () => {
     // 개인정보유형 리스트중 전체 선택
     cy.get('.v-list__tile__title').contains('전체 선택').scrollIntoView().should('be.visible').click({ force: true });
     cy.wait(500);
+ 
+    //사용자 상태 클릭 
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
+     cy.wait(500);
+     // 사용자 상태 리스트중 - 등록  선택
+     cy.get('.v-list__tile__title').contains('등록').should('be.visible').click({ force: true });
+     cy.wait(500);
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -730,12 +805,44 @@ describe('로그캐치 사이트 테스트', () => {
     // [행위 유형] - a 태그 (조회 버튼 등)
     cy.get('a').contains('조회').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
      });
+    
+    
+    // ==========================================
+    // 엑셀 다운로드 
+    // ========================================== 
+    // 엑셀 다운로드 클릭하는 코드 
+    cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
+    cy.wait(500);
+    // 3. 사라지는 것 확인
+    cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
+    //실제 로컬 폴더 다운로드 시간 주기
+    cy.wait(7000);
+    
+    // [검증] 다운로드 폴더를 확인합니다.
+    // 수행시 기존에 다운로드 받아두었던 파일은 자동으로 지움(사전초기화)
+    // 폴더경로 : C:\Users\user\Desktop\CypressWork\cypress\downloads
+    cy.task('readDirectory', 'cypress/downloads').then((files) => {
+    // files: 다운로드 폴더에 있는 모든 파일 이름들의 리스트
+  
+    // 조건에 맞는 파일 찾기 (이름에 'log-excel'이 있고, 확장자가 '.zip'인 것)
+     const myFile = files.find(file => file.includes('log-excel') && file.endsWith('.zip'));
 
+     // 로그 출력
+     if (myFile) {
+      cy.log(`✅ 다운로드 성공! 파일명: ${myFile}`);
+     }
+
+     // 검증: 파일이 존재해야 함 (없으면 에러 발생)
+       expect(myFile).to.not.be.undefined; 
+     });
+
+    
+    cy.log('✅ 사용자 추적 엑셀 다운로드 확인 완료!');
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 이력 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 이력_사용자추적 depth 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 

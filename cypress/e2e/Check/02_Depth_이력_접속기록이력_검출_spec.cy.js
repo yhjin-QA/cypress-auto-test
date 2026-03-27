@@ -188,20 +188,21 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="종료 IP"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');
      //3.0.3.0_R34785에서 해당항목 사라짐 
      //cy.get('input[aria-label="개인정보 건수"]').filter(':visible').should('be.visible');
-     //토글문구 확인
-     cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
+    
      // like버튼 확인 
      cy.get('input[aria-label="사용자 계정"]').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
      cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
+     // v3.0.5.0_r34908에서 추가됨.
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');
      //3.0.3.0_R34785에서 해당항목 사라짐 
      //cy.get('input[aria-label="개인정보 건수"]').parents('.v-input').find('.v-chip__content').contains('≥').should('be.visible');
      
     //검색버튼 존재확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // 문구확인 
-    cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
+    
     //표열 문구확인
     cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
     cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
@@ -227,6 +228,15 @@ describe('로그캐치 사이트 테스트', () => {
     //달력창 닫기
     cy.get('body').type('{esc}');
 
+    //사용자 상태 클릭
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
+     cy.wait(1000);
+
+    // 사용자 상태 리스트 중 '등록' 선택 (안정화 버전)
+    cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '등록').click({ force: true });
+    cy.wait(1000); // 선택 후 리스트가 닫히는 시간 확보
+
+
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
@@ -247,12 +257,13 @@ describe('로그캐치 사이트 테스트', () => {
     .scrollTo('bottom', { duration: 1000 }) // 1초 동안 부드럽게 끝까지 내리기
     .wait(500); // 데이터가 로드되거나 렌더링될 시간 대기
 
-    // 3. 이제 리스트 내에서 3월 12일을 찾아 클릭합니다.
-    cy.get('.v-menu__content:visible').contains('.v-list__tile__title, .v-list-item__title', '2026-03-12').click({ force: true });
+    // 3. 이제 리스트 내에서 3월 18일을 찾아 클릭합니다.
+    cy.get('.v-menu__content:visible').contains('.v-list__tile__title, .v-list-item__title', '2026-03-18').click({ force: true });
+    
     
     cy.wait(1000);
-    // 선택 후, 입력창(.v-select__selection)에 '2026-03-12'가 표시되는지 검증
-    cy.contains('.v-select__selection', '2026-03-12').should('be.visible');
+    // 선택 후, 입력창(.v-select__selection)에 '2026-03-18'가 표시되는지 검증
+    cy.contains('.v-select__selection', '2026-03-18').should('be.visible');
     cy.wait(1000);
  
     // 표 검색결과안의 검출유형 검출 문구확인
