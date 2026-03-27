@@ -391,8 +391,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     cy.contains('button', '현황').click({ force: true });
     cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.log('--- 현황 > 정보사용자별 탭 클릭  ---');
-    cy.get('.tab-btn').contains('정보사용자 별').should('be.visible').click({ force: true });
+    cy.log('--- 현황 > 정보사용자별 탭(디폴트 화면) ---');
+  
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
     cy.log('--- 기간 내 시작/종료 달력 아이콘 검증 ---');

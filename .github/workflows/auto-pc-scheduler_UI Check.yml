@@ -291,12 +291,11 @@ jobs:
           # 여기에 --reportFilename "LogCatch_UI_Report" 추가
           npx marge merged_report.json --reportDir ./final_report_UI --inline --charts --reportTitle "UI Check Report" --reportFilename "LogCatch_UI_Report" --saveJson=false
 
-      - name: Send Google Chat (UI Final Fix)
+     - name: Send Google Chat (UI Final Slim)
         if: always() 
         env:
           WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
           CYPRESS_STATUS: ${{ needs.cypress-run.result }}
-          VERSION_NAME: ${{ needs.cypress-run.outputs.version }}
           PRODUCT_NAME: "로그캐치 UI"
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
@@ -311,29 +310,19 @@ jobs:
           $failedSpecNames = @()
           $isActuallyFailed = $false
 
-          Write-Host "============= [🔍 최종 판정 분석 시작] ============="
-
-          # [Step 1] 통합 리포트(merged_report.json)의 전체 통계 우선 확인
+          # 1. 통합 리포트 확인
           if (Test-Path "merged_report.json") {
-              try {
-                  $merged = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
-                  $totalFailures = [int]$merged.stats.failures
-                  Write-Host "Total Failures in Merged Report: $totalFailures"
-                  
-                  if ($totalFailures -gt 0) {
-                      $isActuallyFailed = $true
-                  }
-              } catch { Write-Host "Merged report parse error." }
+              $merged = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+              if ([int]$merged.stats.failures -gt 0) { $isActuallyFailed = $true }
           }
 
-          # [Step 2] 개별 리포트들을 뒤져서 실패한 파일명 추출 (상세 노출용)
-          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue
+          # 2. 실패한 파일명 추출
+          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Filter "*.json" -ErrorAction SilentlyContinue
           foreach ($file in $jsonFiles) {
               try {
                   $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
                   if ([int]$content.stats.failures -gt 0) {
                       foreach ($res in $content.results) {
-                          # 테스트 결과 문자열을 뒤져서 'fail: true'가 있는지 확인 (가장 확실한 방법)
                           $resRaw = $res | ConvertTo-Json -Depth 10
                           if ($resRaw -match '"fail":\s*true' -or $resRaw -match '"state":\s*"failed"') {
                               $fPath = if ($res.file) { $res.file } else { $res.fullFile }
@@ -345,34 +334,33 @@ jobs:
               } catch { }
           }
           $uniqueFailures = $failedSpecNames | Select-Object -Unique
-
-          # [Step 3] 최종 판정 보정 (리포트 합계가 0이더라도 Job이 실패했거나 파일명이 추출됐다면 실패)
           if ($uniqueFailures.Count -gt 0) { $isActuallyFailed = $true }
-          if ($env:CYPRESS_STATUS.ToLower() -ne "success" -and $env:CYPRESS_STATUS.ToLower() -ne "skipped") { $isActuallyFailed = $true }
+          if ($env:CYPRESS_STATUS.ToLower() -ne "success") { $isActuallyFailed = $true }
 
-          # [Step 4] 메시지 조립
-          $time = "$env:NOW"
-          $vName = if ($env:VERSION_NAME) { $env:VERSION_NAME } else { "Unknown" }
-          
+          # 3. 메시지 조립 (버전 제외)
           if ($isActuallyFailed) {
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-              $title = "$($env:MSG_FAIL) $($env:PRODUCT_NAME) $($env:MSG_TITLE) (v$vName)"
-              
-              # 파일명이 추출되지 않았을 때만 System Error로 표시
-              $specList = if ($uniqueFailures.Count -gt 0) { $uniqueFailures -join ", " } else { "System Error or Crash" }
+              $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*") + " $($env:PRODUCT_NAME) $($env:MSG_TITLE)"
+              $specList = if ($uniqueFailures.Count -gt 0) { $uniqueFailures -join ", " } else { "System Error" }
               $statusDetail = "FAIL: ( $specList )"
           } else {
-              $title = "$($env:MSG_SUCCESS) $($env:PRODUCT_NAME) $($env:MSG_TITLE) (v$vName)"
+              $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*") + " $($env:PRODUCT_NAME) $($env:MSG_TITLE)"
               $statusDetail = ""
           }
 
-          # [Step 5] 메시지 구성 및 전송 (이하 동일)
+          # 💡 [보정] all_raw_data/run_url.txt 경로에서 URL 읽기
           $dashUrl = if (Test-Path "all_raw_data/run_url.txt") { (Get-Content "all_raw_data/run_url.txt" -Raw).Trim() } else { "http://10.10.54.5:8080/projects" }
           $runUrl  = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
           $msgLines = @()
-          if ($isActuallyFailed) { $msgLines += "$title"; $msgLines += "($time)"; $msgLines += "$statusDetail" }
-          else { $msgLines += "$title ($time)" }
-          $msgLines += ""; $msgLines += "$env:LABEL_DASH : $dashUrl"; $msgLines += "$env:LABEL_GIT : $runUrl"
+          if ($isActuallyFailed) { 
+              $msgLines += "$title"
+              $msgLines += "($($env:NOW))"
+              $msgLines += "$statusDetail" 
+          } else { 
+              $msgLines += "$title ($($env:NOW))" 
+          }
+          $msgLines += ""; $msgLines += "$($env:LABEL_DASH) : $dashUrl"; $msgLines += "$($env:LABEL_GIT) : $runUrl"
           
           $payload = @{ text = ($msgLines -join "`n") } | ConvertTo-Json -Compress
           Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($payload))
