@@ -2,6 +2,7 @@ name: Auto-PC Work (Daily_Basic)
 
 env:
   PRODUCT_NAME: "로그캐치"
+  #실패시 파일명 독립적으로 UI/basic 명시하기위해 꼬리표
   TEST_TYPE: 기능(Basic)
   TZ: Asia/Seoul
 
@@ -9,7 +10,7 @@ on:
   push:
     branches: [ "master" ]
   schedule:
-    - cron: '15 2 * * *'
+    - cron: '45 2 * * *'
   workflow_dispatch:
 
 jobs:
@@ -154,17 +155,16 @@ jobs:
           CI: true
         continue-on-error: true # 에러가 나도 업로드는 해야 함
         run: |
+          # 1. 인코딩 강제 설정 (한글 파일명 인식용)
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          npm install
-          # 👇 [필수] 'mochawesome'을 명시적으로 설치해야 합니다.
-          npm install cy2 mochawesome mochawesome-merge mochawesome-report-generator --save-dev
-          npx cypress install
+          # 2. 11번 파일을 찾아서 아예 삭제 ("*11_Basic*" 시작하는 파일들 이 러너 환경에서만 삭제됨 )
+          Get-ChildItem -Path "cypress/e2e/Basic_functions_check" -Recurse | Where-Object { $_.Name -like "*11_Basic*" } | Remove-Item -Force
+          Write-Host "✅ [Job 1] 운영 태스크 파일을 물리적으로 제거하여 실행에서 제외했습니다."
 
-          # 👇 [수정] 복잡한 옵션은 다 빼고, config 파일 설정을 따르도록 단순화했습니다.
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
-          
+          # 3. 실행
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           
           Get-Content cypress.log
 
@@ -216,12 +216,71 @@ jobs:
             cypress/screenshots
           retention-days: 1
           if-no-files-found: ignore
+  
+  # ====================================================
+  # [Job 2] 태스크 재시작 테스트 (단독 실행)
+  # ====================================================
+  restart-task-run:
+    needs: cypress-run  # Job 1이 끝나야 시작
+    if: always()        
+    runs-on: [self-hosted, PC-Auto]
+    # 👇 [추가] cy2 실행을 위한 환경 변수 복사
+    env:
+      CYPRESS_API_URL: "http://10.10.54.5:1234/"
+      CYPRESS_RECORD_KEY: "my-secret-key"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      COMMIT_INFO_MESSAGE: ${{ github.event.head_commit.message }}
+      NO_COLOR: 1
+      CI: true
+      continue-on-error: true # 에러가 나도 업로드는 해야 함
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cypress Run (Restart Task Spec)
+        run: |
+          # 1. 초기 설정 및 설치
+          $ErrorActionPreference = "Continue" 
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          npm install --no-audit  
+          npx cypress install
+
+          # 파일을 찾지 말고, 경로를 직접 변수에 담습니다. ("*11_Basic*"" 으로 시작하는 파일들 실행 만약 특정파일 한개라면 "*11_Basic*운영_태스크*" 한글깨짐)
+          $targetSpec = Get-ChildItem -Path "cypress/e2e/Basic_functions_check" -Recurse | Where-Object { $_.Name -like "*11_Basic*" } | Select-Object -ExpandProperty FullName
+          
+          if (-not $targetSpec) {
+              Write-Error "❌ 테스트 파일을 찾을 수 없습니다! 경로를 다시 확인해주세요."
+              exit 1
+          }
+
+          Write-Host "🚀 [Job 2] 단독 실행 파일: $targetSpec"
+
+          # 실행 시 변수를 따옴표로 감싸서 공백/한글 이슈 방지
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --group 'Restart-Job' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
+         
+          Get-Content cypress_restart.log
+          
+      - name: 📂 리포트 데이터 업로드 (Restart Spec)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Basic-Raw-Data-Restart
+          path: |
+            cypress/reports/json_logs
+            cypress/screenshots
+          retention-days: 1       
 
   # ====================================================
-  # [Job 2] 종합 알림 (데이터 통합 & 리포트 생성)
+  # [Job 3] 종합 알림 (데이터 통합 & 리포트 생성)
   # ====================================================
   notify-result:
-    needs: cypress-run
+    #needs: cypress-run
+    needs: [cypress-run, restart-task-run] # 두 작업이 모두 끝나야 함
     if: always()
     runs-on: [self-hosted, PC-Auto]
     
