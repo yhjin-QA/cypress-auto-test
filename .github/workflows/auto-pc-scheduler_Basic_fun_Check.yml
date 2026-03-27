@@ -354,32 +354,24 @@ jobs:
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
           $failedSpecNames = @()
-          $isActuallyFailed = $false
+          $totalFailCount = 0
 
           Write-Host "============= [🔍 데이터 전수 조사 시작] ============="
 
-          # [방법 1] 통합 리포트(merged_report.json)가 있다면 가장 먼저 확인
-          if (Test-Path "merged_report.json") {
-              try {
-                  $merged = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
-                  if ([int]$merged.stats.failures -gt 0) {
-                      Write-Host "Found Failures in merged_report.json: $($merged.stats.failures)"
-                      $isActuallyFailed = $true
-                  }
-              } catch { }
-          }
-
-          # [방법 2] 경로를 특정하지 않고 'all_raw_data' 전체에서 모든 JSON 파일 조사
-          # 병렬 실행 시 파일이 어디에 위치하든 상관없이 찾아냅니다.
+          # 1. 모든 JSON 리포트 파일을 찾아서 실패 수치 합산
           $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue
-          Write-Host "Scanning $($jsonFiles.Count) JSON files..."
+          Write-Host "찾은 리포트 파일 개수: $($jsonFiles.Count)"
 
           foreach ($file in $jsonFiles) {
               try {
                   $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
-                  if ([int]$content.stats.failures -gt 0) {
-                      $isActuallyFailed = $true # 실패 건수가 있으면 즉시 실패 확정
+                  $fileFailures = [int]$content.stats.failures
+                  
+                  if ($fileFailures -gt 0) {
+                      $totalFailCount += $fileFailures
+                      Write-Host "실패 발견: $($file.Name) ($fileFailures 건)"
                       
+                      # 실패한 파일명 추출
                       foreach ($res in $content.results) {
                           $resRaw = $res | ConvertTo-Json -Depth 10
                           if ($resRaw -match '"fail":\s*true' -or $resRaw -match '"state":\s*"failed"') {
@@ -389,17 +381,24 @@ jobs:
                           }
                       }
                   }
-              } catch { }
+              } catch {
+                  Write-Host "파일 읽기 실패: $($file.Name)"
+              }
           }
-          
-          $uniqueFailures = $failedSpecNames | Select-Object -Unique
 
-          # [방법 3] 리포트 파일에 실패가 안 찍혔더라도 Job 자체가 실패했다면 시스템 에러로 간주
-          if ($env:CYPRESS_STATUS.ToLower() -ne "success" -and $env:CYPRESS_STATUS.ToLower() -ne "skipped") {
+          $uniqueFailures = $failedSpecNames | Select-Object -Unique
+          
+          # ⭐ [핵심 판정] 리포트에서 실패가 1개라도 발견되면 무조건 실패!
+          $isActuallyFailed = $false
+          if ($totalFailCount -gt 0 -or $uniqueFailures.Count -gt 0) {
+              $isActuallyFailed = $true
+          } 
+          # 리포트엔 없는데 Job이 비정상 종료된 경우 (Crash 등)
+          elseif ("${{ needs.cypress-run.result }}".ToLower() -ne "success") {
               $isActuallyFailed = $true
           }
 
-          # [Step 4] 메시지 조립
+          # 2. 메시지 조립
           $time = "$env:NOW"
           if ($isActuallyFailed) {
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -411,16 +410,12 @@ jobs:
               $statusDetail = ""
           }
 
-          # [Step 5] 대시보드 URL 경로 보정 (모든 경로 시도)
+          # 3. 대시보드 URL (전체 폴더 검색)
           $dashUrl = "http://10.10.54.5:8080/projects"
-          $urlFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "run_url.txt"
-          if ($urlFiles.Count -gt 0) {
-              $dashUrl = (Get-Content $urlFiles[0].FullName -Raw).Trim()
-          } elseif (Test-Path "downloaded_url/run_url.txt") {
-              $dashUrl = (Get-Content "downloaded_url/run_url.txt" -Raw).Trim()
-          }
+          $urlFile = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "run_url.txt" | Select-Object -First 1
+          if ($urlFile) { $dashUrl = (Get-Content $urlFile.FullName -Raw).Trim() }
 
-          $runUrl  = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
           $msgLines = @()
           if ($isActuallyFailed) {
