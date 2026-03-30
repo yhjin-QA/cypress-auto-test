@@ -353,6 +353,7 @@ jobs:
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
           NOW: ${{ env.NOW }}
+
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -363,23 +364,21 @@ jobs:
 
           Write-Host "============= [🔍 데이터 정밀 분석 시작 (Flaky 완벽 방어)] ============="
 
-          # [Step 1] JSON 리포트 전수 조사 (가장 정확한 지표)
-          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue
+          # [Step 1] 개별 JSON 리포트 전수 조사 
+          # 💡 [핵심 차단 1] merged_report.json은 전체 파일명이 다 들어있으므로 탐색에서 무조건 제외합니다!
+          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "merged_report.json" }
+          
           foreach ($file in $jsonFiles) {
               try {
                   $rawContent = Get-Content $file.FullName -Raw -Encoding UTF8
                   $content = $rawContent | ConvertFrom-Json
                   
-                  # 💡 리포트에 실패가 명백히 기록되어 있다면 "진짜 실패"
+                  # 개별 리포트에 실패가 기록되어 있다면 "진짜 실패"
                   if ($content.stats -and [int]$content.stats.failures -gt 0) {
                       $isActuallyFailed = $true
+                      $totalFailCount += [int]$content.stats.failures
                       
-                      # merged_report가 아닌 개별 파일에서만 카운트 합산 (중복 카운트 방지)
-                      if ($file.Name -ne "merged_report.json") {
-                          $totalFailCount += [int]$content.stats.failures
-                      }
-                      
-                      # 파일명 패턴 강제 추출
+                      # 이 파일은 진짜 실패한 파일이므로 안심하고 파일명 추출
                       $fileMatches = [regex]::Matches($rawContent, '(?<="file":\s*")[^"]+\.cy\.js|(?<="fullFile":\s*")[^"]+\.cy\.js')
                       foreach ($match in $fileMatches) {
                           $fName = Split-Path ($match.Value -replace '\\', '/') -Leaf
@@ -389,33 +388,32 @@ jobs:
               } catch {}
           }
 
-          # [Step 2] Job 자체 상태 확인 (시스템 크래시 등 JSON 누락 대비)
-          # 💡 Cypress는 재시도 성공(Flaky) 시 'success'를 반환합니다. 
-          # 따라서 'failure'가 떴다는 것은 재시도마저 실패한 찐 에러입니다.
+          # [Step 2] Job 자체 상태 확인 (시스템 크래시 대비)
           $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
           if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled" -or $restartStatus -eq "failure" -or $restartStatus -eq "cancelled") {
               $isActuallyFailed = $true
           }
 
-          # [Step 3] 스크린샷 물리 경로 추적 (보조 수단)
-          # 💡 [Flaky 방어 핵심]: 
-          # 재시도로 최종 성공한 Flaky 테스트는 $isActuallyFailed가 $false입니다.
-          # 오직 "진짜 실패($true)"로 판명난 경우에만 스크린샷 이름 추출을 허용합니다. (Flaky 스크린샷 철저히 무시)
-          if ($isActuallyFailed) {
+          # 중복 제거 및 1차 필터링
+          $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
+
+          # [Step 3] 스크린샷 물리 경로 추적 (최후의 보루)
+          # 💡 [핵심 차단 2] JSON에서 진짜 실패한 파일명을 이미 찾았다면(Count > 0), 스크린샷은 절대 뒤지지 않습니다!
+          # (Flaky 때문에 생성된 찌꺼기 스크린샷을 읽는 것을 원천 차단)
+          if ($isActuallyFailed -and $uniqueFailures.Count -eq 0) {
               $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*failed*.png" -ErrorAction SilentlyContinue
               if ($failedScreenshots.Count -gt 0) {
                   foreach ($shot in $failedScreenshots) {
                       $shotMatches = [regex]::Matches($shot.FullName, '([^\\/":*?<>|]+\.cy\.js)')
                       foreach ($m in $shotMatches) { $failedSpecNames += $m.Value.Trim() }
                   }
+                  # 스크린샷에서 찾은 값으로 다시 중복 제거
+                  $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
               }
           }
 
-          # 중복 제거 및 유효한 .cy.js 파일만 필터링
-          $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
-
-          # [Step 4] 대시보드 URL 탐색 (유효성 검증)
+          # [Step 4] 대시보드 URL 탐색
           $dashUrl = "http://10.10.54.5:8080/projects"
           $urlFiles = Get-ChildItem -Path "all_raw_data", "downloaded_url" -Recurse -Filter "run_url.txt" -ErrorAction SilentlyContinue
           foreach ($uFile in $urlFiles) {
@@ -451,7 +449,6 @@ jobs:
               $msgLines += "($time)"
               $msgLines += "$statusDetail"
           } else {
-              # 성공 시에도 타이틀과 시간을 각각 다른 줄로 분리
               $msgLines += "$title"
               $msgLines += "($time)"
           }
