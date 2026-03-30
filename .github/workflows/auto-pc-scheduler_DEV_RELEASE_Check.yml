@@ -483,7 +483,7 @@ jobs:
               npx marge merged_report.json --reportDir ./final_report_Dev --inline --charts --reportTitle "Dev Report" --reportFilename "LogCatch_Dev_Report"
           }
 
-      - name: Send Google Chat (Fixed Reliability)
+      - name: Send Google Chat (Depth "Flaky 차단 + 레이아웃 통일 + 버전명 동적/정적 할당 )
         if: always() 
         env:
           WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
