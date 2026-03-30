@@ -375,6 +375,7 @@ jobs:
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
           NOW: ${{ env.NOW }}
+
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -386,7 +387,7 @@ jobs:
           Write-Host "============= [🔍 데이터 정밀 분석 시작 (Flaky 완벽 방어)] ============="
 
           # [Step 1] 개별 JSON 리포트 전수 조사 
-          # 💡 [핵심 차단 1] merged_report.json은 전체 파일명이 다 들어있으므로 탐색에서 무조건 제외합니다!
+          # 💡 [핵심 차단 1] merged_report.json은 전체 파일명이 다 들어있으므로 탐색에서 무조건 제외!
           $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "merged_report.json" }
           
           foreach ($file in $jsonFiles) {
@@ -394,7 +395,7 @@ jobs:
                   $rawContent = Get-Content $file.FullName -Raw -Encoding UTF8
                   $content = $rawContent | ConvertFrom-Json
                   
-                  # 개별 리포트에 실패가 기록되어 있다면 "진짜 실패"
+                  # 💡 [핵심 차단 2] 개별 리포트에 실패가 기록되어 있을 때만 "진짜 실패"로 간주!
                   if ($content.stats -and [int]$content.stats.failures -gt 0) {
                       $isActuallyFailed = $true
                       $totalFailCount += [int]$content.stats.failures
@@ -420,7 +421,7 @@ jobs:
           $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
 
           # [Step 3] 스크린샷 물리 경로 추적 (최후의 보루)
-          # 💡 [핵심 차단 2] JSON에서 진짜 실패한 파일명을 이미 찾았다면(Count > 0), 스크린샷은 절대 뒤지지 않습니다!
+          # 💡 [핵심 차단 3] JSON에서 진짜 실패한 파일명을 이미 찾았다면(Count > 0), 스크린샷은 절대 뒤지지 않습니다!
           if ($isActuallyFailed -and $uniqueFailures.Count -eq 0) {
               $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*failed*.png" -ErrorAction SilentlyContinue
               if ($failedScreenshots.Count -gt 0) {
@@ -469,7 +470,6 @@ jobs:
               $msgLines += "($time)"
               $msgLines += "$statusDetail"
           } else {
-              # 👇 성공 시에도 타이틀과 시간을 각각 다른 줄로 분리!
               $msgLines += "$title"
               $msgLines += "($time)"
           }
@@ -481,7 +481,7 @@ jobs:
           $payload = @{ text = ($msgLines -join "`n") } | ConvertTo-Json -Compress
           $utf8Bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
           Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes
-          
+
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: always() && env.FINAL_STATUS == 'FAIL'
         uses: dawidd6/action-send-mail@v3

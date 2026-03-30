@@ -6,10 +6,10 @@ env:
   TZ: Asia/Seoul
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '5 2 * * *'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '5 2 * * *'
   workflow_dispatch:
 
 jobs:
@@ -291,7 +291,6 @@ jobs:
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
           NOW: ${{ env.NOW }}
-          
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -300,29 +299,23 @@ jobs:
           $isActuallyFailed = $false
           $totalFailCount = 0
 
-          Write-Host "============= [🔍 데이터 정밀 분석 시작] ============="
+          Write-Host "============= [🔍 데이터 정밀 분석 시작 (Flaky 완벽 방어)] ============="
 
-          # [Step 1] 통합 리포트 확인 (가장 먼저 확인)
-          if (Test-Path "merged_report.json") {
-              try {
-                  $merged = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
-                  if ($merged.stats -and [int]$merged.stats.failures -gt 0) {
-                      $isActuallyFailed = $true
-                      $totalFailCount += [int]$merged.stats.failures
-                  }
-              } catch {}
-          }
-
-          # [Step 2] 경로 무시 JSON 파일 전수 조사 (파일명 정규식 추출)
-          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue
+          # [Step 1] 개별 JSON 리포트 전수 조사 
+          # 💡 [핵심 차단 1] merged_report.json은 전체 파일명이 다 들어있으므로 탐색에서 무조건 제외합니다!
+          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "merged_report.json" }
+          
           foreach ($file in $jsonFiles) {
               try {
                   $rawContent = Get-Content $file.FullName -Raw -Encoding UTF8
                   $content = $rawContent | ConvertFrom-Json
+                  
+                  # 개별 리포트에 실패가 기록되어 있다면 "진짜 실패"
                   if ($content.stats -and [int]$content.stats.failures -gt 0) {
                       $isActuallyFailed = $true
+                      $totalFailCount += [int]$content.stats.failures
                       
-                      # 파일명 패턴 강제 추출
+                      # 이 파일은 진짜 실패한 파일이므로 안심하고 파일명 추출
                       $fileMatches = [regex]::Matches($rawContent, '(?<="file":\s*")[^"]+\.cy\.js|(?<="fullFile":\s*")[^"]+\.cy\.js')
                       foreach ($match in $fileMatches) {
                           $fName = Split-Path ($match.Value -replace '\\', '/') -Leaf
@@ -332,26 +325,31 @@ jobs:
               } catch {}
           }
 
-          # [Step 3] 최후의 보루: 스크린샷 물리 경로 추적
-          $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*failed*.png" -ErrorAction SilentlyContinue
-          if ($failedScreenshots.Count -gt 0) {
+          # [Step 2] Job 자체 상태 확인 (시스템 크래시 대비)
+          $cyStatus = "${{ env.JOB_STATUS }}".ToLower()
+          if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") {
               $isActuallyFailed = $true
-              foreach ($shot in $failedScreenshots) {
-                  $shotMatches = [regex]::Matches($shot.FullName, '([^\\/":*?<>|]+\.cy\.js)')
-                  foreach ($m in $shotMatches) { $failedSpecNames += $m.Value.Trim() }
+          }
+
+          # 중복 제거 및 1차 필터링
+          $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
+
+          # [Step 3] 스크린샷 물리 경로 추적 (최후의 보루)
+          # 💡 [핵심 차단 2] JSON에서 진짜 실패한 파일명을 이미 찾았다면(Count > 0), 스크린샷은 절대 뒤지지 않습니다!
+          # (Flaky 때문에 생성된 찌꺼기 스크린샷을 읽는 것을 원천 차단)
+          if ($isActuallyFailed -and $uniqueFailures.Count -eq 0) {
+              $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*failed*.png" -ErrorAction SilentlyContinue
+              if ($failedScreenshots.Count -gt 0) {
+                  foreach ($shot in $failedScreenshots) {
+                      $shotMatches = [regex]::Matches($shot.FullName, '([^\\/":*?<>|]+\.cy\.js)')
+                      foreach ($m in $shotMatches) { $failedSpecNames += $m.Value.Trim() }
+                  }
+                  # 스크린샷에서 찾은 값으로 다시 중복 제거
+                  $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
               }
           }
 
-          # [Step 4] Job 자체 상태 확인 (시스템 크래시 대비)
-          $cypressStatus = "${{ env.JOB_STATUS }}".ToLower()
-          if ($cypressStatus -ne "success" -and $cypressStatus -ne "skipped") {
-              $isActuallyFailed = $true
-          }
-
-          # 중복 제거 및 유효한 .cy.js 파일만 필터링
-          $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
-
-          # [Step 5] 대시보드 URL 탐색 (유효성 검증)
+          # [Step 4] 대시보드 URL 탐색
           $dashUrl = "http://10.10.54.5:8080/projects"
           $urlFiles = Get-ChildItem -Path "all_raw_data", "downloaded_url" -Recurse -Filter "run_url.txt" -ErrorAction SilentlyContinue
           foreach ($uFile in $urlFiles) {
@@ -362,11 +360,10 @@ jobs:
               }
           }
 
-          # [Step 6] 메시지 조립
+          # [Step 5] 메시지 조립
           $time = "$env:NOW"
           if ($isActuallyFailed) {
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-              # 👇 제목 끝에 (v하드코딩버전) 추가
               $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
               
               $count = if ($totalFailCount -gt 0) { $totalFailCount } elseif ($uniqueFailures.Count -gt 0) { $uniqueFailures.Count } else { 1 }
@@ -375,7 +372,6 @@ jobs:
               $statusDetail = "FAIL: $count script ( $specListString )"
           } else {
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-              # 👇 제목 끝에 (v하드코딩버전) 추가
               $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
               $statusDetail = ""
           }
@@ -389,7 +385,6 @@ jobs:
               $msgLines += "($time)"
               $msgLines += "$statusDetail"
           } else {
-              # 👇 성공 시에도 타이틀과 시간을 각각 다른 줄로 분리!
               $msgLines += "$title"
               $msgLines += "($time)"
           }
