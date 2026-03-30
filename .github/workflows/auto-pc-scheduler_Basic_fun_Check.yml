@@ -346,6 +346,8 @@ jobs:
           RESTART_STATUS: ${{ needs.restart-task-run.result }}
           PRODUCT_NAME: "로그캐치"
           TEST_TYPE: "기능(Basic)"
+          # 👇 여기에 원하시는 버전명을 직접 하드코딩해서 입력하세요!
+          HARDCODED_VERSION: "3.0.5.0_r34908"
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "시나리오 확인결과"
@@ -427,7 +429,7 @@ jobs:
           $time = "$env:NOW"
           if ($isActuallyFailed) {
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-              $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE)"
+              $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
               
               $count = if ($totalFailCount -gt 0) { $totalFailCount } elseif ($uniqueFailures.Count -gt 0) { $uniqueFailures.Count } else { 1 }
               $specListString = if ($uniqueFailures.Count -gt 0) { $uniqueFailures -join ", " } else { "System Error or Crash" }
@@ -435,7 +437,7 @@ jobs:
               $statusDetail = "FAIL: $count script ( $specListString )"
           } else {
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-              $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE)"
+              $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
               $statusDetail = ""
           }
 
