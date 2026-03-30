@@ -291,8 +291,24 @@ jobs:
           # 수정된 부분: 중괄호를 사용하여 두 폴더의 모든 .cy.js 파일을 실행 대상으로 잡습니다.
           $specPath = "cypress/e2e/{UI_Module_Dev_Check,Basic_functions_Dev_check}/**/*.cy.js"
 
+          # 💡 Cypress 실행 결과를 cypress.log에 저장하고, 에러가 나더라도 다음 줄로 넘어가도록 처리합니다.
+          $ErrorActionPreference = "Continue"
           cmd /c "chcp 65001 & npx cy2 run --record --spec $specPath --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          # 로그 출력
           Get-Content cypress.log
+
+          # 💡 [핵심 예외 처리] 실행이 끝난 후 로그를 분석하여 '깡통 에러'인지 진짜 에러인지 판별합니다.
+          $logContent = Get-Content cypress.log -Raw -Encoding UTF8
+          
+          if ($LASTEXITCODE -ne 0) {
+              if ($logContent -match "matched no report files") {
+                  Write-Host "✅ [INFO] 러너에 할당된 스펙이 없어 리포터가 빈 폴더를 병합하려다 발생한 가짜 에러입니다. (성공으로 처리합니다.)"
+                  exit 0
+              } else {
+                  Write-Host "❌ 진짜 테스트 실패 또는 시스템 에러가 발생했습니다."
+                  exit 1
+              }
+          }
 
       - name: Extract Dashboard URL
         if: always()
