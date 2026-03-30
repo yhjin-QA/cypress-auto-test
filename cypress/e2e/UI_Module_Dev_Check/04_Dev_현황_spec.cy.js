@@ -389,7 +389,7 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 4: 현황서브메뉴 
     // ==========================================
     cy.wait(3000);
-    cy.contains('button', '현황').click({ force: true });
+    //cy.contains('button', '현황').click({ force: true });
     cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
     cy.log('--- 현황 > 정보사용자별 탭(디폴트 화면) ---');
   
