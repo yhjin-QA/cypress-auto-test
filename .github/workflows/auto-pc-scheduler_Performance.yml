@@ -49,7 +49,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NO_COLOR: 1
           CI: true
-        continue-on-error: true
+        #continue-on-error: true
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -196,7 +196,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NO_COLOR: 1
           CI: true
-        continue-on-error: true
+        #continue-on-error: true
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8

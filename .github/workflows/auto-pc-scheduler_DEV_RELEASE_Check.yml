@@ -8,10 +8,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '5 2 * * 1-5'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '5 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -488,7 +488,6 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
           DEPLOY_STATUS: ${{ needs.deploy-qa.result }}
-          # 💡 MATRIX 결과를 포함한 전체 상태를 문자열로 직접 전달
           CYPRESS_STATUS: "${{ needs.cypress-run.result }}"
           RESTART_STATUS: "${{ needs.restart-task-run.result }}"
           VERSION_NAME: ${{ needs.deploy-qa.outputs.version }}
@@ -499,59 +498,72 @@ jobs:
           MSG_TITLE: "확인결과"
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
+          NOW: ${{ env.NOW }}
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
           $failedSpecNames = @()
           $isActuallyFailed = $false
-          $totalFailures = 0
+          $totalFailCount = 0
 
-          Write-Host "============= [🔍 데이터 정밀 분석 시작] ============="
+          Write-Host "============= [🔍 데이터 정밀 분석 시작 (Flaky 완벽 방어)] ============="
           
-          # [Step 1] 배포 단계 확인
-          if ($env:DEPLOY_STATUS -eq "failure") {
+          # [Step 1] 배포 단계 에러 확인 (Dev_Release 전용)
+          if ("${{ env.DEPLOY_STATUS }}".ToLower() -eq "failure") {
               $isActuallyFailed = $true
               $failedSpecNames += "Deployment Stage Error"
           }
 
-          # [Step 2] 리포트 파일 전수 조사
-          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue
+          # [Step 2] 개별 JSON 리포트 전수 조사 
+          # 💡 merged_report.json은 전체 파일명이 다 들어있으므로 탐색에서 무조건 제외!
+          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "merged_report.json" }
           
           foreach ($file in $jsonFiles) {
               try {
-                  # JSON 파일을 문자열로 통째로 읽기
                   $rawContent = Get-Content $file.FullName -Raw -Encoding UTF8
                   $content = $rawContent | ConvertFrom-Json
                   
-                  # 실패 수치가 1 이상인 경우에만 파일명 추출 시도
+                  # 💡 개별 리포트에 실패가 기록되어 있다면 "진짜 실패"
                   if ($content.stats -and [int]$content.stats.failures -gt 0) {
                       $isActuallyFailed = $true
-                      $totalFailures += [int]$content.stats.failures
+                      $totalFailCount += [int]$content.stats.failures
                       
-                      # 💡 [핵심 개선] 정규식을 사용하여 리포트 내의 모든 .cy.js 파일명을 추출
-                      # "file": "path/to/name.cy.js" 또는 "fullFile": "..." 패턴을 모두 잡습니다.
+                      # 파일명 패턴 강제 추출
                       $fileMatches = [regex]::Matches($rawContent, '(?<="file":\s*")[^"]+\.cy\.js|(?<="fullFile":\s*")[^"]+\.cy\.js')
-                      
-                      if ($fileMatches.Count -gt 0) {
-                          foreach ($match in $fileMatches) {
-                              $fName = Split-Path ($match.Value -replace '\\', '/') -Leaf
-                              if ($fName) { $failedSpecNames += $fName }
-                          }
+                      foreach ($match in $fileMatches) {
+                          $fName = Split-Path ($match.Value -replace '\\', '/') -Leaf
+                          if ($fName) { $failedSpecNames += $fName }
                       }
                   }
-              } catch { }
+              } catch {}
           }
 
-          # [Step 3] Job 상태값 교차 체크
-          if ($env:CYPRESS_STATUS -ne "success" -and $env:CYPRESS_STATUS -ne "skipped") {
+          # [Step 3] Job 자체 상태 확인 (시스템 크래시 대비)
+          $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
+          $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
+          if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled" -or $restartStatus -eq "failure" -or $restartStatus -eq "cancelled") {
               $isActuallyFailed = $true
           }
 
-          # 중복 제거 및 유효성 검사
-          $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
+          # 중복 제거 및 1차 필터링 (Dev_Release는 Deployment 에러 문구도 살려둠)
+          $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" -or $_ -eq "Deployment Stage Error" } | Select-Object -Unique
 
-          # [Step 4] 대시보드 URL 복구
+          # [Step 4] 스크린샷 물리 경로 추적 (최후의 보루)
+          # 💡 JSON에서 진짜 실패한 파일명을 이미 찾았다면(Count > 0), 스크린샷은 절대 뒤지지 않습니다!
+          if ($isActuallyFailed -and $uniqueFailures.Count -eq 0) {
+              $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*failed*.png" -ErrorAction SilentlyContinue
+              if ($failedScreenshots.Count -gt 0) {
+                  foreach ($shot in $failedScreenshots) {
+                      $shotMatches = [regex]::Matches($shot.FullName, '([^\\/":*?<>|]+\.cy\.js)')
+                      foreach ($m in $shotMatches) { $failedSpecNames += $m.Value.Trim() }
+                  }
+                  # 스크린샷에서 찾은 값으로 다시 중복 제거
+                  $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" -or $_ -eq "Deployment Stage Error" } | Select-Object -Unique
+              }
+          }
+
+          # [Step 5] 대시보드 URL 탐색
           $dashUrl = "http://10.10.54.5:8080/projects"
           $urlFiles = Get-ChildItem -Path "all_raw_data", "downloaded_url" -Recurse -Filter "run_url.txt" -ErrorAction SilentlyContinue
           foreach ($uFile in $urlFiles) {
@@ -562,36 +574,43 @@ jobs:
               }
           }
 
-          # [Step 5] 메시지 구성
+          # [Step 6] 메시지 조립
+          # 💡 Dev_Release는 하드코딩 대신 배포 단계에서 가져온 $env:VERSION_NAME을 사용합니다.
           $vName = if ($env:VERSION_NAME) { $env:VERSION_NAME } else { "Unknown" }
           $time  = "$env:NOW"
           
           if ($isActuallyFailed) {
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-              $title = "$($env:MSG_FAIL) $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$vName)"
+              $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$vName)"
               
-              # 추출된 파일명이 있으면 나열, 없으면 시스템 에러 표시
-              if ($uniqueFailures.Count -gt 0) {
-                  $specListString = $uniqueFailures -join ", "
-                  $statusDetail = "FAIL Script: ( $specListString )"
-              } else {
-                  $statusDetail = "FAIL Script: ( System Error or Crash )"
-              }
+              $count = if ($totalFailCount -gt 0) { $totalFailCount } elseif ($uniqueFailures.Count -gt 0) { $uniqueFailures.Count } else { 1 }
+              $specListString = if ($uniqueFailures.Count -gt 0) { $uniqueFailures -join ", " } else { "System Error or Crash" }
+              
+              $statusDetail = "FAIL: $count script ( $specListString )"
           } else {
-              $title = "$($env:MSG_SUCCESS) $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$vName)"
+              "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$vName)"
               $statusDetail = "" 
           }
 
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
+          # 메시지 라인 생성
           $msgLines = @()
-          $msgLines += "$title"
-          $msgLines += "($time)"
-          if ($statusDetail) { $msgLines += "$statusDetail" }
+          if ($isActuallyFailed) {
+              $msgLines += "$title"
+              $msgLines += "($time)"
+              $msgLines += "$statusDetail"
+          } else {
+              # 👇 성공 시에도 타이틀과 시간을 각각 다른 줄로 분리!
+              $msgLines += "$title"
+              $msgLines += "($time)"
+          }
           $msgLines += ""
           $msgLines += "$($env:LABEL_DASH) : $dashUrl"
           $msgLines += "$($env:LABEL_GIT) : $runUrl"
           
+          # 전송
           $payload = @{ text = ($msgLines -join "`n") } | ConvertTo-Json -Compress
           $utf8Bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
           Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes
