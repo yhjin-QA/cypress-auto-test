@@ -158,7 +158,7 @@ jobs:
           # 👇 아래 두 줄을 추가하세요! (계정권한 부족 문제 해결)
           CYPRESS_CACHE_FOLDER: ${{ github.workspace }}\.cypress-cache
           TEMP: ${{ github.workspace }}\.temp
-        continue-on-error: true # 에러가 나도 업로드는 해야 함
+        # continue-on-error: true # 에러가 나도 업로드는 해야 함
         run: |
           # 1. 인코딩 강제 설정 (한글 파일명 인식용)
           $OutputEncoding = [System.Text.Encoding]::UTF8
@@ -241,7 +241,7 @@ jobs:
       COMMIT_INFO_MESSAGE: ${{ github.event.head_commit.message }}
       NO_COLOR: 1
       CI: true
-      continue-on-error: true # 에러가 나도 업로드는 해야 함
+      # continue-on-error: true # 에러가 나도 업로드는 해야 함
        # 👇 아래 두 줄을 추가하세요! (계정권한 부족 문제 해결)
       CYPRESS_CACHE_FOLDER: ${{ github.workspace }}\.cypress-cache
       TEMP: ${{ github.workspace }}\.temp
@@ -367,6 +367,7 @@ jobs:
           MSG_TITLE: "시나리오 확인결과"
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
+
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8

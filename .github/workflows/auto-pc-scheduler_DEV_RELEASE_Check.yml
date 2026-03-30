@@ -357,7 +357,7 @@ jobs:
       NODE_TLS_REJECT_UNAUTHORIZED: 0                       # 💡 보안 경고 무시
       NO_COLOR: 1
       CI: true
-      continue-on-error: true # 에러가 나도 업로드는 해야 함
+    # continue-on-error: true # 에러가 나도 업로드는 해야 함
     defaults:
       run:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
