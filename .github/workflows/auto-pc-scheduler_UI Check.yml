@@ -283,8 +283,6 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
           JOB_STATUS: ${{ needs.cypress-run.result }}
-          PRODUCT_NAME: "로그캐치"
-          TEST_TYPE: "UI"
           # 👇 원하시는 버전명을 여기에 하드코딩 하세요!
           HARDCODED_VERSION: "3.0.5.0_r34908" 
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
