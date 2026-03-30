@@ -8,10 +8,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '5 2 * * 1-5'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '5 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -503,73 +503,78 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
+          $failedSpecNames = @()
           $isActuallyFailed = $false
-          $failNames = @()
           $totalFailures = 0
 
           Write-Host "============= [🔍 데이터 정밀 분석 시작] ============="
           
-          # [Step 1] 배포 단계(Job 1) 결과 확인
+          # [Step 1] 배포 단계 확인
           if ($env:DEPLOY_STATUS -eq "failure") {
               $isActuallyFailed = $true
-              $failNames += "Deployment Stage Error"
+              $failedSpecNames += "Deployment Stage Error"
           }
 
-          # [Step 2] 리포트 파일 전수 조사 (가장 확실한 지표)
-          # 'all_raw_data' 내부를 재귀적으로 뒤져서 모든 JSON의 failure 합산
+          # [Step 2] 리포트 파일 전수 조사
           $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue
-          Write-Host "발견된 리포트 개수: $($jsonFiles.Count)"
-
+          
           foreach ($file in $jsonFiles) {
               try {
                   $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
                   if ($content.stats -and [int]$content.stats.failures -gt 0) {
-                      $totalFailures += [int]$content.stats.failures
                       $isActuallyFailed = $true
-                      Write-Host "❌ 실패 기록 발견: $($file.Name) ($($content.stats.failures) 건)"
+                      $totalFailures += [int]$content.stats.failures
                       
-                      # 실패 파일명 추출
+                      # 💡 [핵심 개선] 리포트의 모든 수준을 뒤져서 파일명 추출
+                      # results -> suites -> tests 구조를 모두 탐색
                       foreach ($res in $content.results) {
-                          $resRaw = $res | ConvertTo-Json -Depth 10
-                          if ($resRaw -match '"fail":\s*true' -or $resRaw -match '"state":\s*"failed"') {
-                              $fPath = if ($res.file) { $res.file } else { $res.fullFile }
-                              $fName = Split-Path ($fPath -replace '\\', '/') -Leaf
-                              if ($fName) { $failNames += $fName }
+                          # 1. 루트 레벨에 파일 정보가 있는 경우
+                          $foundFile = if ($res.file) { $res.file } else { $res.fullFile }
+                          
+                          # 2. 하위 suites 내부를 뒤져야 하는 경우 (Cypress 일반적인 구조)
+                          if (-not $foundFile -and $res.suites) {
+                              foreach ($suite in $res.suites) {
+                                  $foundFile = if ($suite.file) { $suite.file } else { $suite.fullFile }
+                                  if ($foundFile) { break }
+                              }
+                          }
+                          
+                          # 파일명을 찾았다면 리스트에 추가
+                          if ($foundFile) {
+                              $fName = Split-Path ($foundFile -replace '\\', '/') -Leaf
+                              $failedSpecNames += $fName
                           }
                       }
                   }
               } catch { }
           }
 
-          # [Step 3] Job 상태값 보충 확인 (리포트가 생성 안 된 경우 대비)
+          # [Step 3] Job 상태값 교차 체크 (리포트 분석 실패 시 대비)
           if ($env:CYPRESS_STATUS -ne "success" -and $env:CYPRESS_STATUS -ne "skipped") {
               $isActuallyFailed = $true
-              Write-Host "⚠️ Cypress Job Status: $env:CYPRESS_STATUS"
-          }
-          if ($env:RESTART_STATUS -ne "success" -and $env:RESTART_STATUS -ne "skipped") {
-              $isActuallyFailed = $true
-              Write-Host "⚠️ Restart Job Status: $env:RESTART_STATUS"
           }
 
-          # [Step 4] 대시보드 URL 복구 로직
+          $uniqueFailures = $failedSpecNames | Where-Object { $_ -ne $null } | Select-Object -Unique
+
+          # [Step 4] 대시보드 URL 복구
           $dashUrl = "http://10.10.54.5:8080/projects"
           $urlFiles = Get-ChildItem -Path "all_raw_data", "downloaded_url" -Recurse -Filter "run_url.txt" -ErrorAction SilentlyContinue
           foreach ($uFile in $urlFiles) {
               $tempUrl = (Get-Content $uFile.FullName -Raw -Encoding UTF8).Trim()
               if ($tempUrl -match "http" -and $tempUrl -notmatch "projects$") {
                   $dashUrl = $tempUrl
-                  Write-Host "✅ 대시보드 URL 복구 완료: $dashUrl"
                   break
               }
           }
 
           # [Step 5] 메시지 구성
-          $uniqueFailures = $failNames | Select-Object -Unique
           $vName = if ($env:VERSION_NAME) { $env:VERSION_NAME } else { "Unknown" }
           $time  = "$env:NOW"
           
           if ($isActuallyFailed) {
+              "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
               $title = "$($env:MSG_FAIL) $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$vName)"
+              # 파일명을 못 찾았을 때만 System Error 표시
               $specListString = if ($uniqueFailures.Count -gt 0) { $uniqueFailures -join ", " } else { "System Error or Crash" }
               $statusDetail = "FAIL Script: ( $specListString )"
           } else {
