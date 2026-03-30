@@ -281,15 +281,19 @@ jobs:
       - name: Send Google Chat (UI)
         if: always() 
         env:
-          # Job 1의 결과를 확인
+          WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
           JOB_STATUS: ${{ needs.cypress-run.result }}
+          PRODUCT_NAME: "로그캐치"
+          TEST_TYPE: "UI"
+          # 👇 원하시는 버전명을 여기에 하드코딩 하세요!
+          HARDCODED_VERSION: "3.0.5.0_r34908" 
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "확인결과"
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
-
-
+          NOW: ${{ env.NOW }}
+          
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -364,7 +368,8 @@ jobs:
           $time = "$env:NOW"
           if ($isActuallyFailed) {
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-              $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*") + " $($env:PRODUCT_NAME) $($env:MSG_TITLE)"
+              # 👇 제목 끝에 (v하드코딩버전) 추가
+              $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
               
               $count = if ($totalFailCount -gt 0) { $totalFailCount } elseif ($uniqueFailures.Count -gt 0) { $uniqueFailures.Count } else { 1 }
               $specListString = if ($uniqueFailures.Count -gt 0) { $uniqueFailures -join ", " } else { "System Error or Crash" }
@@ -372,7 +377,8 @@ jobs:
               $statusDetail = "FAIL: $count script ( $specListString )"
           } else {
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-              $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*") + " $($env:PRODUCT_NAME) $($env:MSG_TITLE)"
+              # 👇 제목 끝에 (v하드코딩버전) 추가
+              $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
               $statusDetail = ""
           }
 
