@@ -345,6 +345,7 @@ jobs:
           RESTART_STATUS: ${{ needs.restart-task-run.result }}
           PRODUCT_NAME: "로그캐치"
           TEST_TYPE: "기능(Basic)"
+          # 👇 원하시는 버전명을 직접 하드코딩해서 입력하세요!
           HARDCODED_VERSION: "3.0.5.0_r34908"
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
@@ -360,30 +361,25 @@ jobs:
           $isActuallyFailed = $false
           $totalFailCount = 0
 
-          Write-Host "============= [🔍 데이터 정밀 분석 시작 (Flaky 방어 모드)] ============="
+          Write-Host "============= [🔍 데이터 정밀 분석 시작 (Flaky 완벽 방어)] ============="
 
-          # [Step 1] 통합 리포트 확인 (Flaky 필터링의 기준점)
-          # 통합 리포트에 실패가 0이면 Flaky로 인한 재시도 성공이므로 실패 처리 안 함.
-          if (Test-Path "merged_report.json") {
-              try {
-                  $merged = Get-Content "merged_report.json" -Raw -Encoding UTF8 | ConvertFrom-Json
-                  if ($merged.stats -and [int]$merged.stats.failures -gt 0) {
-                      $isActuallyFailed = $true
-                      $totalFailCount += [int]$merged.stats.failures
-                  }
-              } catch {}
-          }
-
-          # [Step 2] 개별 JSON 파일 전수 조사 (진짜 실패만 추출)
+          # [Step 1] JSON 리포트 전수 조사 (가장 정확한 지표)
           $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue
           foreach ($file in $jsonFiles) {
               try {
                   $rawContent = Get-Content $file.FullName -Raw -Encoding UTF8
                   $content = $rawContent | ConvertFrom-Json
                   
-                  # 💡 [Flaky 방어 1] 해당 파일의 failures가 0보다 클 때만 파일명 추출 진행
+                  # 💡 리포트에 실패가 명백히 기록되어 있다면 "진짜 실패"
                   if ($content.stats -and [int]$content.stats.failures -gt 0) {
                       $isActuallyFailed = $true
+                      
+                      # merged_report가 아닌 개별 파일에서만 카운트 합산 (중복 카운트 방지)
+                      if ($file.Name -ne "merged_report.json") {
+                          $totalFailCount += [int]$content.stats.failures
+                      }
+                      
+                      # 파일명 패턴 강제 추출
                       $fileMatches = [regex]::Matches($rawContent, '(?<="file":\s*")[^"]+\.cy\.js|(?<="fullFile":\s*")[^"]+\.cy\.js')
                       foreach ($match in $fileMatches) {
                           $fName = Split-Path ($match.Value -replace '\\', '/') -Leaf
@@ -393,8 +389,19 @@ jobs:
               } catch {}
           }
 
+          # [Step 2] Job 자체 상태 확인 (시스템 크래시 등 JSON 누락 대비)
+          # 💡 Cypress는 재시도 성공(Flaky) 시 'success'를 반환합니다. 
+          # 따라서 'failure'가 떴다는 것은 재시도마저 실패한 찐 에러입니다.
+          $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
+          $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
+          if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled" -or $restartStatus -eq "failure" -or $restartStatus -eq "cancelled") {
+              $isActuallyFailed = $true
+          }
+
           # [Step 3] 스크린샷 물리 경로 추적 (보조 수단)
-          # 💡 [Flaky 방어 2] 스크린샷이 있더라도, JSON 분석에서 $isActuallyFailed가 $true로 판정된 경우에만 스크린샷 파일명 수집
+          # 💡 [Flaky 방어 핵심]: 
+          # 재시도로 최종 성공한 Flaky 테스트는 $isActuallyFailed가 $false입니다.
+          # 오직 "진짜 실패($true)"로 판명난 경우에만 스크린샷 이름 추출을 허용합니다. (Flaky 스크린샷 철저히 무시)
           if ($isActuallyFailed) {
               $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*failed*.png" -ErrorAction SilentlyContinue
               if ($failedScreenshots.Count -gt 0) {
@@ -405,22 +412,10 @@ jobs:
               }
           }
 
-          # [Step 4] Job 자체 상태 확인 (시스템 크래시 등 리포트조차 없는 예외 상황)
-          $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
-          $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
-          
-          # 💡 [Flaky 방어 3] Job이 success가 아니더라도 리포트가 정상 생성되었고 실패가 0이면 Job 상태 무시(Flaky 보정)
-          if (-not $isActuallyFailed -and (($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") -or ($restartStatus -eq "failure" -or $restartStatus -eq "cancelled"))) {
-               # 단, json 파일이 하나도 없다면 진짜 시스템 뻗은 거니까 실패 처리
-               if ($jsonFiles.Count -eq 0) {
-                   $isActuallyFailed = $true
-               }
-          }
-
           # 중복 제거 및 유효한 .cy.js 파일만 필터링
           $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
 
-          # [Step 5] 대시보드 URL 탐색
+          # [Step 4] 대시보드 URL 탐색 (유효성 검증)
           $dashUrl = "http://10.10.54.5:8080/projects"
           $urlFiles = Get-ChildItem -Path "all_raw_data", "downloaded_url" -Recurse -Filter "run_url.txt" -ErrorAction SilentlyContinue
           foreach ($uFile in $urlFiles) {
@@ -431,7 +426,7 @@ jobs:
               }
           }
 
-          # [Step 6] 메시지 조립
+          # [Step 5] 메시지 조립
           $time = "$env:NOW"
           if ($isActuallyFailed) {
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -456,7 +451,7 @@ jobs:
               $msgLines += "($time)"
               $msgLines += "$statusDetail"
           } else {
-             # 👇 성공 시에도 타이틀과 시간을 각각 다른 줄로 분리!
+              # 성공 시에도 타이틀과 시간을 각각 다른 줄로 분리
               $msgLines += "$title"
               $msgLines += "($time)"
           }
