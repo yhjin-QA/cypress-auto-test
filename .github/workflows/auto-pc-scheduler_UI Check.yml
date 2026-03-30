@@ -389,7 +389,9 @@ jobs:
               $msgLines += "($time)"
               $msgLines += "$statusDetail"
           } else {
-              $msgLines += "$title ($time)"
+              # 👇 성공 시에도 타이틀과 시간을 각각 다른 줄로 분리!
+              $msgLines += "$title"
+              $msgLines += "($time)"
           }
           $msgLines += ""
           $msgLines += "$($env:LABEL_DASH) : $dashUrl"
