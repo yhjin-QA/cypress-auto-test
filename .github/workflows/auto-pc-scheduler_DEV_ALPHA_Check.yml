@@ -1,17 +1,17 @@
-name: Auto-PC Work (Dev_RELEASE_UI)
+name: Auto-PC Work (Dev_ALPHA_UI)
 
 env:
   PRODUCT_NAME: "로그캐치"
-  TEST_TYPE: Dev_RELEASE
+  TEST_TYPE: Dev_ALPHA
   TZ: Asia/Seoul
    # 👇 여기에 추가하세요! (GitHub Actions가 내부적으로 Node.js 24를 사용하도록 강제함)
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '5 2 * * 1-5'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '5 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -48,8 +48,8 @@ jobs:
           $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
 
           $loginUrl = "https://project.warevalley.com/login"
-          #RELEASE 빌드파일 경로
-          $repoBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/show/logcatch/RELEASE/logcatch"
+          #ALPHA 빌드파일 경로
+          $repoBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/show/logcatch/ALPHA/logcatch"
           
           $userId = "${{ secrets.REDMINE_USER_ID }}"
           $userPw = "${{ secrets.REDMINE_PW }}"
@@ -135,8 +135,8 @@ jobs:
           Write-Host " [Step 2] Delivery of access permissions (Cookies) to the QA server and file download (enhanced stability)..."
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath cookies.txt "${target}:${remotePath}/cookies.txt"
 
-          # (수정 후)  ALPHA를 RELEASE로 변경!
-          $rawBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/raw/logcatch/RELEASE/logcatch/${env:LATEST_VERSION}"
+          # (수정 후)  ALPHA로 변경!
+          $rawBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/show/logcatch/ALPHA/logcatch/${env:LATEST_VERSION}"
           
           #  [네트워크 끊김 완벽 방어] 
           # -f : 다운로드 실패 시 가짜 파일(HTML) 생성 방지
@@ -508,7 +508,7 @@ jobs:
           RESTART_STATUS: "${{ needs.restart-task-run.result }}"
           VERSION_NAME: ${{ needs.deploy-qa.outputs.version }}
           PRODUCT_NAME: "로그캐치"
-          TEST_TYPE: "Dev_RELEASE"
+          TEST_TYPE: "Dev_ALPHA"
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "확인결과"
