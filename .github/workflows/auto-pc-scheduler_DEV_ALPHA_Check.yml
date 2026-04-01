@@ -136,7 +136,7 @@ jobs:
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath cookies.txt "${target}:${remotePath}/cookies.txt"
 
           # (수정 후)  ALPHA로 변경!
-          $rawBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/show/logcatch/ALPHA/logcatch/${env:LATEST_VERSION}"
+          $rawBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/raw/logcatch/ALPHA/logcatch/${env:LATEST_VERSION}"
           
           #  [네트워크 끊김 완벽 방어] 
           # -f : 다운로드 실패 시 가짜 파일(HTML) 생성 방지
