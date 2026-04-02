@@ -36,6 +36,12 @@ module.exports = defineConfig({
     },
 
   e2e: {
+    // 👇 [추가] 외부 사이트(WAS) 로딩 및 보안 이슈 해결을 위한 핵심 설정
+    chromeWebSecurity: false, // 크로스 도메인 보안 정책 해제 (화면 깨짐 방지 도움)
+    experimentalModifyObstructiveThirdPartyCode: true, // 외부 사이트의 방해 코드 수정 허용
+    pageLoadTimeout: 60000, // 페이지 로딩 대기 시간을 60초로 상향 (WAS 응답 지연 대비)
+    defaultCommandTimeout: 10000, // 기본 명령어 대기 시간 10초로 상향
+
     excludeSpecPattern: [    
        "**/Check/**",
        //"**/Basic_functions_check/**",
