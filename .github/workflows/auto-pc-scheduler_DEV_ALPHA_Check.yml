@@ -11,7 +11,7 @@ on:
   push:
     branches: [ "master" ]
   schedule:
-    - cron: '15 2 * * 1-5'
+    - cron: '25 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -87,8 +87,6 @@ jobs:
 
           # 👇 여기서부터 수정 (기존 if문을 이 블록으로 교체)
           #if ($installedVersion -eq $latestVersion) {
-          # 👇 버전에 상관없이 무조건 설치하도록 강제 조작! ($false 추가)
-          if ($false) {
             Write-Host "[SKIP] The currently installed version ($installedVersion) is the latest. Stopping all operations."
             
             # 💡 중요: 다음 Job들이 읽을 수 있도록 skip_all을 true로 설정
