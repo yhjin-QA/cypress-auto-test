@@ -45,7 +45,9 @@ jobs:
           $keyPath = "$env:TEMP\id_auto"
           $env:SSH_KEY_DATA.Trim() | Out-File -FilePath $keyPath -Encoding ASCII
           $target = "${{ secrets.QA_SERVER_USER }}@${{ secrets.QA_SERVER_IP }}"
-          $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
+          # ✅ 수정 후 (직접 절대 경로로 지정)
+          $remotePath = "/home/root/deploy"
+          #$remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
 
           $loginUrl = "https://project.warevalley.com/login"
           #ALPHA 빌드파일 경로
