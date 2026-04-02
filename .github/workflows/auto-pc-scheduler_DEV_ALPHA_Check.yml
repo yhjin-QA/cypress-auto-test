@@ -46,7 +46,7 @@ jobs:
           $env:SSH_KEY_DATA.Trim() | Out-File -FilePath $keyPath -Encoding ASCII
           $target = "${{ secrets.QA_SERVER_USER }}@${{ secrets.QA_SERVER_IP }}"
           # ✅ 수정 후 (직접 절대 경로로 지정)
-          $remotePath = "/home/root/deploy"
+          $remotePath = "/home/root/depoly/"
           #$remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
 
           $loginUrl = "https://project.warevalley.com/login"
@@ -130,7 +130,7 @@ jobs:
           $target = "${{ secrets.QA_SERVER_USER }}@${{ secrets.QA_SERVER_IP }}"
           # $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
           # ✅ 수정 후 (직접 절대 경로로 지정)
-          $remotePath = "/home/root/deploy"
+          $remotePath = "/home/root/depoly/"
           $mainName = "${env:MAIN_FILE_NAME}"
           $partyName = "${env:PARTY_FILE_NAME}"
 
