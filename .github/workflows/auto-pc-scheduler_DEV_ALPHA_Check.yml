@@ -128,10 +128,13 @@ jobs:
           # SSH 접속 준비
           $keyPath = "$env:TEMP\id_auto"
           $env:SSH_KEY_DATA.Trim() | Out-File -FilePath $keyPath -Encoding ASCII
+          
           # 👇 여기도 71번 IP로 직접 꽂아줍니다!
           $target = "root@10.10.54.71"
+
           # ✅ 수정 후 (직접 절대 경로로 지정)
           $remotePath = "/home/root/deploy"
+          
           $mainName = "${env:MAIN_FILE_NAME}"
           $partyName = "${env:PARTY_FILE_NAME}"
 
