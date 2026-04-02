@@ -431,6 +431,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('body').click('center', { force: true });
 
 */
+
   });
 });  
 
