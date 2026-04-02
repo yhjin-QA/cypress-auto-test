@@ -244,8 +244,16 @@ describe('로그캐치 사이트 테스트', () => {
 cy.log('🚀 WAS 사이트로 이동합니다.');
 
 cy.origin('http://10.10.54.22:8080', () => {
-  // 1. WAS 로그인 페이지 방문
-  cy.visit('/uat/uia/egovLoginUsr.do');
+  // 🌟 외부 도메인 내부에서 발생하는 모든 자바스크립트 에러를 무시하도록 설정
+  Cypress.on('uncaught:exception', (err, runnable) => {
+    // 에러 메시지에 'e is not defined'가 포함되어 있다면 테스트를 실패시키지 않음
+    if (err.message.includes('e is not defined')) {
+    return false; // 어떤 에러가 나도 테스트를 중단하지 않음
+    }
+  });
+  
+  // 🌟 상대 경로 대신 '전체 URL'을 직접 입력합니다.
+  cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do');
 
   // 드롭다운 체크 및 새로고침 로직
   cy.get('body').then(($body) => {

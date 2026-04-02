@@ -124,7 +124,9 @@ jobs:
           $keyPath = "$env:TEMP\id_auto"
           $env:SSH_KEY_DATA.Trim() | Out-File -FilePath $keyPath -Encoding ASCII
           $target = "${{ secrets.QA_SERVER_USER }}@${{ secrets.QA_SERVER_IP }}"
-          $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
+          # $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
+          # ✅ 수정 후 (직접 절대 경로로 지정)
+          $remotePath = "/home/root/deploy"
           $mainName = "${env:MAIN_FILE_NAME}"
           $partyName = "${env:PARTY_FILE_NAME}"
 
