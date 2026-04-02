@@ -85,7 +85,7 @@ jobs:
           if ($null -eq $installedVersion) { $installedVersion = "none" }
           $installedVersion = $installedVersion.ToString().Trim()
 
-          # 👇 여기서부터 수정 (기존 if문을 이 블록으로 교체)
+          # 버전비교
           if ($installedVersion -eq $latestVersion) {
             Write-Host "[SKIP] The currently installed version ($installedVersion) is the latest. Stopping all operations."
             
