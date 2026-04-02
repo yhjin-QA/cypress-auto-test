@@ -104,6 +104,7 @@ describe('로그캐치 사이트 테스트', () => {
     
     //로그인 성공
 
+
     // ==========================================
     // STEP 9: 분석 서브메뉴 
     // ==========================================
@@ -129,6 +130,10 @@ describe('로그캐치 사이트 테스트', () => {
 
     //추가한 정책 삭제 검증코드 
     cy.contains('tr', 'test_auto_개인정보과다조회').should('not.exist'); 
+
+    //==========================================
+    // 개인정보과다조회 - 경보등급별 검증 
+    //===========================================
    
 
     // 우측 동그란 + 플러스 버튼 클릭
@@ -173,17 +178,16 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('body').type('{esc}');
 
     // 정책 상세 설정 
-    // 개인정보 사용 건수 입력
-    // 주의 입력 
-    cy.get('input[aria-label="주의"]').filter(':visible').clear({ force: true }).type('10', { force: true });
+    // 경보등급 - 주의단계 이력 셋팅 
+    cy.get('input[aria-label="주의"]').filter(':visible').clear({ force: true }).type('100', { force: true });
     cy.wait(500);
 
     // 경계 입력
-    cy.get('input[aria-label="경계"]').filter(':visible').clear({ force: true }).type('100', { force: true });
+    cy.get('input[aria-label="경계"]').filter(':visible').clear({ force: true }).type('300', { force: true });
     cy.wait(500);
 
     // 심각 입력
-    cy.get('input[aria-label="심각"]').filter(':visible').clear({ force: true }).type('300', { force: true });
+    cy.get('input[aria-label="심각"]').filter(':visible').clear({ force: true }).type('500', { force: true });
     cy.wait(500);
 
     // 저장버튼 클릭 
@@ -232,70 +236,100 @@ describe('로그캐치 사이트 테스트', () => {
      }
    });
 
+    
+  
+ // ----------------------------------------------------------
+// [STEP 1] WAS 사이트 이동 및 이상행위 발생 (도메인 분리)
+// ----------------------------------------------------------
+cy.log('🚀 WAS 사이트로 이동합니다.');
 
-    //기본정책 설정 /철회 코드 -------------------------
-    //깃발 클릭 
-    cy.get('.fa-flag').first().click({ force: true });
-    cy.wait(500);
-   
-    //기본정책 설정
-    //기본 정책 설정 팝업창 확인 버튼 클릭 
-    cy.contains('기본정책으로 설정하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
-    cy.wait(500);
+cy.origin('http://10.10.54.22:8080', () => {
+  // 1. WAS 로그인 페이지 방문
+  cy.visit('/uat/uia/egovLoginUsr.do');
 
-     // 기본 정책 설정확인 검증 코드 (초록색색상값 확인 )
-     cy.contains('tr', 'test_auto_개인정보과다조회').find('.fa-flag').should('be.visible')
-    .invoke('css', 'color') // 아이콘의 실제 색상(CSS color) 값을 가져옴
-    .should('not.eq', 'rgba(0, 0, 0, 0.54)') // 기본 회색이 아니어야 함
-    .and('not.eq', 'rgb(0, 0, 0)');
+  // 드롭다운 체크 및 새로고침 로직
+  cy.get('body').then(($body) => {
+    if ($body.find('select[name="name"]').length === 0) {
+      cy.reload();
+      cy.wait(2000);
+    }
+  });
 
-    //기본 정책 철회
-    // 초록색 깃발아이콘 클릭 
-    cy.contains('tr', 'test_auto_개인정보과다조회').find('.fa-flag').should('be.visible').click({ force: true });
-    cy.wait(500);
+  // 2. 로그인 수행
+  cy.get('#id', { timeout: 10000 }).should('be.visible').clear().type('yunho');
+  cy.get('#password').should('be.visible').type('Manager1{enter}');
+  cy.wait(3000);
 
-    //기본 정책 철회 팝업창 확인 버튼 클릭
-    cy.contains('기본정책에서 철회하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
-    cy.wait(500);
+  // 3. 메뉴 클릭 및 과다조회 실행
+  // 에러 방지를 위해 contains 앞에 페이지 로딩을 확실히 대기합니다.
+  cy.contains('a', '개인정보오남용', { timeout: 10000 }).should('be.visible').click({ force: true });
+  cy.wait(2000);
+  
+  // 과다조회 버튼 클릭
+  cy.get('a[href*="btnExcessCheck"]').should('exist').click({ force: true });
+  cy.wait(3000);
 
-    // 기본 정책 철회 검증
-    // test_auto_개인정보과다조회 사용여부 false 상태로 되어있는지 검증 (철회시 사용여부 false로 변하기때문)
-    cy.contains('tr', 'test_auto_개인정보과다조회').find('td').contains('false').should('be.visible');
+  // 결과 검증
+  cy.get('tbody').contains('td', '배송 준비 중').should('be.visible');
+}); 
 
+// 🌟 cy.origin 블록이 끝났습니다. 이제 다시 원래 도메인(10.10.54.21) 환경입니다.
 
-    // 추가한 test_auto_개인정보과다 조회정책 수정--------------------------------------
-    // 추가된 정책명 : test_auto_개인정보과다조회 다시 재클릭 
-    cy.contains('a', 'test_auto_개인정보과다조회').should('be.visible').click({ force: true });
-    cy.wait(500);
+// ----------------------------------------------------------
+// [STEP 2] 원래 점검 사이트(LogCatch)로 복귀
+// ----------------------------------------------------------
+cy.log('--- 원래 점검 사이트로 복귀합니다 ---');
 
-    // 정책 사용여부 토글 ON
-    cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
-    cy.wait(500);
+// 1. 원래 사이트로 다시 접속
+cy.visit('https://10.10.54.21:18443/logcatch/status/userStatus'); 
+cy.wait(5000); // 도메인 전환 후 로딩 대기
 
-    // 선택한 그룹 x버튼 클릭하여 초기화 
-    // cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+// 2. 세션이 끊겨 로그인 페이지로 튕겼는지 확인 후 재로그인
+cy.url().then((url) => {
+  if (url.includes('/login')) {
+    cy.log('⚠️ 세션 만료 감지: 재로그인을 시도합니다.');
+    cy.get('input[aria-label="사용자 계정"]').clear().type('admin', { force: true });
+    cy.get('input[aria-label="패스워드"]').clear().type('Manager1!{enter}', { force: true });
+    cy.wait(3000);
+    
+    // 재로그인 후 다시 원하는 메뉴로 이동
+    cy.visit('https://10.10.54.21:18443/logcatch/status/userStatus');
+    cy.wait(2000);
+  }
+});
 
-    //추가된 부서 에서 개발팀 추가 하는 코드 
-    // 그룹 톱니바퀴 아이콘 클릭
-    cy.get('.v-icon').filter(':visible').contains('settings').click({ force: true });
-    cy.wait(500);
-
-    // 그룹 톱니바퀴 클릭해서 뜬 그룹화면에서 '개발팀' 추가선택
-    // '개발팀' 텍스트를 포함하고 있는 리스트 항목(.v-list__tile)을 찾아서 클릭
-    cy.contains('.v-list__tile', '개발팀').filter(':visible').click({ force: true }); // 클릭 (체크박스 체크됨)
-    cy.wait(500);
-
-    // 그룹 선택 팝업창 닫기
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    // 개발팀이 추가되었는지 검증하는 코드 ( 그룹 숫자확인 )
-    cy.contains('span.grey--text.caption', '(+2)').should('be.visible');
+cy.log('✅ 원래 사이트 복귀 및 점검 재개 완료');
 
 
-    // 저장버튼 클릭 
-    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    // ===============================================
+    //  이력 - 접속기록 이력 - 이상행위 에서 경보등급 확인 
+    // ================================================
+     // 이력 > 접속 기록 이력 서브메뉴 클릭  -----------------------
+    cy.contains('button', '이력').click({ force: true });
+    cy.log('--- 이력 > 접속기록 이력  클릭 ---');
+    cy.wait(3000);
+    // 설명: .v-list__tile__title 클래스 내의 '사용자 추적' 글자를 찾아 클릭
+    cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
+    cy.wait(3000);
+
+
+    // 이력 > 접속기록 이력 > [이상행위] 탭 선택
+    cy.get('.tab-btn').contains('이상행위').should('be.visible').click({ force: true });
+    cy.wait(3000);
+    cy.log('--- 화면 검증 시작 ---');
+    cy.get('.tab-btn').contains('이상행위').closest('button').should('not.have.class', 'inactive');
+    // 설명: 'c-headline' 클래스를 가진 요소 중에 '이상행위' 글자가 보여야 한다.
+    cy.contains('.c-headline', '이상행위').should('exist');
+
+
+
+
+
+
+
+
+
+
 
 
     cy.log('✅  분석 탭 진입 및 데이터 출력 확인 완료!');

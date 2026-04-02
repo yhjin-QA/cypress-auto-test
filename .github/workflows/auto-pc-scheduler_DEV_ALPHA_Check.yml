@@ -8,10 +8,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '5 2 * * 1-5'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '15 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -268,7 +268,7 @@ jobs:
       - name: Cypress Run
         id: cypress
         env:
-          CYPRESS_BASE_URL: "https://10.10.54.51:18443/logcatch"
+          CYPRESS_BASE_URL: "https://10.10.54.71:18443/logcatch"
           CYPRESS_API_URL: "http://10.10.54.5:1234/"
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -365,7 +365,7 @@ jobs:
     runs-on: [self-hosted, PC-Auto]
     # 👇 [추가] cy2 실행을 위한 환경 변수 복사
     env:
-      CYPRESS_BASE_URL: "https://10.10.54.51:18443/logcatch" # 💡 필수 추가
+      CYPRESS_BASE_URL: "https://10.10.54.71:18443/logcatch" # 💡 필수 추가
       CYPRESS_API_URL: "http://10.10.54.5:1234/"
       CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
