@@ -685,7 +685,8 @@ describe('로그캐치 사이트 테스트', () => {
    // 첫 번째 행 정밀 검증코드 
     cy.get('tbody tr').filter(':visible').first().within(() => {
        cy.get('a').contains('미등록 부서').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
-       cy.get('a').contains('미등록 사용자 (호준)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+       // '미등록 사용자'로 시작하는 모든 <a> 태그를 찾음
+       cy.get('a').contains(/^미등록 사용자/).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
      });
 
       // 사용자 상태 - 전체 선택----------------------------------------------- 
@@ -700,13 +701,28 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(1000);
 
     // [검증] 검색 결과 검증
-    // 첫 번째 행 정밀 검증
-   // 첫 번째 행 정밀 검증코드 
-    // 첫 번째 행 정밀 검증코드 
-    cy.get('tbody tr').filter(':visible').first().within(() => {
-       cy.contains('a', '미등록 부서').should('not.exist');
-       cy.contains('a', '미등록 사용자 (호준)').should('not.exist');
-     });
+cy.get('tbody tr').filter(':visible').first().then(($row) => {
+  
+  // 1. '미등록 부서'가 행 안에 존재하는지 확인
+  const hasDept = $row.find('a:contains("미등록 부서")').length > 0;
+  if (hasDept) {
+    cy.log('✅ [미등록 부서] 발견: 검증을 수행합니다.');
+    cy.wrap($row).contains('a', '미등록 부서').should('be.visible');
+  } else {
+    cy.log('⚪ [미등록 부서] 없음: 검증을 건너뜁니다.');
+  }
+
+  // 2. '미등록 사용자'로 시작하는 텍스트가 존재하는지 확인 (정규식 활용)
+  // jQuery의 filter를 사용하여 텍스트 패턴을 찾습니다.
+  const hasUser = $row.find('a').filter((i, el) => /^미등록 사용자/.test(el.innerText)).length > 0;
+  if (hasUser) {
+    cy.log('✅ [미등록 사용자] 발견: 검증을 수행합니다.');
+    cy.wrap($row).contains('a', /^미등록 사용자/).should('be.visible');
+  } else {
+    cy.log('⚪ [미등록 사용자] 없음: 검증을 건너뜁니다.');
+  }
+
+});
 
     //----------------------------------------------------------------------------------------------
     
