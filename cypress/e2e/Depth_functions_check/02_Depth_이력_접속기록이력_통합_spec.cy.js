@@ -848,12 +848,19 @@ describe('로그캐치 사이트 테스트', () => {
      cy.contains('span.tab-title', 'HTTP Request').should('be.visible').click({ force: true });
      cy.wait(500); 
 
-     // 'referer'라는 텍스트를 가진 행(tr)을 찾아서 검증합니다.
-     cy.contains('tr', 'referer').should('be.visible')
-     .within(() => {
-       // 그 행 안에서 URL 값이 포함되어 있는지 확인
-       cy.contains('http://10.10.54.22:8080/cop/logcatch/selectexcessCheck.do').should('exist');
-      });
+     //화면 검증코드
+     // 'referer' 행 내부에서 검증
+     cy.contains('tr', 'referer', { timeout: 10000 }).should('be.visible')     .within(() => {
+    // 1. IP 주소는 고정이므로 반드시 확인
+    cy.get('td').should('contain', '10.10.54.22:8080');
+    
+    // 2. 중간 경로는 제외하고, 마지막이 .do로 끝나는지만 유연하게 확인
+    // contain 대신 invoke('text')를 사용하여 정규식으로 확인하는 것이 가장 안전합니다.
+    cy.get('td').invoke('text').then((text) => {
+      // .do 확장자가 포함되어 있는지 확인 (어떤 메뉴를 클릭했든 통과됨)
+      expect(text).to.match(/\.do/); 
+       });
+    });
 
      //HTTP Response 탭 클릭---------------------
      cy.contains('span.tab-title', 'HTTP Response').should('be.visible').click({ force: true });

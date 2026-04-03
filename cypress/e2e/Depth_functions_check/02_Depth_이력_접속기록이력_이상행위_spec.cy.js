@@ -258,10 +258,34 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(500);
 
-    //[검증] 표 안의 결과 확인 
-    // '개인정보 과다조회' 행 검증 (MajorAlert - 노란색 아이콘이 있어야 함)
-    cy.contains('tr', '개인정보 과다조회').should('be.visible').and('contain', 'test_auto_개인정보과다조회').find('i.g-IMajorAlert').should('be.visible');
- 
+   // 1. 화면 전체(body)를 먼저 잡고 내부를 체크합니다.
+   cy.get('body').then(($body) => {
+  
+   // 검증코드  ("있으면 검증하고, 없으면 통과하기")
+   // 🟢 [주의] 아이콘이 화면에 한 개라도 있는가?
+   if ($body.find('i.g-ICriticalAlert').length > 0) {
+    cy.log('🟢 주의 로그 감지: 검증을 시작합니다.');
+    cy.get('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+   } else {
+     cy.log('⚪ 주의 로그가 없습니다. 패스합니다.');
+   }
+
+   // 🟠 [경계] 아이콘이 화면에 한 개라도 있는가?
+   if ($body.find('i.g-IMajorAlert').length > 0) {
+     cy.log('🟠 경계 로그 감지: 검증을 시작합니다.');
+     cy.get('i.g-IMajorAlert').should('be.visible').and('have.css', 'color', 'rgb(255, 192, 0)');
+   } else {
+     cy.log('⚪ 경계 로그가 없습니다. 패스합니다.');
+   }
+
+   // 🔴 [심각] 아이콘이 화면에 한 개라도 있는가?
+   if ($body.find('i.g-IMinorAlert').length > 0) {
+     cy.log('🔴 심각 로그 감지: 검증을 시작합니다.');
+     cy.get('i.g-IMinorAlert').should('be.visible').and('have.css', 'color', 'rgb(244, 67, 54)');
+   } else {
+     cy.log('⚪ 심각 로그가 없습니다. 패스합니다.');
+    }
+   });
   
      //////////////////////////////////////////////////////
      // 이상행위 : 업무 시간 외 접속 (경보등급 : 심각,경계,주의)

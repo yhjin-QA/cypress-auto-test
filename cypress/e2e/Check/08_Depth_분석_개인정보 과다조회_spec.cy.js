@@ -377,20 +377,14 @@ cy.log('✅ 이상행위 탭 진입 성공');
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     
-    // //경보등급 선택
-    // // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
-    // cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
-    // cy.wait(500);
-    // // 펼쳐진 리스트 중에서 '심각'이라는 텍스트를 가진 항목을 찾아 '심각' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
-    // cy.wait(500);
-    //  // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '경계' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
-    //  cy.wait(500);
-    // // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '주의' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('주의').click({ force: true });
-    // cy.wait(500);
-    // cy.get('body').type('{esc}');
+    //경보등급 선택
+    // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
+    cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
+    cy.wait(500);
+    // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '주의' 클릭합니다.
+    cy.get('.v-list__tile__title').filter(':visible').contains('주의').click({ force: true });
+    cy.wait(500);
+    cy.get('body').type('{esc}');
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -602,20 +596,15 @@ cy.log('✅ 이상행위 탭 진입 성공');
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     
-    // //경보등급 선택
-    // // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
-    // cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
-    // cy.wait(500);
-    // // 펼쳐진 리스트 중에서 '심각'이라는 텍스트를 가진 항목을 찾아 '심각' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
-    // cy.wait(500);
-    //  // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '경계' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
-    //  cy.wait(500);
-    // // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '주의' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('주의').click({ force: true });
-    // cy.wait(500);
-    // cy.get('body').type('{esc}');
+    //경보등급 선택
+    // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
+    cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
+    cy.wait(500);
+    // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '경계' 클릭합니다.
+    cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
+    cy.wait(500);
+    
+    cy.get('body').type('{esc}');
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -652,7 +641,7 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
  cy.log('🎉 경보등급 경계 (주황색) 이력행위 발생 확인 !');
 
  //==========================================
-// Depth 개인정보과다조회 - 경보등급별 검증  CASE 2
+// Depth 개인정보과다조회 - 경보등급별 검증  CASE 3
 //===========================================
 
   // ==========================================
@@ -826,20 +815,14 @@ cy.log('✅ 이상행위 탭 진입 성공');
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     
-    // //경보등급 선택
-    // // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
-    // cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
-    // cy.wait(500);
-    // // 펼쳐진 리스트 중에서 '심각'이라는 텍스트를 가진 항목을 찾아 '심각' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
-    // cy.wait(500);
-    //  // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '경계' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
-    //  cy.wait(500);
-    // // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '주의' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('주의').click({ force: true });
-    // cy.wait(500);
-    // cy.get('body').type('{esc}');
+    //경보등급 선택
+    // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
+    cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
+    cy.wait(500);
+    // 펼쳐진 리스트 중에서 '심각'이라는 텍스트를 가진 항목을 찾아 '심각' 클릭합니다.
+    cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
+    cy.wait(500);
+    cy.get('body').type('{esc}');
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });

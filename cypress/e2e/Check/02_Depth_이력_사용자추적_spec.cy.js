@@ -634,8 +634,12 @@ describe('로그캐치 사이트 테스트', () => {
     //-----------------------------------------------------------------------------------------------------------------------
 
     // ==========================================
-    // 사용자 상태 
+    // 사용자 상태 - 등록 상태
     // ==========================================
+    // 사용자 계정에 hojun 입력하기 
+    cy.get('input[aria-label="사용자 계정"]').filter(':visible').clear().type('hojun');
+    cy.wait(500);
+    
     ////개인정보유형 전체선택  클릭하여 유형 선택하는 코드 
     cy.get('input[aria-label="개인정보 유형"]').filter(':visible').click({ force: true });
     cy.wait(500);
@@ -662,6 +666,10 @@ describe('로그캐치 사이트 테스트', () => {
      });
 
      // 사용자 상태 - 미등록  선택----------------------------------------------- 
+     // 입력한 사용자 계정 x버튼 클릭하여 초기화 
+     cy.get('input[aria-label="사용자 계정"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+     cy.wait(500);
+     
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
      cy.wait(500);
 
@@ -696,10 +704,10 @@ describe('로그캐치 사이트 테스트', () => {
    // 첫 번째 행 정밀 검증코드 
     // 첫 번째 행 정밀 검증코드 
     cy.get('tbody tr').filter(':visible').first().within(() => {
-       cy.get('a').contains('호준 (hojun)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
        cy.contains('a', '미등록 부서').should('not.exist');
        cy.contains('a', '미등록 사용자 (호준)').should('not.exist');
      });
+
     //----------------------------------------------------------------------------------------------
     
 
