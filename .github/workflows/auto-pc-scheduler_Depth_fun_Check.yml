@@ -368,7 +368,7 @@ jobs:
           PRODUCT_NAME: "로그캐치"
           TEST_TYPE: "Depth"
           # 👇 원하시는 버전명을 직접 하드코딩해서 입력하세요!
-          HARDCODED_VERSION: "3.0.5.0_r34908_현황탭 시나리오 주석처리" 
+          HARDCODED_VERSION: "3.0.5.0_r34908_현황탭 시나리오 주석처리중" 
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "시나리오 확인결과"
@@ -384,56 +384,60 @@ jobs:
           $isActuallyFailed = $false
           $totalFailCount = 0
 
-          Write-Host "============= [🔍 데이터 정밀 분석 시작 (핀셋 추출 & Flaky 완벽 방어)] ============="
+          Write-Host "============= [🔍 데이터 정밀 분석 시작 (Flaky 완벽 방어 버전)] ============="
 
           # [Step 1] 개별 JSON 리포트 전수 조사 
           $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "merged_report.json" }
           
           foreach ($file in $jsonFiles) {
               try {
-                  $rawContent = Get-Content $file.FullName -Raw -Encoding UTF8
-                  $content = $rawContent | ConvertFrom-Json
+                  $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
                   
-                  # 💡 러너 리포트에 1개 이상의 실패가 있다면 분석 시작
+                  # 💡 [핵심 방어 1] 파일 전체 통계에서 failures가 0보다 클 때만 분석 진행
+                  # 재시도 끝에 성공했다면 stats.failures는 0이 되므로 여기서 걸러집니다.
                   if ($content.stats -and [int]$content.stats.failures -gt 0) {
-                      $isActuallyFailed = $true
-                      $totalFailCount += [int]$content.stats.failures
                       
-                      # 💡 [핵심 보완: 핀셋 추출] 
-                      # 구형 Regex 긁어오기를 버리고, '실제로 실패한 스펙'만 정확히 골라냅니다.
+                      $fileHasActualFailure = $false
+                      
                       foreach ($result in $content.results) {
-                          $resultStr = $result | ConvertTo-Json -Depth 10 -Compress
-                          
-                          # 해당 스펙(파일) 결과 내부에 "fail": true 가 있는지 확인
-                          if ($resultStr -match '"fail":true' -or $resultStr -match '"state":"failed"') {
-                              $fName = ""
-                              if ($result.file) { $fName = $result.file }
-                              elseif ($result.fullFile) { $fName = $result.fullFile }
-                              else {
-                                  $m = [regex]::Match($resultStr, '(?:"file"|"fullFile"):"([^"]+\.cy\.js)"')
-                                  if ($m.Success) { $fName = $m.Groups[1].Value }
+                          # 각 테스트 스위트(Suites)를 순회하며 실제 실패를 찾음
+                          foreach ($suite in $result.suites) {
+                              foreach ($test in $suite.tests) {
+                                  # 💡 [핵심 방어 2] 테스트의 최종 상태가 'failed'인 것만 추출
+                                  # 'passed'나 'skipped'는 무시합니다.
+                                  if ($test.fail -eq $true -and $test.state -eq "failed") {
+                                      $fileHasActualFailure = $true
+                                      $totalFailCount++
+                                  }
                               }
-                              
+                          }
+                          
+                          # 해당 파일에 진짜 실패가 하나라도 확정되었다면 파일명 추가
+                          if ($fileHasActualFailure) {
+                              $isActuallyFailed = $true
+                              $fName = if ($result.file) { $result.file } else { $result.fullFile }
                               if ($fName) {
                                   $failedSpecNames += (Split-Path ($fName -replace '\\', '/') -Leaf)
                               }
                           }
                       }
                   }
-              } catch {}
+              } catch {
+                  Write-Host "파일 분석 중 오류 발생: $($file.Name)"
+              }
           }
 
           # [Step 2] Job 자체 상태 확인 (시스템 크래시 대비)
           $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
           if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled" -or $restartStatus -eq "failure" -or $restartStatus -eq "cancelled") {
-              $isActuallyFailed = $true
+              if (-not $isActuallyFailed) { $isActuallyFailed = $true }
           }
 
-          # 중복 제거 및 1차 필터링
-          $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
+          # 중복 제거
+          $uniqueFailures = $failedSpecNames | Select-Object -Unique
 
-          # [Step 3] 스크린샷 물리 경로 추적 (최후의 보루)
+          # [Step 3] 스크린샷 물리 경로 추적 (최후의 보루 - JSON 분석 실패 시에만 실행)
           if ($isActuallyFailed -and $uniqueFailures.Count -eq 0) {
               $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*failed*.png" -ErrorAction SilentlyContinue
               if ($failedScreenshots.Count -gt 0) {
@@ -441,7 +445,7 @@ jobs:
                       $shotMatches = [regex]::Matches($shot.FullName, '([^\\/":*?<>|]+\.cy\.js)')
                       foreach ($m in $shotMatches) { $failedSpecNames += $m.Value.Trim() }
                   }
-                  $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
+                  $uniqueFailures = $failedSpecNames | Select-Object -Unique
               }
           }
 
@@ -456,39 +460,25 @@ jobs:
               }
           }
 
-          # [Step 5] 메시지 조립
+          # [Step 5] 메시지 조립 및 전송 (이하 동일)
           $time = "$env:NOW"
           if ($isActuallyFailed) {
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-              $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
-              
+              $title = $env:MSG_FAIL + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
               $count = if ($totalFailCount -gt 0) { $totalFailCount } elseif ($uniqueFailures.Count -gt 0) { $uniqueFailures.Count } else { 1 }
               $specListString = if ($uniqueFailures.Count -gt 0) { $uniqueFailures -join ", " } else { "System Error or Crash" }
-              
               $statusDetail = "FAIL: $count script ( $specListString )"
           } else {
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-              $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
+              $title = $env:MSG_SUCCESS + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
               $statusDetail = ""
           }
 
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          $msgLines = @("$title", "($time)")
+          if ($statusDetail) { $msgLines += "$statusDetail" }
+          $msgLines += ("", "$($env:LABEL_DASH) : $dashUrl", "$($env:LABEL_GIT) : $runUrl")
 
-          # 메시지 라인 생성
-          $msgLines = @()
-          if ($isActuallyFailed) {
-              $msgLines += "$title"
-              $msgLines += "($time)"
-              $msgLines += "$statusDetail"
-          } else {
-              $msgLines += "$title"
-              $msgLines += "($time)"
-          }
-          $msgLines += ""
-          $msgLines += "$($env:LABEL_DASH) : $dashUrl"
-          $msgLines += "$($env:LABEL_GIT) : $runUrl"
-
-          # 전송
           $payload = @{ text = ($msgLines -join "`n") } | ConvertTo-Json -Compress
           $utf8Bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
           Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes

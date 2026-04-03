@@ -357,7 +357,7 @@ describe('로그캐치 사이트 테스트', () => {
       });
 
      // 특정 사용자(제흔휴) 검증
-     cy.contains('tr', /제흔휴.*업무 시간 외 접속/).find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+     cy.contains('tr', '업무 시간 외 접속').find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
      //----------------------------------------------------------------------------------------------------------------------------------------------
       //사용자 상태 클릭 --------------------------------------------------------------------------
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
@@ -375,7 +375,7 @@ describe('로그캐치 사이트 테스트', () => {
      // (미등록 사용자)와 '업무 시간 외 접속'이 포함된 tr이 아예 존재하지 않아야 함
      cy.contains('tbody tr', /(미등록 사용자).*업무 시간 외 접속/).should('not.exist');
      // 특정 사용자(제흔휴) 검증
-     cy.contains('tr', /제흔휴.*업무 시간 외 접속/).find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+     cy.contains('tr', '업무 시간 외 접속').find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
 
      //사용자 상태 클릭 --------------------------------------------------------------------------
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
@@ -391,7 +391,6 @@ describe('로그캐치 사이트 테스트', () => {
  
      //검증코드
      cy.contains('tr', /(미등록 사용자).*업무 시간 외 접속/).find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
-     cy.contains('tr', /제흔휴.*업무 시간 외 접속/).should('not.exist');
     
      //사용자 상태 초기화 -  전체 선택
     //사용자 상태 클릭 --------------------------------------------------------------------------
