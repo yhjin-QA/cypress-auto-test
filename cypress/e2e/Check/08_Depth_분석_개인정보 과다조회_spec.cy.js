@@ -236,7 +236,7 @@ describe('로그캐치 사이트 테스트', () => {
 
 
 //==========================================
-// Depth 개인정보과다조회 - 경보등급별 검증 
+// Depth 개인정보과다조회 - 경보등급별 검증 CASE 1
 //===========================================
    
 // ----------------------------------------------------------
@@ -244,8 +244,13 @@ describe('로그캐치 사이트 테스트', () => {
 // ----------------------------------------------------------
 cy.log('🚀 WAS 사이트로 이동하여 새 세션을 발급받습니다.');
 
-// 1. 도메인 분리(cy.origin)를 위해 WAS 사이트 껍데기 방문
-cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', { timeout: 30000 });
+// 기존 코드에서 옵션 추가
+cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', { 
+  timeout: 60000,           // 타임아웃을 60초로 연장
+  onBeforeLoad(win) {      // 페이지 로드 전 속도 향상을 위한 설정
+    delete win.fetch; 
+  }
+});
 
 cy.origin('http://10.10.54.22:8080', () => {
   Cypress.on('uncaught:exception', () => false);
@@ -364,6 +369,33 @@ cy.contains('.tab-btn', '이상행위', { timeout: 15000 })
 
 cy.log('✅ 이상행위 탭 진입 성공');
 
+// 이상행위 유형 선택 
+    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(500);
+    // 이상행위 유형중 개인정보 과다조회 클릭하는 코드
+    cy.get('.v-list__tile__title').filter(':visible').contains('개인정보 과다조회').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // 선택 후 메뉴 닫기
+    cy.get('body').type('{esc}');
+    
+    // //경보등급 선택
+    // // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
+    // cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
+    // cy.wait(500);
+    // // 펼쳐진 리스트 중에서 '심각'이라는 텍스트를 가진 항목을 찾아 '심각' 클릭합니다.
+    // cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
+    // cy.wait(500);
+    //  // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '경계' 클릭합니다.
+    // cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
+    //  cy.wait(500);
+    // // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '주의' 클릭합니다.
+    // cy.get('.v-list__tile__title').filter(':visible').contains('주의').click({ force: true });
+    // cy.wait(500);
+    // cy.get('body').type('{esc}');
+
+    //검색버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(1000);
+
 // ----------------------------------------------------------
 // [STEP 4] 이상행위 첫 번째 행(최신 로그) 데이터 검증 (경보등급 확인)
 // ----------------------------------------------------------
@@ -393,14 +425,463 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
 });
 
  cy.log('🎉 경보등급 주의 (초록색) 이력행위 발생 확인 !');
+
+
+//==========================================
+// Depth 개인정보과다조회 - 경보등급별 검증  CASE 2
+//===========================================
+
+  // ==========================================
+  // 분석 서브메뉴 - 경보등급 주의 -> 경계로 변경
+  // ==========================================
+  // 분석탭 이동
+  cy.contains('button.has-child', '분석').click({ force: true });
+  cy.wait(2000); // 메뉴 펼쳐짐 대기
+
+  // 추가한 test_auto_개인정보과다 조회정책 수정--------------------------------------
+  // 추가된 정책명 : test_auto_개인정보과다조회 다시 재클릭 
+  cy.contains('a', 'test_auto_개인정보과다조회').should('be.visible').click({ force: true });
+  cy.wait(500);
+
+  // 정책 상세 설정 
+    // 경보등급 - 주의단계 이력 셋팅 
+    cy.get('input[aria-label="주의"]').filter(':visible').clear({ force: true }).type('50', { force: true });
+    cy.wait(500);
+
+    // 경계 입력
+    cy.get('input[aria-label="경계"]').filter(':visible').clear({ force: true }).type('100', { force: true });
+    cy.wait(500);
+
+    // 심각 입력
+    cy.get('input[aria-label="심각"]').filter(':visible').clear({ force: true }).type('500', { force: true });
+    cy.wait(500);
+
+    // 저장버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+    cy.wait(500);
+
+//==========================================
+// Depth 개인정보과다조회 - 경보등급별 검증 
+//===========================================
+   
+// ----------------------------------------------------------
+// [STEP 1] WAS 시스템 로그인 및 이상행위(과다조회) 타격
+// ----------------------------------------------------------
+cy.log('🚀 WAS 사이트로 이동하여 새 세션을 발급받습니다.');
+
+// 기존 코드에서 옵션 추가
+cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', { 
+  timeout: 60000,           // 타임아웃을 60초로 연장
+  onBeforeLoad(win) {      // 페이지 로드 전 속도 향상을 위한 설정
+    delete win.fetch; 
+  }
+});
+
+cy.origin('http://10.10.54.22:8080', () => {
+  Cypress.on('uncaught:exception', () => false);
+
+  // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
+  cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
+  cy.visit('/uat/uia/egovLoginUsr.do');
+  cy.get('#id').should('be.visible').clear().type('yunho');
+  cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
+
+  // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
+  cy.contains('a', '로그아웃', { timeout: 15000 }).should('be.visible');
+  cy.log('✅ 로그인 성공! 방금 생성된 싱싱한 세션 확보 완료!');
+
+  // 4. ✨ 핵심 로직: 쿠키 또는 URL에서 JSESSIONID를 안전하게 추출합니다.
+  cy.url().then((currentUrl) => {
+    cy.getCookie('JSESSIONID').then((cookie) => {
+      let freshSessionId = '';
+
+      // ① 먼저 쿠키에 JSESSIONID가 있는지 확인
+      if (cookie && cookie.value) {
+        freshSessionId = cookie.value;
+        cy.log(`🔑 쿠키에서 세션 ID 추출 완료`);
+      } 
+      // ② 쿠키가 없다면, URL에 jsessionid가 붙어있는지 확인 (URL Rewriting 대응)
+      else if (currentUrl.toLowerCase().includes('jsessionid=')) {
+        // 정규식을 사용해 URL에서 jsessionid 값만 쏙 뽑아냅니다.
+        const match = currentUrl.match(/jsessionid=([^?&#]+)/i);
+        if (match && match[1]) {
+          freshSessionId = match[1];
+          cy.log(`🔑 URL에서 세션 ID 추출 완료`);
+        }
+      }
+
+      // 방어 코드: 둘 다 실패했을 경우
+      if (!freshSessionId) {
+        throw new Error('❌ JSESSIONID를 쿠키와 URL 모두에서 찾을 수 없습니다.');
+      }
+
+      cy.log(`✅ 최종 사용될 세션 ID: ${freshSessionId}`);
+
+      // 5. 추출한 새 세션 ID를 헤더에 꽂아서 API 타격!
+      cy.request({
+        method: 'POST',
+        url: '/cop/logcatch/btnExcessCheck.do',
+        form: true,
+        headers: {
+          'Cookie': `JSESSIONID=${freshSessionId}`, 
+          'X-Requested-With': 'XMLHttpRequest',
+          'Referer': 'http://10.10.54.22:8080/uat/uia/actionMain.do'
+        },
+        body: { 
+          menuNo: '41' 
+        }
+      }).then((response) => {
+        // 6. 정상 응답 검증 (200 OK)
+        expect(response.status).to.eq(200);
+        cy.log('🎉 매번 새로운 세션으로 과다조회 자동 타격 성공!');
+      });
+    });
+  });
+});
+
+
+// ----------------------------------------------------------
+// [STEP 2] 원래 점검 사이트(LogCatch)로 깨끗하게 복귀
+// ----------------------------------------------------------
+cy.log('🧹 세션 정보를 초기화하고 깨끗하게 복귀합니다.');
+
+// 1. 기존 쿠키와 로컬 스토리지를 모두 비웁니다. (404 방지 핵심)
+cy.clearCookies();
+cy.clearLocalStorage();
+
+// 2. 주소 뒤에 아무것도 붙지 않은 '순수 도메인' 주소로 접속합니다.
+// 경로를 생략하고 도메인까지만 입력하면 서버가 404를 내뱉을 확률이 줄어듭니다.
+cy.visit('https://10.10.54.21:18443/logcatch/login'); 
+
+cy.wait(8000); // 페이지 로딩 및 안정화 대기
+
+  
     
- 
-    // // ==========================================
-    // // [FINAL] 테스트 종료 및 메뉴 닫기
-    // // ==========================================
-    // cy.log('🎉 분석 - 개인정보 과다조회 테스트 시나리오 성공적으로 완료!');
+// ----------------------------------------------------------
+// [STEP 3] 이력 메뉴 화면 이동진입 (Chunk Error 방어 로직 포함)
+// ----------------------------------------------------------
+cy.log('🔄 페이지 안정화 확인 및 이력 메뉴 클릭 시도');
+
+// 1. '이력' 버튼이 있는지 확인하고, 없으면 새로고침 (Chunk Error 대비)
+cy.get('body').then(($body) => {
+  if ($body.find('button:contains("이력")').length === 0) {
+    cy.log('⚠️ 메뉴 렌더링 실패 감지! 새로고침 후 재시도합니다.');
+    cy.reload();
+    cy.wait(5000);
+  }
+});
+
+// 2. '이력' 버튼 클릭 (더 강력한 timeout 부여)
+cy.contains('button', '이력', { timeout: 15000 })
+  .should('be.visible')
+  .click({ force: true });
+
+cy.wait(2000); // 메뉴 애니메이션 대기
+
+// 3. 서브메뉴 '접속기록 이력' 클릭
+cy.contains('.v-list__tile__title', '접속기록 이력', { timeout: 10000 })
+  .should('be.visible')
+  .click({ force: true });
+
+cy.wait(3000);
+
+// 4. [캡처에서 에러난 부분] '이상행위' 탭 클릭 전 대기
+// .tab-btn이 페이지 로딩 직후 바로 생성되지 않을 수 있습니다.
+cy.contains('.tab-btn', '이상행위', { timeout: 15000 })
+  .should('exist')
+  .and('be.visible')
+  .click({ force: true });
+
+cy.log('✅ 이상행위 탭 진입 성공');
+
+// 이상행위 유형 선택 
+    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(500);
+    // 이상행위 유형중 개인정보 과다조회 클릭하는 코드
+    cy.get('.v-list__tile__title').filter(':visible').contains('개인정보 과다조회').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // 선택 후 메뉴 닫기
+    cy.get('body').type('{esc}');
+    
+    // //경보등급 선택
+    // // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
+    // cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
+    // cy.wait(500);
+    // // 펼쳐진 리스트 중에서 '심각'이라는 텍스트를 가진 항목을 찾아 '심각' 클릭합니다.
+    // cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
+    // cy.wait(500);
+    //  // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '경계' 클릭합니다.
+    // cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
+    //  cy.wait(500);
+    // // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '주의' 클릭합니다.
+    // cy.get('.v-list__tile__title').filter(':visible').contains('주의').click({ force: true });
+    // cy.wait(500);
     // cy.get('body').type('{esc}');
-    // cy.get('body').click('center', { force: true });
+
+    //검색버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(500);
+
+// ----------------------------------------------------------
+// [STEP 4] 이상행위 첫 번째 행(최신 로그) 데이터 검증 (경보등급 확인)
+// ----------------------------------------------------------
+cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
+
+// 1. 테이블의 데이터가 들어있는 행(tr) 중 첫 번째 행을 잡습니다.
+// .v-datatable이나 해당 테이블의 클래스가 있다면 더 정확합니다. 
+// 여기서는 일반적인 tr 기준으로 작성합니다.
+cy.get('tbody tr').filter(':visible').first().within(() => {
+  
+  // 2. 사용자명 확인
+  cy.contains('진윤호(yunho)').should('be.visible');
+
+  // 3. 이상행위 유형 확인
+  cy.contains('개인정보 과다조회').should('be.visible');
+
+  // 4. 적용된 정책명 확인
+  cy.contains('test_auto_개인정보과다조회').should('be.visible');
+
+  // 5. 개인정보 유무 및 소명 대상 여부 확인
+  cy.contains('존재').should('be.visible');
+  cy.contains('소명 대상').should('be.visible');
+
+  // 6. 경보 등급 아이콘 확인 (초록색 경보등급 - 주의 아이콘)
+  cy.get('i.v-icon.c-data-grid-icons-icon').should('be.visible').and('have.class', 'g-IMajorAlert').and('have.css', 'color', 'rgb(255, 192, 0)'); 
+
+});
+
+ cy.log('🎉 경보등급 경계 (주황색) 이력행위 발생 확인 !');
+
+ //==========================================
+// Depth 개인정보과다조회 - 경보등급별 검증  CASE 2
+//===========================================
+
+  // ==========================================
+  // 분석 서브메뉴 - 경보등급 주의 -> 경계로 변경
+  // ==========================================
+  // 분석탭 이동
+  cy.contains('button.has-child', '분석').click({ force: true });
+  cy.wait(2000); // 메뉴 펼쳐짐 대기
+
+  // 추가한 test_auto_개인정보과다 조회정책 수정--------------------------------------
+  // 추가된 정책명 : test_auto_개인정보과다조회 다시 재클릭 
+  cy.contains('a', 'test_auto_개인정보과다조회').should('be.visible').click({ force: true });
+  cy.wait(500);
+
+  // 정책 상세 설정 
+    // 경보등급 - 주의단계 이력 셋팅 
+    cy.get('input[aria-label="주의"]').filter(':visible').clear({ force: true }).type('10', { force: true });
+    cy.wait(500);
+
+    // 경계 입력
+    cy.get('input[aria-label="경계"]').filter(':visible').clear({ force: true }).type('25', { force: true });
+    cy.wait(500);
+
+    // 심각 입력
+    cy.get('input[aria-label="심각"]').filter(':visible').clear({ force: true }).type('50', { force: true });
+    cy.wait(500);
+
+    // 저장버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+    cy.wait(500);
+
+//==========================================
+// Depth 개인정보과다조회 - 경보등급별 검증 
+//===========================================
+   
+// ----------------------------------------------------------
+// [STEP 1] WAS 시스템 로그인 및 이상행위(과다조회) 타격
+// ----------------------------------------------------------
+cy.log('🚀 WAS 사이트로 이동하여 새 세션을 발급받습니다.');
+
+// 기존 코드에서 옵션 추가
+cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', { 
+  timeout: 60000,           // 타임아웃을 60초로 연장
+  onBeforeLoad(win) {      // 페이지 로드 전 속도 향상을 위한 설정
+    delete win.fetch; 
+  }
+});
+
+cy.origin('http://10.10.54.22:8080', () => {
+  Cypress.on('uncaught:exception', () => false);
+
+  // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
+  cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
+  cy.visit('/uat/uia/egovLoginUsr.do');
+  cy.get('#id').should('be.visible').clear().type('yunho');
+  cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
+
+  // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
+  cy.contains('a', '로그아웃', { timeout: 15000 }).should('be.visible');
+  cy.log('✅ 로그인 성공! 방금 생성된 싱싱한 세션 확보 완료!');
+
+  // 4. ✨ 핵심 로직: 쿠키 또는 URL에서 JSESSIONID를 안전하게 추출합니다.
+  cy.url().then((currentUrl) => {
+    cy.getCookie('JSESSIONID').then((cookie) => {
+      let freshSessionId = '';
+
+      // ① 먼저 쿠키에 JSESSIONID가 있는지 확인
+      if (cookie && cookie.value) {
+        freshSessionId = cookie.value;
+        cy.log(`🔑 쿠키에서 세션 ID 추출 완료`);
+      } 
+      // ② 쿠키가 없다면, URL에 jsessionid가 붙어있는지 확인 (URL Rewriting 대응)
+      else if (currentUrl.toLowerCase().includes('jsessionid=')) {
+        // 정규식을 사용해 URL에서 jsessionid 값만 쏙 뽑아냅니다.
+        const match = currentUrl.match(/jsessionid=([^?&#]+)/i);
+        if (match && match[1]) {
+          freshSessionId = match[1];
+          cy.log(`🔑 URL에서 세션 ID 추출 완료`);
+        }
+      }
+
+      // 방어 코드: 둘 다 실패했을 경우
+      if (!freshSessionId) {
+        throw new Error('❌ JSESSIONID를 쿠키와 URL 모두에서 찾을 수 없습니다.');
+      }
+
+      cy.log(`✅ 최종 사용될 세션 ID: ${freshSessionId}`);
+
+      // 5. 추출한 새 세션 ID를 헤더에 꽂아서 API 타격!
+      cy.request({
+        method: 'POST',
+        url: '/cop/logcatch/btnExcessCheck.do',
+        form: true,
+        headers: {
+          'Cookie': `JSESSIONID=${freshSessionId}`, 
+          'X-Requested-With': 'XMLHttpRequest',
+          'Referer': 'http://10.10.54.22:8080/uat/uia/actionMain.do'
+        },
+        body: { 
+          menuNo: '41' 
+        }
+      }).then((response) => {
+        // 6. 정상 응답 검증 (200 OK)
+        expect(response.status).to.eq(200);
+        cy.log('🎉 매번 새로운 세션으로 과다조회 자동 타격 성공!');
+      });
+    });
+  });
+});
+
+
+// ----------------------------------------------------------
+// [STEP 2] 원래 점검 사이트(LogCatch)로 깨끗하게 복귀
+// ----------------------------------------------------------
+cy.log('🧹 세션 정보를 초기화하고 깨끗하게 복귀합니다.');
+
+// 1. 기존 쿠키와 로컬 스토리지를 모두 비웁니다. (404 방지 핵심)
+cy.clearCookies();
+cy.clearLocalStorage();
+
+// 2. 주소 뒤에 아무것도 붙지 않은 '순수 도메인' 주소로 접속합니다.
+// 경로를 생략하고 도메인까지만 입력하면 서버가 404를 내뱉을 확률이 줄어듭니다.
+cy.visit('https://10.10.54.21:18443/logcatch/login'); 
+
+cy.wait(8000); // 페이지 로딩 및 안정화 대기
+
+  
+    
+// ----------------------------------------------------------
+// [STEP 3] 이력 메뉴 화면 이동진입 (Chunk Error 방어 로직 포함)
+// ----------------------------------------------------------
+cy.log('🔄 페이지 안정화 확인 및 이력 메뉴 클릭 시도');
+
+// 1. '이력' 버튼이 있는지 확인하고, 없으면 새로고침 (Chunk Error 대비)
+cy.get('body').then(($body) => {
+  if ($body.find('button:contains("이력")').length === 0) {
+    cy.log('⚠️ 메뉴 렌더링 실패 감지! 새로고침 후 재시도합니다.');
+    cy.reload();
+    cy.wait(5000);
+  }
+});
+
+// 2. '이력' 버튼 클릭 (더 강력한 timeout 부여)
+cy.contains('button', '이력', { timeout: 15000 })
+  .should('be.visible')
+  .click({ force: true });
+
+cy.wait(2000); // 메뉴 애니메이션 대기
+
+// 3. 서브메뉴 '접속기록 이력' 클릭
+cy.contains('.v-list__tile__title', '접속기록 이력', { timeout: 10000 })
+  .should('be.visible')
+  .click({ force: true });
+
+cy.wait(3000);
+
+// 4. [캡처에서 에러난 부분] '이상행위' 탭 클릭 전 대기
+// .tab-btn이 페이지 로딩 직후 바로 생성되지 않을 수 있습니다.
+cy.contains('.tab-btn', '이상행위', { timeout: 15000 })
+  .should('exist')
+  .and('be.visible')
+  .click({ force: true });
+
+cy.log('✅ 이상행위 탭 진입 성공');
+
+// 이상행위 유형 선택 
+    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(500);
+    // 이상행위 유형중 개인정보 과다조회 클릭하는 코드
+    cy.get('.v-list__tile__title').filter(':visible').contains('개인정보 과다조회').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // 선택 후 메뉴 닫기
+    cy.get('body').type('{esc}');
+    
+    // //경보등급 선택
+    // // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
+    // cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
+    // cy.wait(500);
+    // // 펼쳐진 리스트 중에서 '심각'이라는 텍스트를 가진 항목을 찾아 '심각' 클릭합니다.
+    // cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
+    // cy.wait(500);
+    //  // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '경계' 클릭합니다.
+    // cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
+    //  cy.wait(500);
+    // // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '주의' 클릭합니다.
+    // cy.get('.v-list__tile__title').filter(':visible').contains('주의').click({ force: true });
+    // cy.wait(500);
+    // cy.get('body').type('{esc}');
+
+    //검색버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(500);
+
+// ----------------------------------------------------------
+// [STEP 4] 이상행위 첫 번째 행(최신 로그) 데이터 검증 (경보등급 확인)
+// ----------------------------------------------------------
+cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
+
+// 1. 테이블의 데이터가 들어있는 행(tr) 중 첫 번째 행을 잡습니다.
+// .v-datatable이나 해당 테이블의 클래스가 있다면 더 정확합니다. 
+// 여기서는 일반적인 tr 기준으로 작성합니다.
+cy.get('tbody tr').filter(':visible').first().within(() => {
+  
+  // 2. 사용자명 확인
+  cy.contains('진윤호(yunho)').should('be.visible');
+
+  // 3. 이상행위 유형 확인
+  cy.contains('개인정보 과다조회').should('be.visible');
+
+  // 4. 적용된 정책명 확인
+  cy.contains('test_auto_개인정보과다조회').should('be.visible');
+
+  // 5. 개인정보 유무 및 소명 대상 여부 확인
+  cy.contains('존재').should('be.visible');
+  cy.contains('소명 대상').should('be.visible');
+
+  // 6. 경보 등급 아이콘 확인 (초록색 경보등급 - 주의 아이콘)
+  cy.get('i.v-icon.c-data-grid-icons-icon').should('be.visible').and('have.class', 'g-IMinorAlert').and('have.css', 'color', 'rgb(244, 67, 54)'); 
+
+});
+
+ cy.log('🎉 경보등급 심각 (빨강색) 이력행위 발생 확인 !');
+
+ 
+    // ==========================================
+    // [FINAL] 테스트 종료 및 메뉴 닫기
+    // ==========================================
+    cy.log('🎉 분석 - 개인정보 과다조회 테스트 시나리오 성공적으로 완료!');
+    cy.get('body').type('{esc}');
+    cy.get('body').click('center', { force: true });
 
 
   });
