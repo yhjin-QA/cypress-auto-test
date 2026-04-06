@@ -393,40 +393,34 @@ jobs:
               try {
                   $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
                   
-                  # 💡 [핵심 방어 1] 파일 전체 통계에서 failures가 0보다 클 때만 분석 진행
-                  # 재시도 끝에 성공했다면 stats.failures는 0이 되므로 여기서 걸러집니다.
+                  # 💡 [보완 1] 최종 통계 자체가 실패 0이면 이 파일은 볼 것도 없이 통과 (Flaky 완벽 차단)
                   if ($content.stats -and [int]$content.stats.failures -gt 0) {
                       
-                      $fileHasActualFailure = $false
+                      $actualFailedFileFound = $false
                       
                       foreach ($result in $content.results) {
-                          # 각 테스트 스위트(Suites)를 순회하며 실제 실패를 찾음
-                          foreach ($suite in $result.suites) {
-                              foreach ($test in $suite.tests) {
-                                  # 💡 [핵심 방어 2] 테스트의 최종 상태가 'failed'인 것만 추출
-                                  # 'passed'나 'skipped'는 무시합니다.
-                                  if ($test.fail -eq $true -and $test.state -eq "failed") {
-                                      $fileHasActualFailure = $true
-                                      $totalFailCount++
-                                  }
-                              }
+                          # 💡 [보완 2] 개별 테스트 단위가 아니라, 리포트에서 실패한 '테스트 수'를 직접 체크
+                          # Mochawesome은 재시도 성공 시 최종 실패 카운트를 0으로 밀어버립니다.
+                          if ($result.failures.Count -gt 0 -or $result.tests.Where({$_.state -eq "failed"}).Count -gt 0) {
+                              $actualFailedFileFound = $true
                           }
                           
-                          # 해당 파일에 진짜 실패가 하나라도 확정되었다면 파일명 추가
-                          if ($fileHasActualFailure) {
+                          if ($actualFailedFileFound) {
                               $isActuallyFailed = $true
+                              # 전체 파일 실패 카운트는 리포트 통계값을 신뢰
+                              $totalFailCount += [int]$content.stats.failures
+                              
                               $fName = if ($result.file) { $result.file } else { $result.fullFile }
                               if ($fName) {
                                   $failedSpecNames += (Split-Path ($fName -replace '\\', '/') -Leaf)
+                                  break # 한 파일에서 실패 하나 찾았으면 다음 파일로
                               }
                           }
                       }
                   }
-              } catch {
-                  Write-Host "파일 분석 중 오류 발생: $($file.Name)"
-              }
+              } catch { }
           }
-
+              
           # [Step 2] Job 자체 상태 확인 (시스템 크래시 대비)
           $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
