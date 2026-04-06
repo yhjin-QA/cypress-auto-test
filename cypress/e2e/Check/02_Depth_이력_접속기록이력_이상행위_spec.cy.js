@@ -786,7 +786,7 @@ describe('로그캐치 사이트 테스트', () => {
     //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
     cy.wait(500);
     // 데이터 이력있을시
-    //cy.contains('tr', '비인가 접근 사용자').should('contain', 'test_auto_비인가 접근 사용자') .find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+    cy.contains('tr', '비인가 접근 사용자').should('contain', 'test_auto_비인가 접근 사용자') .find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
     // 데이터 이력없을시
     // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
     cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
