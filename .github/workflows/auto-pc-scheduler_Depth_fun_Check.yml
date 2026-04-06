@@ -174,7 +174,28 @@ jobs:
 
           # 3. 실행
           cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Depth_functions_check/**/*.cy.js' --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth 2>&1" | Out-File -FilePath cypress.log -Encoding utf8
-          if (Test-Path cypress.log) { Get-Content cypress.log }
+
+          # 💡 [핵심 개선] 로그가 있는지 확인하고 한 번만 읽어서 변수에 담고 출력합니다.
+          if (Test-Path cypress.log) {
+              $logContent = Get-Content cypress.log -Raw -Encoding UTF8
+              Write-Host "================ [ Cypress Log Summary ] ================"
+              Write-Host $logContent
+              Write-Host "========================================================="
+          } else {
+              $logContent = ""
+          }
+
+          # 💡 종료 코드 분석 및 '깡통 에러(matched no report files)' 판별
+          # $LASTEXITCODE는 바로 위 cmd 실행 결과의 종료 코드를 가지고 있습니다.
+          if ($LASTEXITCODE -ne 0) {
+              if ($logContent -match "matched no report files") {
+                  Write-Host "✅ [INFO] 할당된 테스트가 없어 발생한 리포터 에러입니다. 정상 종료 처리합니다."
+                  exit 0
+              } else {
+                  Write-Host "❌ 실제 테스트 실패 또는 시스템 에러가 발생했습니다."
+                  exit 1
+              }
+          }
 
       - name: Extract Dashboard URL
         if: always()
@@ -283,7 +304,29 @@ jobs:
           cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth 2>&1" | Out-File -FilePath cypress.log -Encoding utf8
          
           if (Test-Path cypress.log) { Get-Content cypress.log }
-          
+
+          # 💡 [개선] 로그가 있는지 확인하고 한 번만 읽어서 변수에 담고 출력합니다.
+          if (Test-Path cypress.log) {
+              $logContent = Get-Content cypress.log -Raw -Encoding UTF8
+              Write-Host "==================== [ Cypress Log Summary ] ===================="
+              Write-Host $logContent
+              Write-Host "================================================================="
+          } else {
+              $logContent = ""
+          }
+
+          # 💡 종료 코드 분석 및 '깡통 에러(matched no report files)' 판별
+          # $LASTEXITCODE는 바로 위 cmd 실행 결과의 종료 코드를 참조합니다.
+          if ($LASTEXITCODE -ne 0) {
+              if ($logContent -match "matched no report files") {
+                  Write-Host "✅ [INFO] 할당된 테스트가 없어 발생한 리포터 에러입니다. 성공(exit 0)으로 처리합니다."
+                  exit 0
+              } else {
+                  Write-Host "❌ 실제 테스트 실패 또는 시스템 에러가 발생했습니다."
+                  exit 1
+              }
+          }
+
       - name: 📂 리포트 데이터 업로드 (Restart Spec)
         if: always()
         uses: actions/upload-artifact@v4
@@ -420,7 +463,7 @@ jobs:
                   }
               } catch { }
           }
-              
+
           # [Step 2] Job 자체 상태 확인 (시스템 크래시 대비)
           $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
