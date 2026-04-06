@@ -175,6 +175,7 @@ jobs:
           # 3. 실행
           # 파이프(|)를 제거하고 cmd 내부에서 직접 리다이렉트(>) 하도록 변경합니다.
           cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Depth_functions_check/**/*.cy.js' --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth > cypress.log 2>&1"
+          
 
 
           Get-Content cypress.log
@@ -283,8 +284,8 @@ jobs:
 
           # 실행 시 변수를 따옴표로 감싸서 공백/한글 이슈 방지
           # 파이프(|)를 제거하고 cmd 내부에서 직접 리다이렉트(>) 하도록 변경합니다.
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Depth_functions_check/**/*.cy.js' --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth > cypress.log 2>&1"
-
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth > cypress.log 2>&1"
+         
           Get-Content cypress_restart.log
           
       - name: 📂 리포트 데이터 업로드 (Restart Spec)
