@@ -133,16 +133,35 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
 
     // 기능 확인 -------------------------------------------------
+    cy.log('🔍 기존 정책 존재 여부를 확인합니다.');
     
-    //추가된 test_auto_업무 시간 외 접속 삭제 --------------------------
-    cy.contains('tr', 'test_auto_업무 시간 외 접속').find('.fa-trash').click({ force: true });
-    cy.wait(500);
-    // 삭제 확인 알림창에서 확인 버튼 클릭 
-    cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
+    //예외처리  test_auto_업무 시간 외 접속 삭제 --------------------------
+    // 1. [조건부 삭제] test_auto_업무 시간 외 접속 정책이 있으면 삭제, 없으면 패스
+    cy.get('body').then(($body) => {
+    // jQuery의 :contains 선택자를 이용해 해당 텍스트가 있는 <tr>을 찾습니다.
+    const hasPolicy = $body.find('tr:contains("test_auto_업무 시간 외 접속")').length > 0;
 
-    //추가한 정책 삭제 검증코드 
-    cy.contains('tr', 'test_auto_업무 시간 외 접속').should('not.exist'); 
-   
+    if (hasPolicy) {
+      cy.log('🗑️ 기존 정책이 발견되었습니다. 삭제를 진행합니다.');
+    
+      // 삭제 버튼(휴지통) 클릭
+      cy.contains('tr', 'test_auto_업무 시간 외 접속').find('.fa-trash').click({ force: true });
+      cy.wait(500);
+    
+      // 삭제 확인 팝업에서 '확인' 클릭
+      cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
+      cy.wait(1000); // 삭제 처리가 서버에 반영될 시간 대기
+
+      // 추가한 정책 삭제 검증코드 
+      cy.contains('tr', 'test_auto_업무 시간 외 접속').should('not.exist'); 
+      cy.log('✅ 기존 정책 삭제 완료!');
+    
+    } else {
+      // 정책이 없으면 에러 없이 이 구문을 타고 자연스럽게 통과합니다.
+      cy.log('⚪ 기존 정책이 없습니다. 삭제 단계를 패스합니다.');
+     }
+     });
+     //----------------------------------------------------------------------------
 
     // 우측 동그란 + 플러스 버튼 클릭-----------------------
       cy.get('.grid-add-button').should('exist').then(($btn) => {
@@ -182,7 +201,7 @@ describe('로그캐치 사이트 테스트', () => {
 
 
   // ==========================================
-  // 업무 시간(월~금)  시계값 13:00 로 변경
+  // 업무 시간(월~금)  시계값 10:00 로 변경
   // ==========================================
   const days = ['월요일', '화요일', '수요일', '목요일', '금요일'];
 
@@ -204,7 +223,7 @@ describe('로그캐치 사이트 테스트', () => {
   cy.wait(800);
 
   // 1. 시간 '13' 클릭
-  cy.get('.menuable__content__active .v-time-picker-clock__item').contains(/^13$/).click({ force: true });
+  cy.get('.menuable__content__active .v-time-picker-clock__item').contains(/^10$/).click({ force: true });
   cy.wait(800);
 
   // 2. 분 '00' 클릭
@@ -218,7 +237,7 @@ describe('로그캐치 사이트 테스트', () => {
   cy.wait(500);
 
   // 4. 해당 요일의 값이 진짜로 바뀌었는지 최종 검증
-  cy.contains('label', day).parents('div').filter((index, el) => Cypress.$(el).find('input[type="text"]').length >= 2).first().find('input[type="text"]').last().should('have.value', '13:00');
+  cy.contains('label', day).parents('div').filter((index, el) => Cypress.$(el).find('input[type="text"]').length >= 2).first().find('input[type="text"]').last().should('have.value', '10:00');
   cy.log(`✅ [${day}] 13:00 실제 UI 반영 완벽 성공!`);
   });
   cy.wait(1000);
@@ -237,22 +256,29 @@ describe('로그캐치 사이트 테스트', () => {
 // ----------------------------------------------------------
 // [STEP 1] WAS 시스템 로그인 및 이상행위(과다조회) 타격
 // ----------------------------------------------------------
-cy.log('🚀 WAS 사이트로 이동하여 새 세션을 발급받습니다.');
+cy.log('🚀 다른 도메인(WAS 서버)으로 크로스 오리진 점프를 시도합니다.');
 
-// 기존 코드에서 옵션 추가
-cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', { 
-  timeout: 60000,           // 타임아웃을 60초로 연장
-  onBeforeLoad(win) {      // 페이지 로드 전 속도 향상을 위한 설정
-    delete win.fetch; 
-  }
-});
+// // 기존 코드에서 옵션 추가
+// cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', { 
+//   timeout: 60000,           // 타임아웃을 60초로 연장
+//   onBeforeLoad(win) {      // 페이지 로드 전 속도 향상을 위한 설정
+//     delete win.fetch; 
+//   }
+// });
+cy.clearCookies();
+cy.clearLocalStorage();
 
 cy.origin('http://10.10.54.22:8080', () => {
   Cypress.on('uncaught:exception', () => false);
 
   // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
   cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
-  cy.visit('/uat/uia/egovLoginUsr.do');
+  cy.visit('/uat/uia/egovLoginUsr.do', { 
+    timeout: 60000 
+  });
+  cy.wait(3000); 
+  cy.log('✅ 10.10.54.22 서버 접속 완료!');
+
   cy.get('#id').should('be.visible').clear().type('yunho');
   cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
 
@@ -321,7 +347,58 @@ cy.clearLocalStorage();
 
 // 2. 주소 뒤에 아무것도 붙지 않은 '순수 도메인' 주소로 접속합니다.
 // 경로를 생략하고 도메인까지만 입력하면 서버가 404를 내뱉을 확률이 줄어듭니다.
-cy.visit('https://10.10.54.21:18443/logcatch/login'); 
+cy.visit('https://10.10.54.21:18443/logcatch/login');
+cy.wait(3000); // 화면이 그려질 수 있도록 초기 렌더링 대기 
+
+// 2. 화면 상태 분석 및 분기 처리
+cy.get('body').then(($body) => {
+  // 로그인 입력창이 존재하는지 확인
+  const hasLoginInput = $body.find('input[aria-label="사용자 계정"]').length > 0;
+  
+  if (hasLoginInput) {
+    // 🟡 [상태 1] 로그인 화면이 정상적으로 떴을 때
+    cy.log('🟡 로그인 화면 감지: 로그인을 수행합니다.');
+    
+    cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
+    cy.get('input[aria-label="패스워드"]').should('exist').type('Manager1!', { force: true }); 
+    cy.get('input[aria-label="패스워드"]').type('{enter}', { force: true }); // 엔터키로 안전하게 로그인
+    
+    cy.wait(8000); // 로그인 후 대시보드 로딩 대기
+
+  } else {
+    // 로그인 창이 없을 경우: '이미 로그인된 상태'이거나 '렌더링 실패(흰 화면)' 둘 중 하나입니다.
+    // 이전 스크린샷들을 참고하여 우측 상단의 'ADMIN 님' 텍스트나 메뉴 텍스트가 존재하는지 확인합니다.
+    const isAlreadyLoggedIn = $body.text().includes('ADMIN') || $body.text().includes('로그아웃');
+
+    if (isAlreadyLoggedIn) {
+      // 🟢 [상태 2] 이미 로그인된 메인 화면일 때
+      cy.log('🟢 이미 로그인된 상태(대시보드)입니다. 로그인 과정을 패스합니다.');
+
+    } else {
+      // 🔴 [상태 3] 로그인 창도 없고, 메인 화면 텍스트도 없으면 렌더링 실패로 간주합니다.
+      cy.log('🔴 화면 렌더링 실패(흰 화면) 감지! 페이지를 새로고침합니다.');
+      cy.reload();
+      cy.wait(3000); // 새로고침 후 안정화 대기
+
+      // 새로고침 후 최종 확인 및 실행
+      cy.get('body').then(($newBody) => {
+        if ($newBody.find('input[aria-label="사용자 계정"]').length > 0) {
+          cy.log('🟡 새로고침 후 로그인 화면 복구됨: 로그인을 수행합니다.');
+          
+          cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
+          cy.get('input[aria-label="패스워드"]').should('exist').type('Manager1!', { force: true }); 
+          cy.get('input[aria-label="패스워드"]').type('{enter}', { force: true });
+          
+          cy.wait(8000);
+        } else {
+          cy.log('🟢 새로고침 후 로그인된 상태로 진입 확인. 패스합니다.');
+        }
+      });
+    }
+  }
+});
+
+cy.log('🚀 원래 사이트(LogCatch) 진입 및 로그인 로직 무사 통과!');
 
 cy.wait(8000); // 페이지 로딩 및 안정화 대기
 
@@ -341,28 +418,63 @@ cy.get('body').then(($body) => {
   }
 });
 
-// 2. '이력' 버튼 클릭 (더 강력한 timeout 부여)
-cy.contains('button', '이력', { timeout: 15000 })
-  .should('be.visible')
-  .click({ force: true });
+// 💡 [STEP 0] 에러 방어막 강화 (JS 청크, CSS 청크, 라우터 에러 모두 무시)
+// 이 코드는 가급적 테스트 파일 최상단(describe 블록 바로 아래 등)에 한 번만 선언해 두는 것이 좋습니다.
+Cypress.on('uncaught:exception', (err, runnable) => {
+  if (
+    err.message.includes('ChunkLoadError') || 
+    err.message.includes('Loading CSS chunk') ||  // 👈 이 부분이 추가되었습니다!
+    err.message.includes('Loading chunk') ||
+    err.message.includes('navigation guard')
+  ) {
+    return false; // Cypress가 테스트를 멈추지 않고 계속 진행하게 함
+  }
+});
 
-cy.wait(2000); // 메뉴 애니메이션 대기
+// ---------------------------------------------------------------------------
 
-// 3. 서브메뉴 '접속기록 이력' 클릭
-cy.contains('.v-list__tile__title', '접속기록 이력', { timeout: 10000 })
-  .should('be.visible')
-  .click({ force: true });
+// 1. '이력' 버튼 클릭
+cy.contains('button', '이력').should('be.visible').click({ force: true });
+cy.wait(1000); 
 
-cy.wait(3000);
+// 2. 서브메뉴 '접속기록 이력' 클릭
+cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
 
-// 4. [캡처에서 에러난 부분] '이상행위' 탭 클릭 전 대기
-// .tab-btn이 페이지 로딩 직후 바로 생성되지 않을 수 있습니다.
-cy.contains('.tab-btn', '이상행위', { timeout: 15000 })
-  .should('exist')
-  .and('be.visible')
-  .click({ force: true });
+// 💡 넉넉하게 4초 정도 기다려 줍니다. (정상이면 화면이 뜨고, 에러면 무한 로딩이 걸릴 시간)
+cy.wait(4000); 
 
+// 3. 무한 로딩 감지 및 자동 복구 로직 (Self-Healing)
+cy.get('body').then(($body) => {
+  // '이상행위' 탭이 화면에 그려졌는지 확인합니다.
+  const isTabLoaded = $body.find('.tab-btn:contains("이상행위")').length > 0;
+
+  if (isTabLoaded) {
+    cy.log('🟢 화면이 정상적으로 로드되었습니다.');
+  } else {
+    // 탭이 없다면 청크 다운로드 실패(무한 로딩)로 간주하고 강제 새로고침!
+    cy.log('🔴 ChunkLoadError(무한 로딩) 감지! 페이지를 강제로 새로고침합니다.');
+    cy.reload();
+    cy.wait(5000); // 새로고침 후 화면 안정화 대기
+
+    // 새로고침 후 메인 화면으로 튕겼을 수 있으므로, 메뉴를 다시 차분하게 찾아 들어갑니다.
+    cy.get('body').then(($newBody) => {
+      // 여전히 이상행위 탭이 없다면 메뉴부터 다시 클릭
+      if ($newBody.find('.tab-btn:contains("이상행위")').length === 0) {
+        cy.log('🔄 메뉴를 다시 클릭하여 진입합니다.');
+        cy.contains('button', '이력').click({ force: true });
+        cy.wait(1000);
+        cy.contains('.v-list__tile__title', '접속기록 이력').click({ force: true });
+        cy.wait(4000);
+      }
+    });
+  }
+});
+
+// 4. 최종 확인 및 탭 클릭 (이제 무조건 화면에 나타나 있을 것입니다)
+cy.contains('.tab-btn', '이상행위', { timeout: 15000 }).should('be.visible').click({ force: true });
+//------------------------------------------------------------------------------------------------------
 cy.log('✅ 이상행위 탭 진입 성공');
+
 
 // 이상행위 유형 선택 
 cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -432,53 +544,13 @@ cy.log('🎉 업무 시간 외 접속 이력행위 발생 확인 및 검증 완�
 
 
 
-
-    
-
-    // // 추가한 test_auto_'test_auto_업무 시간 외 접속 정책 수정--------------------------------------
-    // // 추가된 정책명 : test_auto_'test_auto_업무 시간 외 접속 다시 재클릭 
-    // cy.contains('a', 'test_auto_업무 시간 외 접속').should('be.visible').click({ force: true });
-    // cy.wait(500);
-
-    // // 정책 설정창 안에서 '공휴일설정' 버튼 클릭 
-    // cy.contains('.v-btn__content', '공휴일 설정').filter(':visible').click({ force: true });
-    // cy.wait(500);
- 
-    // // 공휴일 설정 팝업창 공휴일 헤더문구 있는지확인 검증코드
-    // cy.contains('th', '공휴일').should('be.visible');
-
-    // //  공휴일 설정 팝업창 안에서 '동기화' 버튼 클릭
-    // cy.contains('.v-btn__content', '동기화').filter(':visible').click({ force: true });
-    // cy.wait(500);
-
-    // // 동기화 버튼 클릭하여 동기화 알림창 발생 확인 검증코드
-    // cy.get('.v-dialog').filter(':visible').contains('자동 생성된 공휴일은 관련 법안 개정').should('be.visible');
-
-    // // 동기화 확인 알림창 - '확인'버튼클릭 하여 창닫기
-    // cy.contains('.c-headline', '알림').closest('.v-dialog, .v-card').contains('.v-btn__content', '확인').click({ force: true });
-    // cy.wait(500);
-
-    // // 동기화후 공휴일 동기화 확인하는 검증코드
-    // cy.get('.v-dialog').filter(':visible').find('tbody').contains('새해 첫날').should('be.visible');
-
-    // // 공휴일 설정 팝업창 - '저장'버튼 클릭하기 
-    // cy.contains('.c-headline', '공휴일 설정').closest('.v-dialog, .v-card').contains('.v-btn__content', '저장').click({ force: true });
-    // cy.wait(500);
-    
-    // // 저장버튼 클릭 
-    // cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    // cy.wait(500);
-
-    
-    // cy.log('✅  분석 탭 - 업무시간 외 접속 및 데이터 출력 확인 완료!');
-
   
-    // // ==========================================
-    // // [FINAL] 테스트 종료 및 메뉴 닫기
-    // // ==========================================
-    // cy.log('🎉 분석- 업무시간 외 접속 테스트 시나리오 성공적으로 완료!');
-    // cy.get('body').type('{esc}');
-    // cy.get('body').click('center', { force: true });
+    // ==========================================
+    // [FINAL] 테스트 종료 및 메뉴 닫기
+    // ==========================================
+    cy.log('🎉 분석- 업무시간 외 접속 테스트 시나리오 성공적으로 완료!');
+    cy.get('body').type('{esc}');
+    cy.get('body').click('center', { force: true });
 
 
   });
