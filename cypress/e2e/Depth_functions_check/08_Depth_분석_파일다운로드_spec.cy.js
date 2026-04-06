@@ -35,6 +35,20 @@ describe('로그캐치 사이트 테스트', () => {
   it('로그캐치 배포점검목록 동작 체크', () => {
 
     // ==========================================
+    // STEP 0 경보등급 랜돔 지정 셋팅
+    // ==========================================
+    // 🎲 [랜덤 설정] 테스트 실행 시마다 주의, 경계, 심각 중 하나를 무작위로 선택합니다.
+    const alertLevels = [
+      { label: '주의', iconClass: 'i.g-ICriticalAlert', color: 'rgb(169, 209, 142)' },
+      { label: '경계', iconClass: 'i.g-IMajorAlert', color: 'rgb(255, 192, 0)' },
+      { label: '심각', iconClass: 'i.g-IMinorAlert', color: 'rgb(244, 67, 54)' }
+    ];
+    // 배열에서 하나를 랜덤하게 뽑아 targetAlert 변수에 저장합니다.
+    const targetAlert = alertLevels[Math.floor(Math.random() * alertLevels.length)];
+    
+    cy.log(`🎲 이번 테스트 타겟 경보 등급: [${targetAlert.label}]`);
+
+    // ==========================================
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
@@ -106,7 +120,7 @@ describe('로그캐치 사이트 테스트', () => {
     
     //로그인 성공
 
-    // ==========================================
+     // ==========================================
     // STEP 9: 분석 서브메뉴 
     // ==========================================
     cy.contains('button.has-child', '분석').click({ force: true });
@@ -122,10 +136,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
 
 
-    // 설명: '업무 시간 외 접속' 텍스트를 찾아 클릭
-    cy.contains('.v-chip__content', '업무 시간 외 접속').should('be.visible').click({ force: true });
-    cy.wait(500);
-    cy.contains('.c-headline', '업무 시간 외 접속 정책 목록').should('exist');
+     ///////////////////////////////////////////////
+    // 이상행위 정책 - 파일 다운로드
+    ///////////////////////////////////////////////
+    cy.contains('.v-chip__content', '파일다운로드').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '파일다운로드 정책 목록').should('exist');
     // 표 문구열 확인
     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
@@ -135,17 +150,17 @@ describe('로그캐치 사이트 테스트', () => {
     // 기능 확인 -------------------------------------------------
     cy.log('🔍 기존 정책 존재 여부를 확인합니다.');
     
-    //예외처리  test_auto_업무 시간 외 접속 삭제 --------------------------
-    // 1. [조건부 삭제] test_auto_업무 시간 외 접속 정책이 있으면 삭제, 없으면 패스
+    //예외처리  test_auto_파일다운로드 삭제 --------------------------
+    // 1. [조건부 삭제] test_auto_파일다운로드 정책이 있으면 삭제, 없으면 패스
     cy.get('body').then(($body) => {
     // jQuery의 :contains 선택자를 이용해 해당 텍스트가 있는 <tr>을 찾습니다.
-    const hasPolicy = $body.find('tr:contains("test_auto_업무 시간 외 접속")').length > 0;
+    const hasPolicy = $body.find('tr:contains("test_auto_파일다운로드")').length > 0;
 
     if (hasPolicy) {
       cy.log('🗑️ 기존 정책이 발견되었습니다. 삭제를 진행합니다.');
     
       // 삭제 버튼(휴지통) 클릭
-      cy.contains('tr', 'test_auto_업무 시간 외 접속').find('.fa-trash').click({ force: true });
+      cy.contains('tr', 'test_auto_파일다운로드').find('.fa-trash').click({ force: true });
       cy.wait(500);
     
       // 삭제 확인 팝업에서 '확인' 클릭
@@ -153,7 +168,7 @@ describe('로그캐치 사이트 테스트', () => {
       cy.wait(1000); // 삭제 처리가 서버에 반영될 시간 대기
 
       // 추가한 정책 삭제 검증코드 
-      cy.contains('tr', 'test_auto_업무 시간 외 접속').should('not.exist'); 
+      cy.contains('tr', 'test_auto_파일다운로드').should('not.exist'); 
       cy.log('✅ 기존 정책 삭제 완료!');
     
     } else {
@@ -169,170 +184,78 @@ describe('로그캐치 사이트 테스트', () => {
            });
     cy.wait(1000);
 
-    // 업무 시간 외 접속  정책 추가화면 진입----------------------------------------
+    // 파일 다운로드 정책화면 진입----------------------------------------
     // 정책이름 입력 
-    cy.get('input[aria-label="정책 이름"]').filter(':visible').clear({ force: true }).type('test_auto_업무 시간 외 접속', { force: true });
+    cy.get('input[aria-label="정책 이름"]').filter(':visible').clear({ force: true }).type('test_auto_파일다운로드', { force: true });
 
     // 정책설정 부분
-    // 정책 사용여부 토글 ON
+    // 정책 사용여부 토글 OFF-> ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
     cy.wait(500);
-    
+
     // 소명 사용여부 토글 ON 
     cy.get('input[aria-label="소명 여부"]').check({ force: true });
     cy.wait(500); 
-    
-    // 업무시스템 - 리눅스 배송관리 선택
+
+    // 업무시스템 - 선택
     cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
-    cy.wait(1000);
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
-    cy.wait(1000);
+    cy.wait(500);
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').first().parent().click({ force: true });
+    cy.wait(500);
+    // 업무시스템중 'JEUS_tester3' 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').first().contains('JEUS_tester3').click({ force: true });
+    cy.wait(500);
     // 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
 
-    //업무시간 설정 월~금요일옆 토글버튼 활성화
-    cy.contains('label', '월요일').closest('.v-input').find('.v-input--selection-controls__ripple').click({ force: true });
-    cy.contains('label', '화요일').closest('.v-input').find('.v-input--selection-controls__ripple').click({ force: true });
-    cy.contains('label', '수요일').closest('.v-input').find('.v-input--selection-controls__ripple').click({ force: true });
-    cy.contains('label', '목요일').closest('.v-input').find('.v-input--selection-controls__ripple').click({ force: true });
-    cy.contains('label', '금요일').closest('.v-input').find('.v-input--selection-controls__ripple').click({ force: true });
-
-
-  // ==========================================
-  // 업무 시간(월~금)  시계값 10:00 로 변경
-  // ==========================================
-  const days = ['월요일', '화요일', '수요일', '목요일', '금요일'];
-
-  days.forEach((day) => {
-  cy.log(`🕒 [${day}] 정확한 타겟팅으로 퇴근 시간 설정 시작`);
-
-  cy.get('body').type('{esc}', { force: true });
-  cy.wait(300);
-
-  // 🎯 핵심 해결책: 정확히 '해당 요일의 줄(Row)'만 찾아냅니다.
-  cy.contains('label', day).parents('div') // 부모 요소들을 전부 탐색합니다.
-  .filter((index, el) => Cypress.$(el).find('input[type="text"]').length >= 2) // 그중 출/퇴근 텍스트 입력창이 2개 이상 있는 부모만 걸러냅니다.
-    .first() // 가장 가까운 부모 (정확히 해당 요일의 한 줄) 선택!
-    .find('input[type="text"]') .last() // 그 줄에서 마지막 입력창(퇴근 시간) 클릭!
-    .click({ force: true }); 
+    // 경보등급 랜덤 선택하기 
+    cy.log(`🎯 경보등급 [${targetAlert.label}] 항목을 선택합니다.`);
+    cy.contains('label', targetAlert.label).closest('div').find('.v-input--selection-controls__ripple').click({ force: true });
+    cy.wait(500);
     
-  // 💡 드디어 우리가 찾던 '진짜 해당 요일의 팝업'이 열립니다!
-  cy.get('.menuable__content__active').should('be.visible');
-  cy.wait(800);
+    // 랜덤 선택된 상태 확인 검증코드 
+    cy.contains('label', targetAlert.label).closest('div').find('input').should('have.attr', 'aria-checked', 'true');
+    cy.wait(500);
 
-  // 1. 시간 '13' 클릭
-  cy.get('.menuable__content__active .v-time-picker-clock__item').contains(/^10$/).click({ force: true });
-  cy.wait(800);
+    // 저장버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+    cy.wait(500);
 
-  // 2. 분 '00' 클릭
-  cy.get('.menuable__content__active .v-time-picker-clock__item').contains(/^00$/).click({ force: true });
-  cy.wait(500);
 
-  // 3. '확인' 버튼 클릭
-  cy.get('.menuable__content__active').contains('button', '확인').click({ force: true });
-
-  cy.get('.menuable__content__active').should('not.exist');
-  cy.wait(500);
-
-  // 4. 해당 요일의 값이 진짜로 바뀌었는지 최종 검증
-  cy.contains('label', day).parents('div').filter((index, el) => Cypress.$(el).find('input[type="text"]').length >= 2).first().find('input[type="text"]').last().should('have.value', '10:00');
-  cy.log(`✅ [${day}] 13:00 실제 UI 반영 완벽 성공!`);
-  });
-  cy.wait(1000);
- 
-
-  // 저장버튼 클릭 
-  cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-  cy.wait(500);
-
-  //----------------------------------------------------------------------------------------------------------------------------------------------------------------------  
-
-    //test_auto_업무 시간 외 접속 목록에 정책이 잘 추가되었는지 검증하는 코드 
-    cy.get('tbody').contains('tr', 'test_auto_업무 시간 외 접속').should('be.visible');
+    //test_auto_파일다운로드 목록에 정책이 잘 추가되었는지 검증하는 코드 
+    cy.get('tbody').contains('tr', 'test_auto_파일다운로드').should('be.visible');
 
 
 // ----------------------------------------------------------
 // [STEP 1] WAS 시스템 로그인 및 이상행위(과다조회) 타격
 // ----------------------------------------------------------
-cy.log('🚀 다른 도메인(WAS 서버)으로 크로스 오리진 점프를 시도합니다.');
+cy.log('🚀 다른 도메인(tester3 서버)으로 크로스 오리진 점프를 시도합니다.');
 
-// // 기존 코드에서 옵션 추가
-// cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', { 
-//   timeout: 60000,           // 타임아웃을 60초로 연장
-//   onBeforeLoad(win) {      // 페이지 로드 전 속도 향상을 위한 설정
-//     delete win.fetch; 
-//   }
-// });
+// 1. 점프 전, 기존 사이트의 세션/쿠키 찌꺼기 완전 삭제 (충돌 방지)
 cy.clearCookies();
 cy.clearLocalStorage();
 
-cy.origin('http://10.10.54.22:8080', () => {
+// 2. 새로운 도메인(10.10.54.31)으로 점프하여 동작 수행
+cy.origin('http://10.10.54.31:8088', () => {
+  // 새 도메인 전용 에러 무시 처리
   Cypress.on('uncaught:exception', () => false);
 
-  // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
-  cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
-  cy.visit('/uat/uia/egovLoginUsr.do', { 
+  // 사이트 접속 (origin 블록 안이므로 도메인 제외 경로만 입력)
+  cy.log('1️⃣ tester3 사이트에 접속합니다.');
+  cy.visit('/tester3', { 
     timeout: 60000 
   });
-  cy.wait(3000); 
-  cy.log('✅ 10.10.54.22 서버 접속 완료!');
+  
+  cy.wait(3000); // 페이지 로딩 대기
+  cy.log('✅ 10.10.54.31 서버 접속 완료!');
 
-  cy.get('#id').should('be.visible').clear().type('yunho');
-  cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
-
-  // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
-  cy.contains('a', '로그아웃', { timeout: 15000 }).should('be.visible');
-  cy.log('✅ 로그인 성공! 방금 생성된 싱싱한 세션 확보 완료!');
-
-  // 4. ✨ 핵심 로직: 쿠키 또는 URL에서 JSESSIONID를 안전하게 추출합니다.
-  cy.url().then((currentUrl) => {
-    cy.getCookie('JSESSIONID').then((cookie) => {
-      let freshSessionId = '';
-
-      // ① 먼저 쿠키에 JSESSIONID가 있는지 확인
-      if (cookie && cookie.value) {
-        freshSessionId = cookie.value;
-        cy.log(`🔑 쿠키에서 세션 ID 추출 완료`);
-      } 
-      // ② 쿠키가 없다면, URL에 jsessionid가 붙어있는지 확인 (URL Rewriting 대응)
-      else if (currentUrl.toLowerCase().includes('jsessionid=')) {
-        // 정규식을 사용해 URL에서 jsessionid 값만 쏙 뽑아냅니다.
-        const match = currentUrl.match(/jsessionid=([^?&#]+)/i);
-        if (match && match[1]) {
-          freshSessionId = match[1];
-          cy.log(`🔑 URL에서 세션 ID 추출 완료`);
-        }
-      }
-
-      // 방어 코드: 둘 다 실패했을 경우
-      if (!freshSessionId) {
-        throw new Error('❌ JSESSIONID를 쿠키와 URL 모두에서 찾을 수 없습니다.');
-      }
-
-      cy.log(`✅ 최종 사용될 세션 ID: ${freshSessionId}`);
-
-      // 5. 추출한 새 세션 ID를 헤더에 꽂아서 API 타격!
-      cy.request({
-        method: 'POST',
-        url: '/cop/logcatch/btnExcessCheck.do',
-        form: true,
-        headers: {
-          'Cookie': `JSESSIONID=${freshSessionId}`, 
-          'X-Requested-With': 'XMLHttpRequest',
-          'Referer': 'http://10.10.54.22:8080/uat/uia/actionMain.do'
-        },
-        body: { 
-          menuNo: '41' 
-        }
-      }).then((response) => {
-        // 6. 정상 응답 검증 (200 OK)
-        expect(response.status).to.eq(200);
-        cy.log('🎉 매번 새로운 세션으로 과다조회 자동 타격 성공!');
-      });
-    });
-  });
+  // 3. Excel 버튼 클릭 (id 값인 #excel_btn을 타겟팅)
+  cy.log('2️⃣ Excel 버튼을 클릭합니다.');
+  cy.get('#excel_btn').should('be.visible').click({ force: true });
+    
+  // 엑셀 다운로드 또는 내부 처리 스크립트가 돌아갈 시간을 넉넉히 줍니다.
+  cy.wait(5000); 
+  cy.log('✅ Excel 버튼 클릭 완료!');
 });
 
 
@@ -346,7 +269,7 @@ cy.clearCookies();
 cy.clearLocalStorage();
 
 // 2. 주소 뒤에 아무것도 붙지 않은 '순수 도메인' 주소로 접속합니다.
-// 경로를 생략하고 도메인까지만 입력하면 서버가 404를 내뱉을 확률이 줄어듭니다.
+// 원래 주소로 접속
 cy.visit('https://10.10.54.21:18443/logcatch/login');
 cy.wait(3000); // 화면이 그려질 수 있도록 초기 렌더링 대기 
 
@@ -480,7 +403,15 @@ cy.log('✅ 이상행위 탭 진입 성공');
 cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
 cy.wait(500);
 // 이상행위 유형중 개인정보 과다조회 클릭하는 코드
-cy.get('.v-list__tile__title').filter(':visible').contains('업무 시간 외 접속').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+// 1. 현재 화면에 열려있는 '진짜' 활성 상태의 팝업창만 타겟팅합니다.
+cy.get('.menuable__content__active').filter(':visible').within(() => {
+  
+  // 2. 그 활성 팝업창 안에서 '파일다운로드'를 찾습니다.
+  // 이제 엉뚱한 숨김 처리된 팝업의 글자를 찾을 위험이 0%가 됩니다.
+  cy.contains('.v-list__tile__title', '파일다운로드').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+});
+
+cy.wait(500); // 클릭 후 메뉴가 닫힐 시간 대기
 // 선택 후 메뉴 닫기
 cy.get('body').type('{esc}');
     
@@ -489,68 +420,34 @@ cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: t
 cy.wait(1000);
 
 // ----------------------------------------------------------
-// [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증 (업무시간외 접속)
+// [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
 // ----------------------------------------------------------
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
 
-// 1. 테이블의 데이터가 들어있는 행(tr) 중 첫 번째 행을 잡아서 $row 변수로 받습니다.
-cy.get('tbody tr').filter(':visible').first().then(($row) => {
+// 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
+cy.get('tbody tr').filter(':visible').first().within(() => {
   
-  // 2. 텍스트 검증 (wrap을 사용하여 $row 내부만 검색합니다)
-  cy.wrap($row).within(() => {
-    cy.contains('진윤호(yunho)').should('be.visible');
-    cy.contains('업무 시간 외 접속').should('be.visible');
-    cy.contains('test_auto_업무 시간 외 접속').should('be.visible');
-    cy.contains('존재').should('be.visible');
-    cy.contains('소명 대상').should('be.visible');
-  });
+  // 2. 텍스트 검증
+  cy.contains('(미등록 사용자)').should('be.visible');
+  cy.contains('파일다운로드').should('be.visible');
+  cy.contains('test_auto_파일다운로드').should('be.visible');
+  cy.contains('존재').should('be.visible');
+  cy.contains('소명 불필요').should('be.visible');
 
-  // 3. 아이콘 조건부 검증 ("있으면 검증하고, 없으면 통과하기")
-  // $row(첫 번째 행) 안에서 해당 클래스를 가진 요소가 존재하는지 확인합니다.
-  
-  // 🟢 [주의] 아이콘 검증
-  if ($row.find('i.g-ICriticalAlert').length > 0) {
-    cy.log('🟢 주의 로그 감지: 검증을 시작합니다.');
-    cy.wrap($row).find('i.g-ICriticalAlert')
-      .should('be.visible')
-      .and('have.css', 'color', 'rgb(169, 209, 142)');
-  } else {
-    cy.log('⚪ 주의 로그가 없습니다. 패스합니다.');
-  }
-
-  // 🟠 [경계] 아이콘 검증
-  if ($row.find('i.g-IMajorAlert').length > 0) {
-    cy.log('🟠 경계 로그 감지: 검증을 시작합니다.');
-    cy.wrap($row).find('i.g-IMajorAlert')
-      .should('be.visible')
-      .and('have.css', 'color', 'rgb(255, 192, 0)');
-  } else {
-    cy.log('⚪ 경계 로그가 없습니다. 패스합니다.');
-  }
-
-  // 🔴 [심각] 아이콘 검증
-  if ($row.find('i.g-IMinorAlert').length > 0) {
-    cy.log('🔴 심각 로그 감지: 검증을 시작합니다.');
-    cy.wrap($row).find('i.g-IMinorAlert')
-      .should('be.visible')
-      .and('have.css', 'color', 'rgb(244, 67, 54)');
-  } else {
-    cy.log('⚪ 심각 로그가 없습니다. 패스합니다.');
-  }
-
+  // 3. 아이콘 맞춤 검증 (랜덤으로 선택했던 바로 그 등급을 검증합니다)
+  cy.log(`🔍 생성 시 선택했던 [${targetAlert.label}] 로그가 정상적으로 발생했는지 검증합니다.`);
+  cy.get(targetAlert.iconClass).should('be.visible').and('have.css', 'color', targetAlert.color);
 });
 
-cy.log('🎉 업무 시간 외 접속 이력행위 발생 확인 및 검증 완료!');
+cy.log('🎉 분석 파일다운로드 확인 및 랜덤 등급 검증 완료!');
 
 
-
-  
-    // ==========================================
-    // [FINAL] 테스트 종료 및 메뉴 닫기
-    // ==========================================
-    cy.log('🎉 분석- 업무시간 외 접속 테스트 시나리오 성공적으로 완료!');
-    cy.get('body').type('{esc}');
-    cy.get('body').click('center', { force: true });
+  // ==========================================
+  // [FINAL] 테스트 종료 및 메뉴 닫기
+  // ==========================================
+  cy.log('🎉 Depth 분석- 파일다운로드 테스트 시나리오 성공적으로 완료!');
+  cy.get('body').type('{esc}');
+  cy.get('body').click('center', { force: true });
 
 
   });

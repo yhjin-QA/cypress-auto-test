@@ -2023,7 +2023,7 @@ describe('로그캐치 사이트 테스트', () => {
            });
     cy.wait(1000);
 
-    // 열람 제한 개인정보 접근 정책 추가화면 진입----------------------------------------
+    // 파일다운로드 정책 추가화면 진입----------------------------------------
     // 정책이름 입력 
     cy.get('input[aria-label="정책 이름"]').filter(':visible').clear({ force: true }).type('test_auto_파일다운로드', { force: true });
 
@@ -2051,7 +2051,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
      cy.wait(500);
     
-     //비인가 접근 사용자 정책 목록에 정책이 잘 추가되었는지 검증하는 코드 
+     //파일다운로드 정책 목록에 정책이 잘 추가되었는지 검증하는 코드 
      cy.get('tbody').contains('tr', 'test_auto_파일다운로드').should('be.visible');
      cy.wait(1000);
 
