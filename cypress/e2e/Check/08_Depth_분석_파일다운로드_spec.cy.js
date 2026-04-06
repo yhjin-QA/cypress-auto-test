@@ -437,7 +437,7 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
   // 3. 아이콘 맞춤 검증 (랜덤으로 선택했던 바로 그 등급을 검증합니다)
   cy.log(`🔍 생성 시 선택했던 [${targetAlert.label}] 로그가 정상적으로 발생했는지 검증합니다.`);
   cy.get(targetAlert.iconClass).should('be.visible').and('have.css', 'color', targetAlert.color);
-});
+  });
 
 cy.log('🎉 분석 파일다운로드 확인 및 랜덤 등급 검증 완료!');
 
