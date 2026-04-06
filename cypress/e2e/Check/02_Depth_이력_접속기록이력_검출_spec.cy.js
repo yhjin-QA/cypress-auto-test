@@ -250,20 +250,29 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.v-select__selection', '2026-02-20').click({ force: true });
     cy.wait(500); // 메뉴가 열리는 애니메이션 대기
 
-    // 2. 열린 메뉴창(.v-menu__content) 내부를 강제로 스크롤합니다.
-    // v-menu__content 자체가 스크롤을 가지고 있으므로 해당 요소를 scrollTo 합니다.
-    cy.get('.v-menu__content:visible')
-    .first() // 혹시 여러개 떠있을 경우를 대비해 첫번째 보이는 창 선택
-    .scrollTo('bottom', { duration: 1000 }) // 1초 동안 부드럽게 끝까지 내리기
-    .wait(500); // 데이터가 로드되거나 렌더링될 시간 대기
+    cy.log('⏬ 가상 스크롤 영역을 끝까지 내리기 위해 연속 스크롤을 시도합니다.');
 
-    // 3. 이제 리스트 내에서 3월 18일을 찾아 클릭합니다.
-    cy.get('.v-menu__content:visible').contains('.v-list__tile__title, .v-list-item__title', '2026-03-18').click({ force: true });
-    
-    
+    // 1. 현재 열려있는 메뉴창을 잡아서 별명(dropdown)을 붙여줍니다. (코드 길이 단축)
+    cy.get('.v-menu__content:visible').first().as('dropdown');
+
+    // 2. 첫 번째 스크롤 (여기서 멈칫하면서 다음 데이터가 로딩됩니다)
+    cy.get('@dropdown').scrollTo('bottom', { duration: 500 });
+    cy.wait(500); 
+
+    // 3. 두 번째 스크롤 (새로 늘어난 영역의 밑바닥으로 다시 내립니다)
+    cy.get('@dropdown').scrollTo('bottom', { duration: 500 });
+    cy.wait(500);
+
+     // (만약 데이터가 엄청 많다면 이 스크롤 동작을 한 번 더 복사해서 넣어주세요!)
+     // cy.get('@dropdown').scrollTo('bottom', { duration: 500 });
+     // cy.wait(500);
+
+    // 3. 이제 리스트 내에서 4월 06일을 찾아 클릭합니다.
+    cy.get('.v-menu__content:visible').contains('.v-list__tile__title, .v-list-item__title', '2026-04-06').click({ force: true });
     cy.wait(1000);
-    // 선택 후, 입력창(.v-select__selection)에 '2026-03-18'가 표시되는지 검증
-    cy.contains('.v-select__selection', '2026-03-18').should('be.visible');
+    
+    // 선택 후, 입력창(.v-select__selection)에 '2026-04-06'가 표시되는지 검증
+    cy.contains('.v-select__selection', '2026-04-06').should('be.visible');
     cy.wait(1000);
  
     // 표 검색결과안의 검출유형 검출 문구확인

@@ -123,22 +123,44 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
 
     
-    // 정책 추가 기능 확인 -------------------
-    //추가된 test_auto_개인정보과다조회 삭제 --------------------------
-    cy.contains('tr', 'test_auto_개인정보과다조회').find('.fa-trash').click({ force: true });
-    cy.wait(500);
-    // 삭제 확인 알림창에서 확인 버튼 클릭 
-    cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
+    // 기능 확인 -------------------------------------------------
+    cy.log('🔍 기존 정책 존재 여부를 확인합니다.');
+    
+    //예외처리  test_auto_개인정보과다조회 삭제 --------------------------
+    // 1. [조건부 삭제] test_auto_개인정보과다조회 정책이 있으면 삭제, 없으면 패스
+    cy.get('body').then(($body) => {
+    // jQuery의 :contains 선택자를 이용해 해당 텍스트가 있는 <tr>을 찾습니다.
+    const hasPolicy = $body.find('tr:contains("test_auto_개인정보과다조회")').length > 0;
 
-    //추가한 정책 삭제 검증코드 
-    cy.contains('tr', 'test_auto_개인정보과다조회').should('not.exist'); 
+    if (hasPolicy) {
+      cy.log('🗑️ 기존 정책이 발견되었습니다. 삭제를 진행합니다.');
+    
+      // 삭제 버튼(휴지통) 클릭
+      cy.contains('tr', 'test_auto_개인정보과다조회').find('.fa-trash').click({ force: true });
+      cy.wait(500);
+    
+      // 삭제 확인 팝업에서 '확인' 클릭
+      cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
+      cy.wait(1000); // 삭제 처리가 서버에 반영될 시간 대기
 
+      // 추가한 정책 삭제 검증코드 
+      cy.contains('tr', 'test_auto_개인정보과다조회').should('not.exist'); 
+      cy.log('✅ 기존 정책 삭제 완료!');
+    
+    } else {
+      // 정책이 없으면 에러 없이 이 구문을 타고 자연스럽게 통과합니다.
+      cy.log('⚪ 기존 정책이 없습니다. 삭제 단계를 패스합니다.');
+     }
+     });
 
-    // 우측 동그란 + 플러스 버튼 클릭
+     //정책추가
+     //----------------------------------------------------------------------------
+     // 우측 동그란 + 플러스 버튼 클릭
       cy.get('.grid-add-button').should('exist').then(($btn) => {
         $btn[0].click(); 
            });
     cy.wait(1000);
+
 
     // 개인정보 과다조회  정책 추가화면 진입----------------------------------------
     // 정책이름 입력 
@@ -346,27 +368,60 @@ cy.get('body').then(($body) => {
   }
 });
 
-// 2. '이력' 버튼 클릭 (더 강력한 timeout 부여)
-cy.contains('button', '이력', { timeout: 15000 })
-  .should('be.visible')
-  .click({ force: true });
+// 💡 [STEP 0] 에러 방어막 강화 (JS 청크, CSS 청크, 라우터 에러 모두 무시)
+// 이 코드는 가급적 테스트 파일 최상단(describe 블록 바로 아래 등)에 한 번만 선언해 두는 것이 좋습니다.
+Cypress.on('uncaught:exception', (err, runnable) => {
+  if (
+    err.message.includes('ChunkLoadError') || 
+    err.message.includes('Loading CSS chunk') ||  // 👈 이 부분이 추가되었습니다!
+    err.message.includes('Loading chunk') ||
+    err.message.includes('navigation guard')
+  ) {
+    return false; // Cypress가 테스트를 멈추지 않고 계속 진행하게 함
+  }
+});
 
-cy.wait(2000); // 메뉴 애니메이션 대기
+// ---------------------------------------------------------------------------
+// 1. '이력' 버튼 클릭
+cy.contains('button', '이력').should('be.visible').click({ force: true });
+cy.wait(1000); 
 
-// 3. 서브메뉴 '접속기록 이력' 클릭
-cy.contains('.v-list__tile__title', '접속기록 이력', { timeout: 10000 })
-  .should('be.visible')
-  .click({ force: true });
+// 2. 서브메뉴 '접속기록 이력' 클릭
+cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
 
-cy.wait(3000);
+// 💡 넉넉하게 4초 정도 기다려 줍니다. (정상이면 화면이 뜨고, 에러면 무한 로딩이 걸릴 시간)
+cy.wait(4000); 
 
-// 4. [캡처에서 에러난 부분] '이상행위' 탭 클릭 전 대기
-// .tab-btn이 페이지 로딩 직후 바로 생성되지 않을 수 있습니다.
-cy.contains('.tab-btn', '이상행위', { timeout: 15000 })
-  .should('exist')
-  .and('be.visible')
-  .click({ force: true });
+// 3. 무한 로딩 감지 및 자동 복구 로직 (Self-Healing)
+cy.get('body').then(($body) => {
+  // '이상행위' 탭이 화면에 그려졌는지 확인합니다.
+  const isTabLoaded = $body.find('.tab-btn:contains("이상행위")').length > 0;
 
+  if (isTabLoaded) {
+    cy.log('🟢 화면이 정상적으로 로드되었습니다.');
+  } else {
+    // 탭이 없다면 청크 다운로드 실패(무한 로딩)로 간주하고 강제 새로고침!
+    cy.log('🔴 ChunkLoadError(무한 로딩) 감지! 페이지를 강제로 새로고침합니다.');
+    cy.reload();
+    cy.wait(5000); // 새로고침 후 화면 안정화 대기
+
+    // 새로고침 후 메인 화면으로 튕겼을 수 있으므로, 메뉴를 다시 차분하게 찾아 들어갑니다.
+    cy.get('body').then(($newBody) => {
+      // 여전히 이상행위 탭이 없다면 메뉴부터 다시 클릭
+      if ($newBody.find('.tab-btn:contains("이상행위")').length === 0) {
+        cy.log('🔄 메뉴를 다시 클릭하여 진입합니다.');
+        cy.contains('button', '이력').click({ force: true });
+        cy.wait(1000);
+        cy.contains('.v-list__tile__title', '접속기록 이력').click({ force: true });
+        cy.wait(4000);
+      }
+    });
+  }
+});
+
+// 4. 최종 확인 및 탭 클릭 (이제 무조건 화면에 나타나 있을 것입니다)
+cy.contains('.tab-btn', '이상행위', { timeout: 15000 }).should('be.visible').click({ force: true });
+//------------------------------------------------------------------------------------------------------
 cy.log('✅ 이상행위 탭 진입 성공');
 
 // 이상행위 유형 선택 
@@ -377,20 +432,14 @@ cy.log('✅ 이상행위 탭 진입 성공');
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     
-    // //경보등급 선택
-    // // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
-    // cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
-    // cy.wait(500);
-    // // 펼쳐진 리스트 중에서 '심각'이라는 텍스트를 가진 항목을 찾아 '심각' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
-    // cy.wait(500);
-    //  // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '경계' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
-    //  cy.wait(500);
-    // // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '주의' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('주의').click({ force: true });
-    // cy.wait(500);
-    // cy.get('body').type('{esc}');
+    //경보등급 선택
+    // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
+    cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
+    cy.wait(500);
+    // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '주의' 클릭합니다.
+    cy.get('.v-list__tile__title').filter(':visible').contains('주의').click({ force: true });
+    cy.wait(500);
+    cy.get('body').type('{esc}');
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -571,27 +620,60 @@ cy.get('body').then(($body) => {
   }
 });
 
-// 2. '이력' 버튼 클릭 (더 강력한 timeout 부여)
-cy.contains('button', '이력', { timeout: 15000 })
-  .should('be.visible')
-  .click({ force: true });
+// 💡 [STEP 0] 에러 방어막 강화 (JS 청크, CSS 청크, 라우터 에러 모두 무시)
+// 이 코드는 가급적 테스트 파일 최상단(describe 블록 바로 아래 등)에 한 번만 선언해 두는 것이 좋습니다.
+Cypress.on('uncaught:exception', (err, runnable) => {
+  if (
+    err.message.includes('ChunkLoadError') || 
+    err.message.includes('Loading CSS chunk') ||  // 👈 이 부분이 추가되었습니다!
+    err.message.includes('Loading chunk') ||
+    err.message.includes('navigation guard')
+  ) {
+    return false; // Cypress가 테스트를 멈추지 않고 계속 진행하게 함
+  }
+});
 
-cy.wait(2000); // 메뉴 애니메이션 대기
+// ---------------------------------------------------------------------------
+// 1. '이력' 버튼 클릭
+cy.contains('button', '이력').should('be.visible').click({ force: true });
+cy.wait(1000); 
 
-// 3. 서브메뉴 '접속기록 이력' 클릭
-cy.contains('.v-list__tile__title', '접속기록 이력', { timeout: 10000 })
-  .should('be.visible')
-  .click({ force: true });
+// 2. 서브메뉴 '접속기록 이력' 클릭
+cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
 
-cy.wait(3000);
+// 💡 넉넉하게 4초 정도 기다려 줍니다. (정상이면 화면이 뜨고, 에러면 무한 로딩이 걸릴 시간)
+cy.wait(4000); 
 
-// 4. [캡처에서 에러난 부분] '이상행위' 탭 클릭 전 대기
-// .tab-btn이 페이지 로딩 직후 바로 생성되지 않을 수 있습니다.
-cy.contains('.tab-btn', '이상행위', { timeout: 15000 })
-  .should('exist')
-  .and('be.visible')
-  .click({ force: true });
+// 3. 무한 로딩 감지 및 자동 복구 로직 (Self-Healing)
+cy.get('body').then(($body) => {
+  // '이상행위' 탭이 화면에 그려졌는지 확인합니다.
+  const isTabLoaded = $body.find('.tab-btn:contains("이상행위")').length > 0;
 
+  if (isTabLoaded) {
+    cy.log('🟢 화면이 정상적으로 로드되었습니다.');
+  } else {
+    // 탭이 없다면 청크 다운로드 실패(무한 로딩)로 간주하고 강제 새로고침!
+    cy.log('🔴 ChunkLoadError(무한 로딩) 감지! 페이지를 강제로 새로고침합니다.');
+    cy.reload();
+    cy.wait(5000); // 새로고침 후 화면 안정화 대기
+
+    // 새로고침 후 메인 화면으로 튕겼을 수 있으므로, 메뉴를 다시 차분하게 찾아 들어갑니다.
+    cy.get('body').then(($newBody) => {
+      // 여전히 이상행위 탭이 없다면 메뉴부터 다시 클릭
+      if ($newBody.find('.tab-btn:contains("이상행위")').length === 0) {
+        cy.log('🔄 메뉴를 다시 클릭하여 진입합니다.');
+        cy.contains('button', '이력').click({ force: true });
+        cy.wait(1000);
+        cy.contains('.v-list__tile__title', '접속기록 이력').click({ force: true });
+        cy.wait(4000);
+      }
+    });
+  }
+});
+
+// 4. 최종 확인 및 탭 클릭 (이제 무조건 화면에 나타나 있을 것입니다)
+cy.contains('.tab-btn', '이상행위', { timeout: 15000 }).should('be.visible').click({ force: true });
+//------------------------------------------------------------------------------------------------------
 cy.log('✅ 이상행위 탭 진입 성공');
 
 // 이상행위 유형 선택 
@@ -602,20 +684,15 @@ cy.log('✅ 이상행위 탭 진입 성공');
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     
-    // //경보등급 선택
-    // // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
-    // cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
-    // cy.wait(500);
-    // // 펼쳐진 리스트 중에서 '심각'이라는 텍스트를 가진 항목을 찾아 '심각' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
-    // cy.wait(500);
-    //  // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '경계' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
-    //  cy.wait(500);
-    // // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '주의' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('주의').click({ force: true });
-    // cy.wait(500);
-    // cy.get('body').type('{esc}');
+    //경보등급 선택
+    // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
+    cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
+    cy.wait(500);
+    // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '경계' 클릭합니다.
+    cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
+    cy.wait(500);
+    
+    cy.get('body').type('{esc}');
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -652,7 +729,7 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
  cy.log('🎉 경보등급 경계 (주황색) 이력행위 발생 확인 !');
 
  //==========================================
-// Depth 개인정보과다조회 - 경보등급별 검증  CASE 2
+// Depth 개인정보과다조회 - 경보등급별 검증  CASE 3
 //===========================================
 
   // ==========================================
@@ -795,27 +872,60 @@ cy.get('body').then(($body) => {
   }
 });
 
-// 2. '이력' 버튼 클릭 (더 강력한 timeout 부여)
-cy.contains('button', '이력', { timeout: 15000 })
-  .should('be.visible')
-  .click({ force: true });
+// 💡 [STEP 0] 에러 방어막 강화 (JS 청크, CSS 청크, 라우터 에러 모두 무시)
+// 이 코드는 가급적 테스트 파일 최상단(describe 블록 바로 아래 등)에 한 번만 선언해 두는 것이 좋습니다.
+Cypress.on('uncaught:exception', (err, runnable) => {
+  if (
+    err.message.includes('ChunkLoadError') || 
+    err.message.includes('Loading CSS chunk') ||  // 👈 이 부분이 추가되었습니다!
+    err.message.includes('Loading chunk') ||
+    err.message.includes('navigation guard')
+  ) {
+    return false; // Cypress가 테스트를 멈추지 않고 계속 진행하게 함
+  }
+});
 
-cy.wait(2000); // 메뉴 애니메이션 대기
+// ---------------------------------------------------------------------------
+// 1. '이력' 버튼 클릭
+cy.contains('button', '이력').should('be.visible').click({ force: true });
+cy.wait(1000); 
 
-// 3. 서브메뉴 '접속기록 이력' 클릭
-cy.contains('.v-list__tile__title', '접속기록 이력', { timeout: 10000 })
-  .should('be.visible')
-  .click({ force: true });
+// 2. 서브메뉴 '접속기록 이력' 클릭
+cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
 
-cy.wait(3000);
+// 💡 넉넉하게 4초 정도 기다려 줍니다. (정상이면 화면이 뜨고, 에러면 무한 로딩이 걸릴 시간)
+cy.wait(4000); 
 
-// 4. [캡처에서 에러난 부분] '이상행위' 탭 클릭 전 대기
-// .tab-btn이 페이지 로딩 직후 바로 생성되지 않을 수 있습니다.
-cy.contains('.tab-btn', '이상행위', { timeout: 15000 })
-  .should('exist')
-  .and('be.visible')
-  .click({ force: true });
+// 3. 무한 로딩 감지 및 자동 복구 로직 (Self-Healing)
+cy.get('body').then(($body) => {
+  // '이상행위' 탭이 화면에 그려졌는지 확인합니다.
+  const isTabLoaded = $body.find('.tab-btn:contains("이상행위")').length > 0;
 
+  if (isTabLoaded) {
+    cy.log('🟢 화면이 정상적으로 로드되었습니다.');
+  } else {
+    // 탭이 없다면 청크 다운로드 실패(무한 로딩)로 간주하고 강제 새로고침!
+    cy.log('🔴 ChunkLoadError(무한 로딩) 감지! 페이지를 강제로 새로고침합니다.');
+    cy.reload();
+    cy.wait(5000); // 새로고침 후 화면 안정화 대기
+
+    // 새로고침 후 메인 화면으로 튕겼을 수 있으므로, 메뉴를 다시 차분하게 찾아 들어갑니다.
+    cy.get('body').then(($newBody) => {
+      // 여전히 이상행위 탭이 없다면 메뉴부터 다시 클릭
+      if ($newBody.find('.tab-btn:contains("이상행위")').length === 0) {
+        cy.log('🔄 메뉴를 다시 클릭하여 진입합니다.');
+        cy.contains('button', '이력').click({ force: true });
+        cy.wait(1000);
+        cy.contains('.v-list__tile__title', '접속기록 이력').click({ force: true });
+        cy.wait(4000);
+      }
+    });
+  }
+});
+
+// 4. 최종 확인 및 탭 클릭 (이제 무조건 화면에 나타나 있을 것입니다)
+cy.contains('.tab-btn', '이상행위', { timeout: 15000 }).should('be.visible').click({ force: true });
+//------------------------------------------------------------------------------------------------------
 cy.log('✅ 이상행위 탭 진입 성공');
 
 // 이상행위 유형 선택 
@@ -826,20 +936,14 @@ cy.log('✅ 이상행위 탭 진입 성공');
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     
-    // //경보등급 선택
-    // // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
-    // cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
-    // cy.wait(500);
-    // // 펼쳐진 리스트 중에서 '심각'이라는 텍스트를 가진 항목을 찾아 '심각' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
-    // cy.wait(500);
-    //  // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '경계' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
-    //  cy.wait(500);
-    // // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '주의' 클릭합니다.
-    // cy.get('.v-list__tile__title').filter(':visible').contains('주의').click({ force: true });
-    // cy.wait(500);
-    // cy.get('body').type('{esc}');
+    //경보등급 선택
+    // '경보 등급' 입력창(콤보박스)을 클릭하여 리스트를 펼칩니다.
+    cy.get('input[aria-label="경보 등급"]').filter(':visible').click({ force: true });
+    cy.wait(500);
+    // 펼쳐진 리스트 중에서 '심각'이라는 텍스트를 가진 항목을 찾아 '심각' 클릭합니다.
+    cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
+    cy.wait(500);
+    cy.get('body').type('{esc}');
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });

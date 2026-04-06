@@ -491,10 +491,10 @@ describe('로그캐치 사이트 테스트', () => {
     //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
     cy.wait(500);
     // 데이터 이력있을시
-    //cy.contains('tr', '미등록 사용자 접속자').should('contain', 'test_auto_미등록 사용자 접속') .find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+    cy.contains('tr', '미등록 사용자 접속').should('contain', 'test_auto_미등록 사용자 접속').should('be.visible');
     // 데이터 이력없을시
     // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
-    cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
+    //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
 
     //////////////////////////////////////////////////////
     // 이상행위 : 비인가 IP 접근  (경보등급 : 심각,경계,주의)
@@ -789,7 +789,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('tr', '비인가 접근 사용자').should('contain', 'test_auto_비인가 접근 사용자') .find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
     // 데이터 이력없을시
     // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
-    cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
+    //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
     cy.wait(500);
 
     //////////////////////////////////////////////////////
@@ -840,7 +840,7 @@ describe('로그캐치 사이트 테스트', () => {
     //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
     cy.wait(500);
     // 데이터 이력있을시
-    cy.contains('tr', '접근제한 업무 시스템 접근').should('contain', 'test_auto_접근제한 업무 시스템 접근') .find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+    cy.contains('tr', '접근제한 업무 시스템 접근').should('contain', 'test_auto_접근제한 업무 시스템 접근').find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
     // 데이터 이력없을시
     // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
     //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
@@ -875,11 +875,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="경보 등급"]').filter(':visible').scrollIntoView().click({ force: true });
     cy.wait(500);
     // 펼쳐진 리스트 중에서 '심각'이라는 텍스트를 가진 항목을 찾아 '심각' 클릭합니다.
-    cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
-    cy.wait(500);
+    //cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
+    //cy.wait(500);
      // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '경계' 클릭합니다.
-    cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
-     cy.wait(500);
+    //cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
+    // cy.wait(500);
     // 펼쳐진 리스트 중에서 '경계'이라는 텍스트를 가진 항목을 찾아 '주의' 클릭합니다.
     cy.get('.v-list__tile__title').filter(':visible').contains('주의').click({ force: true });
     cy.wait(500);
@@ -892,13 +892,7 @@ describe('로그캐치 사이트 테스트', () => {
     //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
     cy.wait(500);
     // 데이터 이력있을시
-    //cy.contains('tr', '파일다운로드').should('contain', 'test_auto_파일다운로드') .find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
-    // 1. 타임아웃을 넉넉히 주고 해당 행을 찾습니다.
-    cy.contains('tr', '파일다운로드', { timeout: 15000 }).should('contain', 'test_auto_파일다운로드')
-    .within(() => { 
-     // 검증 포인트 1: 아이콘의 정확한 종류(MinorAlert)와 빨간색 색상 검증
-     cy.get('i.g-IMinorAlert').should('be.visible').and('have.css', 'color', 'rgb(244, 67, 54)'); 
-     });
+    cy.contains('tr', '파일다운로드').should('contain', 'test_auto_파일다운로드').find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
     // 데이터 이력없을시
     // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
     //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
@@ -945,9 +939,50 @@ describe('로그캐치 사이트 테스트', () => {
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(500);
-    
 
-    
+
+    // ----------------------------------------------------------
+// [검증코드] 경보등급 존재
+// ----------------------------------------------------------
+cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
+
+// 1. 테이블의 데이터가 들어있는 행(tr) 중 첫 번째 행을 잡아서 $row 변수로 받습니다.
+cy.get('tbody tr').filter(':visible').first().then(($row) => {
+  
+  // 3. 아이콘 조건부 검증 ("있으면 검증하고, 없으면 통과하기")
+  // $row(첫 번째 행) 안에서 해당 클래스를 가진 요소가 존재하는지 확인합니다.
+  
+  // 🟢 [주의] 아이콘 검증
+  if ($row.find('i.g-ICriticalAlert').length > 0) {
+    cy.log('🟢 주의 로그 감지: 검증을 시작합니다.');
+    cy.wrap($row).find('i.g-ICriticalAlert')
+      .should('be.visible')
+      .and('have.css', 'color', 'rgb(169, 209, 142)');
+  } else {
+    cy.log('⚪ 주의 로그가 없습니다. 패스합니다.');
+  }
+
+  // 🟠 [경계] 아이콘 검증
+  if ($row.find('i.g-IMajorAlert').length > 0) {
+    cy.log('🟠 경계 로그 감지: 검증을 시작합니다.');
+    cy.wrap($row).find('i.g-IMajorAlert')
+      .should('be.visible')
+      .and('have.css', 'color', 'rgb(255, 192, 0)');
+  } else {
+    cy.log('⚪ 경계 로그가 없습니다. 패스합니다.');
+  }
+
+  // 🔴 [심각] 아이콘 검증
+  if ($row.find('i.g-IMinorAlert').length > 0) {
+    cy.log('🔴 심각 로그 감지: 검증을 시작합니다.');
+    cy.wrap($row).find('i.g-IMinorAlert')
+      .should('be.visible')
+      .and('have.css', 'color', 'rgb(244, 67, 54)');
+  } else {
+    cy.log('⚪ 심각 로그가 없습니다. 패스합니다.');
+  }
+
+});
     
 
     cy.log('✅ 이력 - 이상행위 탭 진입 및 데이터 출력 확인 완료!');

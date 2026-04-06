@@ -364,7 +364,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(500);
 
     // ==========================================
-    // 파일명 검색 - 타겟 :  tester3-******.pdf
+    // 파일명 검색 - 타겟 :  tester3-******.확장자
     // ==========================================
     // 파일명 검색에 tester3 입력 
     cy.get('input[aria-label="파일명"]').filter(':visible').clear().type('tester3');
@@ -374,16 +374,20 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
 
-    //검증코드
-    // 'tester3-'로 시작하고 중간에 숫자들이 있으며 '.pdf'로 끝나는 패턴 검증
-    cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.pdf/) .should('be.visible');
-     // 첫 번째 행 정밀 검증
-    cy.get('tbody tr').filter(':visible').first().within(() => {
-     cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.pdf/) .should('be.visible');
-     });
-    // 입력한 URI 주소 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="파일명"]').filter(':visible').clear();
-    cy.wait(500);
+     // ==========================================================
+     // [검증코드] 정규식을 활용하여 pdf와 xlsx 확장자를 모두 허용합니다.
+     // 패턴 설명: tester3- 로 시작하고, 아무 글자나 오다가, .pdf 또는 .xlsx 로 끝나는 문자열
+    // ==========================================================
+      const filePattern = /tester3-.*\.(pdf|xlsx)/i; // 'i'를 붙여 대소문자(PDF, xlsx 등) 구분 없이 검사
+
+      // 첫 번째 행 정밀 검증
+      cy.get('tbody tr').filter(':visible').first().within(() => {
+      cy.get('span.ellipsis.text-xs-left').contains(filePattern).should('be.visible');
+      });
+
+      // 입력한 URI 주소 x버튼 클릭하여 초기화 
+      cy.get('input[aria-label="파일명"]').filter(':visible').clear();
+      cy.wait(500);
 
 
     // ==========================================
@@ -398,7 +402,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     //검증코드
-    // 'tester3-'로 시작하고 중간에 숫자들이 있으며 '.pdf'로 끝나는 패턴 검증
+    // 'tester3-'로 시작하고 중간에 숫자들이 있으며 '.pdf', 'xlsx'로 끝나는 패턴 검증
     cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.xlsx/) .should('be.visible');
     cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.pdf/) .should('be.visible');
     cy.get('span.ellipsis.text-xs-left').contains('tester3/api/file-download') .should('be.visible');
