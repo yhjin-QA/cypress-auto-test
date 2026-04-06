@@ -436,27 +436,32 @@ jobs:
               try {
                   $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
                   
-                  # 💡 [보완 1] 최종 통계 자체가 실패 0이면 이 파일은 볼 것도 없이 통과 (Flaky 완벽 차단)
-                  if ($content.stats -and [int]$content.stats.failures -gt 0) {
-                      
-                      $actualFailedFileFound = $false
+                  # 💡 [방어 1] 최종 통계 자체가 실패 0이면 재시도로 살아난 것이므로 즉시 통과
+                  if ($content.stats -and [int]$content.stats.failures -eq 0) {
+                      continue
+                  }
+
+                  # 💡 [방어 2] 최종 실패가 있는 파일만 분석
+                  if ([int]$content.stats.failures -gt 0) {
+                      $fileHasActualFailure = $false
                       
                       foreach ($result in $content.results) {
-                          # 💡 [보완 2] 개별 테스트 단위가 아니라, 리포트에서 실패한 '테스트 수'를 직접 체크
-                          # Mochawesome은 재시도 성공 시 최종 실패 카운트를 0으로 밀어버립니다.
-                          if ($result.failures.Count -gt 0 -or $result.tests.Where({$_.state -eq "failed"}).Count -gt 0) {
-                              $actualFailedFileFound = $true
-                          }
+                          # 테스트 스위트 내부를 뒤져서 '최종 상태'가 failed인 것이 있는지 확인
+                          # (Cypress Retry 시 최종 실패한 것만 state가 'failed'로 남습니다)
+                          $actualFails = $result.suites.tests | Where-Object { $_.state -eq "failed" }
                           
-                          if ($actualFailedFileFound) {
+                          if ($actualFails -or $result.tests | Where-Object { $_.state -eq "failed" }) {
+                              $fileHasActualFailure = $true
+                          }
+
+                          if ($fileHasActualFailure) {
                               $isActuallyFailed = $true
-                              # 전체 파일 실패 카운트는 리포트 통계값을 신뢰
                               $totalFailCount += [int]$content.stats.failures
                               
                               $fName = if ($result.file) { $result.file } else { $result.fullFile }
                               if ($fName) {
                                   $failedSpecNames += (Split-Path ($fName -replace '\\', '/') -Leaf)
-                                  break # 한 파일에서 실패 하나 찾았으면 다음 파일로
+                                  break # 한 파일에서 실패 확정 시 다음 파일로
                               }
                           }
                       }

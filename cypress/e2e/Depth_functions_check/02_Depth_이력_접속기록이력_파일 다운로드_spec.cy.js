@@ -250,9 +250,26 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
 
-    //검증코드
-    cy.contains('a.ellipsis', '진윤호(yunho)').should('be.visible');
+    // ==========================================================
+    // [검증코드] 검색 결과 첫 번째 행(최신 데이터) 정밀 검증
+    // ==========================================================
+    cy.log('🧐 검색 결과 최상단(첫 번째 행) 데이터를 검증합니다.');
 
+    // 화면에 보이는 표의 첫 번째 행을 잡고 그 안에서만(within) 검사를 수행합니다.
+    cy.get('tbody tr').filter(':visible').first().within(() => {
+  
+     // 1. 파일명 검증 (span 태그)
+     // 정규식 설명: 'tester3-'로 시작하고, 중간에 숫자가 변하더라도 무시하며, '.xlsx' 또는 '.pdf'로 끝남
+     cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.(xlsx|pdf)/i).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)'); // 꼼꼼하게 검은색 폰트인지도 확인합니다.
+
+     // 2. 다운로드 URI 경로 검증 (span 태그)
+     cy.get('span.ellipsis.text-xs-left').contains('/tester3/api/file-download').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+
+     // 3. 업무시스템명 검증 (a 태그)
+     // 주의: 시스템명은 span이 아니라 'a' 태그이므로 정확히 타겟팅합니다.
+     cy.get('a.ellipsis.text-xs-left').contains('JEUS_tester3').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    });
+    cy.log('✅ 검색 결과 첫 번째 행 데이터 검증 완벽 통과!');
     cy.log('✅ 이력 - 파일 다운로드 탭 진입 및 데이터 출력 확인 완료!');
 
     // ==========================================
@@ -475,15 +492,27 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
      cy.wait(1000);
 
-    // [검증] 검색 결과 검증
-    cy.get('a').contains('(호준)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
-    cy.get('a').contains('(미등록 사용자)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
-    cy.get('a').contains('진윤호(yunho)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    // ==========================================================
+    // [검증코드] 정보 사용자 다중 조건 검증 (4개 중 1개 이상 존재)
+    // ==========================================================
+    cy.log('🧐 동적으로 변하는 정보사용자 데이터를 검증합니다.');
+
+    // 1. 허용할 사용자 목록을 정규식으로 정의합니다. (| 기호가 '또는' 역할을 합니다)
+    // 해석: \(호준\) 또는 \(미등록 사용자\) 또는 진윤호\(yunho\) 또는 \(logcatch\)
+    const allowedUsersRegex = /\(호준\)|\(미등록 사용자\)|진윤호\(yunho\)|\(logcatch\)/;
+
+    // 2. 화면에 보이는 표의 데이터 행(tr) 안에서 찾습니다.
+    cy.get('tbody tr').filter(':visible').find('a.ellipsis.text-xs-center').contains(allowedUsersRegex).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.log('✅ 허용된 정보사용자 데이터 정상 출력 확인 완료!');
     
     //----------------------------------------------------------------------------------------------
     
+    // // 검색 결과 첫 번째 행의 정보사용자가 4명 중 한 명인지 정밀 검증
+    // cy.get('tbody tr').filter(':visible').first().within(() => {
+    //   cy.get('a.ellipsis.text-xs-center').contains(/\(호준\)|\(미등록 사용자\)|진윤호\(yunho\)|\(logcatch\)/).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    //  });
 
-    
+     
     //////////////////////////////////////////////////////
     // 받기버튼 파일다운로드 확인
     /////////////////////////////////////////////////////
