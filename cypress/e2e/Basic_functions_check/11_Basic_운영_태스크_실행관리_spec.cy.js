@@ -125,7 +125,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.v-btn__content', 'MASTER 태스크 전체 시작').should('be.visible');
     cy.contains('.v-btn__content', 'MASTER 태스크 전체 정지').should('be.visible');
     
-    // 기능확인 
+      // 기능확인 
     // ==========================================
     // 실행관리 : 전체 프로세스 정지 및 시작 확인 
     // ==========================================
@@ -140,24 +140,16 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('p', 'Task 종료하시겠습니까?').should('be.visible');
     // 'MASTER 태스크 전체 종료 확인 알림창 확인 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
-    // 대기
-    cy.wait(90000);
+    
 
     //프로세스 정지확인 검증(프로세스 정지상태라면 시작문구로 버튼 변경되어있는상태 ) 
     cy.contains('p', 'Log Collector').should('be.visible');
-    cy.contains('p', 'Log Collector').closest('.v-card').contains('.v-btn__content', '시작').should('be.visible');
-
-    cy.contains('p', 'Discriminator').should('be.visible');
-    cy.contains('p', 'Discriminator').closest('.v-card').contains('.v-btn__content', '시작').should('be.visible');
-
-    cy.contains('p', 'Rule Analyzer').should('be.visible');
-    cy.contains('p', 'Rule Analyzer').closest('.v-card').contains('.v-btn__content', '시작').should('be.visible');
-
-    cy.contains('p', 'Data File Cleaner').should('be.visible');
-    cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '시작').should('be.visible');
-    
-    cy.contains('p', 'Statistics').should('be.visible');
-    cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '시작').should('be.visible');
+   // ✅ 개선: '시작' 버튼으로 바뀔 때까지 최대 90초 대기 (바뀌면 즉시 통과)
+    cy.contains('p', 'Log Collector').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Discriminator').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Rule Analyzer').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
 
 
     // 'MASTER 태스크 전체 시작' 버튼 클릭
@@ -170,25 +162,14 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
     // 'MASTER 태스크 전체 종료 확인 알림창 확인 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
-    // 대기
-    cy.wait(90000);
     
     
     //프로세스 실행확인 검증코드 (프로세스 실행상태라면  정지 문구로 버튼 변경되어있는상태 ) 
-    cy.contains('p', 'Log Collector').should('be.visible');
-    cy.contains('p', 'Log Collector').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
-
-    cy.contains('p', 'Discriminator').should('be.visible');
-    cy.contains('p', 'Discriminator').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
-
-    cy.contains('p', 'Rule Analyzer').should('be.visible');
-    cy.contains('p', 'Rule Analyzer').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
-
-    cy.contains('p', 'Data File Cleaner').should('be.visible');
-    cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
-    
-    cy.contains('p', 'Statistics').should('be.visible');
-    cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
+    cy.contains('p', 'Log Collector').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Discriminator').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Rule Analyzer').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
 
    /* 
     // =============================================
