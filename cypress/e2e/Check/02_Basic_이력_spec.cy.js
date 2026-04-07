@@ -363,8 +363,8 @@ describe('로그캐치 사이트 테스트', () => {
     // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
-    // 2. '2월'이라는 글자를 찾아 클릭합니다.
-     cy.get('.v-date-picker-table--month').filter(':visible').contains('2월').click({ force: true });
+    // 2. '3월'이라는 글자를 찾아 클릭합니다.
+     cy.get('.v-date-picker-table--month').filter(':visible').contains('3월').click({ force: true });
     // 달력 20일 클릭
     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '20일').closest('.v-btn').click({ force: true });
     //달력창 닫기
@@ -376,27 +376,36 @@ describe('로그캐치 사이트 테스트', () => {
 
 
     // 검색결과 2026-02-20 선택하기
-    cy.contains('.v-select__selection', '2026-02-20').filter(':visible').closest('.v-input').find('.v-icon').click({ force: true });
+    cy.contains('.v-select__selection', '2026-03-20').filter(':visible').closest('.v-input').find('.v-icon').click({ force: true });
     cy.wait(1000);
 
     // 1. 먼저 드롭다운 박스를 클릭해서 리스트를 엽니다.
-    cy.contains('.v-select__selection', '2026-02-20').click({ force: true });
+    cy.contains('.v-select__selection', '2026-03-20').click({ force: true });
     cy.wait(500); // 메뉴가 열리는 애니메이션 대기
 
-    // 2. 열린 메뉴창(.v-menu__content) 내부를 강제로 스크롤합니다.
-    // v-menu__content 자체가 스크롤을 가지고 있으므로 해당 요소를 scrollTo 합니다.
-    cy.get('.v-menu__content:visible')
-    .first() // 혹시 여러개 떠있을 경우를 대비해 첫번째 보이는 창 선택
-    .scrollTo('bottom', { duration: 1000 }) // 1초 동안 부드럽게 끝까지 내리기
-    .wait(500); // 데이터가 로드되거나 렌더링될 시간 대기
+    cy.log('⏬ 가상 스크롤 영역을 끝까지 내리기 위해 연속 스크롤을 시도합니다.');
 
-    // 3. 이제 리스트 내에서 3월 1일을 찾아 클릭합니다.
-    cy.get('.v-menu__content:visible').contains('.v-list__tile__title, .v-list-item__title', '2026-03-18').click({ force: true });
-    
-    
+    // 1. 현재 열려있는 메뉴창을 잡아서 별명(dropdown)을 붙여줍니다. (코드 길이 단축)
+    cy.get('.v-menu__content:visible').first().as('dropdown');
+
+    // 2. 첫 번째 스크롤 (여기서 멈칫하면서 다음 데이터가 로딩됩니다)
+    cy.get('@dropdown').scrollTo('bottom', { duration: 500 });
+    cy.wait(500); 
+
+    // 3. 두 번째 스크롤 (새로 늘어난 영역의 밑바닥으로 다시 내립니다)
+    cy.get('@dropdown').scrollTo('bottom', { duration: 500 });
+    cy.wait(500);
+
+     // (만약 데이터가 엄청 많다면 이 스크롤 동작을 한 번 더 복사해서 넣어주세요!)
+     // cy.get('@dropdown').scrollTo('bottom', { duration: 500 });
+     // cy.wait(500);
+
+    // 3. 일별 리스트에서 검출이력이 있는 날짜로 클릭합니다. 
+    cy.get('.v-menu__content:visible').contains('.v-list__tile__title, .v-list-item__title', '2026-04-06').click({ force: true });
     cy.wait(1000);
-    // 선택 후, 입력창(.v-select__selection)에 '2026-03-18'가 표시되는지 검증
-    cy.contains('.v-select__selection', '2026-03-18').should('be.visible');
+    
+    // 선택 후, 입력창(.v-select__selection)에 '2026-03-18'가 표시되는지 검증코드
+    cy.contains('.v-select__selection', '2026-04-06').should('be.visible');
     cy.wait(1000);
 
   
@@ -494,15 +503,14 @@ describe('로그캐치 사이트 테스트', () => {
     //개인정보 유형별 상세내역 포함 클릭 
     cy.get('.v-dialog--active').contains('label', '개인정보 유형별 상세 내역 포함').click({ force: true });
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-     /*  이슈 등록해둠 (37313) 
+    
     // 2. [수정] be.visible 대신 exist를 먼저 사용하고, 텍스트 확인을 결합합니다.
     //cy.contains('엑셀 다운로드 요청에 성공했습니다', { timeout: 10000 }).should('exist'); // 찰나의 순간이라도 DOM에 나타나면 성공 처리
-    //cy.contains(/엑셀.*요청.*성공/, { timeout: 30000 }).should('exist');
+    cy.contains(/엑셀.*요청.*성공/, { timeout: 30000 }).should('exist');
 
     // 3. 사라지는 것 확인
     cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
-    
-    /*  이슈 등록해둠 (37313) 
+     
     //실제 로컬 폴더 다운로드 시간 주기
     cy.wait(7000);
     
@@ -524,7 +532,7 @@ describe('로그캐치 사이트 테스트', () => {
        expect(myFile).to.not.be.undefined; 
      });
 
-     */ 
+    
     cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
 
 
