@@ -33,6 +33,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          clean: true       # 이전 작업 찌꺼기 강제 삭제
+          fetch-depth: 1    # 최근 커밋 하나만 가져와서 속도 향상 및 네트워크 부하 감소
 
         # 👇 [추가] 이전 테스트 결과 찌꺼기(HTML 등) 삭제
       - name: Clean Previous Reports
@@ -275,6 +278,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          clean: true       # 이전 작업 찌꺼기 강제 삭제
+          fetch-depth: 1    # 최근 커밋 하나만 가져와서 속도 향상 및 네트워크 부하 감소
 
       - name: Cypress Run (Restart Task Spec)
         run: |

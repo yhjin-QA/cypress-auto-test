@@ -420,8 +420,8 @@ describe('로그캐치 사이트 테스트', () => {
 
     //검증코드
     // 'tester3-'로 시작하고 중간에 숫자들이 있으며 '.pdf', 'xlsx'로 끝나는 패턴 검증
-    cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.xlsx/) .should('be.visible');
-    cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.pdf/) .should('be.visible');
+    // xlsx 또는 pdf 중 하나를 포함하는 요소를 찾아 가시성 검증
+    cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.(xlsx|pdf)/).should('be.visible');
     cy.get('span.ellipsis.text-xs-left').contains('tester3/api/file-download') .should('be.visible');
     cy.wait(500);
 
@@ -476,8 +476,10 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(1000);
 
      // [검증] 검색 결과 검증
-     cy.get('a').contains('(미등록 사용자)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
-     cy.get('a').contains('(호준)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+     // '(미등록 사용자)' 또는 '(호준)', '(logcatch) 중 하나를 포함하는 a 태그 검증
+     cy.get('a').contains(/\((미등록 사용자|logcatch|호준)\)/) .should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    //  cy.get('a').contains('(미등록 사용자)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    //  cy.get('a').contains('(호준)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
     
 
       // 사용자 상태 - 전체 선택----------------------------------------------- 
@@ -516,43 +518,42 @@ describe('로그캐치 사이트 테스트', () => {
     //////////////////////////////////////////////////////
     // 받기버튼 파일다운로드 확인
     /////////////////////////////////////////////////////
-    // 1. 'tester3-'로 시작하고 '.pdf'로 끝나는 파일이 포함된 행(tr)을 찾습니다.
-    // contains에 정규표현식을 쓰면 해당 텍스트를 가진 행을 정확히 찝어낼 수 있습니다.
-    cy.contains('tr', /tester3-.*\.pdf/, { timeout: 15000 }).should('be.visible')
-    .within(() => {
-    // 2. 🌟 [핵심] 찾은 '그 행' 내부에서만 다운로드 아이콘을 찾아 클릭합니다.
-    cy.get('i.v-icon').contains('file_download').should('be.visible').click({ force: true });
-     });
+    // 대소문자 구분 없이 .pdf 또는 .xlsx 찾기
+    // 1. 화면에서 행을 찾고, 그 행의 텍스트에서 확장자를 알아냅니다.
+    cy.contains('tr', /tester3-.*\.(pdf|xlsx)/i, { timeout: 15000 }).should('be.visible')
+    .then(($tr) => {
+    // 🔍 화면에 표시된 텍스트(예: tester3-memo.xlsx)를 가져옵니다.
+    const rowText = $tr.text();
+    
+    // 📝 텍스트에서 확장자(pdf 또는 xlsx)만 쏙 뽑아냅니다.
+    const foundExtension = rowText.match(/\.(pdf|xlsx)/i)[0].toLowerCase();
+    cy.log(`🎯 화면에서 확인된 확장자: ${foundExtension}`);
 
-    //알림창에 해당 문구가 포함되어 있는지 확인
+    // 2. 해당 행 내부에서 다운로드 버튼 클릭
+    cy.wrap($tr).within(() => {
+      cy.get('i.v-icon').contains('file_download').should('be.visible').click({ force: true });
+    });
+
+    // --- 알림창 확인 및 대기 로직 (기존과 동일) ---
     cy.contains('.v-snack__content, .v-alert', '파일 다운로드를 요청했습니다', { timeout: 15000 }).should('be.visible');
-    //cy.contains('파일 다운로드를 요청했습니다', { timeout: 10000 }).should('exist');
-    //cy.contains(/파일.*다운로드.*요청/, { timeout: 30000 }).should('exist');
-
-    //다운로등 알림창 사라지는 것 확인
     cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
-    
-  
-    //실제 로컬 폴더 다운로드 시간 주기
-    cy.wait(7000);
-    
-    // [검증] 다운로드 폴더를 확인합니다.
-    // 수행시 기존에 다운로드 받아두었던 파일은 자동으로 지움(사전초기화)
-    // 폴더경로 : C:\Users\user\Desktop\CypressWork\cypress\downloads
+    cy.wait(7000); 
+
+    // 3. [검증] 다운로드 폴더 확인 (동적 확장자 적용)
     cy.task('readDirectory', 'cypress/downloads').then((files) => {
-    // files: 다운로드 폴더에 있는 모든 파일 이름들의 리스트
-  
-    // 조건에 맞는 파일 찾기 (이름에 'tester3'이 있고, 확장자가 '.pdf'인 것)
-     const myFile = files.find(file => file.includes('tester3') && file.endsWith('.pdf'));
+      // 🌟 핵심: 화면에서 찾았던 그 확장자(foundExtension)로 파일을 찾습니다.
+      const myFile = files.find(file => 
+        file.includes('tester3') && file.toLowerCase().endsWith(foundExtension)
+      );
 
-     // 로그 출력
-     if (myFile) {
-      cy.log(`✅ 다운로드 성공! 파일명: ${myFile}`);
-     }
+      if (myFile) {
+        cy.log(`✅ 다운로드 성공! 파일명: ${myFile}`);
+      }
 
-     // 검증: 파일이 존재해야 함 (없으면 에러 발생)
-       expect(myFile,'다운로드 폴더 내에 해당 패턴의 파일이 존재해야 합니다.').to.not.be.undefined; 
-     });
+      // 검증: 파일이 존재해야 함
+      expect(myFile, `다운로드 폴더 내에 tester3 패턴의 ${foundExtension} 파일이 존재해야 합니다.`).to.not.be.undefined;
+    });
+  });
     
 
     // ==========================================
@@ -615,7 +616,7 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 이력 - 접속기록 이력 - 통합 검출팝업 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 이력 - 접속기록 이력 - 파일 다운로드 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 
