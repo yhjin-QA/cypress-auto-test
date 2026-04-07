@@ -6,10 +6,10 @@ env:
   TZ: Asia/Seoul
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '5 2 * * *'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '5 2 * * *'
   workflow_dispatch:
 
 jobs:
@@ -157,11 +157,17 @@ jobs:
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          Write-Host "📦 패키지 설치 시작 (node-ssh 포함)..."
+          # 🌟 기존 install 대신 ci를 사용하여 package.json에 명시된 버전을 정확히 설치합니다.
+          npm ci
           
-          npm install
+          Write-Host "🚀 Cypress 바이너리 확인 및 설치..."
+          npx cypress install 
+          
           # 👇 [필수] 'mochawesome'을 명시적으로 설치해야 합니다.
           npm install cy2 mochawesome mochawesome-merge mochawesome-report-generator --save-dev
-          npx cypress install
+        
 
           # 👇 [수정] 복잡한 옵션은 다 빼고, config 파일 설정을 따르도록 단순화했습니다.
           cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Full_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8

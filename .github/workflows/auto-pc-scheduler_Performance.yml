@@ -54,6 +54,13 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           Write-Host "🚀 [Phase 1] 쾌적망(Fast) 환경 성능 측정을 시작합니다. (01, 02 파일 대상)"
+
+          Write-Host "📦 패키지 설치 시작 (node-ssh 포함)..."
+          # 🌟 기존 install 대신 ci를 사용하여 package.json에 명시된 버전을 정확히 설치합니다.
+          npm ci
+          
+          Write-Host "🚀 Cypress 바이너리 확인 및 설치..."
+          npx cypress install 
           
           # 👇 [핵심] 01, 02 파일만 골라서 쾌적망 그룹으로 병렬 실행합니다.
           cmd /c "chcp 65001 & npx cy2 run --record --spec `"cypress/e2e/Performance`" --browser chrome --parallel --group `"Performance-Fast`" --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Fast 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
