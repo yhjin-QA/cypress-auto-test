@@ -278,9 +278,11 @@ jobs:
           $ErrorActionPreference = "Continue" 
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-
-          npm install --no-audit  
+          
+          # 🌟 [수정 포인트 1] 깔끔하게 다시 설치하도록 강제합니다.
+          npm ci  # 또는 npm install (package.json에 적힌 node-ssh를 여기서 설치함)
           npx cypress install
+          npm install --no-audit  
 
           # 2. 💡 파일 존재 여부 체크 및 예외 처리 보완
           # 경로가 'cypress/e2e/Depth_functions_check' 인지 다시 한번 확인하세요.
