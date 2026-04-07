@@ -163,14 +163,18 @@ jobs:
           # 1. 인코딩 강제 설정 (한글 파일명 인식용)
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          Write-Host "📦 패키지 설치 시작 (node-ssh 포함)..."
+          # 🌟 기존 install 대신 ci를 사용하여 package.json에 명시된 버전을 정확히 설치합니다.
+          npm ci
+          
+          Write-Host "🚀 Cypress 바이너리 확인 및 설치..."
+          npx cypress install 
           
           # 2. 11번 파일을 찾아서 아예 삭제 ("*11_Depth*" 시작하는 파일들 이 러너 환경에서만 삭제됨 )
           Get-ChildItem -Path "cypress/e2e/Depth_functions_check" -Recurse | Where-Object { $_.Name -like "*11_Depth*" } | Remove-Item -Force
           Write-Host "✅ [Job 1] 운영 태스크 파일을 물리적으로 제거하여 실행에서 제외했습니다."
 
-          # 2.5 Cypress Binary 설치 (캐시 경로에 파일이 없을 경우 대비)
-          Write-Host "🚀 Cypress Binary 설치 확인 중..."
-          npx cypress install
 
           # 3. 실행
           cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Depth_functions_check/**/*.cy.js' --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth 2>&1" | Out-File -FilePath cypress.log -Encoding utf8
