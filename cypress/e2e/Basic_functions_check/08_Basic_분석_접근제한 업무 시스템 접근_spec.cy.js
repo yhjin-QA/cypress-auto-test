@@ -1854,7 +1854,6 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 그룹별 클릭하는 코드 
     cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    
     cy.wait(1000);
     // 그룹별중 총무,인사팀 클릭하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('총무팀').click({ force: true });
@@ -1864,7 +1863,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
-    // 접근 제한 업무시스템 등록-------
+    // 접근 제한 업무시스템 등록-----------------------------------------------------------------------------
     // 정책이름 입력하기
     cy.get('input[aria-label="정책 이름"]').filter(':visible').last().clear({ force: true }).type('test_업무시스템 제한', { force: true });
 

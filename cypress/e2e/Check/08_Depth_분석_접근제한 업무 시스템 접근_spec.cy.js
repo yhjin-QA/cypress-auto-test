@@ -136,11 +136,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
 
 
-   ///////////////////////////////////////////////
-    // 이상행위 정책 -  개인정보 유형 과다사용 
     ///////////////////////////////////////////////
-    cy.contains('.v-chip__content', '개인정보 유형 과다사용').should('be.visible').click({ force: true });
-    cy.contains('.c-headline', '개인정보 유형 과다사용 정책 목록').should('exist');
+    // 이상행위 정책 - 접근제한 업무 시스템 접근
+    ///////////////////////////////////////////////
+    cy.contains('.v-chip__content', '접근제한 업무 시스템 접근').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '접근제한 업무 시스템 접근 정책 목록').should('exist');
     // 표 문구열 확인
     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
@@ -150,17 +150,17 @@ describe('로그캐치 사이트 테스트', () => {
     // 기능 확인 -------------------------------------------------
     cy.log('🔍 기존 정책 존재 여부를 확인합니다.');
     
-    //예외처리  test_auto_개인정보 유형 과다사용 삭제 --------------------------
-    // 1. [조건부 삭제] test_auto_개인정보 유형 과다사용 정책이 있으면 삭제, 없으면 패스
+    //예외처리  test_auto_접근제한 업무 시스템 접근 삭제 --------------------------
+    // 1. [조건부 삭제] test_auto_접근제한 업무 시스템 접근 정책이 있으면 삭제, 없으면 패스
     cy.get('body').then(($body) => {
     // jQuery의 :contains 선택자를 이용해 해당 텍스트가 있는 <tr>을 찾습니다.
-    const hasPolicy = $body.find('tr:contains("test_auto_개인정보 유형 과다사용")').length > 0;
+    const hasPolicy = $body.find('tr:contains("test_auto_접근제한 업무 시스템 접근")').length > 0;
 
     if (hasPolicy) {
       cy.log('🗑️ 기존 정책이 발견되었습니다. 삭제를 진행합니다.');
     
       // 삭제 버튼(휴지통) 클릭
-      cy.contains('tr', 'test_auto_개인정보 유형 과다사용').find('.fa-trash').click({ force: true });
+      cy.contains('tr', 'test_auto_접근제한 업무 시스템 접근').find('.fa-trash').click({ force: true });
       cy.wait(500);
     
       // 삭제 확인 팝업에서 '확인' 클릭
@@ -168,7 +168,7 @@ describe('로그캐치 사이트 테스트', () => {
       cy.wait(1000); // 삭제 처리가 서버에 반영될 시간 대기
 
       // 추가한 정책 삭제 검증코드 
-      cy.contains('tr', 'test_auto_개인정보 유형 과다사용').should('not.exist'); 
+      cy.contains('tr', 'test_auto_접근제한 업무 시스템 접근').should('not.exist'); 
       cy.log('✅ 기존 정책 삭제 완료!');
     
     } else {
@@ -184,10 +184,10 @@ describe('로그캐치 사이트 테스트', () => {
            });
     cy.wait(1000);
 
-    // 개인정보 유형 과다사용 정책 추가화면 진입----------------------------------------
+    // 열람 제한 개인정보 접근 정책 추가화면 진입----------------------------------------
     // 정책이름 입력 
-    cy.get('input[aria-label="정책 이름"]').filter(':visible').clear({ force: true }).type('test_auto_개인정보 유형 과다사용', { force: true });
-
+    cy.get('input[aria-label="정책 이름"]').filter(':visible').first().clear({ force: true }).type('test_auto_접근제한 업무 시스템 접근', { force: true });
+    
     // 정책설정 부분
     // 정책 사용여부 토글 OFF-> ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
@@ -197,62 +197,60 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="소명 여부"]').check({ force: true });
     cy.wait(500); 
 
-    // 업무시스템 - 선택
-    cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    // 그룹별 클릭하는 코드 
+    cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
-    // 업무시스템중 '리눅스배송관리' 클릭하는 코드
-    cy.get('.v-menu__content').filter(':visible').contains('리눅스_배송관리').click({ force: true });
+    // 그룹별중 총무,인사팀 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').contains('품질관리팀').click({ force: true });
     cy.wait(500);
-    // 선택한 컨텍스트 메뉴 닫기
+    // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
-    // 경보등급 랜덤 선택하기 ---------------------------------------------------------------------
+    // 경보등급 랜덤 선택하기 
     cy.log(`🎯 경보등급 [${targetAlert.label}] 항목을 선택합니다.`);
     cy.contains('label', targetAlert.label).closest('div').find('.v-input--selection-controls__ripple').click({ force: true });
     cy.wait(500);
     
-    // 랜덤 선택된 상태 확인 검증코드 
+    // 랜덤 선택된 경보등급 상태 확인 검증코드 
     cy.contains('label', targetAlert.label).closest('div').find('input').should('have.attr', 'aria-checked', 'true');
     cy.wait(500);
 
-     // 개인 정보 유형 추가-----------------------------------------------------
-     // 패턴유형 클릭하여 드롭다운 목록 열기---------------------------
-     cy.get('input[aria-label="패턴 유형"]').filter(':visible').click({ force: true });
-     cy.wait(500);
-     // 패턴유형 드롭다운 메뉴에서 주민등록 번호 선택하기
-     cy.get('.v-menu__content').filter(':visible').contains('휴대전화번호').click({ force: true });
-     cy.wait(500);
+    // 접근 제한 업무시스템 등록-----------------------------------------------------------------------------
+    // 정책이름 입력하기
+    cy.get('input[aria-label="정책 이름"]').filter(':visible').last().clear({ force: true }).type('test_리눅스_배송관리 업무시스템 제한', { force: true });
 
-     // 선택한 컨텍스트 메뉴 닫기
-     cy.get('body').type('{esc}');
+    // 업무시스템 - 선택
+    //cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    cy.wait(500);
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').last().scrollIntoView({ block: 'center' }).parent().click({ force: true });
+    cy.wait(500);
+    // 업무시스템중 '리눅스_배송관리' 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').last().contains('리눅스_배송관리').click({ force: true });
+    cy.wait(500);
+
+     // 추가버튼 클릭
+    cy.contains('button', '추가').filter(':visible').scrollIntoView({ block: 'center' }).click({ force: true });
+    cy.wait(500);
+
+    //추가된 표안의 잘추가되어있는지 검증코드 
+    cy.contains('tr', 'test_리눅스_배송관리 업무시스템 제한').scrollIntoView({ block: 'center' }) 
+     .within(() => {
+      cy.contains('리눅스_배송관리').should('be.visible'); 
+    });
+     cy.wait(500); 
 
 
-     //패턴 유형 개수 기본값 0 지우고 1 입력하기
-     cy.get('input[aria-label="패턴 유형 개수"]').filter(':visible').type('{selectall}1', { force: true });
-     // 값이 '3'인지 확인
-     cy.get('input[aria-label="패턴 유형 개수"]').filter(':visible').first().should('have.value', '1');
-     cy.wait(500);
+    // 저장버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+    cy.wait(500);
 
-     // 패턴유형 '추가' 버튼 클릭
-     cy.contains('.v-btn__content', '추가').filter(':visible').click({ force: true });
-     cy.wait(1000);
 
-   
-     // 추가한 패턴유형 검증하는 코드
-     cy.contains('tr', '휴대전화번호').should('contain', '1');
-     cy.wait(500);
-
-     // 저장버튼 클릭 
-     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-     cy.wait(1000);
-    
-     //개인정보 유형 과다사용 정책 목록에 정책이 잘 추가되었는지 검증하는 코드 
-     cy.get('tbody').contains('tr', 'test_auto_개인정보 유형 과다사용').should('be.visible');
+    //test_auto_접근제한 업무 시스템 접근 목록에 정책이 잘 추가되었는지 검증하는 코드 
+    cy.get('tbody').contains('tr', 'test_auto_접근제한 업무 시스템 접근').should('be.visible');
 
 
 // ----------------------------------------------------------
-// [STEP 1] WAS 시스템 로그인 및 배송담당자 조회 타격 (이상행위 - 개인정보 유형 과다사용)
+// [STEP 1] WAS 시스템 로그인 및 배송담당자 김민지 조회 타격 (이상행위 - 열람제한 개인정보 접근)
 // ----------------------------------------------------------
 cy.log('🚀 WAS 사이트로 이동하여 새 세션을 발급받습니다.');
 
@@ -275,7 +273,7 @@ cy.origin('http://10.10.54.22:8080', { args: { targetName: '김민지' } }, ({ t
 
   // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
   cy.contains('a', '로그아웃', { timeout: 15000 }).should('be.visible');
-  cy.log('✅ 로그인 성공! 방금 생성된 세션 확보 완료!');
+  cy.log('✅ 로그인 성공! 방금 생성된 싱싱한 세션 확보 완료!');
 
   // 4. ✨ 핵심 로직: 쿠키 또는 URL에서 JSESSIONID를 안전하게 추출합니다.
   cy.url().then((currentUrl) => {
@@ -331,7 +329,6 @@ cy.origin('http://10.10.54.22:8080', { args: { targetName: '김민지' } }, ({ t
     });
   });
 });
-
 
 
 // ----------------------------------------------------------
@@ -481,11 +478,12 @@ cy.wait(500);
 // 1. 현재 화면에 열려있는 '진짜' 활성 상태의 팝업창만 타겟팅합니다.
 cy.get('.menuable__content__active').filter(':visible').within(() => {
   
-  // 2. 그 활성 팝업창 안에서 '파일다운로드'를 찾습니다.
+  // 2. 그 활성 팝업창 안에서 '접근제한 업무 시스템 접근'를 찾습니다.
   // 이제 엉뚱한 숨김 처리된 팝업의 글자를 찾을 위험이 0%가 됩니다.
-  cy.contains('.v-list__tile__title', '개인정보 유형 과다사용').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+  cy.contains('.v-list__tile__title', '접근제한 업무 시스템 접근').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
 });
-cy.wait(1000); // 클릭 후 메뉴가 닫힐 시간 대기
+
+cy.wait(500); // 클릭 후 메뉴가 닫힐 시간 대기
 // 선택 후 메뉴 닫기
 cy.get('body').type('{esc}');
     
@@ -503,8 +501,8 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
   
   // 2. 텍스트 검증
   cy.contains('진윤호(yunho)').should('be.visible');
-  cy.contains('개인정보 유형 과다사용').should('be.visible');
-  cy.contains('test_auto_개인정보 유형 과다사용').should('be.visible');
+  cy.contains('접근제한 업무 시스템 접근').should('be.visible');
+  cy.contains('test_auto_접근제한 업무 시스템 접근').should('be.visible');
   cy.contains('존재').should('be.visible');
   cy.contains('소명 대상').should('be.visible');
 
@@ -513,13 +511,13 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
   cy.get(targetAlert.iconClass).should('be.visible').and('have.css', 'color', targetAlert.color);
   });
 
-cy.log('🎉 분석 이상행위  개인정보 유형 과다사용 확인 및 랜덤 등급 검증 완료!');
+cy.log('🎉 분석 접근제한 업무 시스템 접근 확인 및 랜덤 등급 검증 완료!');
 
 
   // ==========================================
   // [FINAL] 테스트 종료 및 메뉴 닫기
   // ==========================================
-  cy.log('🎉 Depth 분석 - 개인정보 유형 과다사용 테스트 시나리오 성공적으로 완료!');
+  cy.log('🎉 Depth 분석- 접근제한 업무 시스템 접근 테스트 시나리오 성공적으로 완료!');
   cy.get('body').type('{esc}');
   cy.get('body').click('center', { force: true });
 
