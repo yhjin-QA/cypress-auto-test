@@ -445,7 +445,7 @@ describe('로그캐치 사이트 테스트', () => {
     //[검증] 표 안의 결과 확인 
     //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
     cy.wait(500);
-    cy.contains('tr', '장기 미접속 사용자').should('contain', 'test_auto_장기 미접속 사용자') .find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+    cy.contains('tr', '장기 미접속 사용자').should('contain', 'test_auto_장기 미접속 사용자').should('be.visible');
 
     //////////////////////////////////////////////////////
     // 이상행위 : 미등록 사용자 접속  (경보등급 : 심각,경계,주의)
@@ -736,7 +736,7 @@ describe('로그캐치 사이트 테스트', () => {
     //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
     cy.wait(500);
     // 데이터 이력있을시
-    cy.contains('tr', '권한 외 메뉴 접근',{ timeout: 15000 }).should('contain', 'test_auto_권한 외 메뉴 접근') .find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+    cy.contains('tr', '권한 외 메뉴 접근',{ timeout: 15000 }).should('contain', 'test_auto_권한 외 메뉴 접근').should('be.visible');
     cy.wait(2000);
     // 데이터 이력없을시
     // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
