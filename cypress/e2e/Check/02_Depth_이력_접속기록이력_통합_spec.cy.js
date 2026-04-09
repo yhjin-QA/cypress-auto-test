@@ -331,33 +331,44 @@ describe('로그캐치 사이트 테스트', () => {
     // [이력 > 통합 > 검출 팝업 > 오탐/확정 탭]
     ////////////////////////////////////////
     // Case1  전체 확정선택 -> 전체 오탐 선택 으로 변경하기 
-    // 표의 첫번째 행 처리 아이콘 클릭 (검출팝업)
-    // 1. 화면에 보이는 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+    // 1. 표의 첫 번째 행 처리 아이콘 클릭 (검출 팝업 오픈)
     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
-    cy.wait(1000);
+    cy.wait(1500); // 팝업 애니메이션 대기
 
-    // 메뉴설정 클릭
-    // 검출 팝업 '메뉴 설정'이라는 글자를 찾아 클릭
-    //cy.contains('span.sub-title-title', '메뉴 설정').should('be.visible').click({ force: true });
-    cy.get('i.v-icon.sub-title-icon.fa-angle-right').filter(':visible').first().click({ force: true });
-
-    // 메뉴명 자동등록 체크항목이 보일시 예외처리----------------------------------------
-    // 1. 화면 전체(body)를 잡고 내부를 검사합니다.
+    // 🌟 [핵심] 메뉴 설정이 닫혀있는 경우에만 클릭하는 조건문 로직
     cy.get('body').then(($body) => {
-  
-     // 2. '메뉴명 자동 등록'이라는 텍스트를 가진 label이 존재하는지 개수를 확인합니다.
-     if ($body.find('label:contains("메뉴명 자동 등록")').length > 0) {
-    cy.log('⚠️ "메뉴명 자동 등록" 항목이 화면에 보입니다. 체크 해제를 진행합니다.');
+     // 1. "메뉴명 자동 등록"이 화면에 보이는지 확인 (펼쳐진 상태인지 확인)
+     const isMenuOpened = $body.find('label:contains("메뉴명 자동 등록")').is(':visible');
+
+     if (!isMenuOpened) {
+     cy.log('📁 메뉴 설정이 닫혀 있습니다. 펼치기를 시도합니다.');
+      // 닫혀 있다면 '메뉴 설정' 클릭
+      cy.wrap($body).contains('label.clickable span', '메뉴 설정').click({ force: true });
     
-    // 3. 존재할 경우에만 기존 코드를 실행하여 체크를 해제합니다.
-    cy.wrap($body).contains('label', '메뉴명 자동 등록').closest('.v-input').find('input[type="checkbox"]').uncheck({ force: true });
-    cy.wait(500); // 상태 반영 대기
-    
-    } else {
-    // 4. 요소가 없으면 에러를 내지 않고 로그만 찍은 뒤 자연스럽게 다음 코드로 넘어갑니다.
-    cy.log('✅ "메뉴명 자동 등록" 항목이 화면에 없습니다. 무시하고 패스합니다!');
+      // 클릭 후 펼쳐질 때까지 대기
+      cy.contains('label', '메뉴명 자동 등록', { timeout: 10000 }).should('be.visible');
+     } else {
+       cy.log('📂 메뉴 설정이 이미 펼쳐져 있습니다. 클릭을 패스합니다.');
     }
     });
+
+  // --- 이후 체크 해제 로직 ---
+   cy.get('body').then(($body) => {
+    const autoRegLabel = $body.find('label:contains("메뉴명 자동 등록")');
+  
+    if (autoRegLabel.length > 0 && autoRegLabel.is(':visible')) {
+      cy.log('⚠️ "메뉴명 자동 등록" 체크 해제를 확인합니다.');
+    
+      cy.wrap(autoRegLabel).closest('.v-input').find('input[type="checkbox"]').then(($checkbox) => {
+        if ($checkbox.is(':checked')) {
+          cy.wrap($checkbox).uncheck({ force: true });
+          cy.log('✅ 체크 해제 완료');
+        } else {
+          cy.log('⚪ 이미 해제된 상태입니다.');
+        }
+      });
+    }
+   });
 
     // 'aria-label'이 '메뉴명'인 input 창을 찾아, 기존 글자를 모두 지우고 'depth_Test'를 입력합니다.
     // 메뉴설정 - 메뉴명 'depth_Test' 입력
