@@ -331,61 +331,53 @@ describe('로그캐치 사이트 테스트', () => {
     // [이력 > 통합 > 검출 팝업 > 오탐/확정 탭]
     ////////////////////////////////////////
     // Case1  전체 확정선택 -> 전체 오탐 선택 으로 변경하기 
-    // 1. 표의 첫 번째 행 처리 아이콘 클릭 (검출 팝업 오픈)
-    cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
-    cy.wait(1500); // 팝업 애니메이션 대기
+    // 1. 검출 팝업 오픈
+cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
+cy.wait(1500); 
 
-    // 🌟 [핵심] 메뉴 설정이 닫혀있는 경우에만 클릭하는 조건문 로직
-    cy.get('body').then(($body) => {
-     // 1. "메뉴명 자동 등록"이 화면에 보이는지 확인 (펼쳐진 상태인지 확인)
-     const isMenuOpened = $body.find('label:contains("메뉴명 자동 등록")').is(':visible');
+// 🌟 [개선된 메뉴 설정 제어]
+cy.get('body').then(($body) => {
+    // 1. 펼침/닫힘 판별 (화살표 아이콘이나 메뉴명 입력창 존재 여부로 확인)
+    const isClosed = $body.find('label.clickable i.fa-angle-right').length > 0;
+    const isMenuNameVisible = $body.find('input[aria-label="메뉴명"]').is(':visible');
 
-     if (!isMenuOpened) {
-     cy.log('📁 메뉴 설정이 닫혀 있습니다. 펼치기를 시도합니다.');
-      // 닫혀 있다면 '메뉴 설정' 클릭
-      cy.wrap($body).contains('label.clickable span', '메뉴 설정').click({ force: true });
-    
-      // 클릭 후 펼쳐질 때까지 대기
-      cy.contains('label', '메뉴명 자동 등록', { timeout: 10000 }).should('be.visible');
-     } else {
-       cy.log('📂 메뉴 설정이 이미 펼쳐져 있습니다. 클릭을 패스합니다.');
+    // 닫혀있고, 메뉴명 입력창도 안 보인다면 클릭해서 펼칩니다.
+    if (isClosed && !isMenuNameVisible) {
+        cy.log('📁 메뉴 설정이 닫혀 있어 펼칩니다.');
+        cy.wrap($body).contains('label.clickable span', '메뉴 설정').click({ force: true });
+        cy.wait(1000);
     }
-    });
 
-  // --- 이후 체크 해제 로직 ---
-   cy.get('body').then(($body) => {
-    const autoRegLabel = $body.find('label:contains("메뉴명 자동 등록")');
-  
-    if (autoRegLabel.length > 0 && autoRegLabel.is(':visible')) {
-      cy.log('⚠️ "메뉴명 자동 등록" 체크 해제를 확인합니다.');
-    
-      cy.wrap(autoRegLabel).closest('.v-input').find('input[type="checkbox"]').then(($checkbox) => {
-        if ($checkbox.is(':checked')) {
-          cy.wrap($checkbox).uncheck({ force: true });
-          cy.log('✅ 체크 해제 완료');
-        } else {
-          cy.log('⚪ 이미 해제된 상태입니다.');
+    // 2. 내부 상태 파악 및 동작
+    cy.get('body').then(($innerBody) => {
+        const autoRegLabel = $innerBody.find('label:contains("메뉴명 자동 등록")');
+
+        // [상황 1] 체크박스가 보임 = 체크 해제 후 이름 입력
+        if (autoRegLabel.length > 0 && autoRegLabel.is(':visible')) {
+            cy.log('📝 [Case 1] 자동 등록 해제 및 메뉴명 입력');
+            cy.wrap(autoRegLabel).closest('.v-input').find('input[type="checkbox"]').uncheck({ force: true });
+            
+            cy.get('input[aria-label="메뉴명"]')
+                .clear({ force: true })
+                .type(`Depth_Test_${formattedDate}`, { force: true });
+            cy.wait(500);
+        } 
+        // [상황 2] 이미 이름이 있음 = 바로 저장 (사용자님 의견 반영)
+        else {
+            cy.log('✅ [Case 2] 이미 메뉴명이 존재합니다. 바로 저장합니다.');
         }
-      });
-    }
-   });
 
-    // 'aria-label'이 '메뉴명'인 input 창을 찾아, 기존 글자를 모두 지우고 'depth_Test'를 입력합니다.
-    // 메뉴설정 - 메뉴명 'depth_Test' 입력
-    cy.get('input[aria-label="메뉴명"]').should('be.visible').clear().type(`Depth_Test_${formattedDate}`);
-    cy.wait(500);
+        // 3. 공통 저장 프로세스
+        cy.get('button.v-btn').filter(':visible').contains('저장').first().click({ force: true });
+        cy.contains('메뉴를 저장하시겠습니까?', { timeout: 10000 }).should('be.visible');
+        cy.contains('button.v-btn:visible', '확인').click({ force: true });
+        cy.wait(1000); 
+    });
+});
 
-    // 눈에 보이는 버튼들 중 '저장' 글자가 있는 것을 모두 찾은 뒤, '첫 번째' 버튼을 클릭합니다.
-    cy.get('button.v-btn').filter(':visible').contains('저장').first().click({ force: true });
-     cy.wait(500);
-    // 2. 알림창 팝업이 눈에 보일 때까지 대기 및 검증
-    cy.contains('메뉴를 저장하시겠습니까?').should('be.visible');
-    cy.wait(500); // 팝업 애니메이션 대기
-    // 3. 알림창 안의 '확인' 버튼을 찾아 클릭!
-    cy.contains('button.v-btn:visible', '확인').click({ force: true });
-    cy.wait(500);
 
-    //오탐확정
+   
+    //오탐확정----------------------------------------------------------------------------------------------
     // 확정상태로 체크된 상태로 시작
     // '전체 확정 선택' 글자가 있는 버튼을 찾아 강제 클릭합니다.
     cy.contains('button.v-btn:visible', '전체 확정 선택').should('be.visible').click({ force: true });
