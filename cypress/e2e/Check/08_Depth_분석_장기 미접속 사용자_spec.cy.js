@@ -239,7 +239,7 @@ describe('로그캐치 사이트 테스트', () => {
 
 
 // ----------------------------------------------------------
-// [STEP 1] WAS 시스템 로그인 및 배송담당자 김민지 조회 타격 (이상행위 - 열람제한 개인정보 접근)
+// [STEP 1] WAS 시스템 로그인 및 상품목록 조회 타격
 // ----------------------------------------------------------
 cy.log('🚀 WAS 사이트로 이동하여 새 세션을 발급받습니다.');
 
@@ -251,14 +251,13 @@ cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', {
   }
 });
 
-cy.origin('http://10.10.54.22:8080', { args: { targetName: '김민지' } }, ({ targetName }) => {
+cy.origin('http://10.10.54.22:8080', () => {
   Cypress.on('uncaught:exception', () => false);
 
   // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
   cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
   cy.visit('/uat/uia/egovLoginUsr.do');
-  //  변잔수 ID로 로그인
-  cy.get('#id').should('be.visible').clear().type('KtqeIB85');
+  cy.get('#id').should('be.visible').clear().type('yunho');
   cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
 
   // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
@@ -295,7 +294,7 @@ cy.origin('http://10.10.54.22:8080', { args: { targetName: '김민지' } }, ({ t
       // 5. 추출한 새 세션 ID를 헤더에 꽂아서 API 타격!
       cy.request({
         method: 'POST',
-        url: '/cop/logcatch/selectDeliveryList.do',
+        url: '/cop/logcatch/selectProductList.do',
         form: true,
         headers: {
           'Cookie': `JSESSIONID=${freshSessionId}`, 
@@ -303,22 +302,18 @@ cy.origin('http://10.10.54.22:8080', { args: { targetName: '김민지' } }, ({ t
           'Referer': 'http://10.10.54.22:8080/uat/uia/actionMain.do'
         },
         body: { 
-          menuNo: '32',
-          pageIndex: 1,  // 🔍 수정: pageindex -> pageIndex (대문자 I)
-          searchCnd: '0', // 🔍 추가 권장: 이미지에 포함된 기본 파라미터들
-          searchWrd: targetName, // 🌟 여기에 특정 사용자 이름 입력
-          bbsId: '',      // 🔍 추가 권장
-          trgetId: ''     // 🔍 추가 권장
+          menuNo: '11',
+          link : ''
         }
       }).then((response) => {
         // 6. 정상 응답 검증 (200 OK)
         expect(response.status).to.eq(200);
         cy.log('🎉 매번 새로운 세션으로 과다조회 자동 타격 성공!');
-        cy.log(`🎯 특정 사용자 [${targetName}]으로 배송 담당자 조회 타격 완료!`);
       });
     });
   });
 });
+
 
 
 // ----------------------------------------------------------

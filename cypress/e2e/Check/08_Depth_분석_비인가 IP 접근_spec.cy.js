@@ -248,7 +248,14 @@ describe('로그캐치 사이트 테스트', () => {
     // 3. 넷마스크 입력
     cy.get('input[aria-label="넷마스크"]').filter(':visible').clear({ force: true }).type('255.255.0.0');
     cy.wait(500);
-    // 4. 우측 끝 '추가' 버튼 클릭
+
+    // 허용/비허용' 라벨 옆의 버튼을 클릭 (ON -> OFF)
+    cy.get('input[aria-label="허용/비허용"]').uncheck({ force: true });
+    // [검증] aria-checked 속성이 'false'(꺼짐)로 변했는지 확인
+    cy.get('input[aria-label="허용/비허용"]').should('have.attr', 'aria-checked', 'false');
+
+
+    // 우측 끝 '추가' 버튼 클릭
     cy.contains('button', '추가').filter(':visible').click({ force: true });
     cy.wait(500);
 
