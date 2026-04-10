@@ -443,39 +443,44 @@ jobs:
 
           Write-Host "============= [🔍 데이터 정밀 분석 시작 (Flaky 완벽 방어 버전)] ============="
 
-          # [Step 1] 개별 JSON 리포트 전수 조사 
+          # [Step 1] 개별 JSON 리포트 전수 조사 (수정 버전)
           $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "merged_report.json" }
           
           foreach ($file in $jsonFiles) {
               try {
                   $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
                   
-                  # 💡 [방어 1] 최종 통계 자체가 실패 0이면 재시도로 살아난 것이므로 즉시 통과
+                  # 💡 [핵심 보완 1] 파일 전체 통계상 실패가 0이면, 재시도로 성공한 파일이므로 무조건 통과(Skip)
                   if ($content.stats -and [int]$content.stats.failures -eq 0) {
                       continue
                   }
 
-                  # 💡 [방어 2] 최종 실패가 있는 파일만 분석
+                  # 💡 [핵심 보완 2] 실패가 있다고 기록된 파일만 정밀 분석
                   if ([int]$content.stats.failures -gt 0) {
                       $fileHasActualFailure = $false
                       
                       foreach ($result in $content.results) {
-                          # 테스트 스위트 내부를 뒤져서 '최종 상태'가 failed인 것이 있는지 확인
-                          # (Cypress Retry 시 최종 실패한 것만 state가 'failed'로 남습니다)
-                          $actualFails = $result.suites.tests | Where-Object { $_.state -eq "failed" }
-                          
-                          if ($actualFails -or $result.tests | Where-Object { $_.state -eq "failed" }) {
+                          # suites 내부와 results 직속 테스트를 모두 뒤져서, 
+                          # "재시도 후에도 최종적으로 실패(state: failed)" 상태인 테스트가 있는지 확인
+                          $allTestsInFile = @()
+                          if ($result.tests) { $allTestsInFile += $result.tests }
+                          if ($result.suites) { $allTestsInFile += ($result.suites | ForEach-Object { $_.tests }) }
+
+                          $finalFailures = $allTestsInFile | Where-Object { $_.state -eq "failed" }
+
+                          if ($finalFailures) {
                               $fileHasActualFailure = $true
                           }
 
                           if ($fileHasActualFailure) {
                               $isActuallyFailed = $true
+                              # 실제 최종 실패 개수만 누적 합산
                               $totalFailCount += [int]$content.stats.failures
                               
                               $fName = if ($result.file) { $result.file } else { $result.fullFile }
                               if ($fName) {
                                   $failedSpecNames += (Split-Path ($fName -replace '\\', '/') -Leaf)
-                                  break # 한 파일에서 실패 확정 시 다음 파일로
+                                  break # 파일당 1번만 리스트에 추가
                               }
                           }
                       }
