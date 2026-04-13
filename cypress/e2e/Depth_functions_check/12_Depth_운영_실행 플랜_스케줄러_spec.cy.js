@@ -163,9 +163,10 @@ describe('로그캐치 사이트 테스트', () => {
 
     //예외처리  test_auto_인사연동 삭제 --------------------------
     // 1. [조건부 삭제] test_auto_인사연동 정책이 있으면 삭제, 없으면 패스
-    cy.get('body').then(($body) => {
-    // jQuery의 :contains 선택자를 이용해 해당 텍스트가 있는 <tr>을 찾습니다.
-    const hasPolicy = $body.find('tr:contains("test_auto_인사연동")').length > 0;
+    //'정책 목록' 영역 안에서만 검사합니다.
+    cy.get('.v-datatable').first().then(($table) => {
+    // 정책 목록 테이블 내부에 해당 텍스트가 있는지 확인
+    const hasPolicy = $table.find('tr:contains("test_auto_인사연동")').length > 0;
 
     if (hasPolicy) {
       cy.log('🗑️ 기존 정책이 발견되었습니다. 삭제를 진행합니다.');
@@ -179,8 +180,11 @@ describe('로그캐치 사이트 테스트', () => {
       cy.wait(1000); // 삭제 처리가 서버에 반영될 시간 대기
 
       // 추가한 정책 삭제 검증코드 
-      cy.contains('tr', 'test_auto_인사연동').should('not.exist'); 
-      cy.log('✅ 기존 정책 삭제 완료!');
+      // 2. 추가한 정책 삭제 검증코드 (상단 테이블 영역으로 한정)
+      cy.get('.v-datatable').first().within(() => {
+      // 이제 이 안에서는 하단 '일정 상세' 테이블이 간섭하지 못합니다.
+       cy.contains('tr', 'test_auto_인사연동').should('not.exist');
+      });
     
     } else {
       // 정책이 없으면 에러 없이 이 구문을 타고 자연스럽게 통과합니다.

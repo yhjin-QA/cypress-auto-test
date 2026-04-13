@@ -217,7 +217,7 @@ processList.forEach((process) => {
     expect(output, '🚨 SSH 접속 실패!').to.not.be.null;
     
     cy.log(`🖥️ [정지 결과] 터미널 출력: ${output}`);
-    // 검색된 텍스트가 비어있어야(empty) 프로세스가 완벽히 죽은 것입니다.
+    // 검색된 텍스트가 비어있어야(empty) 프로세스가 완벽히 죽은 것인지 확인
     expect(output.trim(), `${process.uiName} 프로세스가 서버에서 완전히 종료되었는지 확인`).to.be.empty; 
   });
 
@@ -245,7 +245,7 @@ processList.forEach((process) => {
     expect(output, '🚨 SSH 접속 실패!').to.not.be.null;
 
     cy.log(`🖥️ [시작 결과] 터미널 출력:\n${output}`);
-    // 💡 검색을 띄어쓰기 없이 했으므로, 결과가 텅 비어있지 않다(not.empty)면 기동 성공으로 봅니다!
+    // 💡 검색을 띄어쓰기 없이 했으므로, 결과가 텅 비어있지 않다(not.empty)면 기동 성공으로 간주
     expect(output.trim(), `${process.uiName} 프로세스가 서버에서 정상 기동되었는지 확인`).to.not.be.empty;
   });
     

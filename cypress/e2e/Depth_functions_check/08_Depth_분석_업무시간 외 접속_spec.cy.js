@@ -475,6 +475,17 @@ cy.contains('.tab-btn', '이상행위', { timeout: 15000 }).should('be.visible')
 cy.log('✅ 이상행위 탭 진입 성공');
 
 
+// 사용자 검색 - 진윤호(yunho)
+// 1. 콤보박스에 검색어 입력
+cy.get('input[aria-label="사용자"]').filter(':visible').clear({ force: true }).type('yunho', { force: true });
+cy.wait(1000); 
+// 검색된 콤보박스 리스트  선택하기
+cy.contains('.v-list__tile__title', 'yunho').should('be.visible').click({ force: true });
+cy.wait(1000);
+// 선택 후 메뉴 닫기
+cy.get('body').type('{esc}');
+
+
 // 이상행위 유형 선택 
 cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
 cy.wait(500);

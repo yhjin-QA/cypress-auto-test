@@ -426,7 +426,7 @@ describe('로그캐치 사이트 테스트', () => {
 
 
        //배송관리 - 배송 담당자 조회  URI 주소 입력하기 
-       cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/cop/logcatch/selectDeliveryList.do', { force: true });
+       cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/cop/logcatch/privacyFileDownloadAfter.do', { force: true });
        cy.wait(500);
 
        // 검색 버튼 클릭 
