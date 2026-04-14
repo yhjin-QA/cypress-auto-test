@@ -120,22 +120,49 @@ module.exports = defineConfig({
         // ==========================================
         // 👇 [신규 추가] SSH 원격 접속을 위한 태스크 (서버 검증용)
         // ==========================================
-        async runSSH(command) {
-          const ssh = new NodeSSH();
-          try {
-            // 🚨 실제 로그캐치 서버 정보로 변경해 주세요!
-            await ssh.connect({
-              host: "10.10.54.21", // 대상 서버 IP
-              username: "root",    // 서버 접속 계정
-              password: "chakra", // 서버 접속 비밀번호
-              // port: 22 
-            });
+        // async runSSH(command) {
+        //   const ssh = new NodeSSH();
+        //   try {
+        //     // 🚨 실제 로그캐치 서버 정보로 변경해 주세요!
+        //     await ssh.connect({
+        //       host: "10.10.54.21", // 대상 서버 IP
+        //       username: "root",    // 서버 접속 계정
+        //       password: "chakra", // 서버 접속 비밀번호
+        //       // port: 22 
+        //     });
+
+       async runSSH(params) {
+        
+  let host, username, password, command;
+
+  // 1. 인자가 '문자열'인 경우 (기본 서버 54.21로 접속)
+  if (typeof params === 'string') {
+    host = "10.10.54.21";
+    username = "root";
+    password = "chakra";
+    command = params;
+  } 
+  // 2. 인자가 '객체'인 경우 ({host, username, password, command})
+  else {
+    host = params.host || "10.10.54.21";
+    username = params.username || "root";
+    password = params.password || "chakra";
+    command = params.command;
+  }
+
+  const ssh = new NodeSSH();
+  try {
+    await ssh.connect({
+      host: host,
+      username: username,
+      password: password,
+      // port: 22
+    });
 
             console.log(`\n📡 SSH 명령 실행 중: ${command}\n`);
             
             // 서버 터미널에 명령어를 입력하고 결과를 받아옵니다.
             const result = await ssh.execCommand(command);
-            
             ssh.dispose(); // 실행 완료 후 접속 안전하게 종료
 
             if (result.stderr) {
