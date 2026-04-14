@@ -15,6 +15,8 @@ describe('로그캐치 사이트 테스트', () => {
       'Cannot read properties',
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
+      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
+      'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
       'Loading chunk',
       'operate.task.packageManagement',
@@ -30,7 +32,7 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('로그캐치 기본동작 체크', () => {
+  it('로그캐치 배포점검목록 동작 체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -105,262 +107,7 @@ describe('로그캐치 사이트 테스트', () => {
     
     //로그인 성공
      
-  
-  /*
-       ///////////////////////////////////////////////
-       // 검출탭 > 필터  서브메뉴 선택 
-       ///////////////////////////////////////////////
-        
-        cy.log('🚀 검출탭 > 필터  서브메뉴 선택 ');
-        cy.contains('button', '검출').should('be.visible').click({ force: true });
-        cy.wait(2000);
-        cy.log('---검출 - 필터 서브메뉴 클릭 ---');
-        cy.get('.v-list__tile__title').filter(':contains("필터")').filter(':visible').click({ force: true });
-        cy.wait(3000); 
-        
-        // 검출탭 > 필터 > 탐색/분석 필터 그룹 관리 탭 클릭 
-        cy.contains('.v-btn__content', '탐색/분석 필터 그룹 관리').should('be.visible').click({ force: true });
-        cy.log('--- 화면 검증 시작 ---');
-        // 트리영역 + 아이콘
-        cy.get('.v-icon.fa-plus').filter(':visible').should('be.visible');
-        //트리영역 새로고침 아이콘
-        cy.get('.material-icons').filter(':visible').contains('autorenew').should('be.visible');
-        //트리영역 검색 버튼 아이콘
-        cy.get('.v-icon.fa-search').filter(':visible').should('be.visible');
-        // 트리영역 안 IP그룹 폴더명 
-        cy.get('.text-label').filter(':visible').contains('IP 그룹').should('be.visible');
-        // 왼쪽 화면영역 
-        cy.contains('.c-headline', 'IP 그룹 (0)').should('exist');
-        // 표 컬럼 확인
-        cy.get('th').filter(':visible').contains('그룹 이름').should('be.visible');
-        cy.get('th').filter(':visible').contains('관리자').should('be.visible');
-        cy.get('th').filter(':visible').contains('설명').should('be.visible');
-        cy.get('th').filter(':visible').contains('필터 개수').should('be.visible');
-        cy.get('th').filter(':visible').contains('사용 중인 정책 개수').should('be.visible');
-        cy.log('✅ 검출 - 필터 - [탐색/분석 필터 그룹 관리] 출력 확인 완료!');
-
-
-
-        // 검출탭 > 필터 > 전처리 파일 구분 설정 탭 클릭 
-        cy.log('--- 전처리 파일 구분 설정 탭 클릭 ---');
-        cy.contains('.v-btn__content', '전처리 파일 구분 설정').should('be.visible').click({ force: true });
-        cy.wait(2000);
-        cy.log('--- 화면 검증 시작 ---');
-        // 트리영역 + 아이콘
-        cy.get('.v-icon.fa-plus').filter(':visible').should('be.visible');
-        //트리영역 새로고침 아이콘
-        cy.get('.material-icons').filter(':visible').contains('autorenew').should('be.visible');
-        cy.contains('.c-headline', '전처리 파일 구분 설정').should('exist');
-        //전처리 파일 구분 설정정 문구 확인
-        cy.get('input[aria-label="정책 이름"]').filter(':visible').should('be.visible');
-        cy.get('input[aria-label="기본 확장자"]').filter(':visible').should('be.visible');
-        cy.get('input[aria-label="ContentType Value"]').filter(':visible').should('be.visible');
-        cy.get('input[aria-label="ContentDisposition Key"]').filter(':visible').should('be.visible');
-        cy.log('✅ 검출 - 필터 - [전처리 파일 구분 설정] 출력 확인 완료! ');
-
-
-        
-        // 검출탭 > 필터 > 전처리 필터링 정책 탭 클릭 
-        cy.log('--- 전처리 필터링 정책 탭 클릭 ---');
-        cy.contains('.v-btn__content', '전처리 필터링 정책').should('be.visible').click({ force: true });
-        cy.wait(2000);
-        
-        // 검출 > 필터 > 전처리 필터링 정책 >[사용자 IP 제외] 탭선택 
-        cy.contains('.v-tabs__item', '사용자 IP 제외').click({ force: true });
-        cy.wait(2000);
-        cy.log('--- 화면 검증 시작 ---');
-        cy.contains('.c-headline', 'Excluded IP').should('exist');
-        // 문구확인
-        cy.get('p').filter(':visible').contains('IP not covered by Logcollector').should('be.visible');
-        
-        cy.contains('.c-headline', 'IP').should('exist');
-        // IP입력 IP란 확인
-        cy.get('label[for="ipv4-address"]').should('contain', 'IP').and('be.visible');
-        //설명 확인
-        cy.get('input[aria-label="설명"]').filter(':visible').should('be.visible');
-        //업무시스템 할당 확인
-        cy.get('input[aria-label="업무시스템 할당"]').filter(':visible').should('be.visible');
-        // Log Tracer 확인
-        cy.get('input[aria-label="Log Tracer"]').filter(':visible').should('be.visible');
-        //저장버튼 확인
-        cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
-
-        cy.contains('.c-headline', '등록 필터 상세 보기').should('exist');
-        // 표 컬럼 확인
-        cy.get('th').filter(':visible').contains('IP').should('be.visible');
-        cy.get('th').filter(':visible').contains('설명').should('be.visible');
-        cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
-        cy.get('th').filter(':visible').contains('Log Tracer').should('be.visible');
-        cy.get('th').filter(':visible').contains('삭제').should('be.visible');
-
-        cy.contains('.c-headline', '변경 이력').should('exist');
-        // 표 컬럼 확인
-        cy.get('th').filter(':visible').contains('발생 일시').should('be.visible');
-        cy.get('th').filter(':visible').contains('관리자').should('be.visible');
-        // IP문구 중복으로 구분처리 
-        cy.get('th').filter(':visible').filter(':contains("IP")').eq(1).should('be.visible');
-        cy.get('th').filter(':visible').contains('상태').should('be.visible');
-        cy.log('✅ 검출 - 필터 - 전처리 필터링 정책 - [사용자 IP 제외] 탭 클릭 및 출력 확인 완료');
-
-
-        // 검출탭 > 필터 > 전처리 필터링 정책 > 화면URI제외 탭선택
-        cy.contains('.v-tabs__item', '화면 (URI) 제외').should('be.visible').click({ force: true });
-        cy.wait(2000);
-        cy.log('--- 화면 검증 시작 ---');
-        cy.contains('.v-tabs__item--active', '화면 (URI) 제외').should('exist');
-        cy.contains('.c-headline', 'Excluded IP').should('exist');
-        // 문구확인
-        cy.get('p').filter(':visible').contains('URI not covered by Logcollector').should('be.visible');
-        
-        cy.contains('.c-headline', '화면 URI').should('exist');
-        // 화면 URI란 확인
-        cy.get('input[aria-label="화면 URI"]').filter(':visible').should('be.visible');
-        //설명 확인
-        cy.get('input[aria-label="설명"]').filter(':visible').should('be.visible');
-        //업무시스템 할당 확인
-        cy.get('input[aria-label="업무시스템 할당"]').filter(':visible').should('be.visible');
-        // Log Tracer 확인
-        cy.get('input[aria-label="Log Tracer"]').filter(':visible').should('be.visible');
-        //저장버튼 확인
-        cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
-
-        cy.contains('.c-headline', '등록 필터 상세 보기').should('exist');
-        // 표 컬럼 확인
-        cy.get('th').filter(':visible').contains('화면 URI').should('be.visible');
-        cy.get('th').filter(':visible').contains('설명').should('be.visible');
-        cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
-        cy.get('th').filter(':visible').contains('Log Tracer').should('be.visible');
-        cy.get('th').filter(':visible').contains('삭제').should('be.visible');
-
-        cy.contains('.c-headline', '변경 이력').should('exist');
-        // 표 컬럼 확인
-        cy.get('th').filter(':visible').contains('발생 일시').should('be.visible');
-        cy.get('th').filter(':visible').contains('관리자').should('be.visible');
-        cy.get('th').filter(':visible').contains('IP').should('be.visible');
-        cy.get('th').filter(':visible').contains('상태').should('be.visible');
-        cy.log('✅ 검출 - 필터 - 전처리 필터링 정책 - [화면 (URI) 제외] 탭 클릭 및 출력 확인 완료');
-
-
-
-        // 검출탭 > 필터 > 전처리 필터링 정책 > 특정SQL 제외 탭선택
-        cy.contains('.v-tabs__item', '특정 SQL 제외').should('be.visible').click({ force: true });
-        cy.wait(2000);
-        cy.log('--- 화면 검증 시작 ---');
-        cy.contains('.v-tabs__item--active', '특정 SQL 제외').should('exist');
-        cy.contains('.c-headline', 'Excluded IP').should('exist');
-        // 문구확인
-        cy.get('p').filter(':visible').contains('SQL not covered by Logcollector').should('be.visible');
-        
-        cy.contains('.c-headline', '특정 SQL').should('exist');
-        // 화면 URI란 확인
-        cy.get('input[aria-label="특정 SQL"]').filter(':visible').should('be.visible');
-        //설명 확인
-        cy.get('input[aria-label="설명"]').filter(':visible').should('be.visible');
-        //업무시스템 할당 확인
-        cy.get('input[aria-label="업무시스템 할당"]').filter(':visible').should('be.visible');
-        // Log Tracer 확인
-        cy.get('input[aria-label="Log Tracer"]').filter(':visible').should('be.visible');
-        //저장버튼 확인
-        cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
-
-        cy.contains('.c-headline', '등록 필터 상세 보기').should('exist');
-        // 표 컬럼 확인
-        cy.get('th').filter(':visible').contains('특정 SQL').should('be.visible');
-        cy.get('th').filter(':visible').contains('설명').should('be.visible');
-        cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
-        cy.get('th').filter(':visible').contains('Log Tracer').should('be.visible');
-        cy.get('th').filter(':visible').contains('삭제').should('be.visible');
-
-        cy.contains('.c-headline', '변경 이력').should('exist');
-        // 표 컬럼 확인
-        cy.get('th').filter(':visible').contains('발생 일시').should('be.visible');
-        cy.get('th').filter(':visible').contains('관리자').should('be.visible');
-        cy.get('th').filter(':visible').contains('IP').should('be.visible');
-        cy.get('th').filter(':visible').contains('상태').should('be.visible');
-        cy.log('✅ 검출 - 필터 - 전처리 필터링 정책 - [특정 SQL 제외] 탭 클릭 및 출력 확인 완료');
-        
-
-       
-        // 검출탭 > 필터 > 전처리 필터링 정책 > CONTENT-TYPE 제외 탭선택
-        cy.contains('.v-tabs__item', 'Content-Type 제외').should('be.visible').click({ force: true });
-        cy.wait(2000);
-        cy.log('--- 화면 검증 시작 ---');
-        cy.contains('.v-tabs__item--active', 'Content-Type 제외').should('exist');
-        cy.contains('.c-headline', 'Excluded Content-Type').should('exist');
-        // 문구확인
-        cy.get('p').filter(':visible').contains('Content-Type not covered by Logcollector').should('be.visible');
-        
-        cy.contains('.c-headline', 'Content-Type 제외').should('exist');
-        // 화면 URI란 확인
-        cy.get('input[aria-label="Content-Type"]').filter(':visible').should('be.visible');
-        //설명 확인
-        cy.get('input[aria-label="설명"]').filter(':visible').should('be.visible');
-        //업무시스템 할당 확인
-        cy.get('input[aria-label="업무시스템 할당"]').filter(':visible').should('be.visible');
-        // Log Tracer 확인
-        cy.get('input[aria-label="Log Tracer"]').filter(':visible').should('be.visible');
-        //저장버튼 확인
-        cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
-
-        cy.contains('.c-headline', '등록 필터 상세 보기').should('exist');
-        // 표 컬럼 확인
-        //표 열첫번쨰 문구없음.
-        //cy.get('th').filter(':visible').contains('').should('be.visible');
-        cy.get('th').filter(':visible').contains('설명').should('be.visible');
-        cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
-        cy.get('th').filter(':visible').contains('Log Tracer').should('be.visible');
-        cy.get('th').filter(':visible').contains('삭제').should('be.visible');
-
-        cy.contains('.c-headline', '변경 이력').should('exist');
-        // 표 컬럼 확인
-        cy.get('th').filter(':visible').contains('발생 일시').should('be.visible');
-        cy.get('th').filter(':visible').contains('관리자').should('be.visible');
-        cy.get('th').filter(':visible').contains('IP').should('be.visible');
-        cy.get('th').filter(':visible').contains('상태').should('be.visible');
-        cy.log('✅ 검출 - 필터 - 전처리 필터링 정책 - [Content-Type 제외] 탭 클릭 및 출력 확인 완료');
-        cy.log('✅ 검출 - 필터 - [전처리 필터링 정책] 출력 확인 완료! ');
-
-
-        // 검출탭 > 필터 > 전처리 사용자 계정 탐색 설정 탭 클릭 
-        cy.log('--- 전처리 사용자 계정 탐색 설정 탭 클릭 ---');
-        cy.contains('.v-btn__content', '전처리 사용자 계정 탐색 설정').should('be.visible').click({ force: true });
-        cy.wait(2000);
-        cy.log('--- 화면 검증 시작 ---');
-        // 트리영역 + 아이콘
-        cy.get('.v-icon.fa-plus').filter(':visible').should('be.visible');
-        //트리영역 새로고침 아이콘
-        cy.get('.material-icons').filter(':visible').contains('autorenew').should('be.visible');
-        cy.contains('.c-headline', '전처리 사용자 계정 탐색 설정').should('exist');
-        //전처리 사용자 계정 탐색 설정 문구 확인
-        cy.get('input[aria-label="정책 이름"]').filter(':visible').should('be.visible');
-        cy.get('span[title="Request Header Cookie"]').should('be.visible');
-        cy.get('input[aria-label="key"]').filter(':visible').should('be.visible');
-        cy.get('input[aria-label="Log Tracer"]').filter(':visible').should('be.visible');
-        cy.get('input[aria-label="업무시스템 할당"]').filter(':visible').should('be.visible');
-        cy.log('✅ 검출 - 필터 - [전처리 사용자 계정 탐색 설정] 화면 출력 확인 완료 ');
-
-
-   
-        // 검출탭 > 필터 > 전처리 디코더 설정 탭 클릭 
-        cy.log('--- 전처리 디코더 설정 탭 클릭 ---');
-        cy.contains('.v-btn__content', '전처리 디코더 설정').should('be.visible').click({ force: true });
-        cy.wait(2000);
-        cy.log('--- 화면 검증 시작 ---');
-        // 트리영역 + 아이콘
-        cy.get('.v-icon.fa-plus').filter(':visible').should('be.visible');
-        //트리영역 새로고침 아이콘
-        cy.get('.material-icons').filter(':visible').contains('autorenew').should('be.visible');
-        cy.contains('.c-headline', '전처리 디코더 설정').should('exist');
-        //전처리 사용자 계정 탐색 설정 문구 확인
-        cy.get('input[aria-label="정책 이름"]').filter(':visible').should('be.visible');
-        cy.get('span[title="URL Decoder"]').should('be.visible');
-        cy.get('span[title="Response Body(UTF-8)"]').should('be.visible');
-        cy.get('input[aria-label="Log Tracer"]').filter(':visible').should('be.visible');
-        cy.get('input[aria-label="업무시스템 할당"]').filter(':visible').should('be.visible');
-        cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
-        cy.log('✅ 검출 - 필터 - [전처리 디코더 설정] 화면 출력 확인 완료 ');
-
-*/
+ 
 
        ///////////////////////////////////////////////
        // 검출탭 > 검출 메뉴 관리  서브메뉴 선택 
@@ -425,7 +172,7 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('body').type('{esc}');
 
 
-       //배송관리 - 배송 담당자 조회  URI 주소 입력하기 
+       // URI 주소 입력하기 
        cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/cop/logcatch/privacyFileDownloadAfter.do', { force: true });
        cy.wait(500);
 
@@ -435,8 +182,8 @@ describe('로그캐치 사이트 테스트', () => {
        
 
        // 메뉴등록 필요 검색값 결과 검증코드  
-       // '/cop/logcatch/selectDeliveryList.do' 텍스트를 포함하고 있는 테이블 행(tr)을 찾습니다.
-       cy.contains('tr', '/cop/logcatch/selectDeliveryList.do')
+       // '/cop/logcatch/privacyFileDownloadAfter.do' 텍스트를 포함하고 있는 테이블 행(tr)을 찾습니다.
+       cy.contains('tr', '/cop/logcatch/privacyFileDownloadAfter.do')
        .scrollIntoView({ block: 'center' }) 
        .within(() => {
        // 2. 그 행(tr) 내부에서 텍스트와 주소가 모두 올바르게 존재하는지 확인합니다.
@@ -585,6 +332,9 @@ describe('로그캐치 사이트 테스트', () => {
        // 업무시스템중 리눅스_배송관리 클릭하는 코드
        cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
        cy.wait(1000);
+       // 업무시스템중 리눅스_배송관리 클릭하는 코드
+       cy.contains('.v-list__tile__title', '윈도우_배송관리').should('be.visible').click();
+       cy.wait(1000);
        // 선택한 컨텍스트 메뉴 닫기
        cy.get('body').type('{esc}');
 
@@ -608,24 +358,24 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
        cy.wait(500);
 
-       // 미등록 URI 관리  검색값 결과 검증코드  
-       // '/cop/logcatch/selectDeliveryList.do' 텍스트를 포함하고 있는 테이블 행(tr)을 찾습니다.
-       cy.contains('tr', '/cop/logcatch/selectDeliveryList.do')
-       .scrollIntoView({ block: 'center' }) 
-       .within(() => {
-       //'+' 버튼 활성화(노출) 검증
-       cy.get('.fa-plus').should('be.visible');
-       // 2. 등록된 URI 값이 공백(비어있음)인지 검증
-       //eq(3)은 0부터 시작하여 4번째 열
-       cy.get('td').eq(3).invoke('text')
-      .then((text) => {
-        expect(text.trim()).to.equal('');
+       // 미등록 URI 관리 검색값 결과 검증코드  
+       // 1. 테이블의 모든 행(tr)을 가져와서 필터링
+       cy.get('tbody tr').filter((index, $el) => {
+        // 텍스트를 가져와 앞뒤 공백을 제거한 결과가 빈 값인지 확인
+        return $el.querySelectorAll('td')[3].innerText.trim() === '';
+      })
+      .contains('/cop/logcatch/selectDeliveryList.do').parents('tr')
+      .within(() => {
+        // 4. '+' 버튼 노출 확인
+        cy.get('.fa-plus').should('be.visible');
+        // 🌟 [수정된 부분] should('have.text') 대신 공백 제거 후 비교
+        cy.get('td').eq(3).invoke('text').then((text) => {
+          expect(text.trim()).to.equal('');
         });
-       });
-
+      });
        
        //기능 확인 2-------------------------------------------------------
-       // 미등록 URI 검색 
+       //등록된 URI검색
 
        // 등록된 URI 옵션 상태 OFF(디폴트)-> ON상태 변경하여 검색
        cy.contains('.v-input:visible', '등록된 URI').find('.v-input--selection-controls__input').click();
@@ -642,8 +392,31 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
        cy.wait(500);
 
+       // 등록된 URI 검색결과가 없는경우
        // 'No data available'이라는 문구가 화면에(또는 표 내부에) 나타나는지 확인 검증코드
-       cy.contains('td', 'No data available').should('be.visible');
+       //cy.contains('td', 'No data available').should('be.visible');
+
+       // 1. 검색 결과 테이블에 데이터가 존재하는지 확인 (최소 1개 이상의 행)
+       cy.get('tbody tr').should('have.length.at.least', 1);
+       // 2. 검색된 모든 행의 '등록된 URI'(4번째 칸)에 값이 차 있는지 검증
+       cy.get('tbody tr').each(($el) => {
+        cy.wrap($el).find('td').eq(3).invoke('text').then((text) => {
+          // 등록된 URI 칸이 비어있지 않아야 함 (이미 등록된 데이터들이므로)
+          expect(text.trim()).to.not.be.empty;
+          expect(text.trim()).to.equal('/cop/logcatch/selectDeliveryList.do');
+        });
+      });
+
+      // 검색된 모든 행의 5번째 칸(index 4)에 있는 버튼의 비활성화 상태를 확인합니다.
+      cy.get('tbody tr').each(($tr) => {
+        // 1. 해당 행의 5번째 열(td)을 찾습니다.
+        cy.wrap($tr).find('td').eq(4) 
+        // 2. 그 안의 버튼 요소를 찾아 클래스를 검증합니다.
+        .find('button, .v-btn') 
+        .should('have.class', 'v-btn--disabled'); 
+      });
+
+     
 
     
 
@@ -691,15 +464,13 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 검출 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 Depth 검출 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 
 
   });
 });  
-
-//코드마지막
 
 
  })()

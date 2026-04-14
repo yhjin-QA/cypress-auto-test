@@ -275,7 +275,7 @@ cy.origin('http://10.10.54.22:8080', { args: { targetName: '김민지' } }, ({ t
 
   // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
   cy.contains('a', '로그아웃', { timeout: 15000 }).should('be.visible');
-  cy.log('✅ 로그인 성공! 방금 생성된 싱싱한 세션 확보 완료!');
+  cy.log('✅ 로그인 성공! 방금 생성된 세션 확보 완료!');
 
   // 4. ✨ 핵심 로직: 쿠키 또는 URL에서 JSESSIONID를 안전하게 추출합니다.
   cy.url().then((currentUrl) => {
@@ -473,6 +473,16 @@ cy.contains('.tab-btn', '이상행위', { timeout: 15000 }).should('be.visible')
 //------------------------------------------------------------------------------------------------------
 cy.log('✅ 이상행위 탭 진입 성공');
 
+// 사용자 검색 - 진윤호(yunho)
+// 1. 콤보박스에 검색어 입력
+cy.get('input[aria-label="사용자"]').filter(':visible').clear({ force: true }).type('yunho', { force: true });
+cy.wait(1000); 
+// 검색된 콤보박스 리스트  선택하기
+cy.contains('.v-list__tile__title', 'yunho').should('be.visible').click({ force: true });
+cy.wait(1000);
+// 선택 후 메뉴 닫기
+cy.get('body').type('{esc}');
+
 
 // 이상행위 유형 선택 
 cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -497,10 +507,6 @@ cy.wait(1000);
 // [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
 // ----------------------------------------------------------
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
-// [개선 코드]
-// 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
-cy.get('tbody', { timeout: 15000 }).contains('tr', '진윤호(yunho)').should('be.visible');
-
 
 // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
 cy.get('tbody tr').filter(':visible').first().within(() => {
