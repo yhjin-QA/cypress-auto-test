@@ -192,7 +192,7 @@ describe('로그캐치 사이트 테스트', () => {
      }
      });
      
-
+     //-----------------------------------------------------------------------
      //스케줄러 정책 추가
      // '추가' 버튼 클릭
      cy.contains('.v-btn__content', '추가').click({ force: true });
@@ -240,7 +240,10 @@ describe('로그캐치 사이트 테스트', () => {
      //스케줄러 정책목록에 test_auto_인사연동 정책이 잘 추가되었는지 검증하는 코드 
      cy.get('tbody').contains('tr', 'test_auto_인사연동').should('be.visible');
 
+
+     ///////////////////////////////////////////////////////////
      // "test_auto_인사연동" 텍스트가 포함된 행(tr)을 찾아 체크하기
+     ///////////////////////////////////////////////////////////
      // 활성 확인하기 위해 targetRow1 지정 
     cy.contains('tr', 'test_auto_인사연동').as('targetRow1')
     .within(() => {
@@ -268,14 +271,14 @@ describe('로그캐치 사이트 테스트', () => {
     
 
     // 2. 스케줄러가 백그라운드에서 실행되고 로그 파일을 생성할 때까지 충분히 대기 
-    cy.log('⏳ 스케줄러 동작 및 로그 기록 대기 중...');
+    cy.log('⏳ 인사연동 정책 스케줄러 동작 및 로그 기록 대기 중...');
     cy.wait(8000); // 💡 서버 성능이나 스케줄러 동작 시간에 따라 5~10초 사이로 조절하세요.
     
-   /////////////////////////////////////////////////
-// 스케줄러 로그파일 검증 로직 
+ /////////////////////////////////////////////////
+// 인사연동 스케줄러 로그파일 검증 로직 
 /////////////////////////////////////////////////
 cy.task('runSSH', `pscheck | grep -w "rank"`).then((pscheckOutput) => {
-    expect(pscheckOutput, '🚨 SSH 접속 실패 또는 pscheck 명령 실패!').to.not.be.null;
+    expect(pscheckOutput, '✅ 로그 경로에 antiforgery 포함 여부 확인').to.not.be.null;
     
     cy.log(`🖥️ [pscheck 결과]:\n${pscheckOutput}`);
 
@@ -287,7 +290,7 @@ cy.task('runSSH', `pscheck | grep -w "rank"`).then((pscheckOutput) => {
     cy.log(`👉 동적 추출된 로그 폴더: ${dirPath}`);
     cy.log('===================================================');
 
-    expect(logPath, '🚨 로그 경로 추출 실패').to.include('/proc/rank/');
+    expect(logPath, '🚨  로그 경로 추출 포함여부 확인').to.include('/proc/rank/');
 
     // 2. [수정] 스케줄러가 비즈니스 로직(Queue flush)을 완료할 때까지 충분히 대기
     // 3초는 짧을 수 있으므로 15초 정도를 권장합니다.
@@ -324,13 +327,182 @@ cy.task('runSSH', `pscheck | grep -w "rank"`).then((pscheckOutput) => {
         cy.log('🎉 [HUMANRESOURCE] rank 스케줄러 기동 및 Queue flush 정상 완료까지 검증완료');
     });
 });
+//--------------------------------------------------------------------------------------------------------------
+cy.wait(3000);
 
+    /////////////////////////////////////////
+    // Case 2 정책목록 유형 무결성 검사사정책
+    ///////////////////////////////////////    
      
+    //예외처리  test_auto_무결성검사 삭제 --------------------------
+    // 1. [조건부 삭제] test_auto_무결성검사 정책이 있으면 삭제, 없으면 패스
+    //'정책 목록' 영역 안에서만 검사합니다.
+    cy.get('.v-datatable').first().then(($table) => {
+    // 정책 목록 테이블 내부에 해당 텍스트가 있는지 확인
+    const hasPolicy = $table.find('tr:contains("test_auto_무결성검사")').length > 0;
+
+    if (hasPolicy) {
+      cy.log('🗑️ 기존 정책이 발견되었습니다. 삭제를 진행합니다.');
+    
+      // 삭제 버튼(휴지통) 클릭
+      cy.contains('tr', 'test_auto_무결성검사').find('.fa-trash').click({ force: true });
+      cy.wait(1000);
+    
+      // 삭제 확인 팝업에서 '확인' 클릭
+      cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
+      cy.wait(1000); // 삭제 처리가 서버에 반영될 시간 대기
+
+      // 추가한 정책 삭제 검증코드 
+      // 2. 추가한 정책 삭제 검증코드 (상단 테이블 영역으로 한정)
+      cy.get('.v-datatable').first().within(() => {
+      // 이제 이 안에서는 하단 '일정 상세' 테이블이 간섭하지 못합니다.
+       cy.contains('tr', 'test_auto_무결성검사').should('not.exist');
+      });
+    
+    } else {
+      // 정책이 없으면 에러 없이 이 구문을 타고 자연스럽게 통과합니다.
+      cy.log('⚪ 기존 정책이 없습니다. 삭제 단계를 패스합니다.');
+     }
+     });
+
+     //-----------------------------------------------------------------------
+     //스케줄러 정책 추가
+     // '추가' 버튼 클릭
+     cy.contains('.v-btn__content', '추가').click({ force: true });
+
+    //정책 플랜 상세 화면으로 이동되는지 확인----------------------------------------------
+    // 🌟 [수정된 방식] 눈에 "보이는" 요소들을 먼저 추려낸 후 텍스트를 찾습니다.
+    cy.get('span.c-headline', { timeout: 10000 }).filter(':visible').contains('정책 플랜 상세').should('be.visible');
+
+    // 즉시 검사 설정 문구 검증
+    cy.get('span.c-headline', { timeout: 10000 }).filter(':visible').contains('즉시 검사 설정').should('be.visible');
+
+     // 정책 화면 ---------------------------
+     //--------------------------------------
+     // 정책목록 유형 선택하기 - 무결성 검사사정책
+     //-------------------------------------
+     // 정책목록
+     // 1. 먼저 정책 목록 입력창(ComboBox)을 클릭하여 리스트를 펼칩니다.
+     cy.get('input[aria-label="정책 목록"]').should('be.visible').click({ force: true });
+     // 2. 리스트가 애니메이션과 함께 나타나므로 잠시 대기하거나 존재 확인
+     cy.wait(1000); 
+     // 3. 나타난 리스트 항목 중 해당 텍스트를 정확히 찾아 클릭합니다.
+     cy.contains('.v-list__tile__title', '[접속이력 무결성 검사] 무결성 검사 정책').should('be.visible').click({ force: true });
+     // 4. [검증] 입력창에 해당 값이 제대로 들어갔는지 확인 (필요 시)
+     cy.get('input[aria-label="정책 목록"]').closest('.v-input').should('contain.text', '[접속이력 무결성 검사] 무결성 검사 정책');
+
+
+     // '플랜 이름' 입력하기 
+     cy.get('input[aria-label="플랜 이름"]').should('be.visible').clear({ force: true }).type('test_auto_무결성검사', { force: true });
+     cy.wait(1000);
+     
+     // 작업유형 - 주기반복
+     // 작업 유형 입력창을 클릭하여 숨겨진 리스트를 펼칩니다.
+     cy.get('input[aria-label="작업 유형"]').should('be.visible').click({ force: true });     
+     cy.wait(1000);
+     // 펼쳐진 리스트 중에서 '주기 반복' 항목을 정확히 찾아 클릭
+     cy.contains('.v-list__tile__title', '주기 반복').should('be.visible').click({ force: true });
+     cy.wait(1000);
+     // [검증코드] 즉시 검사에서 주기 반복으로 값이 잘 변경되었는지 확인합니다.
+     cy.get('input[aria-label="작업 유형"]').closest('.v-input').should('contain.text', '주기 반복'); 
+
+     // '저장'버튼 클릭
+     cy.get('.v-btn__content').filter(':visible').contains('저장').last().click({ force: true });
+     cy.wait(1000);
+
+      //스케줄러 정책목록에test_auto_무결성검사 정책이 잘 추가되었는지 검증하는 코드 
+     cy.get('tbody').contains('tr', 'test_auto_무결성검사').should('be.visible');
+
+
+     ///////////////////////////////////////////////////////////
+     // "test_auto_무결성검사" 텍스트가 포함된 행(tr)을 찾아 체크하기
+     ///////////////////////////////////////////////////////////
+     // 활성 확인하기 위해 targetRow2 지정 
+    cy.contains('tr', 'test_auto_무결성검사').as('targetRow2')
+    .within(() => {
+      cy.get('.v-input--selection-controls__ripple').click({ force: true });
+    });
+    cy.wait(1000);
+
+    // (옵션) 체크가 실제로 체크박스에 체크가 되었는지 검증
+    cy.contains('tr', 'test_auto_무결성검사').find('input[role="checkbox"]').should('have.attr', 'aria-checked', 'true');
+
+    // '시작'이라는 버튼이 활성화 해당버튼을 클릭합니다.
+    cy.contains('.v-btn__content', '시작').closest('button').should('not.be.disabled').click({ force: true });
+
+     // 4. 성공 알림창(Snackbar) 포착 및 텍스트 검증
+    cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible').and('contain', '성공'); // '성공' 문구 포함 확인
+
+    // 5. 알림창이 사라질 때까지 대기
+    cy.get('.v-snack__content').should('not.exist');
+    cy.wait(2000); 
+
+    // [최종 확인] 등록했던 이름인 @targetRow1을 사용하여 상태를 확인
+    //cy.get('@targetRow1').should('contain', '활성').and('be.visible');
+    // 별명 대신 직접 다시 찾아서 '활성' 상태 검증 (가장 안전한 방법)
+    cy.contains('tr', 'test_auto_무결성검사').should('be.visible').and('contain', '활성');
+    
+
+    // 2. 스케줄러가 백그라운드에서 실행되고 로그 파일을 생성할 때까지 충분히 대기 
+    cy.log('⏳ 무결성 검사 정책스케줄러 동작 및 로그 기록 대기 중...');
+    cy.wait(8000); // 💡 서버 성능이나 스케줄러 동작 시간에 따라 5~10초 사이로 조절하세요.
+
+
+    /////////////////////////////////////////////////
+    // Antiforgery 스케줄러 로그파일 검증 로직 
+    /////////////////////////////////////////////////
+    // 1. pscheck를 통해 antiforgery 프로세스 정보 가져오기
+    cy.task('runSSH', `pscheck | grep -w "antiforgery"`).then((pscheckOutput) => {
+    expect(pscheckOutput, '✅ 로그 경로에 antiforgery 포함 여부 확인').to.not.be.null;
+    
+    cy.log(`🖥️ [antiforgery pscheck 결과]:\n${pscheckOutput}`);
+
+    // 2. 경로 및 동적 ID 추출
+    const logPath = pscheckOutput.trim().split(/\s+/).pop(); // 파일 풀 경로
+    const dirPath = logPath.substring(0, logPath.lastIndexOf('/')); // 로그 폴더 경로
+    
+    const pathParts = logPath.split('/');
+    // 경로 예: /home/logcatch/proc/antiforgery/202604/12619/log/task_iid_12619.std
+    // 뒤에서 3번째 요소가 인스턴스 ID (12619)
+    const dynamicInstId = pathParts[pathParts.length - 3];
+
+    cy.log('===================================================');
+    cy.log(`👉 동적 추출된 로그 폴더: ${dirPath}`);
+    cy.log(`🔍 검증에 사용할 동적 ID: ${dynamicInstId}`);
+    cy.log('===================================================');
+
+    expect(logPath, '🚨 로그 경로 추출 포함여부 확인 ').to.include('/proc/antiforgery/');
+
+    // 3. 작업 완료를 위한 대기 (프로세스 기동 및 초기 로그 기록 시간)
+    cy.log('⏳ Antiforgery 작업 완료 대기 중 (15초)...');
+    cy.wait(15000); 
+
+    // 4. 폴더 내 모든 로그 통합 읽기 (* 사용)
+    cy.task('runSSH', `cat ${dirPath}/*`).then((allLogContent) => {
+        cy.log(`📄 [Antiforgery 로그 통합 내용 읽기 완료]`);
+
+        // 5. 정밀 검증 시작
+        expect(allLogContent.trim(), '🚨 로그 내용이 비어있습니다.').to.not.be.empty;
+        // A. 실제 추출한 경로가 로그에 기록되어 있는지 확인
+        expect(allLogContent, '로그 내 기록된 경로가 실제 추출 경로와 일치하는지 확인').to.include(`LOGCATCH_TASK_LOGPATH : [${dirPath}]`);
+        // B. 태스크 명이 ANTIFORGERY인지 확인 (서비스명에 따라 대문자 확인 필요)
+        expect(allLogContent, '무결성검사(ANTIFORGERY) 태스크 실행 확인').to.include('LOGCATCH_TASK_NAME : [ANTIFORGERY]');
+        // C. 추출한 동적 ID가 로그에 기록된 ID와 일치하는지 확인
+        expect(allLogContent, `로그 내 INSTID가 경로상의 ID(${dynamicInstId})와 일치하는지 확인`).to.include(`LOGCATCH_TASK_INSTID : [${dynamicInstId}]`);
+        // D. Antiforgery 특유의 성공 문구 확인 (비즈니스 로직 종료 메시지)
+        // 성공 문구는 시스템마다 다를 수 있으니 실제 로그에 찍히는 문구로 조정하세요.
+        expect(allLogContent, 'Antiforgery 정상 종료 확인').to.include('Queue flush finished successfully within timeout.');
+
+        cy.log(`🎉 [ANTIFORGERY] 스케줄러 기동 및 검증이 완벽히 완료되었습니다!`);
+    });
+});
+
+
+
 //------------------------------------------------------------------------ 
 
     cy.log('✅ 운영 - 실행플랜 - [스케줄러] 출력 확인 완료 ');
 
- 
  
     // // 운영 > 실행 플랜  > "실시간 모니터링" 탭을 클릭
     // cy.log('--- 실시간 모니터링 탭 클릭 ---');
