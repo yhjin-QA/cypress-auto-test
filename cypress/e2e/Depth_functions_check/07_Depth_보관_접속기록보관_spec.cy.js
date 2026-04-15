@@ -34,6 +34,9 @@ describe('로그캐치 사이트 테스트', () => {
   
   it('로그캐치 배포점검목록 동작 체크', () => {
 
+
+
+
     // ==========================================
     // STEP 1: 로그인
     // ==========================================
@@ -105,6 +108,107 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(3000);
     
     //로그인 성공
+    // ----------------------------------------------------------
+// [백업 사전조건 생성] WAS 시스템 로그인 및 이상행위(과다조회) 타격
+// ----------------------------------------------------------
+cy.log('🚀 다른 도메인(tester3 서버)으로 크로스 오리진 점프를 시도합니다.');
+
+// 1. 점프 전, 기존 사이트의 세션/쿠키 찌꺼기 완전 삭제 (충돌 방지)
+cy.clearCookies();
+cy.clearLocalStorage();
+
+// 2. 새로운 도메인(10.10.54.31)으로 점프하여 동작 수행
+cy.origin('http://10.10.54.31:8088', () => {
+  // 새 도메인 전용 에러 무시 처리
+  Cypress.on('uncaught:exception', () => false);
+
+  // 사이트 접속 (origin 블록 안이므로 도메인 제외 경로만 입력)
+  cy.log('1️⃣ tester3 사이트에 접속합니다.');
+  cy.visit('/tester3', { 
+    timeout: 60000 
+  });
+  
+  cy.wait(3000); // 페이지 로딩 대기
+  cy.log('✅ 10.10.54.31 서버 접속 완료!');
+
+  // 3. Excel 버튼 클릭 (id 값인 #excel_btn을 타겟팅)
+  cy.log('2️⃣ Excel 버튼을 클릭합니다.');
+  cy.get('#excel_btn').should('be.visible').click({ force: true });
+    
+  // 엑셀 다운로드 또는 내부 처리 스크립트가 돌아갈 시간을 넉넉히 줍니다.
+  cy.wait(5000); 
+  cy.log('✅ Excel 버튼 클릭 완료!');
+});
+
+
+// ----------------------------------------------------------
+// 원래 점검 사이트(LogCatch)로 깨끗하게 복귀
+// ----------------------------------------------------------
+cy.log('🧹 세션 정보를 초기화하고 깨끗하게 복귀합니다.');
+
+// 1. 기존 쿠키와 로컬 스토리지를 모두 비웁니다. (404 방지 핵심)
+cy.clearCookies();
+cy.clearLocalStorage();
+
+// 2. 주소 뒤에 아무것도 붙지 않은 '순수 도메인' 주소로 접속합니다.
+// 원래 주소로 접속
+cy.visit('https://10.10.54.21:18443/logcatch/login');
+cy.wait(3000); // 화면이 그려질 수 있도록 초기 렌더링 대기 
+
+// 2. 화면 상태 분석 및 분기 처리
+cy.get('body').then(($body) => {
+  // 로그인 입력창이 존재하는지 확인
+  const hasLoginInput = $body.find('input[aria-label="사용자 계정"]').length > 0;
+  
+  if (hasLoginInput) {
+    // 🟡 [상태 1] 로그인 화면이 정상적으로 떴을 때
+    cy.log('🟡 로그인 화면 감지: 로그인을 수행합니다.');
+    
+    cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
+    cy.get('input[aria-label="패스워드"]').should('exist').type('Manager1!', { force: true }); 
+    cy.get('input[aria-label="패스워드"]').type('{enter}', { force: true }); // 엔터키로 안전하게 로그인
+    
+    cy.wait(8000); // 로그인 후 대시보드 로딩 대기
+
+  } else {
+    // 로그인 창이 없을 경우: '이미 로그인된 상태'이거나 '렌더링 실패(흰 화면)' 둘 중 하나입니다.
+    // 이전 스크린샷들을 참고하여 우측 상단의 'ADMIN 님' 텍스트나 메뉴 텍스트가 존재하는지 확인합니다.
+    const isAlreadyLoggedIn = $body.text().includes('ADMIN') || $body.text().includes('로그아웃');
+
+    if (isAlreadyLoggedIn) {
+      // 🟢 [상태 2] 이미 로그인된 메인 화면일 때
+      cy.log('🟢 이미 로그인된 상태(대시보드)입니다. 로그인 과정을 패스합니다.');
+
+    } else {
+      // 🔴 [상태 3] 로그인 창도 없고, 메인 화면 텍스트도 없으면 렌더링 실패로 간주합니다.
+      cy.log('🔴 화면 렌더링 실패(흰 화면) 감지! 페이지를 새로고침합니다.');
+      cy.reload();
+      cy.wait(3000); // 새로고침 후 안정화 대기
+
+      // 새로고침 후 최종 확인 및 실행
+      cy.get('body').then(($newBody) => {
+        if ($newBody.find('input[aria-label="사용자 계정"]').length > 0) {
+          cy.log('🟡 새로고침 후 로그인 화면 복구됨: 로그인을 수행합니다.');
+          
+          cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
+          cy.get('input[aria-label="패스워드"]').should('exist').type('Manager1!', { force: true }); 
+          cy.get('input[aria-label="패스워드"]').type('{enter}', { force: true });
+          
+          cy.wait(8000);
+        } else {
+          cy.log('🟢 새로고침 후 로그인된 상태로 진입 확인. 패스합니다.');
+        }
+      });
+    }
+  }
+});
+
+cy.log('🚀 원래 사이트(LogCatch) 진입 및 로그인 로직 무사 통과!');
+
+cy.wait(8000); // 페이지 로딩 및 안정화 대기
+
+
+
 
     // ==========================================
     // STEP 8: 보관 서브메뉴 
@@ -162,11 +266,13 @@ describe('로그캐치 사이트 테스트', () => {
 
         cy.log(`📅 오늘 날짜 : ${todayPrefix}`);
 
-        // 3. 동적 경로 검증 (이미 backupPath를 가지고 있는 then 블록 안이므로 바로 실행)
-        cy.task('runSSH', `ls -d ${backupPath}/system/${todayPrefix}_*`).then((result) => {
-            // 결과에 오늘 날짜 패턴이 포함되어 있는지 확인
-            expect(result).to.include(todayPrefix);
-            cy.log(`✅ backup/system 백업 폴더 확인: ${result.trim()}`);
+        // 전체 목록 조회를 위해 ${todayPrefix}_* 를 빼고 조회합니다.
+        cy.task('runSSH', `ls -1 ${backupPath}/system/`).then((result) => {
+          // system 폴더 하위의 모든 목록을 로그에 출력해서 보여줍니다.
+          cy.log(`📂 [system] 하위 전체 목록:\n${result.trim()}`);
+          // 출력된 전체 목록 중에 오늘 날짜(todayPrefix) 폴더가 존재하는지 검증합니다.
+          expect(result, '오늘 날짜로 된 백업 폴더가 존재해야 함').to.include(todayPrefix);
+          
         });
     });
 
@@ -178,6 +284,7 @@ describe('로그캐치 사이트 테스트', () => {
 cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
     const now = new Date();
     const todayPrefix = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    // audit-trail/오늘날짜 폴더
     const auditPath = `${backupPath}/audit-trail/${todayPrefix}`;
 
     // 2. [백업 전] 기준 데이터 파악 (System 폴더 개수, Audit 파일 개수)
@@ -243,9 +350,25 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
                     cy.task('runSSH', `ls -1t ${auditPath}/*.tgz.enc* | head -n 2`).then((lf) => cy.log(`✅ 최신 파일: ${lf}`));
                 });
 
-                // [contentLedger & explanationFiles] 폴더 내 파일존재 확인
+                // [contentLedger ] 폴더 내 파일존재 확인 - 접속기록 이력 파일
+                // 오늘날짜.tgz.enc 파일 생성확인
                 cy.task('runSSH', `ls ${backupPath}/contentLedger/*/${todayPrefix}.tgz.enc`).then((r) => expect(r).to.include(todayPrefix));
+                
+                // [explanationFiles] 폴더 내 파일존재 확인 - 파일다운로드 이력
+                // 파일다운로드 이력 있으면 오늘날짜.tgz.enc 파일 생성확인
                 cy.task('runSSH', `ls ${backupPath}/explanationFiles/*/${todayPrefix}.tgz.enc`).then((r) => expect(r).to.include(todayPrefix));
+                // cy.task('runSSH', `ls -1 ${backupPath}/explanationFiles/*/*.tgz.enc 2>/dev/null`).then((result) => {
+                //  // 1. 파일이 아예 없는 경우 방어
+                //  expect(result.trim(), '파일이 최소 1개 이상 존재해야 함').to.not.be.empty;
+                //  // 2. 줄바꿈(\n)을 기준으로 문자열을 쪼개서 배열로 만듭니다.
+                //  const fileList = result.trim().split('\n');
+                //   cy.log(`📄 총 ${fileList.length}개의 파일이 발견되었습니다.`);
+
+                //    // 3. 발견된 '모든' 파일이 숫자 8자리 포맷을 지키는지 각각 확인합니다.
+                //    fileList.forEach((file) => {
+                //     expect(file, `파일명 예외 확인: ${file}`).to.match(/\d{8}\.tgz\.enc/);
+                //    });
+                //    });
 
                  // [System 폴더] 개수 유지 및 최신 폴더 상세 검증
                 cy.wait(7000); // 삭제 로직 작동 대기
@@ -315,6 +438,23 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
                         }
                      
                         cy.log(`📊 [검증 4] 현재 system폴더내 폴더갯수 : 최종 ${finalCount}개 확인 (설정값: ${expectedCount}개)`);
+                        // ========================================================
+                        // 💡 [신규 추가] 실제 남아있는 폴더 목록을 조회하여 로그에 세로로 출력
+                        // ========================================================
+                         cy.task('runSSH', `ls -1d ${backupPath}/system/${todayPrefix}_* 2>/dev/null`).then((folderList) => {
+                         cy.log('📂 [system] 현재 system 하위폴더 목록:'); 
+                          if (folderList && folderList.trim()) {
+                            const folders = folderList.trim().split(/\s+/);
+                            folders.forEach((folderPath) => {
+                              // 절대 경로(/home/.../20260415_1) 대신 폴더명(20260415_1)만 깔끔하게 추출해서 출력
+                              const folderName = folderPath.split('/').pop();
+                              cy.log(`- ${folderName}`);
+                            });
+                          } else {
+                            cy.log('⚠️ 조건에 맞는 폴더가 없습니다.');
+                          }
+                        });
+                        // ========================================================
                       });
                     });
                    //---------------------------------------------------------------------------
@@ -346,7 +486,7 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
     // 2. 서버 타입 및 상세 설정값 검증
     cy.get('.v-select__selection--comma').should('be.visible').and('contain', 'SFTP');
     cy.get('input[aria-label="백업 경로"]').should('have.value', '/home/backup');
-    cy.get('input[aria-label="서버 ip"]').should('have.value', '10.10.56.3');
+    cy.get('input[aria-label="서버 ip"]').should('have.value', '10.10.54.24');
     cy.get('input[aria-label="PORT"]').should('have.value', '22');
     cy.get('input[aria-label="아이디"]').should('have.value', 'root');
 
@@ -358,19 +498,27 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
 // 버튼 클릭 후 "성공" 메시지가 떠야 실제 전송 경로가 유효하다는 증거입니다.
 cy.get('.v-snack__content', { timeout: 20000 }).should('be.visible').and('contain', '성공');
 
-// 6. [추가 검증] 실제 SFTP 서버(10.10.56.3) 내부 데이터 조회
+// 6. [추가 검증] 실제 SFTP 서버(10.10.54.24) 내부 데이터 조회
 // Snackbar 확인 직후 실행하여 데이터 무결성을 교차 검증합니다.
 cy.task('runSSH', { 
-    host: '10.10.56.3',
+    host: '10.10.54.24',
     username: 'root', 
     password: 'chakra', 
-    command: 'ls -F /home/backup' // -F를 붙이면 폴더명 뒤에 /가 붙어 구분이 쉽습니다.
+    command: 'ls -F /home/backup' 
 }).then((folderList) => {
-    cy.log('📂 [SFTP 서버: 10.10.56.3] /home/backup 목록:');
-    if (folderList && folderList.trim()) {
+    cy.log('📂 [SFTP 서버: 10.10.54.24] /home/backup 목록:');
+    
+    // 에러 메시지(No such file, Permission denied 등)가 포함되어 있는지 먼저 확인
+    if (folderList && (folderList.includes('No such file') || folderList.includes('cannot access'))) {
+        cy.log("⚠️ /home/backup 경로 자체가 존재하지 않습니다.");
+    } 
+    // 정상적으로 파일/폴더 목록이 있는 경우
+    else if (folderList && folderList.trim()) {
         cy.log(folderList);
-    } else {
-        cy.log("⚠️ /home/backup 경로에 폴더가 없거나 접근할 수 없습니다.");
+    } 
+    // 폴더는 존재하지만 안에 아무것도 없는 빈 폴더인 경우
+    else {
+        cy.log("⚠️ /home/backup 폴더는 존재하지만, 내부가 비어있습니다.");
     }
 });
 
