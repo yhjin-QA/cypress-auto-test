@@ -15,7 +15,7 @@ describe('로그캐치 사이트 테스트', () => {
       'Cannot read properties',
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
-        'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
+      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
       'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
       'Loading chunk',
@@ -355,10 +355,17 @@ cy.wait(3000);
       // 삭제 버튼(휴지통) 클릭
       cy.contains('tr', 'test_auto_무결성검사').find('.fa-trash').click({ force: true });
       cy.wait(1000);
+
+      // 💡 [수정 포인트 1] 팝업이 완전히 렌더링될 때까지 애니메이션 안정화 대기
+      cy.get('.v-dialog').filter(':visible').should('be.visible').and('contain', '삭제하시겠습니까?');
+      cy.wait(500); // 애니메이션이 끝날 때까지 0.5초만 숨고르기
     
-      // 삭제 확인 팝업에서 '확인' 클릭
-      cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
-      cy.wait(1000); // 삭제 처리가 서버에 반영될 시간 대기
+      // 2. 삭제 확인 팝업에서 '확인' 클릭 (강제 클릭 대신 일반 클릭으로 정상 작동 확인)
+      cy.get('.v-dialog').filter(':visible').find('.v-btn').contains('확인').click();
+      cy.wait(2000);
+      // 팝업창 글자가 화면에서 '안 보이게' 숨겨졌는지 확인합니다.
+      cy.contains('삭제하시겠습니까?').should('not.be.visible');
+      cy.wait(2000);
 
       // 추가한 정책 삭제 검증코드 
       // 2. 추가한 정책 삭제 검증코드 (상단 테이블 영역으로 한정)
