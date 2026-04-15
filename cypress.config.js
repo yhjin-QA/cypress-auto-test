@@ -3,11 +3,15 @@ const fs = require('fs');   // 파일 시스템 모듈
 const path = require('path');
 const { NodeSSH } = require("node-ssh"); // 👇 [신규 추가] SSH 라이브러리 불러오기
 
+// 👇 [신규 추가] Oracle DB 모듈 불러오기
+const oracledb = require('oracledb');
+
 // Lighthouse 플러그인 불러오기
 const { lighthouse, prepareAudit } = require("@cypress-audit/lighthouse");
 
 // 파일명을 저장해둘 전역 변수
 let currentReportName = "default";
+
 
 module.exports = defineConfig({
   //projectId: "7yuixr",
@@ -139,14 +143,16 @@ module.exports = defineConfig({
   if (typeof params === 'string') {
     host = "10.10.54.21";
     username = "root";
-    password = "chakra";
+    // ✅ GitHub 환경변수가 있으면 쓰고, 없으면 로컬용 사용
+    password = process.env.SSH_PASSWORD || "chakra";
     command = params;
   } 
   // 2. 인자가 '객체'인 경우 ({host, username, password, command})
   else {
     host = params.host || "10.10.54.21";
     username = params.username || "root";
-    password = params.password || "chakra";
+    // ✅ 파라미터로 받은 게 없으면 환경변수 확인 후 최후에 로컬용 사용
+    password = params.password || process.env.SSH_PASSWORD || "chakra";
     command = params.command;
   }
 
@@ -176,8 +182,55 @@ module.exports = defineConfig({
             console.error("SSH 접속 실패:", error);
             return null; // 실패 시 Cypress가 멈추지 않도록 null 반환
           }
-        }
+        },
         // ==========================================
+
+                // ==========================================
+                // 👇 [신규 추가] Oracle DB 직접 접속 및 쿼리 실행 태스크
+                // ==========================================
+                async queryDB(query) {
+                  let connection;
+                  try {
+                    // 🚨 [핵심 추가] 구버전 오라클(11g) 접속을 위한 Thick 모드 초기화
+                    // 한 번만 초기화되도록 조건문 처리
+                    if (!oracledb.oracleClientInitialized) {
+                      // 윈도우 경로인 경우 역슬래시(\)를 두 번씩(\\) 쓰거나 슬래시(/)로 써야 합니다.
+                      // 아래 경로는 방금 Instant Client 압축을 푼 '실제 폴더 경로'로 바꿔주세요!
+                      oracledb.initOracleClient({ libDir: 'C:\\oracle\\instantclient' }); 
+                    }
+                    // 전달해주신 정보로 DB 접속 설정
+                    connection = await oracledb.getConnection({
+                      user: "WVADMIN",
+                      // ✅ GitHub 환경변수가 있으면 쓰고, 없으면 로컬용 사용
+                      password: process.env.DB_PASSWORD || "qwert123",
+                      connectString: "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=172.16.200.10)(PORT=1521))(CONNECT_DATA=(SID=xe)))"
+                    });
+        
+                    console.log(`\n🛢️ Oracle DB 쿼리 실행 중: ${query}\n`);
+                    
+                    // 쿼리 실행 (outFormat 설정으로 결과를 깔끔한 JSON 객체 배열로 받습니다)
+                    const result = await connection.execute(query, [], { 
+                      outFormat: oracledb.OUT_FORMAT_OBJECT 
+                    });
+                    
+                    return result.rows; // [{ 컬럼명: '값' }, { 컬럼명: '값' }] 형태로 반환
+        
+                  } catch (err) {
+                    console.error("\n❌ Oracle DB 접속 또는 쿼리 실패:\n", err);
+                    return null;
+                  } finally {
+                    if (connection) {
+                      try {
+                        await connection.close(); // 작업 완료 후 무조건 접속 종료
+                      } catch (err) {
+                        console.error("DB 접속 종료 에러:", err);
+                      }
+                    }
+                  }
+                }
+                // ==========================================
+
+
 
       }); // task 블록 종료
 

@@ -161,6 +161,10 @@ jobs:
           # 👇 아래 두 줄을 추가하세요! (계정권한 부족 문제 해결)
           CYPRESS_CACHE_FOLDER: ${{ github.workspace }}\.cypress-cache
           TEMP: ${{ github.workspace }}\.temp
+          # 👇 [신규 추가] 보안 처리된 DB 및 SSH 비밀번호 주입
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+
         # continue-on-error: true # 에러가 나도 업로드는 해야 함
         run: |
           # 1. 인코딩 강제 설정 (한글 파일명 인식용)
@@ -272,6 +276,10 @@ jobs:
        # 👇 아래 두 줄을 추가하세요! (계정권한 부족 문제 해결)
       CYPRESS_CACHE_FOLDER: ${{ github.workspace }}\.cypress-cache
       TEMP: ${{ github.workspace }}\.temp
+      # 👇 [신규 추가] 보안 처리된 DB 및 SSH 비밀번호 주입
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+
     defaults:
       run:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
