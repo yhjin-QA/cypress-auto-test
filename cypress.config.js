@@ -3,8 +3,10 @@ const fs = require('fs');   // 파일 시스템 모듈
 const path = require('path');
 const { NodeSSH } = require("node-ssh"); // 👇 [신규 추가] SSH 라이브러리 불러오기
 
-// 👇 [신규 추가] Oracle DB 모듈 불러오기
+//   Oracle DB 모듈 불러오기
 const oracledb = require('oracledb');
+//   postgress DB 모듈 불러오기
+const { Client } = require('pg');
 
 // Lighthouse 플러그인 불러오기
 const { lighthouse, prepareAudit } = require("@cypress-audit/lighthouse");
@@ -210,10 +212,12 @@ module.exports = defineConfig({
                     
                     // 쿼리 실행 (outFormat 설정으로 결과를 깔끔한 JSON 객체 배열로 받습니다)
                     const result = await connection.execute(query, [], { 
-                      outFormat: oracledb.OUT_FORMAT_OBJECT 
+                      outFormat: oracledb.OUT_FORMAT_OBJECT,
+                      autoCommit: true  // ⭐ 이 줄이 반드시 있어야 DBeaver에서도 데이터가 보입니다!  
                     });
                     
-                    return result.rows; // [{ 컬럼명: '값' }, { 컬럼명: '값' }] 형태로 반환
+                    // 둘 다 없으면 null이라도 반환하여 Cypress 에러를 방지합니다.
+                    return result.rows || { affected: result.rowsAffected } || null;
         
                   } catch (err) {
                     console.error("\n❌ Oracle DB 접속 또는 쿼리 실패:\n", err);
@@ -225,6 +229,39 @@ module.exports = defineConfig({
                       } catch (err) {
                         console.error("DB 접속 종료 에러:", err);
                       }
+                    }
+                  }
+                },
+                // ==========================================
+
+                // ==========================================
+                // 👇 [신규 추가] PostgreSQL 직접 접속 및 쿼리 실행 태스크
+                // ==========================================
+                async queryPostgresDB(query) {
+                  // 🚨 아래 접속 정보는 실제 Postgres 환경에 맞게 수정이 필요합니다!
+                  const client = new Client({
+                    host: "10.10.54.21", // Postgres 서버 IP
+                    port: 15432,            // Postgres 기본 포트 (보통 5432)
+                    database: "logcatch",     // 대상 데이터베이스 이름
+                    user: "logcatch",       // 접속 계정명
+                    // ✅ GitHub 환경변수 처리 (로컬에서는 우측 비밀번호 사용)
+                    password: process.env.PG_PASSWORD || "Manager1!", 
+                  });
+                  try {
+                    await client.connect();
+                    console.log(`\n🐘 PostgreSQL 쿼리 실행 중: ${query}\n`);
+                    // 쿼리 실행
+                    const res = await client.query(query);
+                    // 결과 반환 (오라클과 동일하게 [{컬럼: 값}, ...] 형태로 자동 반환됨)
+                    return res.rows; 
+                  } catch (err) {
+                    console.error("\n❌ PostgreSQL 접속 또는 쿼리 실패:\n", err);
+                    return null;
+                  } finally {
+                    try {
+                      await client.end(); // 작업 완료 후 무조건 접속 종료
+                    } catch (err) {
+                      console.error("PostgreSQL 접속 종료 에러:", err);
                     }
                   }
                 }

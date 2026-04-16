@@ -107,9 +107,135 @@ describe('로그캐치 사이트 테스트', () => {
     //로그인 성공
 
 
-    // ==========================================
+    
+
+    
+    
+
+
+    // ===================================================
+    // STEP: 기존 DB 데이터 클린업 (Oracle & PostgreSQL 공통)
+    // ===================================================
+    cy.log('🧹 oracle DB, Postgres DB의 기존 "자동화1" 데이터 정리 중...');
+    
+    // 1. Oracle 데이터 삭제
+    cy.task('queryDB', `DELETE FROM LETTNEMPLYRINFO WHERE USER_NM = '자동화1'`);
+    // 2. PostgreSQL 데이터 삭제 (추가된 부분)
+    
+    // ✅ 스케줄러가 옮겨놓은 '자동화1' 이름의 모든 데이터를 삭제합니다.
+    cy.task('queryPostgresDB', `DELETE FROM logcatch.tbr_opr_user WHERE name = '자동화1'`).then((result) => {
+      cy.log('🧹 PostgreSQL: 기존 "자동화1" 데이터 정리 완료');
+    });
+
+   
+    // =================================================================
+    //  STEP : WAS Oracle DB LETTNEMPLYRINFO 테이블에 자동화 1 사용자 추가 
+    // =================================================================
+    // 🎯 Date.now()의 뒷부분 10자리만 추출하여 길이를 줄입니다.
+
+    cy.log('✅ Oracle DB 자동화1 사용자 생성 시작 아이디 : auto_랜덤숫자');
+
+    const uniqueTag = String(Date.now()).slice(-10); 
+    const testEmplrId = `auto_${uniqueTag}`;        // ID: auto_6243577771 (15자)
+    const testEsntlId = `USR_${uniqueTag}`;         // 예: USR_6243577771 (14자) - 안전하게 20자 미만
+
+
+    const insertSql = `
+    INSERT INTO LETTNEMPLYRINFO (
+    EMPLYR_ID, 
+    ORGNZT_ID, 
+    USER_NM, 
+    PASSWORD,
+    SEXDSTN_CODE,
+    HOUSE_ADRES, 
+    PASSWORD_HINT, 
+    PASSWORD_CNSR, 
+    GROUP_ID, 
+    PSTINST_CODE, 
+    EMPLYR_STTUS_CODE, 
+    ESNTL_ID, 
+    SBSCRB_DE
+    ) VALUES (
+    '${testEmplrId}', 
+    'ORGNZT_0000000000000', 
+    '자동화1',
+    'Manager1',
+    'F',
+    '관리자 주소',  
+    'P01', 
+    '123', 
+    'GROUP_00000000000002', 
+    '00000000', 
+    'P', 
+    '${testEsntlId}', 
+    SYSDATE
+     )
+    `;
+
+    // =================================================================
+    // STEP : WAS Oracle DB 신규 데이터 삽입 및 검증
+    // =================================================================
+    cy.log(`✅ Oracle DB 생성 시작 (ID: ${testEmplrId})`);
+    // 1. 신규 데이터 삽입 실행
+    cy.task('queryDB', insertSql).then(() => {
+    // 2. [검증] 삽입한 ID로 다시 조회하여 실제로 들어갔는지 확인
+    const verifyOracleSql = `SELECT EMPLYR_ID FROM LETTNEMPLYRINFO WHERE EMPLYR_ID = '${testEmplrId}'`;
+    return cy.task('queryDB', verifyOracleSql);
+    }).then((result) => {
+    // result는 보통 배열 형태로 반환됩니다. (예: [{ EMPLYR_ID: 'auto_...' }])
+    // 3. 결과 검증
+    expect(result, 'Oracle DB에 데이터가 존재해야 합니다').to.not.be.null;
+    expect(result.length, '방금 생성한 ID가 1건 조회되어야 합니다').to.equal(1);
+    // 컬럼명 대문자 주의 (Oracle은 기본적으로 대문자로 반환)
+    const dbId = result[0].EMPLYR_ID || result[0].emplyr_id; 
+    expect(dbId).to.equal(testEmplrId);
+    cy.log('✅ [검증 완료] Oracle DB에 데이터가 성공적으로 저장되었습니다:', dbId);
+    });
+
+    // ===============================================
+    // STEP : 운영 서브메뉴 - 인사연동 스케줄러 실행하기
+    // ===============================================
+    cy.log('🚀 운영 탭 클릭');
+    
+    // 운영 > 실행플랜 서브메뉴 
+    cy.contains('button', '운영').click({ force: true });
+    cy.wait(2000);
+    cy.log('---운영 - 실행 플랜 서브메뉴 클릭 ---');
+    cy.get('.v-list__tile__title').filter(':contains("실행 플랜")').filter(':visible').click({ force: true });
+    cy.wait(3000); 
+
+    // 운영 > 실행플랜  > 스케줄러 탭을 클릭
+    cy.log('--- 스케줄러 탭 클릭 ---');
+    cy.contains('.v-btn__content', '스케줄러').should('be.visible').click({ force: true });
+    cy.wait(3000);
+
+
+     ///////////////////////////////////////////////////////////
+     // "인사연동 플랜" 텍스트가 포함된 행(tr)을 찾아 체크하기
+     ///////////////////////////////////////////////////////////
+     // 활성 확인하기 위해 targetRow1 지정 
+    cy.contains('tr', '인사연동 플랜').as('targetRow1')
+    .within(() => {
+      cy.get('.v-input--selection-controls__ripple').click({ force: true });
+    });
+    cy.wait(1000);
+
+    // (옵션) 체크가 실제로 체크박스에 체크가 되었는지 검증
+    cy.contains('tr', '인사연동 플랜').find('input[role="checkbox"]').should('have.attr', 'aria-checked', 'true');
+
+    // '시작'이라는 버튼이 활성화 해당버튼을 클릭합니다.
+    cy.contains('.v-btn__content', '시작').closest('button').should('not.be.disabled').click({ force: true });
+
+     // 4. 성공 알림창(Snackbar) 포착 및 텍스트 검증
+    cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible').and('contain', '성공'); // '성공' 문구 포함 확인
+
+    // 5. 알림창이 사라질 때까지 대기
+    cy.get('.v-snack__content').should('not.exist');
+    cy.wait(7000); 
+
+    // ==============================================================
     // STEP : 일반모드 -> 관리자페이지 탭 진입(상단관리자 버튼 클릭) 
-    // ==========================================
+    // ==============================================================
     cy.log('🚀 관리자(톱니바퀴) 버튼 클릭');
     // 1. [검증] 톱니바퀴 아이콘이 화면에 보이는지 확인
     // 설명: 'g-IConfig' 클래스가 설정 아이콘을 의미하는 핵심 식별자입니다.
@@ -120,7 +246,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(2000);
     cy.log('✅ 관리자 톱니바퀴 아이콘 클릭 완료');
 
-
+    // ==============================================================
+    // STEP : 관리 > 정보사용자 / 그룹 관리  화면이동
+    // ==============================================================
     // 관리 > 정보사용자 / 그룹 관리  서브메뉴 선택 
     cy.contains('button.side-menu', '관리').should('be.visible').click({ force: true });
     cy.wait(1000);
@@ -154,106 +282,79 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('th').filter(':visible').contains('이메일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
 
-     //기능확인 - 소속조회
-     // 소속(전체 )검색조건에서 이름 검색----------------------------------------------------
-     // '검색 조건' 콤보박스(input)를 찾아 클릭하여 리스트를 엽니다.
-     cy.get('input[aria-label="검색 조건"]').click({ force: true });
-     cy.wait(500);
-     // 화면에 나타난 리스트 메뉴 중에서 '이름'을 선택
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '이름').should('be.visible').click({ force: true });
-     // '값' 입력창을 찾아 비운 뒤 '호준'을 타이핑합니다.
-     cy.get('input[aria-label="값"]').should('be.visible').clear().type('호준');
-     cy.wait(500);
-     //상태 클릭
-     cy.get('input[aria-label="상태"]').filter(':visible').click({ force: true });
-     cy.wait(500);
-     // 상태 리스트중 '사용자' 클릭
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '사용자').should('be.visible').click({ force: true });
-     cy.wait(500);    
-     // 검색버튼 클릭 
-     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
-     //검색결과 검증
-     cy.get('td', { timeout: 10000 }).contains('호준').should('be.visible');
-     //----------------------------------------------------------------------------------------------
+    // ===================================================
+    // STEP: PostgreSQL DB 데이터 검증 (tbr_opr_user 테이블)
+    // ===================================================
+    const targetName = '자동화1';
+    const expectedId = `auto_${uniqueTag}`; 
 
-     // 소속(전체 )검색조건에서 이름 -> 아이디 검색으로----------------------------------------------------
-     // '검색 조건' 콤보박스(input)를 찾아 클릭하여 리스트를 엽니다.
-     cy.get('span[title="이름"]').should('be.visible').click({ force: true });
-     cy.wait(500);
-     // 화면에 나타난 리스트 메뉴 중에서 '아이디'을 선택
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '아이디').should('be.visible').click({ force: true });
-     // '값' 입력창을 찾아 비운 뒤 '호준'을 타이핑합니다.
-     cy.get('input[aria-label="값"]').should('be.visible').clear().type('loginid2');
-     cy.wait(500);
+cy.log(`--- 🐘 PostgreSQL DB 데이터 확인: ${targetName} ---`);
 
-     cy.wait(500);    
-     // 검색버튼 클릭 
-     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+// 1. 대기 시간을 넉넉히 줍니다. (인사연동은 생각보다 무거운 작업일 수 있습니다)
+cy.wait(8000); 
 
-     //검색결과 검증
-     cy.get('td', { timeout: 10000 }).contains('loginid2').should('be.visible');
-     //----------------------------------------------------------------------------------------------
+// 1. 조회 쿼리 수정 (id -> employee_number)
+const pgSql = `SELECT employee_number FROM logcatch.tbr_opr_user WHERE employee_number = '${expectedId}'`;
 
-
-     // 소속(전체 )검색조건에서 아이디 -> 이메일 검색으로----------------------------------------------------
-     // '검색 조건' 콤보박스(input)를 찾아 클릭하여 리스트를 엽니다.
-     cy.get('span[title="아이디"]').should('be.visible').click({ force: true });
-     cy.wait(500);
-     // 화면에 나타난 리스트 메뉴 중에서 '아이디'을 선택
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '이메일').should('be.visible').click({ force: true });
-     // '값' 입력창을 찾아 비운 뒤 '호준'을 타이핑합니다.
-     cy.get('input[aria-label="값"]').should('be.visible').clear().type('hojun@naver.com');
-     cy.wait(500);
-
-     cy.wait(500);    
-     // 검색버튼 클릭 
-     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-
-     //검색결과 검증
-     cy.get('td', { timeout: 10000 }).contains('hojun@naver.com').should('be.visible');
-     //----------------------------------------------------------------------------------------------
+cy.task('queryPostgresDB', pgSql).then((pgResult) => {
+    if (!pgResult || pgResult.length === 0) {
+        cy.log('⚠️ 첫 번째 조회 실패. 5초 더 기다린 후 재시도합니다...');
+        cy.wait(5000);
+        return cy.task('queryPostgresDB', pgSql);
+    }
+    return pgResult;
+}).then((pgResult) => {
+    expect(pgResult, 'Postgres DB에 방금 생성한 사번이 존재해야 합니다').to.not.be.null;
+    expect(pgResult.length).to.equal(1);
+    
+    // 2. 값 추출 컬럼명도 employee_number로 변경
+    const dbEmployeeNumber = pgResult[0].employee_number;
+    
+    expect(String(dbEmployeeNumber)).to.equal(expectedId);
+    cy.log(`✅ PostgreSQL 데이터 검증 최종 성공! (사번: ${dbEmployeeNumber} 일치 확인)`);
+});
 
     // ==========================================
-    // STEP [추가]: 인사 연동 DB 데이터 교차 검증 
+    // STEP : logcatch UI 데이터 존재 및 일치 검증 
     // ==========================================
-    // 캡처 화면에 존재하는 실제 데이터 '호준'으로 테스트 진행
-    const targetUserName = '호준'; 
+cy.log(`--- [1단계] UI에서 ${targetName} 사용자 검색 ---`);
 
-    cy.log(`--- [1단계] ${targetUserName} 사용자 검색 ---`);
-    // 이름으로 검색 조건 세팅
-    cy.get('input[aria-label="검색 조건"]').click({ force: true });
-    cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '이름').should('be.visible').click({ force: true });
-    cy.get('input[aria-label="값"]').should('be.visible').clear().type(targetUserName);
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    cy.wait(1500); // 검색 결과 로딩 대기
+// 1. 검색 조건 세팅 (이름)
+cy.get('input[aria-label="검색 조건"]').click({ force: true });
+cy.get('.v-menu__content:visible')
+  .contains('.v-list__tile__title', '이름')
+  .click({ force: true });
 
-    cy.log(`--- [2단계] UI 정보 추출 및 DB 교차 검증 ---`);
-    // 해당 사용자가 있는 행(tr)을 찾아서 '아이디' 텍스트를 추출합니다.
-    // 표 순서: 이름(0), 아이디(1), 그룹(2), 이메일(3), 생성일(4) 이므로 eq(1)을 사용합니다.
-    cy.contains('td', targetUserName).parent('tr').within(() => {
-        cy.get('td').eq(1).invoke('text').as('uiUserId'); // 아이디 추출
+// 2. 검색어 입력 및 실행
+cy.get('input[aria-label="값"]').should('be.visible').clear().type(targetName);
+cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+cy.wait(2000); // 검색 결과 렌더링 시간 확보
+
+cy.log(`--- [2단계] UI 정보 추출 및 DB 데이터 교차 검증 ---`);
+
+// 3. UI에서 아이디(사번)를 추출하여 실제 DB 값과 비교
+cy.contains('td', targetName) // '자동화1'이 포함된 셀 찾기
+  .parent('tr')               // 해당 행(Row)으로 이동
+  .within(() => {
+    // eq(1)에서 텍스트를 가져와서 검증
+    cy.get('td').eq(1).invoke('text').then((uiUserId) => {
+      const trimmedUiId = uiUserId.trim(); // 공백 제거
+      
+      cy.log(`🖥️ UI 표시 아이디: ${trimmedUiId}`);
+      cy.log(`🛢️ DB 저장 아이디: ${expectedId}`);
+
+      // 🎯 [핵심] UI 값과 DB 값이 일치하는지 최종 확인
+      expect(trimmedUiId).to.equal(expectedId);
     });
+  });
 
-    cy.get('@uiUserId').then((uiUserId) => {
-        // 🎯 제공해주신 실제 테이블(LETTNEMPLYRINFO)과 컬럼(EMPLYR_ID, USER_NM) 적용!
-        const sql = `SELECT EMPLYR_ID FROM LETTNEMPLYRINFO WHERE USER_NM = '${targetUserName}'`;
+cy.log(`✅ 최종 검증 완료: UI 화면과 DB 데이터가 일치합니다.`);
+
+    
         
-        cy.task('queryDB', sql).then((dbResult) => {
-            // DB 통신 결과 확인
-            expect(dbResult, 'DB 결과가 반환되어야 합니다').to.not.be.null;
-            expect(dbResult.length, 'DB에 해당 사용자가 존재해야 합니다').to.be.greaterThan(0);
+        
 
-            // 대문자로 반환되는 오라클 컬럼 특성
-            const dbUserId = dbResult[0].EMPLYR_ID; 
-            
-            cy.log(`🖥️ UI 아이디: ${uiUserId.trim()} / 🛢️ DB 아이디: ${dbUserId}`);
-
-            // 교차 검증 실행
-            expect(uiUserId.trim()).to.equal(dbUserId);
-            cy.log('✅ UI 화면과 Oracle DB 데이터가 완벽하게 일치합니다!');
-        });
-    });
 
      
 
