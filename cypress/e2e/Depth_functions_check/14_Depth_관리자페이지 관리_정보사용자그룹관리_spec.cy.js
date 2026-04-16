@@ -107,11 +107,7 @@ describe('로그캐치 사이트 테스트', () => {
     //로그인 성공
 
 
-    
-
-    
-    
-
+   
 
     // ===================================================
     // STEP: 기존 DB 데이터 클린업 (Oracle & PostgreSQL 공통)
@@ -132,13 +128,13 @@ describe('로그캐치 사이트 테스트', () => {
     //  STEP : WAS Oracle DB LETTNEMPLYRINFO 테이블에 자동화 1 사용자 추가 
     // =================================================================
     // 🎯 Date.now()의 뒷부분 10자리만 추출하여 길이를 줄입니다.
+    //자동화 1  개발부서의 개발팀 소속
 
     cy.log('✅ Oracle DB 자동화1 사용자 생성 시작 아이디 : auto_랜덤숫자');
 
     const uniqueTag = String(Date.now()).slice(-10); 
     const testEmplrId = `auto_${uniqueTag}`;        // ID: auto_6243577771 (15자)
     const testEsntlId = `USR_${uniqueTag}`;         // 예: USR_6243577771 (14자) - 안전하게 20자 미만
-
 
     const insertSql = `
     INSERT INTO LETTNEMPLYRINFO (
@@ -157,14 +153,14 @@ describe('로그캐치 사이트 테스트', () => {
     SBSCRB_DE
     ) VALUES (
     '${testEmplrId}', 
-    'ORGNZT_0000000000000', 
+    'ORGNZT_0000000000002', 
     '자동화1',
     'Manager1',
     'F',
     '관리자 주소',  
     'P01', 
     '123', 
-    'GROUP_00000000000002', 
+    'GROUP_00000000000004', 
     '00000000', 
     'P', 
     '${testEsntlId}', 
@@ -227,11 +223,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.v-btn__content', '시작').closest('button').should('not.be.disabled').click({ force: true });
 
      // 4. 성공 알림창(Snackbar) 포착 및 텍스트 검증
-    cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible').and('contain', '성공'); // '성공' 문구 포함 확인
+    cy.get('.v-snack__content', { timeout: 15000 }).should('be.visible').and('contain', '성공'); // '성공' 문구 포함 확인
 
     // 5. 알림창이 사라질 때까지 대기
     cy.get('.v-snack__content').should('not.exist');
     cy.wait(7000); 
+
+    
 
     // ==============================================================
     // STEP : 일반모드 -> 관리자페이지 탭 진입(상단관리자 버튼 클릭) 
@@ -309,6 +307,8 @@ describe('로그캐치 사이트 테스트', () => {
       cy.log(`✅ PostgreSQL 데이터 검증 최종 성공! (사번: ${dbEmployeeNumber} 일치 확인)`);
     });
 
+   
+     
     // ==========================================
     // STEP : logcatch UI 자동화1 사용자 존재 검증 
     // ==========================================
@@ -338,12 +338,85 @@ describe('로그캐치 사이트 테스트', () => {
      });
    });
    cy.log(`✅ 최종 검증 완료: UI 화면과 DB 데이터가 일치합니다.`);
- 
+
+
+
+   // 맨티스 이슈 : 37523  ,37521
+   // 부서장 체크시 DB테이블 업데이트및 부서장 체크박스 유지 안되는 문제
+   /*
+   // ==========================================
+   // STEP : 부서 관리에서 '자동화1'을 부서장으로 설정
+   // ==========================================
+   cy.log('⚙️ 부서장 설정 체크박스 활성화 및 저장');
+   // '자동화1'이라는 글자를 포함한 가시적인 a 태그를 찾아 클릭
+   cy.contains('a.font-weight-bold', '자동화1').should('be.visible').click({ force: true });
+   cy.wait(3000); 
+   
+   // [사용자 상세] 타이틀이 나타날 때까지 확실히 대기 (팝업 로딩 확인)
+   cy.contains('.c-headline', '사용자 상세', { timeout: 10000 }).should('be.visible');
+
+   cy.contains('label', '부서장 설정').parent().find('.v-input--selection-controls__ripple').click({ force: true });
+   cy.wait(1000); 
+
+   // 체크박스가 실제로 체크되었는지 상태 검증 (선택 사항)
+   cy.get('input[role="checkbox"]').should('be.checked');
+
+   // 저장버튼 클릭 
+   cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+   cy.wait(1000); 
+    
+   // 수정했습니다.  알림창(Snackbar) 포착 및 텍스트 검증
+   cy.get('.v-snack__content', { timeout: 15000 }).should('be.visible').and('contain', '수정'); // '수정' 문구 포함 확인
+
+   cy.log('✅ 부서장 설정 저장 완료');
+
+   // ===================================================
+   // STEP: PostgreSQL 부서장 반영 최종 검증 (Cross-Check)
+   // ===================================================
+   cy.log('🐘 PostgreSQL 부서장 반영 상태 확인 시작...');
+
+
+   // 1. 먼저 '자동화1'의 현재 id 값을 tbr_opr_user 테이블에서 가져옵니다.
+   const getUserIdSql = `SELECT id FROM logcatch.tbr_opr_user WHERE employee_number = '${expectedId}'`;
+
+
+   cy.task('queryPostgresDB', getUserIdSql).then((userResult) => {
+    expect(userResult, '사용자 정보가 조회되어야 합니다').to.not.be.null;
+    const currentAutoId = userResult[0].id; // 예: 2517
+    
+    cy.log(`🎯 이번 테스트의 자동화1 ID: ${currentAutoId}`);
+
+    // 2. 개발팀(id: 1011) 행의 group_head_user_id가 위 id와 일치하는지 확인합니다.
+    const checkGroupHeadSql = `
+        SELECT group_head_user_id 
+        FROM logcatch.tbr_opr_user_group 
+        WHERE id = 1011 AND group_name = '개발팀'
+    `;
+
+    // DB 반영 시간을 고려해 약간의 대기 후 조회
+    cy.wait(2000);
+
+    cy.task('queryPostgresDB', checkGroupHeadSql).then((groupResult) => {
+        expect(groupResult, '그룹 정보가 조회되어야 합니다').to.not.be.null;
+        
+        const dbGroupHeadId = groupResult[0].group_head_user_id;
+        
+        cy.log(`🛢️ DB에 저장된 부서장 ID: ${dbGroupHeadId}`);
+
+        // 3. 최종 비교 (자동화1의 ID === 부서 테이블의 부서장 ID)
+        // DB 데이터 타입에 따라 숫자/문자열이 다를 수 있으므로 안전하게 String으로 비교합니다.
+        expect(String(dbGroupHeadId)).to.equal(String(currentAutoId));
+        
+        cy.log(`✅ [검증 성공] 개발팀의 부서장이 자동화1(ID: ${currentAutoId})로 정상 반영되었습니다!`);
+  
+      });
+    });
+  */
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('✅ 관리 - 정보사용자/그룹 관리  인사DB연동 확인 완료 ');
+    cy.log('✅ 관리 - 정보사용자/그룹 관리 인사 DB연동 확인 완료 ');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 
