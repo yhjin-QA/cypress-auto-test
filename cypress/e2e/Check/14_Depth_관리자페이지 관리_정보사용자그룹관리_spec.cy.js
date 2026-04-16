@@ -288,80 +288,62 @@ describe('로그캐치 사이트 테스트', () => {
     // ===================================================
     const targetName = '자동화1';
     const expectedId = `auto_${uniqueTag}`; 
-
-cy.log(`--- 🐘 PostgreSQL DB 데이터 확인: ${targetName} ---`);
-
-// 1. 대기 시간을 넉넉히 줍니다. (인사연동은 생각보다 무거운 작업일 수 있습니다)
-cy.wait(8000); 
-
-// 1. 조회 쿼리 수정 (id -> employee_number)
-const pgSql = `SELECT employee_number FROM logcatch.tbr_opr_user WHERE employee_number = '${expectedId}'`;
-
-cy.task('queryPostgresDB', pgSql).then((pgResult) => {
-    if (!pgResult || pgResult.length === 0) {
+    cy.log(`--- 🐘 PostgreSQL DB 데이터 확인: ${targetName} ---`);
+    // 1. 대기 시간을 넉넉히 줍니다. (인사연동은 생각보다 무거운 작업일 수 있습니다)
+    cy.wait(8000); 
+    // 1. 조회 쿼리 수정 (id -> employee_number)
+    const pgSql = `SELECT employee_number FROM logcatch.tbr_opr_user WHERE employee_number = '${expectedId}'`;
+    cy.task('queryPostgresDB', pgSql).then((pgResult) => {
+      if (!pgResult || pgResult.length === 0) {
         cy.log('⚠️ 첫 번째 조회 실패. 5초 더 기다린 후 재시도합니다...');
         cy.wait(5000);
         return cy.task('queryPostgresDB', pgSql);
-    }
-    return pgResult;
-}).then((pgResult) => {
-    expect(pgResult, 'Postgres DB에 방금 생성한 사번이 존재해야 합니다').to.not.be.null;
-    expect(pgResult.length).to.equal(1);
-    
-    // 2. 값 추출 컬럼명도 employee_number로 변경
-    const dbEmployeeNumber = pgResult[0].employee_number;
-    
-    expect(String(dbEmployeeNumber)).to.equal(expectedId);
-    cy.log(`✅ PostgreSQL 데이터 검증 최종 성공! (사번: ${dbEmployeeNumber} 일치 확인)`);
-});
+      }
+      return pgResult;
+    }).then((pgResult) => {
+      expect(pgResult, 'Postgres DB에 방금 생성한 사번이 존재해야 합니다').to.not.be.null;
+      expect(pgResult.length).to.equal(1);
+      // 2. 값 추출 컬럼명도 employee_number로 변경
+      const dbEmployeeNumber = pgResult[0].employee_number;
+      expect(String(dbEmployeeNumber)).to.equal(expectedId);
+      cy.log(`✅ PostgreSQL 데이터 검증 최종 성공! (사번: ${dbEmployeeNumber} 일치 확인)`);
+    });
 
     // ==========================================
-    // STEP : logcatch UI 데이터 존재 및 일치 검증 
+    // STEP : logcatch UI 자동화1 사용자 존재 검증 
     // ==========================================
-cy.log(`--- [1단계] UI에서 ${targetName} 사용자 검색 ---`);
+    cy.log(`--- [1단계] UI에서 ${targetName} 사용자 검색 ---`);
+    // 1. 검색 조건 세팅 (이름)
+    cy.get('input[aria-label="검색 조건"]').click({ force: true });
+    cy.wait(1000); 
+    cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '이름').click({ force: true });
+    // 2. 검색어 입력 및 실행
+    cy.get('input[aria-label="값"]').should('be.visible').clear().type(targetName);
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(2000); // 검색 결과 렌더링 시간 확보
 
-// 1. 검색 조건 세팅 (이름)
-cy.get('input[aria-label="검색 조건"]').click({ force: true });
-cy.get('.v-menu__content:visible')
-  .contains('.v-list__tile__title', '이름')
-  .click({ force: true });
 
-// 2. 검색어 입력 및 실행
-cy.get('input[aria-label="값"]').should('be.visible').clear().type(targetName);
-cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-cy.wait(2000); // 검색 결과 렌더링 시간 확보
-
-cy.log(`--- [2단계] UI 정보 추출 및 DB 데이터 교차 검증 ---`);
-
-// 3. UI에서 아이디(사번)를 추출하여 실제 DB 값과 비교
-cy.contains('td', targetName) // '자동화1'이 포함된 셀 찾기
-  .parent('tr')               // 해당 행(Row)으로 이동
-  .within(() => {
+    cy.log(`--- [2단계] UI 정보 추출 및 DB 데이터 교차 검증 ---`);
+    // UI에서 아이디(사번)를 추출하여 실제 DB 값과 비교
+    cy.contains('td', targetName) // '자동화1'이 포함된 셀 찾기
+    .parent('tr')               // 해당 행(Row)으로 이동
+    .within(() => {
     // eq(1)에서 텍스트를 가져와서 검증
     cy.get('td').eq(1).invoke('text').then((uiUserId) => {
       const trimmedUiId = uiUserId.trim(); // 공백 제거
-      
       cy.log(`🖥️ UI 표시 아이디: ${trimmedUiId}`);
       cy.log(`🛢️ DB 저장 아이디: ${expectedId}`);
-
       // 🎯 [핵심] UI 값과 DB 값이 일치하는지 최종 확인
       expect(trimmedUiId).to.equal(expectedId);
-    });
-  });
-
-cy.log(`✅ 최종 검증 완료: UI 화면과 DB 데이터가 일치합니다.`);
-
-    
-        
-        
-
-
-     
+     });
+   });
+   cy.log(`✅ 최종 검증 완료: UI 화면과 DB 데이터가 일치합니다.`);
+ 
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('✅ 관리 - 정보사용자/그룹 관리 - [관리]탭 출력 확인 완료 ');
+    cy.log('✅ 관리 - 정보사용자/그룹 관리  인사DB연동 확인 완료 ');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 
