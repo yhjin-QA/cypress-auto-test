@@ -109,17 +109,35 @@ describe('로그캐치 사이트 테스트', () => {
         cy.log('💾 테스트 데이터 백업 완료');
 
     // ==========================================
-    // STEP : 일반모드 -> 관리자페이지 탭 진입(상단관리자 버튼 클릭) 
+    // STEP : 일반모드 -> 관리자페이지 탭 진입 (자동 복구 로직 적용)
     // ==========================================
-    cy.log('🚀 관리자(톱니바퀴) 버튼 클릭');
-    // 1. [검증] 톱니바퀴 아이콘이 화면에 보이는지 확인
-    // 설명: 'g-IConfig' 클래스가 설정 아이콘을 의미하는 핵심 식별자입니다.
-    cy.get('.g-IConfig').should('be.visible');
-    // 2. [클릭] 버튼 클릭
+    cy.log('🚀 관리자(톱니바퀴) 버튼 클릭 및 렌더링 대기');
+
+    cy.get('body').then(($body) => {
+        // 1차 방어: 화면에 톱니바퀴 아이콘이 아예 렌더링되지 않았다면?
+        if ($body.find('.g-IConfig:visible').length === 0) {
+            cy.log('🔴 톱니바퀴 아이콘 렌더링 실패 감지! 페이지 새로고침');
+            cy.reload();
+            cy.wait(3000);
+        }
+    });
+
+    // 톱니바퀴 클릭
     cy.get('.g-IConfig').should('be.visible').click({ force: true });
-    // 3. [대기] 관리자 메뉴가 펼쳐지거나 화면이 이동할 시간 대기
-    cy.wait(2000);
-    cy.log('✅ 관리자 톱니바퀴 아이콘 클릭 완료');
+    cy.wait(2000); // 청크 로딩 대기
+
+    cy.get('body').then(($body) => {
+        // 2차 방어: 클릭은 했는데 ChunkLoadError 때문에 '설정' 메뉴가 안 나타났다면?
+        if ($body.find('button.side-menu:contains("설정"):visible').length === 0) {
+            cy.log('🔴 ChunkLoadError 감지! (사이드 메뉴 렌더링 실패). 새로고침 후 재시도합니다.');
+            cy.reload();
+            cy.wait(3000);
+            cy.get('.g-IConfig').should('be.visible').click({ force: true });
+            cy.wait(2000);
+        }
+    });
+
+    cy.log('✅ 관리자 메뉴 렌더링 및 클릭 완벽 성공');
 
     // =================================================
     // STEP 14: 관리자 - 설정 - 관리자 - 계정 정보  관리규칙탭
