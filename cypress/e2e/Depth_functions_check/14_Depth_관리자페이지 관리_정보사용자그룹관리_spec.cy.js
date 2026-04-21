@@ -133,7 +133,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ Oracle DB 자동화1 사용자 생성 시작 아이디 : auto_랜덤숫자');
 
     const uniqueTag = String(Date.now()).slice(-10); 
-    const testEmplrId = `auto_${uniqueTag}`;        // ID: auto_6243577771 (15자)
+    const testEmplrId = `auto${uniqueTag}`;        // ID: auto6243577771 (15자)
     const testEsntlId = `USR_${uniqueTag}`;         // 예: USR_6243577771 (14자) - 안전하게 20자 미만
 
     const insertSql = `

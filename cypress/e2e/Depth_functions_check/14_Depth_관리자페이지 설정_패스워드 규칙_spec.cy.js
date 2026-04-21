@@ -14,7 +14,7 @@ describe('로그캐치 사이트 테스트', () => {
       'Navigation cancelled',
       'Cannot read properties',
       'resetValidation',
-      'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
+      'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 
       'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
       'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
@@ -199,6 +199,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="동일한 문자 연속 사용 금지"]').should('have.value', dbRules.use_same_char);
     // 최근 변경 이력 검증
     cy.get('input[aria-label="최근 변경 이력 내에서 동일 패스워드 사용 금지"]').should('have.value', dbRules.old_passwd_log_cnt);
+
+    // ✨ [추가 1] 콤보박스(숫자, 특수문자 사용) 디폴트 검증 로직
+    const defaultComboText = dbRules.use_number_special_char === '2' ? '모두 사용' : '숫자 또는 특수문자 사용';
+    // 수정: input 태그 대신 라벨을 포함한 전체 .v-input 영역 안에서 텍스트를 검증합니다.
+    cy.contains('.v-input', '숫자, 특수문자 사용').should('contain', defaultComboText);
+
+
     // 스위치 타입의 규칙들을 매핑합니다.
     const toggleRules = {
     '대문자 포함': 'use_upper_char',
@@ -236,6 +243,24 @@ describe('로그캐치 사이트 테스트', () => {
     Object.entries(newValues).forEach(([label, val]) => {
       cy.contains('.v-input', label).find('input').clear().type(val);
     });
+
+    // ✨ [추가 2] 콤보박스 값 변경 로직-------------
+    cy.then(() => {
+      // 논리는 완벽합니다. 2면 1의 텍스트로, 1이면 2의 텍스트로 변경을 시도합니다.
+      const targetComboText = dbRules.use_number_special_char === '2' ? '숫자 또는 특수문자 사용' : '모두 사용';
+      
+      // 수정 1: 껍데기가 아닌, 콤보박스 내부의 실제 클릭 영역을 정확히 타겟팅해서 엽니다.
+      cy.contains('.v-input', '숫자, 특수문자 사용')
+        .find('.v-input__slot') // 또는 화살표 아이콘 영역
+        .click({ force: true });
+        
+      cy.wait(500); // 드롭다운 팝업 애니메이션 대기
+
+      // 수정 2: Vuetify는 팝업 메뉴를 화면 최하단(v-menu__content)에 띄우므로, 그 안에서 텍스트를 찾습니다.
+      cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', targetComboText).click({ force: true });
+    });
+    //-------------------
+      
 
     // 3. [UI 작업] 스위치(토글) 상태 반전 (전체 토글)
     const toggleRules = {
@@ -290,7 +315,8 @@ describe('로그캐치 사이트 테스트', () => {
       'use_phone_number': String(!JSON.parse(dbRules.use_phone_number)), // 반전
       'use_email_addr': String(!JSON.parse(dbRules.use_email_addr)), // 반전
       'use_first_char_pw': String(!JSON.parse(dbRules.use_first_char_pw)), // 반전
-      'use_number_special_char': dbRules.use_number_special_char // 변경 안 함
+      // ✨ [추가 3] DB 변경 기대값 (2였으면 1로, 1이었으면 2로)
+      'use_number_special_char': dbRules.use_number_special_char === '2' ? '1' : '2'
     };
 
     // 2. 11개 항목 전체 일괄 비교
@@ -326,6 +352,11 @@ describe('로그캐치 사이트 테스트', () => {
     // 숫자값 검증 (이전 dbRules의 값을 그대로 사용)
     cy.get('input[aria-label="최소 패스워드 길이"]').should('have.value', dbRules.passwd_min_size);
     cy.get('input[aria-label="최대 패스워드 길이"]').should('have.value', dbRules.passwd_max_size);
+
+    // ✨ [추가 4] 복원된 콤보박스 UI 검증
+    const restoredComboText = dbRules.use_number_special_char === '2' ? '모두 사용' : '숫자 또는 특수문자 사용';
+    // 수정: 복원 검증 시에도 동일하게 .v-input 영역 안의 텍스트를 확인합니다.
+    cy.contains('.v-input', '숫자, 특수문자 사용').should('contain', restoredComboText);
 
     // 스위치값 검증 (toggleRules 객체 활용)
 
