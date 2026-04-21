@@ -112,16 +112,26 @@ describe('로그캐치 사이트 테스트', () => {
     // ===================================================
     // STEP: 기존 DB 데이터 클린업 (Oracle & PostgreSQL 공통)
     // ===================================================
-    cy.log('🧹 oracle DB, Postgres DB의 기존 "자동화1" 데이터 정리 중...');
+    cy.log(' 🧹 DB 데이터 정리 중 (대상: "자동화1")');
+     cy.log('🧹 oracle DB, Postgres DB의 기존 "자동화1" 데이터 정리 중...');
     
-    // 1. Oracle 데이터 삭제
+    // 1. Oracle 데이터 삭제 (관리자 원천 정보)
     cy.task('queryDB', `DELETE FROM LETTNEMPLYRINFO WHERE USER_NM = '자동화1'`);
-    // 2. PostgreSQL 데이터 삭제 (추가된 부분)
+      cy.log('🧹oracle DB : 기존 "자동화1" 데이터 정리 완료');
+
+    // 2. PostgreSQL 데이터 삭제 (운영자 및 관리자 계정 정보)
     
-    // ✅ 스케줄러가 옮겨놓은 '자동화1' 이름의 모든 데이터를 삭제합니다.
-    cy.task('queryPostgresDB', `DELETE FROM logcatch.tbr_opr_user WHERE name = '자동화1'`).then((result) => {
-      cy.log('🧹 PostgreSQL: 기존 "자동화1" 데이터 정리 완료');
+    // [항목 A] tbr_opr_user 테이블 정리
+    cy.task('queryPostgresDB', `DELETE FROM logcatch.tbr_opr_user WHERE name = '자동화1'`);
+    
+    // [항목 B] tbr_opr_manager 테이블 정리 (추가된 부분 ✨)
+    // 설명: 계정관리 탭의 '관리자 계정' 테이블에 해당하는 원천 데이터입니다.
+    cy.task('queryPostgresDB', `DELETE FROM logcatch.tbr_opr_manager WHERE name = '자동화1'`).then(() => {
+        cy.log('🧹 PostgreSQL: tbr_opr_user 및 tbr_opr_manager 정리 완료');
     });
+
+    cy.wait(1000); // DB 반영을 위한 짧은 대기
+
 
    
     // =================================================================
@@ -343,7 +353,6 @@ describe('로그캐치 사이트 테스트', () => {
 
    // 맨티스 이슈 : 37523  ,37521
    // 부서장 체크시 DB테이블 업데이트및 부서장 체크박스 유지 안되는 문제
-   /*
    // ==========================================
    // STEP : 부서 관리에서 '자동화1'을 부서장으로 설정
    // ==========================================
@@ -369,7 +378,9 @@ describe('로그캐치 사이트 테스트', () => {
    cy.get('.v-snack__content', { timeout: 15000 }).should('be.visible').and('contain', '수정'); // '수정' 문구 포함 확인
 
    cy.log('✅ 부서장 설정 저장 완료');
-
+   /*
+   // 맨티스 이슈 : 37523  ,37521
+   // 부서장 체크시 DB테이블 업데이트및 부서장 체크박스 유지 안되는 문제
    // ===================================================
    // STEP: PostgreSQL 부서장 반영 최종 검증 (Cross-Check)
    // ===================================================

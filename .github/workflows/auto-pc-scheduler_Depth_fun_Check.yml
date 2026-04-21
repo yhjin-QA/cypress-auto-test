@@ -447,80 +447,80 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          $failedSpecNames = @()
-          $isActuallyFailed = $false
-          $totalFailCount = 0
+          Write-Host "============= [🔍 데이터 정밀 분석 시작 (Flaky 완벽 방어 버전 v2)] ============="
 
-          Write-Host "============= [🔍 데이터 정밀 분석 시작 (Flaky 완벽 방어 버전)] ============="
-
-          # [Step 1] 개별 JSON 리포트 전수 조사 (수정 버전)
+          $passedSpecs = @()
+          $realFailedSpecs = @()
+          
+          # [Step 1] JSON 파일 전수 조사하여 성공/실패 화이트리스트 분류
           $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "merged_report.json" }
           
           foreach ($file in $jsonFiles) {
               try {
-                  $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+                  $rawText = Get-Content $file.FullName -Raw -Encoding UTF8
+                  $content = $rawText | ConvertFrom-Json
                   
-                  # 💡 [핵심 보완 1] 파일 전체 통계상 실패가 0이면, 재시도로 성공한 파일이므로 무조건 통과(Skip)
-                  if ($content.stats -and [int]$content.stats.failures -eq 0) {
-                      continue
+                  # 파일명 안전 추출 (정규식으로 100% 확실하게 뽑아냄)
+                  $specName = ""
+                  $match = [regex]::Match($rawText, '"fullFile"\s*:\s*"([^"]+)"')
+                  if ($match.Success) {
+                      $specName = Split-Path ($match.Groups[1].Value -replace '\\', '/') -Leaf
+                  } elseif ($content.results -and $content.results[0].file) {
+                      $specName = Split-Path ($content.results[0].file -replace '\\', '/') -Leaf
                   }
 
-                  # 💡 [핵심 보완 2] 실패가 있다고 기록된 파일만 정밀 분석
-                  if ([int]$content.stats.failures -gt 0) {
-                      $fileHasActualFailure = $false
-                      
-                      foreach ($result in $content.results) {
-                          # suites 내부와 results 직속 테스트를 모두 뒤져서, 
-                          # "재시도 후에도 최종적으로 실패(state: failed)" 상태인 테스트가 있는지 확인
-                          $allTestsInFile = @()
-                          if ($result.tests) { $allTestsInFile += $result.tests }
-                          if ($result.suites) { $allTestsInFile += ($result.suites | ForEach-Object { $_.tests }) }
-
-                          $finalFailures = $allTestsInFile | Where-Object { $_.state -eq "failed" }
-
-                          if ($finalFailures) {
-                              $fileHasActualFailure = $true
-                          }
-
-                          if ($fileHasActualFailure) {
-                              $isActuallyFailed = $true
-                              # 실제 최종 실패 개수만 누적 합산
-                              $totalFailCount += [int]$content.stats.failures
-                              
-                              $fName = if ($result.file) { $result.file } else { $result.fullFile }
-                              if ($fName) {
-                                  $failedSpecNames += (Split-Path ($fName -replace '\\', '/') -Leaf)
-                                  break # 파일당 1번만 리스트에 추가
-                              }
+                  if ($specName -ne "") {
+                      if ($content.stats) {
+                          # 실패 횟수가 0이면 '성공 명단'에 추가
+                          if ([int]$content.stats.failures -eq 0) {
+                              $passedSpecs += $specName
+                          } else {
+                              # 실패가 있으면 '실패 명단'에 추가
+                              $realFailedSpecs += $specName
                           }
                       }
                   }
               } catch { }
           }
 
-          # [Step 2] Job 자체 상태 확인 (시스템 크래시 대비)
-          $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
-          $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
-          if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled" -or $restartStatus -eq "failure" -or $restartStatus -eq "cancelled") {
-              if (-not $isActuallyFailed) { $isActuallyFailed = $true }
-          }
-
-          # 중복 제거
-          $uniqueFailures = $failedSpecNames | Select-Object -Unique
-
-          # [Step 3] 스크린샷 물리 경로 추적 (최후의 보루 - JSON 분석 실패 시에만 실행)
-          if ($isActuallyFailed -and $uniqueFailures.Count -eq 0) {
-              $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*failed*.png" -ErrorAction SilentlyContinue
-              if ($failedScreenshots.Count -gt 0) {
-                  foreach ($shot in $failedScreenshots) {
-                      $shotMatches = [regex]::Matches($shot.FullName, '([^\\/":*?<>|]+\.cy\.js)')
-                      foreach ($m in $shotMatches) { $failedSpecNames += $m.Value.Trim() }
-                  }
-                  $uniqueFailures = $failedSpecNames | Select-Object -Unique
+          # [Step 2] Flaky(재시도 성공) 테스트 완벽 필터링
+          $finalFailedSpecs = @()
+          foreach ($failName in $realFailedSpecs) {
+              # 실패 명단에 있더라도, 성공 명단에 한 번이라도 올랐다면(Flaky) 무시!
+              if ($passedSpecs -notcontains $failName) {
+                  $finalFailedSpecs += $failName
               }
           }
 
-          # [Step 4] 대시보드 URL 탐색
+          $uniqueFailures = $finalFailedSpecs | Select-Object -Unique
+          $isActuallyFailed = if ($uniqueFailures.Count -gt 0) { $true } else { $false }
+
+          # [Step 3] Job 상태 점검 (시스템 뻗음 방어)
+          $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
+          $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
+          if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") {
+              if ($restartStatus -ne "success" -and -not $isActuallyFailed) { 
+                  $isActuallyFailed = $true 
+              }
+          }
+
+          # [Step 4] 최후의 보루: 스크린샷 경로 추적 (JSON 추출 실패 대비)
+          if ($isActuallyFailed -and $uniqueFailures.Count -eq 0) {
+              $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*failed*.png" -ErrorAction SilentlyContinue
+              foreach ($shot in $failedScreenshots) {
+                  $shotMatches = [regex]::Matches($shot.FullName, '([^\\/":*?<>|]+\.cy\.js)')
+                  foreach ($m in $shotMatches) { 
+                      $shotName = $m.Value.Trim()
+                      # 💡 핵심: 스크린샷이 굴러다녀도 '성공 명단'에 이름이 있으면 Flaky이므로 제외!
+                      if ($passedSpecs -notcontains $shotName) {
+                          $finalFailedSpecs += $shotName
+                      }
+                  }
+              }
+              $uniqueFailures = $finalFailedSpecs | Select-Object -Unique
+          }
+
+          # [Step 5] 대시보드 URL 파싱
           $dashUrl = "http://10.10.54.5:8080/projects"
           $urlFiles = Get-ChildItem -Path "all_raw_data", "downloaded_url" -Recurse -Filter "run_url.txt" -ErrorAction SilentlyContinue
           foreach ($uFile in $urlFiles) {
@@ -531,12 +531,12 @@ jobs:
               }
           }
 
-          # [Step 5] 메시지 조립 및 전송 (이하 동일)
+          # [Step 6] 구글 챗 메시지 조립 및 발송
           $time = "$env:NOW"
           if ($isActuallyFailed) {
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
               $title = $env:MSG_FAIL + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
-              $count = if ($totalFailCount -gt 0) { $totalFailCount } elseif ($uniqueFailures.Count -gt 0) { $uniqueFailures.Count } else { 1 }
+              $count = if ($uniqueFailures.Count -gt 0) { $uniqueFailures.Count } else { 1 }
               $specListString = if ($uniqueFailures.Count -gt 0) { $uniqueFailures -join ", " } else { "System Error or Crash" }
               $statusDetail = "FAIL: $count script ( $specListString )"
           } else {

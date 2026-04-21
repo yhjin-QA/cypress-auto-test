@@ -223,10 +223,10 @@ cy.wait(8000); // 페이지 로딩 및 안정화 대기
     
     
     cy.contains('.side-menu', '보관').click({ force: true });
-    cy.wait(2000);
+    cy.wait(3000);
     cy.log('---보관-접속기록 보관 서브메뉴 클릭 ---');
     cy.get('.v-list__tile__title').filter(':contains("접속기록 보관")').filter(':visible').click({ force: true });
-    cy.wait(2000); 
+    cy.wait(3000); 
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.tab-title', '백업/복원').should('exist');
     // 보관 > 접속기록 보관 >  백업/복원  활성/비활성화 토글
