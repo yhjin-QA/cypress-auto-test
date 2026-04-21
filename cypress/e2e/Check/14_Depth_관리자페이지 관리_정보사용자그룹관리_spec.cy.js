@@ -133,7 +133,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ Oracle DB 자동화1 사용자 생성 시작 아이디 : auto_랜덤숫자');
 
     const uniqueTag = String(Date.now()).slice(-10); 
-    const testEmplrId = `auto${uniqueTag}`;        // ID: auto_6243577771 (15자)
+    const testEmplrId = `auto${uniqueTag}`;        // ID: auto6243577771 (15자)
     const testEsntlId = `USR_${uniqueTag}`;         // 예: USR_6243577771 (14자) - 안전하게 20자 미만
 
     const insertSql = `
@@ -285,7 +285,7 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP: PostgreSQL DB 데이터 검증 (tbr_opr_user 테이블)
     // ===================================================
     const targetName = '자동화1';
-    const expectedId = `auto_${uniqueTag}`; 
+    const expectedId = `auto${uniqueTag}`; 
     cy.log(`--- 🐘 PostgreSQL DB 데이터 확인: ${targetName} ---`);
     // 1. 대기 시간을 넉넉히 줍니다. (인사연동은 생각보다 무거운 작업일 수 있습니다)
     cy.wait(8000); 

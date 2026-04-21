@@ -267,12 +267,12 @@ describe('로그캐치 사이트 테스트', () => {
      // cy.get('@dropdown').scrollTo('bottom', { duration: 500 });
      // cy.wait(500);
 
-    // 3. 이제 리스트 내에서 4월 06일을 찾아 클릭합니다.
-    cy.get('.v-menu__content:visible').contains('.v-list__tile__title, .v-list-item__title', '2026-04-06').click({ force: true });
+    // 3. 이제 리스트 내에서 4월 14일을 찾아 클릭합니다.
+    cy.get('.v-menu__content:visible').contains('.v-list__tile__title, .v-list-item__title', '2026-04-14').click({ force: true });
     cy.wait(1000);
     
-    // 선택 후, 입력창(.v-select__selection)에 '2026-04-06'가 표시되는지 검증
-    cy.contains('.v-select__selection', '2026-04-06').should('be.visible');
+    // 선택 후, 입력창(.v-select__selection)에 '2026-04-14'가 표시되는지 검증
+    cy.contains('.v-select__selection', '2026-04-14').should('be.visible');
     cy.wait(1000);
  
     // 표 검색결과안의 검출유형 검출 문구확인
