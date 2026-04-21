@@ -75,17 +75,18 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 관리자 메뉴 렌더링 및 클릭 완벽 성공');
 
     // =================================================
-    // STEP 14: 관리자 - 설정 - 관리자 - 계정 정보  관리규칙탭
+    // STEP : 관리자 - 설정 - 관리자 - 계정 관리탭
     // ==================================================
     //설정 클릭
     cy.log('--- [설정] 메뉴 클릭 ---');
     cy.contains('button.side-menu', '설정').should('be.visible').click({ force: true });
     // 설정 > 관리자  서브메뉴 클릭 
-    cy.wait(2000)
+    cy.wait(3000)
     
     cy.log('--- 서브메뉴 [관리자] 클릭 ---');
     cy.get('.v-list__tile__title').filter(':contains("관리자")').filter(':visible').click({ force: true });
-    cy.wait(2000); // 화면 전환 대기
+    
+    cy.wait(3000); // 화면 전환 대기
      
      // 설정 > 관리자 > [계정관리] 탭 클릭
     cy.get('.v-btn__content').filter(':visible').contains('계정관리').last().click({ force: true });
@@ -129,7 +130,7 @@ describe('로그캐치 사이트 테스트', () => {
    cy.log('✅ 설정 - 관리자 - [계정관리] 출력 확인 완료');
 
     // ================================================================
-    // [관리자 계정] 이선재(loingid346) auto 그룹으로 소속된 권한그룹 변경하기
+    // [관리자 계정] 이선재(loginid346) auto 그룹으로 소속된 권한그룹 변경하기
     // =================================================================
     cy.log('👤 [관리자 계정] 이선재 권한 그룹 변경 시작');
 
@@ -252,15 +253,54 @@ describe('로그캐치 사이트 테스트', () => {
     cy.login('admin', 'Manager1!');
     cy.wait(3000);
 
-    // 다시 관리자 페이지의 [계정관리] 탭까지 진입
+    // ==========================================
+    // STEP : 일반모드 -> 관리자페이지 탭 진입 (자동 복구 로직 적용)
+    // ==========================================
+    cy.log('🚀 관리자(톱니바퀴) 버튼 클릭 및 렌더링 대기');
+
+    cy.get('body').then(($body) => {
+        // 1차 방어: 화면에 톱니바퀴 아이콘이 아예 렌더링되지 않았다면?
+        if ($body.find('.g-IConfig:visible').length === 0) {
+            cy.log('🔴 톱니바퀴 아이콘 렌더링 실패 감지! 페이지 새로고침');
+            cy.reload();
+            cy.wait(3000);
+        }
+    });
+
+    // 톱니바퀴 클릭
     cy.get('.g-IConfig').should('be.visible').click({ force: true });
-    cy.wait(2000);
+    cy.wait(2000); // 청크 로딩 대기
+
+    cy.get('body').then(($body) => {
+        // 2차 방어: 클릭은 했는데 ChunkLoadError 때문에 '설정' 메뉴가 안 나타났다면?
+        if ($body.find('button.side-menu:contains("설정"):visible').length === 0) {
+            cy.log('🔴 ChunkLoadError 감지! (사이드 메뉴 렌더링 실패). 새로고침 후 재시도합니다.');
+            cy.reload();
+            cy.wait(3000);
+            cy.get('.g-IConfig').should('be.visible').click({ force: true });
+            cy.wait(2000);
+        }
+    });
+
+  
+    // =================================================
+    // STEP 관리자 - 설정 - 관리자 - 계정 관리탭
+    // ==================================================
+    //설정 클릭
+    cy.log('--- [설정] 메뉴 클릭 ---');
     cy.contains('button.side-menu', '설정').should('be.visible').click({ force: true });
-    cy.wait(1000);
+    // 설정 > 관리자  서브메뉴 클릭 
+    cy.wait(3000)
+    
+    cy.log('--- 서브메뉴 [관리자] 클릭 ---');
     cy.get('.v-list__tile__title').filter(':contains("관리자")').filter(':visible').click({ force: true });
-    cy.wait(2000);
+    
+    cy.wait(3000); // 화면 전환 대기
+     
+     // 설정 > 관리자 > [계정관리] 탭 클릭
     cy.get('.v-btn__content').filter(':visible').contains('계정관리').last().click({ force: true });
     cy.wait(3000);
+    
 
     // 💡 (이 아래부터 기존에 작성하신 '원복 코드(ComplianceManagers)'가 이어지면 됩니다!)
     // ==========================================================
@@ -335,6 +375,48 @@ describe('로그캐치 사이트 테스트', () => {
     });
     
     cy.log('🎉 이선재 계정 권한 그룹 원래대로 복구 완벽 성공!');
+
+    // ==========================================================
+    // STEP: [사전 정리] AutoUser 계정 존재 여부 확인 및 조건부 삭제 - 예외처리
+    // ==========================================================
+    cy.log('🧹 [사전 정리] 이전 테스트 잔재(AutoUser) 확인 중...');
+
+    cy.get('table').eq(1).then(($table) => {
+        // 테이블 내부에 'AutoUser'라는 텍스트를 가진 행(tr)이 존재하는지 확인
+        if ($table.find('tr:contains("AutoUser")').length > 0) {
+            cy.log('⚠️ 기존 AutoUser 계정 발견! 먼저 삭제를 진행합니다.');
+            
+            // 삭제 API 인터셉트
+            cy.intercept('POST', '**/manager-account*').as('preDeleteAdmin');
+            
+            // AutoUser 행을 찾아서 휴지통 클릭
+            cy.wrap($table)
+              .find('tr:contains("AutoUser")')
+              .find('.fa-trash')
+              .click({ force: true });
+              
+            cy.wait(500); // 팝업 대기
+            
+            // 삭제 확인 팝업 처리
+            cy.get('body').then(($body) => {
+                if ($body.find('.v-card:contains("삭제")').length > 0) {
+                    cy.contains('.v-card', '삭제')
+                      .find('button')
+                      .contains('확인')
+                      .click({ force: true });
+                }
+            });
+            
+            // API 통신 성공 검증 및 테이블 갱신 대기
+            cy.wait('@preDeleteAdmin').its('response.statusCode').should('eq', 200);
+            cy.wait(1000); 
+            
+            cy.log('✅ 기존 AutoUser 계정 사전 삭제 완료!');
+        } else {
+            // AutoUser가 없으면 아무것도 하지 않고 부드럽게 넘어감
+            cy.log('✅ 기존 AutoUser 계정이 없습니다. 바로 신규 추가를 진행합니다.');
+        }
+    });
     
 
     // ==========================================================

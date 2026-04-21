@@ -447,80 +447,76 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          Write-Host "============= [🔍 데이터 정밀 분석 시작 (Flaky 완벽 방어 버전 v2)] ============="
-
-          $passedSpecs = @()
+          Write-Host "============= [🔍 데이터 정밀 분석 (완벽 해결 V3)] ============="
+          $isActuallyFailed = $false
+          $totalFailCount = 0
           $realFailedSpecs = @()
-          
-          # [Step 1] JSON 파일 전수 조사하여 성공/실패 화이트리스트 분류
-          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "merged_report.json" }
-          
-          foreach ($file in $jsonFiles) {
-              try {
-                  $rawText = Get-Content $file.FullName -Raw -Encoding UTF8
-                  $content = $rawText | ConvertFrom-Json
-                  
-                  # 파일명 안전 추출 (정규식으로 100% 확실하게 뽑아냄)
-                  $specName = ""
-                  $match = [regex]::Match($rawText, '"fullFile"\s*:\s*"([^"]+)"')
-                  if ($match.Success) {
-                      $specName = Split-Path ($match.Groups[1].Value -replace '\\', '/') -Leaf
-                  } elseif ($content.results -and $content.results[0].file) {
-                      $specName = Split-Path ($content.results[0].file -replace '\\', '/') -Leaf
-                  }
 
-                  if ($specName -ne "") {
-                      if ($content.stats) {
-                          # 실패 횟수가 0이면 '성공 명단'에 추가
-                          if ([int]$content.stats.failures -eq 0) {
-                              $passedSpecs += $specName
-                          } else {
-                              # 실패가 있으면 '실패 명단'에 추가
-                              $realFailedSpecs += $specName
+          # [Step 1] 오직 최종 병합된 merged_report.json 하나만 신뢰합니다.
+          if (Test-Path "merged_report.json") {
+              try {
+                  $rawJson = Get-Content "merged_report.json" -Raw -Encoding UTF8
+                  $json = $rawJson | ConvertFrom-Json
+                  
+                  $totalFailCount = [int]$json.stats.failures
+                  Write-Host "📊 통합 리포트 전체 실패 수: $totalFailCount"
+
+                  if ($totalFailCount -gt 0) {
+                      $isActuallyFailed = $true
+                      
+                      # 리포트 결과(results)를 돌면서 '진짜 실패'가 기록된 스펙만 쏙쏙 뽑아냅니다.
+                      foreach ($res in $json.results) {
+                          # mochawesome은 각 스펙마다 failures 배열(실패한 테스트 목록)을 가집니다.
+                          $failCountInSpec = 0
+                          if ($res.failures) { $failCountInSpec = @($res.failures).Count }
+                          
+                          # 이 스크립트에 진짜 실패가 존재한다면?
+                          if ($failCountInSpec -gt 0) {
+                              $fName = if ($res.file) { $res.file } else { $res.fullFile }
+                              if ($fName) {
+                                  $specName = Split-Path ($fName -replace '\\', '/') -Leaf
+                                  $realFailedSpecs += $specName
+                                  Write-Host "🚨 진짜 실패 확인됨: $specName"
+                              }
                           }
                       }
+                  } else {
+                      Write-Host "✅ 통합 리포트 상 실패가 0이므로 완벽한 성공(또는 Flaky 통과)입니다."
                   }
-              } catch { }
-          }
-
-          # [Step 2] Flaky(재시도 성공) 테스트 완벽 필터링
-          $finalFailedSpecs = @()
-          foreach ($failName in $realFailedSpecs) {
-              # 실패 명단에 있더라도, 성공 명단에 한 번이라도 올랐다면(Flaky) 무시!
-              if ($passedSpecs -notcontains $failName) {
-                  $finalFailedSpecs += $failName
+              } catch {
+                  Write-Host "⚠️ merged_report.json 파싱 실패"
               }
+          } else {
+              Write-Host "⚠️ merged_report.json 파일이 없습니다."
           }
 
-          $uniqueFailures = $finalFailedSpecs | Select-Object -Unique
-          $isActuallyFailed = if ($uniqueFailures.Count -gt 0) { $true } else { $false }
+          $uniqueFailures = $realFailedSpecs | Select-Object -Unique
 
-          # [Step 3] Job 상태 점검 (시스템 뻗음 방어)
+          # [Step 2] 시스템 에러 / 뻗음 감지 (리포트는 정상인데 Job이 터진 경우)
           $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
           if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") {
-              if ($restartStatus -ne "success" -and -not $isActuallyFailed) { 
-                  $isActuallyFailed = $true 
+              if (-not $isActuallyFailed -and $restartStatus -ne "success") { 
+                  $isActuallyFailed = $true
+                  $totalFailCount = 1
+                  Write-Host "🚨 시스템 강제 종료 감지"
               }
           }
 
-          # [Step 4] 최후의 보루: 스크린샷 경로 추적 (JSON 추출 실패 대비)
+          # [Step 3] 최후의 보루: 리포트에서 이름을 전혀 못 뽑았을 때만 스크린샷 탐색
           if ($isActuallyFailed -and $uniqueFailures.Count -eq 0) {
+              Write-Host "⚠️ 리포트에서 스크립트명을 찾지 못해 스크린샷을 탐색합니다."
               $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*failed*.png" -ErrorAction SilentlyContinue
               foreach ($shot in $failedScreenshots) {
                   $shotMatches = [regex]::Matches($shot.FullName, '([^\\/":*?<>|]+\.cy\.js)')
                   foreach ($m in $shotMatches) { 
-                      $shotName = $m.Value.Trim()
-                      # 💡 핵심: 스크린샷이 굴러다녀도 '성공 명단'에 이름이 있으면 Flaky이므로 제외!
-                      if ($passedSpecs -notcontains $shotName) {
-                          $finalFailedSpecs += $shotName
-                      }
+                      $realFailedSpecs += $m.Value.Trim()
                   }
               }
-              $uniqueFailures = $finalFailedSpecs | Select-Object -Unique
+              $uniqueFailures = $realFailedSpecs | Select-Object -Unique
           }
 
-          # [Step 5] 대시보드 URL 파싱
+          # [Step 4] 대시보드 URL 파싱
           $dashUrl = "http://10.10.54.5:8080/projects"
           $urlFiles = Get-ChildItem -Path "all_raw_data", "downloaded_url" -Recurse -Filter "run_url.txt" -ErrorAction SilentlyContinue
           foreach ($uFile in $urlFiles) {
@@ -531,12 +527,12 @@ jobs:
               }
           }
 
-          # [Step 6] 구글 챗 메시지 조립 및 발송
+          # [Step 5] 구글 챗 메시지 조립 및 발송
           $time = "$env:NOW"
           if ($isActuallyFailed) {
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
               $title = $env:MSG_FAIL + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
-              $count = if ($uniqueFailures.Count -gt 0) { $uniqueFailures.Count } else { 1 }
+              $count = if ($totalFailCount -gt 0) { $totalFailCount } elseif ($uniqueFailures.Count -gt 0) { $uniqueFailures.Count } else { 1 }
               $specListString = if ($uniqueFailures.Count -gt 0) { $uniqueFailures -join ", " } else { "System Error or Crash" }
               $statusDetail = "FAIL: $count script ( $specListString )"
           } else {
