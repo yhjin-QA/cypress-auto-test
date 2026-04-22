@@ -1454,7 +1454,7 @@ describe('로그캐치 사이트 테스트', () => {
         // '식별자 패턴' 컬럼이 존재하고, 현재 오름차순(asc) 정렬 상태인지 확인
         cy.contains('th.column.sortable', '식별자 패턴').should('be.visible').and('have.class', 'asc'); 
         
-        cy.log('✅ 검출 - 필터 - [전처리 인코더 설정] 화면 출력 확인 완료 ');
+        cy.log('✅ 검출 - 필터 - [식별자 패턴관리] 화면 출력 확인 완료 ');
 
 
 

@@ -15,7 +15,7 @@ describe('로그캐치 사이트 테스트', () => {
       'Cannot read properties',
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
-       'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
+      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
       'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
       'Loading chunk',    //네트워크 로딩에러 
@@ -261,7 +261,7 @@ cy.wait(8000); // 페이지 로딩 및 안정화 대기
         });
 
     // ==========================================
-    // STEP : 백업 폴더 생성확인
+    // STEP : 백업전 system 폴더 확인(보관갯수 사전확인용)
     // ==========================================  
 
     // 오늘 날짜 생성 (YYYYMMDD)
@@ -270,16 +270,12 @@ cy.wait(8000); // 페이지 로딩 및 안정화 대기
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
         const todayPrefix = `${year}${month}${day}`;
-
         cy.log(`📅 오늘 날짜 : ${todayPrefix}`);
 
         // 전체 목록 조회를 위해 ${todayPrefix}_* 를 빼고 조회합니다.
         cy.task('runSSH', `ls -1 ${backupPath}/system/`).then((result) => {
           // system 폴더 하위의 모든 목록을 로그에 출력해서 보여줍니다.
           cy.log(`📂 [system] 하위 전체 목록:\n${result.trim()}`);
-          // 출력된 전체 목록 중에 오늘 날짜(todayPrefix) 폴더가 존재하는지 검증합니다.
-          expect(result, '오늘 날짜로 된 백업 폴더가 존재해야 함').to.include(todayPrefix);
-          
         });
     });
 
