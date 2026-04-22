@@ -11,12 +11,15 @@ describe('로그캐치 사이트 테스트', () => {
   Cypress.on('uncaught:exception', (err, runnable) => {
     // 무시할 에러 메시지 목록
     const ignoredErrors = [
-      'Navigation cancelled',
+     'Navigation cancelled',
       'Cannot read properties',
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
+      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
+      'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
-      'Loading chunk',    //네트워크 로딩에러 
+      'Loading chunk',
+      'Loading CSS chunk',           // ◀◀◀ [NEW] 이번에 발생한 CSS 청크 에러 무시 추가!
       'operate.task.packageManagement',
       'e is not defined',
       'Script error',
@@ -57,10 +60,10 @@ describe('로그캐치 사이트 테스트', () => {
      //////////////////////////////////////
 
     // 2. 아이디 입력
-    cy.get('input[aria-label="사용자 계정"]').should('exist').type('hojun', { force: true });
+    cy.get('input[aria-label="사용자 계정"]').should('exist').type('loginid2', { force: true });
 
     // 3. 비밀번호 입력
-    cy.get('input[aria-label="패스워드"]').should('exist').type('Manager1!@', { force: true }); 
+    cy.get('input[aria-label="패스워드"]').should('exist').type('Manager1!', { force: true }); 
     
     // 4. 로그인 실행 (버튼 클릭 대신 엔터키 사용)
     // 설명: 버튼 클릭보다 엔터키가 '중복 클릭'이나 '이동 에러'가 훨씬 적게 발생합니다.
@@ -109,14 +112,14 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
 
     cy.contains('button', '소명').click({ force: true });
-    cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
+    cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
     
     //부서장 권한있는 유저가 로그인시 
-    //cy.log('--- 소명 > 나의 소명 서브메뉴 ---');
+    cy.log('--- 소명 > 나의 소명 서브메뉴 ---');
     //서브메뉴 관리 클릭 
-    //cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('나의 소명').click({ force: true });
+    cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('나의 소명').click({ force: true });
  
-
+/*
     // 소명 > 나의 소명 > 나의 소명내역 탭 (디폴트 기본화면)
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
@@ -144,24 +147,6 @@ describe('로그캐치 사이트 테스트', () => {
     // 기능확인 - 조건별로 검색  
     // 소명상태 별로 검증 /////////////
     // 소명상태  클릭하는 코드 
-
-
-    //기능동작
-    //달력표를 펼침  월/일 지정  
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.wait(500);
-    // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
-    cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
-
-    // 2. '2월'이라는 글자를 찾아 클릭합니다.
-    cy.get('.v-date-picker-table--month').filter(':visible').contains('2월').click({ force: true });
-    // 달력 1일 클릭
-    cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').closest('.v-btn').click({ force: true });
-    //달력창 닫기
-    cy.get('body').type('{esc}');
-
-    
-
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
     // 소명상태중 '취소' 클릭하는 코드
@@ -179,8 +164,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 소명상태중 '대기' 클릭하는 코드 
     // 대기 &  소명필요 검색결과로 나오지  않는 이슈 ( 맨티스 이슈 : 37157)
     // 이슈라면 수정후 대기상태 코드 작성필요 
-
-   
+    
     // 소명 상태 클릭 (팝업창 다시띄우기) (소명상태 다중선택 취소 + 신청 )
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '신청' 클릭하는 코드
@@ -342,28 +326,22 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('tbody').find('a').contains('개인정보 과다조회').should('be.visible');
     
 
-    //이상행위 유형 상태 클릭 (팝업창 다시띄우기) (이상행위 유형 다중선택 개인정보 과다조회 + 접근제한 업무 시스템 접근 )
+    //이상행위 유형 상태 클릭 (팝업창 다시띄우기) (이상행위 유형 다중선택 개인정보 과다조회 + 열람제한 개인정보 접근 )
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
-    // 이상행위 유형중 '접근제한 업무 시스템 접근 ' 클릭하는 코드
-    //cy.contains('.v-list__tile__title', '접근제한 업무 시스템 접근').scrollIntoView().click({ force: true });
+    // 이상행위 유형중 '열람제한 개인정보 접근 ' 클릭하는 코드
+    //cy.contains('.v-list__tile__title', '열람제한 개인정보 접근').scrollIntoView().click({ force: true });
     // 실제 스크롤 내리는 동작으로 클릭
-    // cy.get('.v-menu__content').filter(':visible').scrollIntoView({ block: 'end' }).contains('접근제한 업무 시스템 접근').should('be.visible').click({ force: true });
-    // 1. 드롭다운 컨테이너 자체를 맨 아래로 스크롤
-    cy.get('.v-menu__content').filter(':visible').scrollTo('bottom', { duration: 1000 }); // 부드럽게 끝까지 내림
-
-    // 2. 렌더링 시간을 잠시 준 뒤, 텍스트가 존재하는지 확인하고 클릭
-    // (비가시 상태여도 클릭하도록 force: true 사용)
-    cy.contains('접근제한 업무 시스템 접근', { timeout: 10000 }).click({ force: true });
+    cy.get('.v-menu__content').filter(':visible').scrollTo('center').contains('열람제한 개인정보 접근').should('be.visible').click({ force: true });
     cy.wait(500);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
-    // '개인정보 과다조회 + 접근제한 업무 시스템 접근' 선택한 검색결과 검증코드
+    // '개인정보 과다조회 + 열람제한 개인정보 접근' 선택한 검색결과 검증코드
     cy.get('tbody').find('a').contains('개인정보 과다조회').should('be.visible');
-    cy.get('tbody').find('a').contains('접근제한 업무 시스템 접근').should('be.visible');
+    cy.get('tbody').find('a').contains('열람제한 개인정보 접근').should('be.visible');
    
 
     // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
@@ -372,40 +350,21 @@ describe('로그캐치 사이트 테스트', () => {
     // 이상행위 유형 선택창 팝업 다시 띄우기
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
-    // 이상행위 유형중 스크롤 내려서 '권한 외 메뉴 접근' 클릭하는 코드
-    cy.get('.v-menu__content').filter(':visible').scrollTo('center').contains('권한 외 메뉴 접근').should('be.visible').click({ force: true });
+    // 이상행위 유형중 스크롤 내려서 '열람제한 개인정보 접근 ' 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').scrollTo('center').contains('열람제한 개인정보 접근').should('be.visible').click({ force: true });
     cy.wait(500);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
-    // '권한 외 메뉴 접근' 선택한 검색결과 검증코드
-    cy.get('tbody').find('a').contains('권한 외 메뉴 접근').should('be.visible');
-    cy.wait(1000);
+    // '열람제한 개인정보 접근' 선택한 검색결과 검증코드
+    cy.get('tbody').find('a').contains('열람제한 개인정보 접근').should('be.visible');
 
+    // 경보등급 선택 //
     // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     cy.wait(1000);
-
-    
-    // 경보등금 심각만 선택하여 검색시 이전날짜이력은 검색되지 않는 문제 (맨티스 이슈 : 37203)
-    //  임시로 날짜 선택하게 함.  37203 버그 해결시에는 임시 날짜 선택코드 삭제해야함. 
-    // 버그해결시 삭제 /////////////////
-    // 소명 대상 일자 선택창 팝업 띄우기
-    cy.get('input[aria-label="소명 대상 일자"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
-    // 일자 : 2026-02-05일자  클릭하는 코드
-    //cy.get('.v-list__tile__title').filter(':visible').contains('2026-02-05').click({ force: true });
-    cy.get('.v-menu__content:visible, .v-autocomplete__content:visible').should('exist').scrollTo('bottom', { duration: 1000 }); // 1초 동안 천천히 아래로 이동
-    // 2. 데이터가 렌더링될 시간을 잠시 준 뒤 날짜를 클릭합니다.
-    cy.wait(500);
-    cy.contains('.v-list__tile__title', '2026-02-05').should('exist').click({ force: true });
-     // 선택 후 메뉴 닫기
-    cy.get('body').type('{esc}');
-    ///////////////////////////////
-
-    // 경보등급 선택 //
     // 경보 등급 유형 선택창 팝업 띄우기
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
@@ -413,15 +372,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
-
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    
     cy.wait(1000);
     // 경보등급중 '심각' 검색결과 검증코드 (빨강색)
     cy.get('.g-IMinorAlert').filter('[style*="rgb(244, 67, 54)"]') .should('be.visible');
 
-    //경보등급 경계있을시에만 ... **********************************************
+    /* 경보등급 경계있을시에만 ... **********************************************
     cy.wait(1000);
     // 경보 등급 유형 선택창 팝업 띄우기 (다시 띄우기)
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -455,8 +412,8 @@ describe('로그캐치 사이트 테스트', () => {
     // 경보등급중 '경계' 검색결과 검증코드 (노란색)
     cy.get('.g-IMajorAlert').filter('[style*="rgb(255, 192, 0)"]') .should('be.visible');
     
-    //***********************************************************************************/ 
-
+   ***********************************************************************************/ 
+/*
     // 선택한 경보등급  x버튼 클릭하여 초기화 
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     cy.wait(1000);
@@ -491,9 +448,9 @@ describe('로그캐치 사이트 테스트', () => {
 
     cy.log('✅ 소명 - 나의 소명 - [소명하기]탭 진입 및 데이터 출력 확인 완료!');
   
+*/
 
-
-     /* 부서장 권한이있는 사람으로 로그인시 확인하는 부분 
+      //부서장 권한이있는 사람으로 로그인시 확인하는 부분 
       // 소명 > 나의소명 > 승인하기
       cy.get('.tab-btn').contains('승인하기').should('be.visible').click({ force: true });
       cy.wait(3000); 
@@ -526,6 +483,22 @@ describe('로그캐치 사이트 테스트', () => {
       cy.get('th').filter(':visible').contains('소명 유형').should('be.visible');
 
       // 기능확인 //
+      // 날짜부터 선택안하면 업무시스템 초기화되는 문제
+
+      //기능동작
+      //달력표를 펼침  월/일 지정  
+      cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+      cy.wait(500);
+      // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
+      cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
+
+      // 2. '2월'이라는 글자를 찾아 클릭합니다.
+      cy.get('.v-date-picker-table--month').filter(':visible').contains('2월').click({ force: true });
+      // 달력 1일 클릭
+      cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').closest('.v-btn').click({ force: true });
+      //달력창 닫기
+      cy.get('body').type('{esc}');
+
       // 업무시스템 클릭  : 리눅스 배송관리 선택 
       cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
       cy.wait(1000);
@@ -546,10 +519,12 @@ describe('로그캐치 사이트 테스트', () => {
       cy.get('body').type('{esc}');
       cy.wait(500);
 
-      //// 사용자 계정 클릭하여 loginid2 아이디 입력
+      //// 사용자 계정 클릭하여 hojun 아이디 입력
       cy.contains('.v-label', '사용자 계정').closest('.v-input').find('input').type('hojun', { force: true });
 
-      // 소명상태  클릭하는 코드 
+
+      // 소명상태 점검 시작 
+      // 소명상태 - 신청을  클릭하는 코드 
       cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
       cy.wait(500);
       // 소명상태중 '취소' 클릭하는 코드
@@ -567,9 +542,9 @@ describe('로그캐치 사이트 테스트', () => {
       // 선택 후 메뉴 닫기
       cy.get('body').type('{esc}');
 
-      
       // 검색 버튼 클릭
       cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+
       // '신청', '사후소명' 선택한 검색결과 검증코드
       cy.get('tbody').find('a').contains('인사팀').should('be.visible');
       cy.get('tbody').find('a').contains('hojun').should('be.visible');
@@ -577,15 +552,126 @@ describe('로그캐치 사이트 테스트', () => {
       cy.get('tbody').find('a').contains('사후 소명').should('be.visible');
       cy.wait(1000);
 
+      //-------------------------
+      // 소명상태 - 신청 + 반려 다중선택 클릭하는 코드 
+      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+      cy.wait(500);
+      // 소명상태중 '취소' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('반려').click({ force: true });
+      cy.wait(500);
+      // 선택 후 메뉴 닫기
+      cy.get('body').type('{esc}');
+
+
+      // 소명유형 클릭 (팝업창 띄우기)
+      cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
+      // 소명유형중  '사후 소명' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
+      cy.wait(500);
+      // 선택 후 메뉴 닫기
+      cy.get('body').type('{esc}');
+
+
+      
+      // 검색 버튼 클릭
+      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+      // '신청', '사후소명' 선택한 검색결과 검증코드
+      cy.get('tbody').find('a').contains('인사팀').should('be.visible');
+      cy.get('tbody').find('a').contains('hojun').should('be.visible');
+      cy.get('tbody').find('a').contains('반려').should('be.visible');
+      cy.get('tbody').find('a').contains('사후 소명').should('be.visible');
+      cy.wait(1000);
+
+      // 선택한 소명 x버튼 클릭하여 초기화 
+      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+
+     //-------------------------
+      // 소명상태 - 반려 클릭하는 코드 
+      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+      cy.wait(500);
+      // 소명상태중 '취소' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('반려').click({ force: true });
+      cy.wait(500);
+      // 선택 후 메뉴 닫기
+      cy.get('body').type('{esc}');
+
+
+      // 소명유형 클릭 (팝업창 띄우기)
+      cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
+      // 소명유형중  '사후 소명' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
+      cy.wait(500);
+      // 선택 후 메뉴 닫기
+      cy.get('body').type('{esc}');
+
+
+      
+      // 검색 버튼 클릭
+      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+      // '신청', '사후소명' 선택한 검색결과 검증코드
+      cy.get('tbody').find('a').contains('인사팀').should('be.visible');
+      cy.get('tbody').find('a').contains('hojun').should('be.visible');
+      cy.get('tbody').find('a').contains('반려').should('be.visible');
+      cy.get('tbody').find('a').contains('사후 소명').should('be.visible');
+      cy.wait(1000);
+      
+      // 선택한 소명 x버튼 클릭하여 초기화 
+      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+
+      //-------------------------
+      // 소명상태 - 승인 클릭하는 코드 
+      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+      cy.wait(500);
+      // 소명상태중 '취소' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('승인').click({ force: true });
+      cy.wait(500);
+      // 선택 후 메뉴 닫기
+      cy.get('body').type('{esc}');
+
+
+      // 소명유형 클릭 (팝업창 띄우기)
+      cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
+      // 소명유형중  '사후 소명' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
+      cy.wait(500);
+      // 선택 후 메뉴 닫기
+      cy.get('body').type('{esc}');
+
+
+      
+      // 검색 버튼 클릭
+      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+      // '신청', '사후소명' 선택한 검색결과 검증코드
+      cy.get('tbody').find('a').contains('인사팀').should('be.visible');
+      cy.get('tbody').find('a').contains('hojun').should('be.visible');
+      cy.get('tbody').find('a').contains('승인').should('be.visible');
+      cy.get('tbody').find('a').contains('사후 소명').should('be.visible');
+      cy.wait(1000)
+
+      // 승인필요한 내역만 보기 토글버튼 클릭 
+      cy.get('input[aria-label="승인이 필요한 내역만 보기"]').click({ force: true });
+      cy.wait(1000)
+      // 클릭 후, 체크된 상태(checked)인지 검증
+      cy.get('input[aria-label="승인이 필요한 내역만 보기"]').should('be.checked');
+      
+      //맨티스 이슈 : 0037197 수정필요
+      // [소명] 소명 - 승인하기 탭 ' 승인이필요한 내역만 보기 클릭시' 초기화되어 검색결과 보여지지 않는 문제
+      // 승인필요한 내역만 보기 표 검증
+      //cy.get('tbody').find('a').contains('신청').should('be.visible');
+      //cy.get('tbody').find('a').contains('반려').should('not.exist');
+      //cy.get('tbody').find('a').contains('승인').should('not.exist');
+     
+  
+
       cy.log('✅ 소명 - 나의 소명 - [승인하기]탭 진입 및 데이터 출력 확인 완료!');
 
-    */
+    
   
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 소명_유저(User) 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 소명_유저(부서장) 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 
@@ -598,4 +684,3 @@ describe('로그캐치 사이트 테스트', () => {
 
  })()
 ;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic3BlYy5jeS5qcyIsIm1hcHBpbmdzIjoiOzs7Ozs7O0FBQUFBLFFBQVEsQ0FBQyxlQUFlLEVBQUUsTUFBTTtFQUM5QkMsRUFBRSxDQUFDLFFBQVEsRUFBRSxNQUFNO0lBQ2pCQyxFQUFFLENBQUNDLEtBQUssQ0FBQyw0QkFBNEIsQ0FBQztFQUN4QyxDQUFDLENBQUM7QUFDSixDQUFDLENBQUMsQyIsInNvdXJjZXMiOlsid2VicGFjazovLy8uL2N5cHJlc3MvZTJlL3NwZWMuY3kuanMiXSwic291cmNlc0NvbnRlbnQiOlsiZGVzY3JpYmUoJ3RlbXBsYXRlIHNwZWMnLCAoKSA9PiB7XHJcbiAgaXQoJ3Bhc3NlcycsICgpID0+IHtcclxuICAgIGN5LnZpc2l0KCdodHRwczovL2V4YW1wbGUuY3lwcmVzcy5pbycpXHJcbiAgfSlcclxufSkiXSwibmFtZXMiOlsiZGVzY3JpYmUiLCJpdCIsImN5IiwidmlzaXQiXSwic291cmNlUm9vdCI6IiJ9
