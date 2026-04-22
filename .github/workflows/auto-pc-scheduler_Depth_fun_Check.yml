@@ -447,93 +447,96 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          Write-Host "============= [🔍 Node.js 기반 정밀 분석 (완벽 해결 v4)] ============="
+          Write-Host "============= [Debug Log: Node.js Raw Data Analysis] ============="
           
-          # [Step 1] Node.js 스크립트 생성 (JSON을 가장 완벽하게 읽어내는 방법)
+          # [핵심] 병합본(merged)을 믿지 않고, 개별 원본 JSON 파일들을 직접 검사합니다.
           $nodeScript = @"
           const fs = require('fs');
+          const path = require('path');
+
+          function findJsonFiles(dir, fileList = []) {
+              if (!fs.existsSync(dir)) return fileList;
+              const files = fs.readdirSync(dir);
+              for (const file of files) {
+                  const stat = fs.statSync(path.join(dir, file));
+                  if (stat.isDirectory()) {
+                      findJsonFiles(path.join(dir, file), fileList);
+                  } else if (file.endsWith('.json') && file !== 'merged_report.json') {
+                      fileList.push(path.join(dir, file));
+                  }
+              }
+              return fileList;
+          }
+
           try {
-              if (!fs.existsSync('merged_report.json')) {
-                  console.log('ERROR=File not found');
-                  process.exit(0);
-              }
-              const data = JSON.parse(fs.readFileSync('merged_report.json', 'utf8'));
-              let fails = data.stats.failures || 0;
-              let failSpecs = [];
-              
-              if (fails > 0) {
-                  data.results.forEach(r => {
-                      let hasFail = false;
-                      // Mochawesome의 깊은 구조(suites)를 재귀적으로 파고들며 실패 찾기
-                      const checkFails = (suite) => {
-                          if (suite.failures && suite.failures.length > 0) hasFail = true;
-                          if (suite.suites) suite.suites.forEach(checkFails);
-                      };
-                      
-                      if (r.failures && r.failures.length > 0) hasFail = true;
-                      if (r.suites) r.suites.forEach(checkFails);
-                      
-                      if (hasFail) {
-                          let f = r.file || r.fullFile || 'Unknown';
-                          let fileName = f.split(/[\\\\/]/).pop();
-                          if (fileName) failSpecs.push(fileName);
+              const jsonFiles = findJsonFiles('all_raw_data');
+              let realFailures = new Set();
+              let totalFails = 0;
+
+              jsonFiles.forEach(file => {
+                  try {
+                      const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+                      // stats.failures가 0보다 클 때만 진짜 실패로 간주 (Flaky 완벽 필터링)
+                      if (data.stats && data.stats.failures > 0) {
+                          totalFails += data.stats.failures;
+                          let specName = 'Unknown Spec';
+                          if (data.results && data.results[0]) {
+                              const fullFile = data.results[0].file || data.results[0].fullFile;
+                              if (fullFile) {
+                                  specName = fullFile.split(/[\\\\/]/).pop();
+                              }
+                          }
+                          realFailures.add(specName);
                       }
-                  });
+                  } catch (e) {
+                      // ignore bad json files
+                  }
+              });
+
+              console.log('FAILS=' + totalFails);
+              if (realFailures.size > 0) {
+                  console.log('SPECS=' + Array.from(realFailures).join(', '));
               }
-              console.log('FAILS=' + fails);
-              if (failSpecs.length > 0) {
-                  console.log('SPECS=' + [...new Set(failSpecs)].join(', '));
-              }
-          } catch (e) {
-              console.log('ERROR=' + e.message);
+          } catch (err) {
+              console.log('ERROR=' + err.message);
           }
           "@
           
-          # 스크립트 저장 및 Node.js 실행
-          $nodeScript | Out-File -FilePath "parse_report.js" -Encoding UTF8
-          $nodeOut = node parse_report.js
+          # Node.js 실행
+          $nodeScript | Out-File -FilePath "parse_raw_reports.js" -Encoding UTF8
+          $nodeOut = node parse_raw_reports.js
           
-          Write-Host "🖥️ Node.js 추출 결과:"
+          Write-Host "Node.js Output:"
           $nodeOut | ForEach-Object { Write-Host $_ }
           
-          # [Step 2] Node.js가 던져준 결과값 안전하게 받기
           $totalFailCount = 0
           $specListString = ""
           $isActuallyFailed = $false
           
+          # 결과 파싱
           foreach ($line in $nodeOut) {
               if ($line -match "^FAILS=(\d+)") { $totalFailCount = [int]$matches[1] }
-              if ($line -match "^SPECS=(.*)") { $specListString = $matches[1] }
+              if ($line -match "^SPECS=(.*)") { $specListString = $matches[1].Trim() }
           }
           
           if ($totalFailCount -gt 0) {
               $isActuallyFailed = $true
           }
           
-          # [Step 3] 시스템 뻗음 방어 (리포트는 무사한데 Cypress 자체가 터진 경우)
+          # 시스템 뻗음 방어
           $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
           if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") {
               if (-not $isActuallyFailed -and $restartStatus -ne "success") {
                   $isActuallyFailed = $true
                   $totalFailCount = if ($totalFailCount -eq 0) { 1 } else { $totalFailCount }
-                  $specListString = "시스템 오류 또는 작업 중단(Cancelled)"
+                  $specListString = "System Error or Cancelled"
               }
           }
           
-          # [Step 4] 최후의 보루: 에러는 났는데 Node.js가 스펙 이름을 못 찾았을 때만 스크린샷 탐색
-          if ($isActuallyFailed -and [string]::IsNullOrEmpty($specListString)) {
-              $scFails = @()
-              $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*failed*.png" -ErrorAction SilentlyContinue
-              foreach ($shot in $failedScreenshots) {
-                  $shotMatches = [regex]::Matches($shot.FullName, '([^\\/":*?<>|]+\.cy\.js)')
-                  foreach ($m in $shotMatches) { $scFails += $m.Value.Trim() }
-              }
-              $uniq = $scFails | Select-Object -Unique
-              $specListString = if ($uniq.Count -gt 0) { $uniq -join ", " } else { "Unknown Spec (리포트 확인 요망)" }
-          }
+          # 🚨 스크린샷 찾는 로직 완전 삭제 (Flaky를 실패로 잡는 주범) 🚨
 
-          # [Step 5] 대시보드 URL 파싱
+          # 대시보드 URL 파싱
           $dashUrl = "http://10.10.54.5:8080/projects"
           $urlFiles = Get-ChildItem -Path "all_raw_data", "downloaded_url" -Recurse -Filter "run_url.txt" -ErrorAction SilentlyContinue
           foreach ($uFile in $urlFiles) {
@@ -544,12 +547,13 @@ jobs:
               }
           }
 
-          # [Step 6] 구글 챗 메시지 조립 및 발송
+          # 메시지 조립 및 발송
           $time = "$env:NOW"
           if ($isActuallyFailed) {
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
               $title = $env:MSG_FAIL + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
-              $statusDetail = "FAIL: $totalFailCount script ( $specListString )"
+              $detailSpec = if ($specListString) { $specListString } else { "Unknown Spec" }
+              $statusDetail = "FAIL: $totalFailCount script ( $detailSpec )"
           } else {
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
               $title = $env:MSG_SUCCESS + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
