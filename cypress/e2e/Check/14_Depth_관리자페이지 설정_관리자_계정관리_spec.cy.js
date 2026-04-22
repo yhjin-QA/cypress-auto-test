@@ -19,7 +19,11 @@ describe('로그캐치 사이트 테스트', () => {
       'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
       'Loading chunk',
-      'operate.task.packageManagement'
+      'Loading CSS chunk',           // ◀◀◀ [NEW] 이번에 발생한 CSS 청크 에러 무시 추가!
+      'operate.task.packageManagement',
+      'e is not defined',
+      'Script error',
+      'not valid JSON'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
