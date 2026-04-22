@@ -221,8 +221,8 @@ describe('로그캐치 사이트 테스트', () => {
     // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
-    // 2. '2월'이라는 글자를 찾아 클릭합니다.
-     cy.get('.v-date-picker-table--month').filter(':visible').contains('2월').click({ force: true });
+    // 2. '3월'이라는 글자를 찾아 클릭합니다.
+     cy.get('.v-date-picker-table--month').filter(':visible').contains('3월').click({ force: true });
     // 달력 20일 클릭
     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '20일').closest('.v-btn').click({ force: true });
     //달력창 닫기
