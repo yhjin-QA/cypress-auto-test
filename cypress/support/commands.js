@@ -24,9 +24,9 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
-// ==========================================================
-// 로그캐치 공통 로그인 커맨드 (세션 초기화 + 화면 렌더링 방어 + 중복 팝업 방어)
-// ==========================================================
+// ====================================================================
+// 1. 로그캐치 공통 로그인 커맨드 (세션 초기화 + 화면 렌더링 방어 + 중복 팝업 방어)
+// =====================================================================
 Cypress.Commands.add('login', (userId, password) => {
     cy.log(`🔑 [${userId}] 계정으로 로그인 진행`);
 
@@ -67,4 +67,35 @@ Cypress.Commands.add('login', (userId, password) => {
     cy.url({ timeout: 10000 }).should('not.include', '/login');
     cy.wait(3000);
     cy.log(`✅ [${userId}] 로그인 완벽 성공!`);
+});
+
+// ==========================================================
+// 2. 페이지네이션 노출 개수 변경 커맨드 (새로 추가할 코드)
+// ==========================================================
+Cypress.Commands.add('changePageRow', (targetCount = '10') => {
+    cy.log(`📄 페이지네이션 노출 개수를 [${targetCount}]개로 변경 시도`);
+    cy.wait(500); 
+
+    cy.get('body').then(($body) => {
+        const currentVal = $body.find('.v-select__selection').last().text().trim();
+
+        if (currentVal !== targetCount.toString()) {
+            cy.log(`🔄 현재 ${currentVal}개 노출. ${targetCount}개로 변경합니다.`);
+            
+            cy.wrap($body).find('.v-select__selection').last().click({ force: true });
+            cy.wait(500); 
+
+            cy.get('.v-menu__content')
+              .filter(':visible')
+              .last()
+              .contains('.v-list__tile__title', targetCount.toString()) 
+              .closest('a, div.v-list__tile')
+              .click({ force: true });
+
+            cy.wait(1500); 
+            cy.log(`✅ ${targetCount}개 노출로 변경 완료!`);
+        } else {
+            cy.log(`✅ 이미 ${targetCount}개 노출 상태입니다. 패스합니다.`);
+        }
+    });
 });

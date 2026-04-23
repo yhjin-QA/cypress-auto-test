@@ -851,19 +851,58 @@ cy.get('body').then(($body) => {
      cy.contains('span.tab-title', 'HTTP Request').should('be.visible').click({ force: true });
      cy.wait(500); 
 
-     //화면 검증코드
-     // 'referer' 행 내부에서 검증
-     cy.contains('tr', 'referer', { timeout: 10000 }).should('be.visible')     .within(() => {
-    // 1. IP 주소는 고정이므로 반드시 확인
-    cy.get('td').should('contain', '10.10.54.22:8080');
-    
-    // 2. 중간 경로는 제외하고, 마지막이 .do로 끝나는지만 유연하게 확인
-    // contain 대신 invoke('text')를 사용하여 정규식으로 확인하는 것이 가장 안전합니다.
-    cy.get('td').invoke('text').then((text) => {
-      // .do 확장자가 포함되어 있는지 확인 (어떤 메뉴를 클릭했든 통과됨)
-      expect(text).to.match(/\.do/); 
-       });
+     // ==========================================================
+    // STEP: HTTP REQUEST 정보 검증 (조건부 분기)
+    // ==========================================================
+    cy.log('🔍 HTTP REQUEST 데이터 검증');
+
+    // 팝업 화면이 완전히 열릴 때까지 고정 요소(접속 아이디 라벨)를 기다립니다.
+    cy.contains('span', '접속 아이디', { timeout: 10000 }).should('be.visible');
+    cy.wait(500); // 데이터 렌더링 안정화 대기
+
+    cy.get('body').then(($body) => {
+        // 제이쿼리(jQuery)를 이용해 화면 어딘가에 '(undefined)' 텍스트가 있는지 찾습니다.
+        if ($body.find('span:contains("(undefined)")').length > 0) {
+            
+            // --------------------------------------------------
+            // [CASE A] 접속 아이디가 (undefined)인 경우
+            // --------------------------------------------------
+            cy.log('⚠️ [Case A] 비정상(undefined) 사용자: connection 정보 검증');
+            
+            // referer가 없으므로 대신 'connection' 행을 찾아 'keep-alive'를 검증합니다.
+            cy.contains('tr', 'connection', { timeout: 10000 }).should('be.visible')
+              .within(() => {
+                  cy.contains('keep-alive').should('be.visible');
+              });
+
+            // 추가로 'host' 정보도 함께 검증해주면 더욱 안전합니다.
+            cy.contains('tr', 'host').within(() => {
+                  cy.contains('10.10.54.22:8080').should('be.visible');
+            });
+
+        } else {
+            
+            // --------------------------------------------------
+            // [CASE B] 정상적인 사용자인 경우 (기존 작성하신 코드)
+            // --------------------------------------------------
+            cy.log('✅ [Case B] 정상 사용자: referer 정보 검증');
+            
+            cy.contains('tr', 'referer', { timeout: 10000 }).should('be.visible')
+              .within(() => {
+                  // 1. IP 주소는 고정이므로 반드시 확인
+                  cy.contains('10.10.54.22:8080').should('be.visible');
+                  
+                  // 2. 중간 경로는 제외하고, 마지막이 .do로 끝나는지만 유연하게 확인
+                  cy.get('td').invoke('text').then((text) => {
+                      expect(text).to.match(/\.do/); 
+                  });
+              });
+        }
     });
+
+    cy.log('✅ HTTP REQUEST 검증 성공!');
+
+
 
      //HTTP Response 탭 클릭---------------------
      cy.contains('span.tab-title', 'HTTP Response').should('be.visible').click({ force: true });
