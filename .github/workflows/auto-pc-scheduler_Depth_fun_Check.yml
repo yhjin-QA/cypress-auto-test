@@ -447,92 +447,103 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          Write-Host "============= [Debug Log: Ghost Failure Detector] ============="
+          Write-Host "============= [Debug Log: Flaky & Ghost Detector V7] ============="
           
-          # [핵심] 통과한 JSON과 스크린샷을 대조하여 도망친 실패(Crash)까지 완벽하게 잡아냅니다.
+          # [핵심] merged_report.json을 1순위로 믿고 합격/불합격 명단을 완벽히 만듭니다.
           $nodeScript = @"
           const fs = require('fs');
           const path = require('path');
 
-          function findFiles(dir, ext, fileList = []) {
+          let passedSpecs = new Set();
+          let failedSpecs = new Set();
+          let totalFails = 0;
+
+          // 1. 진실의 방 (merged_report.json) 분석
+          if (fs.existsSync('merged_report.json')) {
+              try {
+                  const data = JSON.parse(fs.readFileSync('merged_report.json', 'utf8'));
+                  
+                  if (data.results) {
+                      data.results.forEach(r => {
+                          // JSON 텍스트 전체에서 가장 확실하게 파일명(.cy.js) 추출
+                          const strData = JSON.stringify(r);
+                          const match = strData.match(/([^\\/":*?<>|]+\.cy\.js)/);
+                          
+                          if (match) {
+                              const specName = match[1].trim();
+                              let isFail = false;
+                              
+                              // 재귀적으로 실패한 테스트(state: 'failed')가 단 1개라도 있는지 확인
+                              const checkFails = (suite) => {
+                                  if (suite.tests) {
+                                      suite.tests.forEach(t => {
+                                          if (t.state === 'failed' || t.fail) isFail = true;
+                                      });
+                                  }
+                                  if (suite.suites) suite.suites.forEach(checkFails);
+                              };
+                              checkFails(r);
+
+                              if (isFail) {
+                                  failedSpecs.add(specName);
+                              } else {
+                                  // 에러가 1개도 없다면 (Flaky 통과 포함) 합격 명단으로 직행!
+                                  passedSpecs.add(specName);
+                              }
+                          }
+                      });
+                  }
+                  if (data.stats && data.stats.failures > 0) {
+                      totalFails = data.stats.failures;
+                  }
+              } catch (e) {
+                  console.log('ERROR_MERGED=' + e.message);
+              }
+          }
+
+          // 2. 스크린샷(CCTV) 분석 - Flaky 걸러내기 & 고스트 실패 찾기
+          function findPngs(dir, fileList = []) {
               if (!fs.existsSync(dir)) return fileList;
               const files = fs.readdirSync(dir);
               for (const file of files) {
                   const stat = fs.statSync(path.join(dir, file));
                   if (stat.isDirectory()) {
-                      findFiles(path.join(dir, file), ext, fileList);
-                  } else if (file.endsWith(ext) && file !== 'merged_report.json') {
-                      fileList.push(path.join(dir, file));
+                      findPngs(path.join(dir, file), fileList);
+                  } else if (file.endsWith('.png')) {
+                      fileList.push(file);
                   }
               }
               return fileList;
           }
 
-          try {
-              const jsonFiles = findFiles('all_raw_data', '.json');
-              const pngFiles = findFiles('all_raw_data', '.png');
-
-              let passedSpecs = new Set();
-              let failedSpecs = new Set();
-              let totalFails = 0;
-
-              // 1. JSON 파일 분석 (확실한 성공/실패 분류)
-              jsonFiles.forEach(file => {
-                  try {
-                      const data = JSON.parse(fs.readFileSync(file, 'utf8'));
-                      let specName = null;
-
-                      // 스펙 이름 추출
-                      if (data.results && data.results[0]) {
-                          const fullFile = data.results[0].file || data.results[0].fullFile;
-                          if (fullFile) specName = fullFile.split(/[\\\\/]/).pop().trim();
-                      }
-
-                      if (specName && data.stats) {
-                          if (data.stats.failures > 0) {
-                              failedSpecs.add(specName);
-                              totalFails += data.stats.failures;
-                          } else if (data.stats.passes > 0 || data.stats.pending > 0) {
-                              passedSpecs.add(specName);
-                          }
-                      }
-                  } catch (e) {}
-              });
-
-              // 2. 스크린샷과 합격자 대조 (고스트 실패 탐지)
-              pngFiles.forEach(file => {
-                  const match = file.match(/([^\\/":*?<>|]+\.cy\.js)/);
-                  if (match) {
-                      const specName = match[1].trim();
-                      // 스크린샷은 남았는데 '성공 명단(passedSpecs)'에 없다면? -> 진짜 실패! (Flaky는 제외됨)
-                      if (!passedSpecs.has(specName)) {
-                          failedSpecs.add(specName);
-                      }
+          const pngFiles = findPngs('all_raw_data');
+          pngFiles.forEach(file => {
+              const match = file.match(/([^\\/":*?<>|]+\.cy\.js)/);
+              if (match) {
+                  const specName = match[1].trim();
+                  // 💡 가장 중요한 로직: 합격 명단(passedSpecs)에 있으면 Flaky 스크린샷이므로 무시!
+                  if (!passedSpecs.has(specName)) {
+                      failedSpecs.add(specName);
                   }
-              });
-
-              // 결과 정리
-              const finalSpecs = Array.from(failedSpecs);
-              // JSON 없이 스크린샷만으로 잡은 경우 카운트를 보정해 줍니다.
-              if (finalSpecs.length > 0 && totalFails === 0) {
-                  totalFails = finalSpecs.length; 
               }
+          });
 
-              console.log('DEBUG_PASSED=' + Array.from(passedSpecs).join(', '));
-              console.log('DEBUG_FAILED=' + finalSpecs.join(', '));
-              console.log('FAILS=' + totalFails);
-              if (finalSpecs.length > 0) {
-                  console.log('SPECS=' + finalSpecs.join(', '));
-              }
+          const finalSpecs = Array.from(failedSpecs);
+          if (finalSpecs.length > 0 && totalFails === 0) {
+              totalFails = finalSpecs.length;
+          }
 
-          } catch (err) {
-              console.log('ERROR=' + err.message);
+          console.log('DEBUG_PASSED=' + Array.from(passedSpecs).join(', '));
+          console.log('DEBUG_FAILED=' + finalSpecs.join(', '));
+          console.log('FAILS=' + totalFails);
+          if (finalSpecs.length > 0) {
+              console.log('SPECS=' + finalSpecs.join(', '));
           }
           "@
           
           # Node.js 실행
-          $nodeScript | Out-File -FilePath "detect_ghost_fails.js" -Encoding UTF8
-          $nodeOut = node detect_ghost_fails.js
+          $nodeScript | Out-File -FilePath "detect_flaky.js" -Encoding UTF8
+          $nodeOut = node detect_flaky.js
           
           Write-Host "Node.js Output:"
           $nodeOut | ForEach-Object { Write-Host $_ }
@@ -541,7 +552,7 @@ jobs:
           $specListString = ""
           $isActuallyFailed = $false
           
-          # 결과 파싱
+          # 파싱
           foreach ($line in $nodeOut) {
               if ($line -match "^FAILS=(\d+)") { $totalFailCount = [int]$matches[1] }
               if ($line -match "^SPECS=(.*)") { $specListString = $matches[1].Trim() }
@@ -562,12 +573,12 @@ jobs:
               }
           }
 
-          # 메시지 조립 및 발송
+          # 메시지 조립
           $time = "$env:NOW"
           if ($isActuallyFailed) {
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
               $title = $env:MSG_FAIL + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
-              $detailSpec = if ($specListString) { $specListString } else { "Unknown Spec (리포트 확인 요망)" }
+              $detailSpec = if ($specListString) { $specListString } else { "Unknown Spec" }
               $statusDetail = "FAIL: $totalFailCount script ( $detailSpec )"
           } else {
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
