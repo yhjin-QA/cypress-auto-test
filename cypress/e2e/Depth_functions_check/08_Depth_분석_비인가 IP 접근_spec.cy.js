@@ -220,7 +220,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 허용 IP설정-------
     // 식별자 이름 tester 입력하기 
-    cy.get('input[aria-label="식별자 이름"]').filter(':visible').first().type('{selectall}{backspace}tester', { force: true });
+    cy.get('input[aria-label="식별자 이름"]').filter(':visible').first().type('{selectall}{backspace}autotester', { force: true });
     cy.wait(500);
 
     //정보사용자 선택하기
@@ -228,15 +228,15 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(500);
 
     // 정보 사용자 팝업창에서 이름 검색 - 테스터 입력 
-    cy.get('.v-dialog').filter(':visible').find('input[aria-label="사용자"]').type('테스터', { force: true });
+    cy.get('.v-dialog').filter(':visible').find('input[aria-label="사용자"]').type('박선영', { force: true });
     cy.wait(500);
 
     // 정보사용자 팝업창에서 테스터이라는 사람 그옆 체크박스 클릭
-    cy.contains('tr', '테스터').find('.v-icon').click({ force: true });
+    cy.contains('tr', '박선영').find('.v-icon').click({ force: true });
     cy.wait(500);
 
     // 체크가 잘되어있는지 검증코드
-    cy.contains('tr', '테스터').find('.v-icon').should('contain', 'check_box');
+    cy.contains('tr', '박선영').find('.v-icon').should('contain', 'check_box');
 
     //정보사용자 팝업창 '확인' 버튼 클릭
     cy.get('.v-dialog__content--active').find('button').contains('확인').click({ force: true });
@@ -287,7 +287,7 @@ cy.origin('http://10.10.54.22:8080', { args: { targetName: '김민지' } }, ({ t
   // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
   cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
   cy.visit('/uat/uia/egovLoginUsr.do');
-  cy.get('#id').should('be.visible').clear().type('tester');
+  cy.get('#id').should('be.visible').clear().type('loginid1');
   cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
 
   // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
@@ -489,12 +489,12 @@ cy.contains('.tab-btn', '이상행위', { timeout: 15000 }).should('be.visible')
 //------------------------------------------------------------------------------------------------------
 cy.log('✅ 이상행위 탭 진입 성공');
 
-// 사용자 검색 - tester
+// 사용자 검색 - 박선영(loginid1)
 // 1. 콤보박스에 검색어 입력
-cy.get('input[aria-label="사용자"]').filter(':visible').clear({ force: true }).type('tester', { force: true });
+cy.get('input[aria-label="사용자"]').filter(':visible').clear({ force: true }).type('박선영', { force: true });
 cy.wait(1000); 
 // 검색된 콤보박스 리스트  선택하기
-cy.contains('.v-list__tile__title', 'tester').should('be.visible').click({ force: true });
+cy.contains('.v-list__tile__title', '박선영').should('be.visible').click({ force: true });
 cy.wait(1000);
 // 선택 후 메뉴 닫기
 cy.get('body').type('{esc}');
@@ -526,14 +526,14 @@ cy.wait(1000);
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
 // [개선 코드]
 // 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
-cy.get('tbody', { timeout: 15000 }).contains('tr', '테스터(tester)').should('be.visible');
+cy.get('tbody', { timeout: 15000 }).contains('tr', '박선영(loginid1)').should('be.visible');
 
 
 // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
 cy.get('tbody tr').filter(':visible').first().within(() => {
   
   // 2. 텍스트 검증
-  cy.contains('테스터(tester)').should('be.visible');
+  cy.contains('박선영(loginid1)').should('be.visible');
   cy.contains('비인가 IP 접근').should('be.visible');
   cy.contains('test_auto_비인가 IP 접근').should('be.visible');
   cy.contains('존재').should('be.visible');

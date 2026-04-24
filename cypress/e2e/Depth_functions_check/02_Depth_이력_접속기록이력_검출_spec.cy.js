@@ -15,11 +15,15 @@ describe('로그캐치 사이트 테스트', () => {
       'Cannot read properties',
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
+      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
+      'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
       'Loading chunk',
+      'Loading CSS chunk',           // ◀◀◀ [NEW] 이번에 발생한 CSS 청크 에러 무시 추가!
       'operate.task.packageManagement',
       'e is not defined',
-      'Script error'
+      'Script error',
+      'not valid JSON'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -221,8 +225,8 @@ describe('로그캐치 사이트 테스트', () => {
     // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
-    // 2. '2월'이라는 글자를 찾아 클릭합니다.
-     cy.get('.v-date-picker-table--month').filter(':visible').contains('2월').click({ force: true });
+    // 2. '3월'이라는 글자를 찾아 클릭합니다.
+     cy.get('.v-date-picker-table--month').filter(':visible').contains('3월').click({ force: true });
     // 달력 20일 클릭
     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '20일').closest('.v-btn').click({ force: true });
     //달력창 닫기

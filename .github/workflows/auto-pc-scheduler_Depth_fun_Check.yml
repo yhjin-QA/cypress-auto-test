@@ -447,9 +447,8 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          Write-Host "============= [Debug Log: Flaky & Ghost Detector V8 (Ultimate)] ============="
+          Write-Host "============= [Debug Log: Flaky & Ghost Detector V9 (Perfect Extraction)] ============="
           
-          # [핵심] 원본 JSON과 스크린샷 경로를 조합하여 가장 완벽한 판정을 내립니다.
           $nodeScript = @"
           const fs = require('fs');
           const path = require('path');
@@ -457,7 +456,6 @@ jobs:
           let passedSpecs = new Set();
           let failedSpecs = new Set();
 
-          // 하위 폴더까지 뒤져서 전체 파일 경로(Full Path)를 가져오는 함수
           function findFiles(dir, ext, fileList = []) {
               if (!fs.existsSync(dir)) return fileList;
               const files = fs.readdirSync(dir);
@@ -467,7 +465,7 @@ jobs:
                   if (stat.isDirectory()) {
                       findFiles(fullPath, ext, fileList);
                   } else if (file.endsWith(ext) && file !== 'merged_report.json') {
-                      fileList.push(fullPath); // 경로가 포함된 전체 이름을 넣음!
+                      fileList.push(fullPath);
                   }
               }
               return fileList;
@@ -477,41 +475,42 @@ jobs:
               const jsonFiles = findFiles('all_raw_data', '.json');
               const pngFiles = findFiles('all_raw_data', '.png');
 
-              // 1. 원본 JSON 분석 (깨진 merged 파일 무시)
+              // 1. JSON 분석 (무적의 정규식 추출법 도입)
               jsonFiles.forEach(file => {
                   try {
-                      const data = JSON.parse(fs.readFileSync(file, 'utf8'));
-                      let specName = null;
+                      const rawText = fs.readFileSync(file, 'utf8');
+                      const data = JSON.parse(rawText);
                       
-                      // 스펙 이름 안전하게 추출
-                      if (data.results && data.results.length > 0) {
-                          const fullFile = data.results[0].file || data.results[0].fullFile;
-                          if (fullFile) specName = fullFile.split(/[\\\/]/).pop().trim();
+                      // 💡 JSON 구조 무시하고 텍스트 전체에서 파일명(.cy.js)을 냅다 찾아냅니다!
+                      let specName = null;
+                      const match = rawText.match(/([^\\/":*?<>|]+\.cy\.js)/);
+                      if (match) {
+                          specName = match[1].trim();
                       }
 
                       if (specName && data.stats) {
                           if (data.stats.failures > 0) {
-                              failedSpecs.add(specName); // 실패 기록이 있으면 실패 명단에
+                              failedSpecs.add(specName);
                           } else if (data.stats.passes > 0 || data.stats.pending > 0) {
-                              passedSpecs.add(specName); // 단 한 번이라도 통과/패스했으면 합격 명단에!
+                              passedSpecs.add(specName); // 이제 합격 명단에 이름이 쑥쑥 들어갑니다!
                           }
                       }
-                  } catch (e) { /* 손상된 JSON은 무시 */ }
+                  } catch (e) { /* 무시 */ }
               });
 
-              // 2. 스크린샷 분석 (전체 경로에서 정규식으로 스크립트명 추출)
+              // 2. 스크린샷 분석
               pngFiles.forEach(file => {
                   const match = file.match(/([^/\\]+\.cy\.js)/);
                   if (match) {
-                      failedSpecs.add(match[1].trim()); // 스크린샷이 찍힌 애들도 일단 실패 명단에 넣음
+                      failedSpecs.add(match[1].trim());
                   }
               });
 
-              // 3. 최종 평가: 실패 명단에 있는 애들 중, "합격 명단"에 있는 애들(Flaky)은 싹 다 빼버림!
+              // 3. 최종 평가 (Flaky 소거)
               let finalSpecs = [];
               failedSpecs.forEach(spec => {
                   if (!passedSpecs.has(spec)) {
-                      finalSpecs.push(spec); // 합격 명단에 없는 진짜 에러들만 최종 명단에 추가
+                      finalSpecs.push(spec);
                   }
               });
 
@@ -528,7 +527,6 @@ jobs:
           }
           "@
           
-          # Node.js 실행
           $nodeScript | Out-File -FilePath "detect_flaky.js" -Encoding UTF8
           $nodeOut = node detect_flaky.js
           
@@ -539,7 +537,6 @@ jobs:
           $specListString = ""
           $isActuallyFailed = $false
           
-          # 파싱
           foreach ($line in $nodeOut) {
               if ($line -match "^FAILS=(\d+)") { $totalFailCount = [int]$matches[1] }
               if ($line -match "^SPECS=(.*)") { $specListString = $matches[1].Trim() }
@@ -549,7 +546,6 @@ jobs:
               $isActuallyFailed = $true
           }
           
-          # 시스템 뻗음 방어
           $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
           if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") {
@@ -560,7 +556,6 @@ jobs:
               }
           }
           
-          # 대시보드 URL 파싱
           $dashUrl = "http://10.10.54.5:8080/projects"
           $urlFiles = Get-ChildItem -Path "all_raw_data", "downloaded_url" -Recurse -Filter "run_url.txt" -ErrorAction SilentlyContinue
           foreach ($uFile in $urlFiles) {
@@ -571,7 +566,6 @@ jobs:
               }
           }
 
-          # 메시지 조립
           $time = "$env:NOW"
           if ($isActuallyFailed) {
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -592,6 +586,7 @@ jobs:
           $payload = @{ text = ($msgLines -join "`n") } | ConvertTo-Json -Compress
           $utf8Bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
           Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes
+          
 
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: always() && env.FINAL_STATUS == 'FAIL'

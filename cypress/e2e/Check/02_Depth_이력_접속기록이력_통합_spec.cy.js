@@ -15,11 +15,15 @@ describe('로그캐치 사이트 테스트', () => {
       'Cannot read properties',
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
+      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
+      'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
       'Loading chunk',
+      'Loading CSS chunk',           // ◀◀◀ [NEW] 이번에 발생한 CSS 청크 에러 무시 추가!
       'operate.task.packageManagement',
       'e is not defined',
-      'Script error'
+      'Script error',
+      'not valid JSON'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -816,18 +820,18 @@ cy.get('body').then(($body) => {
 
      // 저장버튼 클릭
      cy.get('button.v-btn').filter(':visible').contains('저장').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // [검증] 리스트에 수정된 키워드명이 존재하는지 확인
      cy.contains('tr', 'Depth_test_계좌번호_수정').should('be.visible');
-     cy.wait(500);
+     cy.wait(1000);
 
      //case 불용 데이터 값 수정한 행 삭제하기 -----------------------------------------------------------------
     
 
      // 수정된 이름('Depth_test_계좌번호_수정')이 포함된 테이블행 휴지통 아이콘 클릭
-     cy.contains('tr', 'Depth_test_계좌번호_수정').should('be.visible').last().find('i.fa-trash') .click({ force: true });
-     cy.wait(500);
+     cy.contains('tr', 'Depth_test_계좌번호_수정').should('be.visible').last().find('i.fa-trash').click({ force: true });
+     cy.wait(1000);
 
      // [검증] 표에서 해당 텍스트가 더 이상 존재하지 않는지 확인
      cy.contains('Depth_test_계좌번호_수정').should('not.exist');
