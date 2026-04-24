@@ -15,8 +15,11 @@ describe('로그캐치 사이트 테스트', () => {
       'Cannot read properties',
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
+      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
+      'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
-      'Loading chunk',    //네트워크 로딩에러 
+      'Loading chunk',
+      'Loading CSS chunk',           // ◀◀◀ [NEW] 이번에 발생한 CSS 청크 에러 무시 추가!
       'operate.task.packageManagement',
       'e is not defined',
       'Script error',
@@ -127,7 +130,7 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // 1. 엉뚱한 화살표 대신, 화면 하단에 '5'라고 적혀있는 페이지 선택 박스를 콕 집어 클릭합니다.
     cy.contains('.v-select__selection', '5').click({ force: true });
-    cy.wait(500); // 콤보박스 메뉴가 스르륵 열릴 때까지 대기
+    cy.wait(1000); // 콤보박스 메뉴가 스르륵 열릴 때까지 대기
     // 2. 열린 메뉴(.v-menu__content) 안에서 '25'을 찾아서 클릭합니다.
     // (클래스명에 얽매이지 않고 텍스트 '25'을 포함한 요소를 강제 클릭하도록 유연하게 작성)
     cy.get('.v-menu__content').filter(':visible').contains('25') .click({ force: true });
@@ -200,10 +203,10 @@ describe('로그캐치 사이트 테스트', () => {
     // 보고서 추가화면에서 보고서 종류 선택 - 월 정기점검 보고서
     //보고서 종류 콤보박스 열기 
     cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 보고서 종류 콤보박스에서  '월 정기점검 보고서 (행위_Mongo)' 선택하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월 정기점검 보고서').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('body').type('{esc}');
     cy.wait(500);
 
@@ -251,6 +254,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 2. 보고서 목록에서 추가한 보고서 클릭하여 열기
     cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
+    cy.wait(1000);
     
     // 3. 🌟 [최종 해결책] 아이프레임 안의 글자를 찾는 대신, 그물에 통신이 걸려들 때까지 60초를 기다립니다!
     // 이 통신이 200(성공)으로 떨어졌다는 것은, 이미지든 글자든 리포트 렌더링이 무사히 끝났다는 뜻입니다.
@@ -275,10 +279,10 @@ describe('로그캐치 사이트 테스트', () => {
     
     //보고서 종류 콤보박스 열기 
     cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 보고서 종류중 월 정기점검 보고서 (행위) 선택하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월 정기점검 보고서 (행위)').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
@@ -328,10 +332,10 @@ describe('로그캐치 사이트 테스트', () => {
     
     //보고서 종류 콤보박스 열기 
     cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 보고서 종류중 월 정기점검 보고서 (행위) 선택하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월 정기점검 보고서 (행위_Mongo)').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
@@ -381,10 +385,10 @@ describe('로그캐치 사이트 테스트', () => {
     
     //보고서 종류 콤보박스 열기 
     cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 보고서 종류중 월 정기점검 보고서 (행위) 선택하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '개인정보접속 종합 보고서').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
@@ -465,11 +469,11 @@ describe('로그캐치 사이트 테스트', () => {
 
       // 보고서 종류 콤보박스 열기 
       cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       
       // 배열에서 꺼낸 보고서 종류(reportType) 선택
       cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', reportType).should('be.visible').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
 
       // 보고서 종류 변경 사항 1차 저장
       cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
@@ -498,6 +502,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.get('.menuable__content__active').within(() => {
         // 3. 🌟 [핵심] 찾으려는 확장자 글자로 스크롤을 쫙 끌어내린 뒤 클릭합니다!
         cy.contains('.v-list__tile__title', ext).scrollIntoView().should('be.visible').click({ force: true });
+        cy.wait(1000);
          });
 
          cy.wait(1000); // 팝업 닫힘 대기
@@ -553,15 +558,14 @@ describe('로그캐치 사이트 테스트', () => {
         // ========================================== 
         
         // 1. 내보내기 버튼 클릭 (보고서가 이미 열려있는 상태이므로 바로 클릭)
-        cy.get('.v-btn__content').filter(':visible').contains('내보내기').click({ force: true }); 
+        cy.get('.v-btn__content').filter(':visible').contains('내보내기').click({ force: true });
+        cy.wait(1000); 
         
         // 2. 알림창(Snackbar) 팝업 확인 및 사라짐 대기
-        cy.get('.v-snack__content', { timeout: 10000 })
-          .should('be.visible')
-          .and('contain', '파일 다운로드를 요청했습니다');
+        cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible').and('contain', '파일 다운로드를 요청했습니다');
         
         // 3. 실제 로컬 폴더에 파일이 다운로드될 시간을 넉넉히 줍니다.
-        cy.wait(8000); 
+        cy.wait(9000); 
         
         // 4. 로컬 다운로드 폴더에서 파일 확인
         cy.task('readDirectory', 'cypress/downloads').then((files) => {

@@ -262,6 +262,8 @@ cy.contains('.text-label', 'auto_사전소명설정', { timeout: 10000 })
     cy.wrap($row).find('i.fa-trash').invoke('css', 'display', 'block').click({ force: true });
   });
 
+});
+
 // ===============================================
 // STEP :  auto_사전소명설정 삭제 알림창 처리 
 // ===============================================
@@ -278,14 +280,14 @@ cy.contains('p', '삭제하시겠습니까?', { timeout: 10000 }).should('be.vis
   cy.contains('p', '삭제하시겠습니까?').should('not.be.visible');
   cy.wait(1000);
 
-  });
-
-
+  
 
 
 
 
 /*
+
+
 // ===============================================
 // STEP :이상행위 발생 사용자 : loginid445 //Manager1
 // ===============================================
