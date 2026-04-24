@@ -447,97 +447,84 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          Write-Host "============= [Debug Log: Flaky & Ghost Detector V7] ============="
+          Write-Host "============= [Debug Log: Flaky & Ghost Detector V8 (Ultimate)] ============="
           
-          # [핵심] merged_report.json을 1순위로 믿고 합격/불합격 명단을 완벽히 만듭니다.
+          # [핵심] 원본 JSON과 스크린샷 경로를 조합하여 가장 완벽한 판정을 내립니다.
           $nodeScript = @"
           const fs = require('fs');
           const path = require('path');
 
           let passedSpecs = new Set();
           let failedSpecs = new Set();
-          let totalFails = 0;
 
-          // 1. 진실의 방 (merged_report.json) 분석
-          if (fs.existsSync('merged_report.json')) {
-              try {
-                  const data = JSON.parse(fs.readFileSync('merged_report.json', 'utf8'));
-                  
-                  if (data.results) {
-                      data.results.forEach(r => {
-                          // JSON 텍스트 전체에서 가장 확실하게 파일명(.cy.js) 추출
-                          const strData = JSON.stringify(r);
-                          const match = strData.match(/([^\\/":*?<>|]+\.cy\.js)/);
-                          
-                          if (match) {
-                              const specName = match[1].trim();
-                              let isFail = false;
-                              
-                              // 재귀적으로 실패한 테스트(state: 'failed')가 단 1개라도 있는지 확인
-                              const checkFails = (suite) => {
-                                  if (suite.tests) {
-                                      suite.tests.forEach(t => {
-                                          if (t.state === 'failed' || t.fail) isFail = true;
-                                      });
-                                  }
-                                  if (suite.suites) suite.suites.forEach(checkFails);
-                              };
-                              checkFails(r);
-
-                              if (isFail) {
-                                  failedSpecs.add(specName);
-                              } else {
-                                  // 에러가 1개도 없다면 (Flaky 통과 포함) 합격 명단으로 직행!
-                                  passedSpecs.add(specName);
-                              }
-                          }
-                      });
-                  }
-                  if (data.stats && data.stats.failures > 0) {
-                      totalFails = data.stats.failures;
-                  }
-              } catch (e) {
-                  console.log('ERROR_MERGED=' + e.message);
-              }
-          }
-
-          // 2. 스크린샷(CCTV) 분석 - Flaky 걸러내기 & 고스트 실패 찾기
-          function findPngs(dir, fileList = []) {
+          // 하위 폴더까지 뒤져서 전체 파일 경로(Full Path)를 가져오는 함수
+          function findFiles(dir, ext, fileList = []) {
               if (!fs.existsSync(dir)) return fileList;
               const files = fs.readdirSync(dir);
               for (const file of files) {
-                  const stat = fs.statSync(path.join(dir, file));
+                  const fullPath = path.join(dir, file);
+                  const stat = fs.statSync(fullPath);
                   if (stat.isDirectory()) {
-                      findPngs(path.join(dir, file), fileList);
-                  } else if (file.endsWith('.png')) {
-                      fileList.push(file);
+                      findFiles(fullPath, ext, fileList);
+                  } else if (file.endsWith(ext) && file !== 'merged_report.json') {
+                      fileList.push(fullPath); // 경로가 포함된 전체 이름을 넣음!
                   }
               }
               return fileList;
           }
 
-          const pngFiles = findPngs('all_raw_data');
-          pngFiles.forEach(file => {
-              const match = file.match(/([^\\/":*?<>|]+\.cy\.js)/);
-              if (match) {
-                  const specName = match[1].trim();
-                  // 💡 가장 중요한 로직: 합격 명단(passedSpecs)에 있으면 Flaky 스크린샷이므로 무시!
-                  if (!passedSpecs.has(specName)) {
-                      failedSpecs.add(specName);
+          try {
+              const jsonFiles = findFiles('all_raw_data', '.json');
+              const pngFiles = findFiles('all_raw_data', '.png');
+
+              // 1. 원본 JSON 분석 (깨진 merged 파일 무시)
+              jsonFiles.forEach(file => {
+                  try {
+                      const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+                      let specName = null;
+                      
+                      // 스펙 이름 안전하게 추출
+                      if (data.results && data.results.length > 0) {
+                          const fullFile = data.results[0].file || data.results[0].fullFile;
+                          if (fullFile) specName = fullFile.split(/[\\\/]/).pop().trim();
+                      }
+
+                      if (specName && data.stats) {
+                          if (data.stats.failures > 0) {
+                              failedSpecs.add(specName); // 실패 기록이 있으면 실패 명단에
+                          } else if (data.stats.passes > 0 || data.stats.pending > 0) {
+                              passedSpecs.add(specName); // 단 한 번이라도 통과/패스했으면 합격 명단에!
+                          }
+                      }
+                  } catch (e) { /* 손상된 JSON은 무시 */ }
+              });
+
+              // 2. 스크린샷 분석 (전체 경로에서 정규식으로 스크립트명 추출)
+              pngFiles.forEach(file => {
+                  const match = file.match(/([^/\\]+\.cy\.js)/);
+                  if (match) {
+                      failedSpecs.add(match[1].trim()); // 스크린샷이 찍힌 애들도 일단 실패 명단에 넣음
                   }
+              });
+
+              // 3. 최종 평가: 실패 명단에 있는 애들 중, "합격 명단"에 있는 애들(Flaky)은 싹 다 빼버림!
+              let finalSpecs = [];
+              failedSpecs.forEach(spec => {
+                  if (!passedSpecs.has(spec)) {
+                      finalSpecs.push(spec); // 합격 명단에 없는 진짜 에러들만 최종 명단에 추가
+                  }
+              });
+
+              console.log('DEBUG_PASSED=' + Array.from(passedSpecs).join(', '));
+              console.log('DEBUG_FAILED=' + finalSpecs.join(', '));
+              console.log('FAILS=' + finalSpecs.length);
+              
+              if (finalSpecs.length > 0) {
+                  console.log('SPECS=' + finalSpecs.join(', '));
               }
-          });
 
-          const finalSpecs = Array.from(failedSpecs);
-          if (finalSpecs.length > 0 && totalFails === 0) {
-              totalFails = finalSpecs.length;
-          }
-
-          console.log('DEBUG_PASSED=' + Array.from(passedSpecs).join(', '));
-          console.log('DEBUG_FAILED=' + finalSpecs.join(', '));
-          console.log('FAILS=' + totalFails);
-          if (finalSpecs.length > 0) {
-              console.log('SPECS=' + finalSpecs.join(', '));
+          } catch (err) {
+              console.log('ERROR=' + err.message);
           }
           "@
           
@@ -560,6 +547,17 @@ jobs:
           
           if ($totalFailCount -gt 0) {
               $isActuallyFailed = $true
+          }
+          
+          # 시스템 뻗음 방어
+          $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
+          $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
+          if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") {
+              if (-not $isActuallyFailed -and $restartStatus -ne "success") {
+                  $isActuallyFailed = $true
+                  $totalFailCount = if ($totalFailCount -eq 0) { 1 } else { $totalFailCount }
+                  $specListString = "System Error or Cancelled"
+              }
           }
           
           # 대시보드 URL 파싱
