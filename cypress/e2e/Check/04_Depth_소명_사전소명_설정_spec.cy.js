@@ -155,7 +155,24 @@ cy.get('body').then(($body) => {
 
 // 1. 관리자 페이지 사이드 메뉴 중 '설정' 버튼 클릭
 cy.log('--- [설정] 메뉴 클릭 ---');
-cy.contains('button.side-menu', '설정').should('be.visible').click({ force: true });
+//cy.contains('button.side-menu', '설정').should('be.visible').click({ force: true });
+
+// '설정' 메뉴가 없으면 새로고침 후 다시 시도하는 재귀적 호출 로직
+const clickSettingsMenu = () => {
+  cy.get('body').then(($body) => {
+    if ($body.find('button.side-menu:contains("설정")').length > 0) {
+      cy.contains('button.side-menu', '설정').click({ force: true });
+    } else {
+      cy.log('🔴 사이드 메뉴 로딩 실패 감지! 새로고침 후 재시도.');
+      cy.reload();
+      cy.wait(7000);
+      clickSettingsMenu(); // 재시도
+    }
+  });
+};
+
+clickSettingsMenu();
+
 // 설정 > 패스워드 규칙 서브메뉴 클릭 
 cy.wait(2000)
 cy.log('--- 서브메뉴 [사전 소명 설멍] 클릭 ---');
@@ -170,45 +187,47 @@ cy.contains('.c-headline', /소명 사유.*설정/, { timeout: 15000 }).should('
 //  사전 소명 설정 화면 
 // ==========================================
 
-//초기화 작업------------------------------------------------------------
-/// ===============================================
-// STEP : 추가한 ADD_auto_Test 그룹 삭제
 // ===============================================
-// 1. visible 검증을 생략하고 해당 텍스트를 포함하는 요소를 찾습니다.
-cy.contains('.text-label', 'ADD_auto_Test', { timeout: 10000 })
-  .invoke('show') // 요소가 숨겨져 있다면 강제로 보이게 함
-  .then(($el) => {
-    // 2. 마우스를 올리는 이벤트를 시뮬레이션합니다.
-    cy.wrap($el).trigger('mouseover', { force: true });
+// STEP : 'ADD_auto_Test' 그룹 삭제 (조건부)
+// ===============================================
+cy.log('🧹 삭제 전 그룹 존재 확인 중...');
 
-// 1. 해당 텍스트를 가진 라벨을 찾습니다.
-cy.contains('.text-label', 'ADD_auto_Test', { timeout: 10000 })
-  .then(($label) => {
-    
-    let $row = $label.closest('.v-list-item'); // 1단계 부모
-    if ($row.length === 0) $row = $label.parents('div').eq(2); // 없을 경우 대비
+// 1. 전체 body에서 요소 존재 여부를 먼저 확인합니다.
+cy.get('body').then(($body) => {
+  // find를 사용하여 요소가 있는지 체크 (에러 방지)
+  if ($body.find('.text-label:contains("ADD_auto_Test")').length > 0) {
+    cy.log('✅ 그룹 발견! 삭제를 시작합니다.');
 
-    // 3. 그 행 내부에서만 휴지통을 찾습니다.
-    cy.wrap($row).find('i.fa-trash').invoke('css', 'display', 'block').click({ force: true });
-  });
+    // 2. 삭제 절차 시작
+    cy.contains('.text-label', 'ADD_auto_Test')
+      .invoke('show')
+      .trigger('mouseover', { force: true });
 
+    cy.contains('.text-label', 'ADD_auto_Test').then(($label) => {
+      let $row = $label.closest('.v-list-item');
+      if ($row.length === 0) $row = $label.parents('div').eq(2);
+      cy.wrap($row).find('i.fa-trash').invoke('css', 'display', 'block').click({ force: true });
+    });
+
+    // 3. 팝업 확인 및 처리
+    cy.contains('p', '삭제하시겠습니까?', { timeout: 10000 })
+      .should('be.visible')
+      .closest('.v-card')
+      .within(() => {
+        cy.contains('button', '확인').click({ force: true });
+      });
+
+    // 4. 삭제 완료 대기
+    cy.contains('p', '삭제하시겠습니까?').should('not.exist');
+    cy.wait(1000);
+    cy.log('✅ 그룹 삭제 완료.');
+
+  } else {
+    // 5. 요소가 없을 경우 패스
+    cy.log('⏭️ 삭제할 그룹이 없습니다. 패스합니다.');
+  }
 });
 
-// ===============================================
-// STEP :  ADD_auto_Test정 삭제 알림창 처리 
-// ===============================================
-// [수정된 팝업 처리 코드]
-cy.log('🧹 소명 사유 그룹  팝업 확인 처리 시작');
-
-// '삭제하시겠습니까?'라는 문구가 있는 팝업 영역을 찾습니다.
-cy.contains('p', '삭제하시겠습니까?', { timeout: 10000 }).should('be.visible').closest('.v-card') // 해당 문구가 들어있는 카드(팝업)를 찾습니다.
-  .within(() => {
-    // 2. 그 카드 안에 있는 '확인' 버튼만 정확히 클릭합니다.
-    cy.contains('button', '확인').click({ force: true });
-  });
-  //팝업창 사라짐 확인
-  cy.contains('p', '삭제하시겠습니까?').should('not.be.visible');
-  cy.wait(1000);
 
 // ===============================================
 // STEP : 모든 소명사유 삭제 작업 (조건부)

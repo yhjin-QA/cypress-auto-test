@@ -42,11 +42,77 @@ Cypress.on('uncaught:exception', (err, runnable) => {
     }
     return true; 
 });
-// ==========================================
-// STEP : 로그인
-// ==========================================
- cy.login('admin', 'Manager1!');
- cy.wait(5000);   
+    // ==========================================
+    // STEP 1: 로그인
+    // ==========================================
+    // 1. 사이트 방문
+    cy.visit('https://10.10.54.21:18443/logcatch/login');
+    cy.wait(4000); // 로딩 대기
+
+    ////////////새로고침코드//////
+      cy.get('body').then(($body) => {
+      // 만약 입력창이 안 보인다면? (흰 화면 상태라면?)
+      if ($body.find('input[aria-label="사용자 계정"]').length === 0) {
+        cy.log('🔴 화면 렌더링 실패 감지! 페이지를 새로고침합니다.');
+    
+      // 새로고침 실행
+      cy.reload();
+    
+      // 다시 한번 안정화 대기
+      cy.wait(2000);
+      } else {
+        cy.log('🟢 화면이 정상적으로 로드되었습니다.');
+      }
+     });
+     //////////////////////////////////////
+
+    // 2. 아이디 입력
+    cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
+
+    // 3. 비밀번호 입력
+    cy.get('input[aria-label="패스워드"]').should('exist').type('Manager1!', { force: true }); 
+    
+    // 4. 로그인 실행 (버튼 클릭 대신 엔터키 사용)
+    // 설명: 버튼 클릭보다 엔터키가 '중복 클릭'이나 '이동 에러'가 훨씬 적게 발생합니다.
+    cy.get('input[aria-label="패스워드"]').type('{enter}', { force: true });
+
+    
+
+   // -----------------------------------------------------------
+   // [추가된 부분] "이미 로그인" 알림창 처리 (조건부 로직)
+   // -----------------------------------------------------------
+   cy.wait(2000); // 팝업이 뜨는 찰나의 시간을 기다려줍니다.
+   cy.get('body').then(($body) => {
+    
+    // 2. jQuery 문법(.find)으로 해당 요소가 있는지 '길이(length)'로 체크합니다.
+    // 주의: 여기서는 cy.contains를 쓰면 안 됩니다!
+    if ($body.find('.v-card__title:contains("이미 접속 중인 계정입니다."):visible').length > 0) {
+        
+        cy.log('⚠️ 알림창 발견! 확인 버튼을 클릭합니다.');
+
+        // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
+        cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
+          .closest('.v-card')
+          .contains('확인')
+          .click(); // 여기서 force: true를 주면 더 안전합니다.
+          
+        cy.wait(1000); // 팝업 닫힘 대기
+    } else {
+        cy.log('✅ 알림창이 없습니다. 넘어갑니다.');
+    }
+});
+
+ // 5. [중요] 로그인 성공 검증 (URL 변경 확인)
+    // 로그인이 성공해서 URL에서 '/login'이 빠질 때까지 최대 10초간 기다립니다.
+    // 만약 여기서 실패한다면 "아이디/비번"이 틀렸거나 서버 문제(Access Deny)입니다.
+    cy.url({ timeout: 10000 }).should('not.include', '/login');
+// -----------------------------------------------------------
+
+     
+    //6. 화면 안정화 대기
+     cy.wait(5000);
+    
+    //로그인 성공  
 
 // ==========================================
 // STEP : 소명 서브메뉴 - 결재라인 확인
@@ -456,8 +522,69 @@ cy.get('@targetRow').within(() => {
 // ==========================================
 // STEP : 관리자 로그인
 // ==========================================
- cy.login('admin', 'Manager1!');
- cy.wait(5000);  
+
+cy.log('🧹 세션 정보를 초기화하고 깨끗하게 복귀합니다.');
+
+// 1. 기존 쿠키와 로컬 스토리지를 모두 비웁니다. (404 방지 핵심)
+cy.clearCookies();
+cy.clearLocalStorage();
+
+// 2. 주소 뒤에 아무것도 붙지 않은 '순수 도메인' 주소로 접속합니다.
+// 원래 주소로 접속
+cy.visit('https://10.10.54.21:18443/logcatch/login');
+cy.wait(3000); // 화면이 그려질 수 있도록 초기 렌더링 대기 
+
+// 2. 화면 상태 분석 및 분기 처리
+cy.get('body').then(($body) => {
+  // 로그인 입력창이 존재하는지 확인
+  const hasLoginInput = $body.find('input[aria-label="사용자 계정"]').length > 0;
+  
+  if (hasLoginInput) {
+    // 🟡 [상태 1] 로그인 화면이 정상적으로 떴을 때
+    cy.log('🟡 로그인 화면 감지: 로그인을 수행합니다.');
+    
+    cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
+    cy.get('input[aria-label="패스워드"]').should('exist').type('Manager1!', { force: true }); 
+    cy.get('input[aria-label="패스워드"]').type('{enter}', { force: true }); // 엔터키로 안전하게 로그인
+    
+    cy.wait(8000); // 로그인 후 대시보드 로딩 대기
+
+  } else {
+    // 로그인 창이 없을 경우: '이미 로그인된 상태'이거나 '렌더링 실패(흰 화면)' 둘 중 하나입니다.
+    // 이전 스크린샷들을 참고하여 우측 상단의 'ADMIN 님' 텍스트나 메뉴 텍스트가 존재하는지 확인합니다.
+    const isAlreadyLoggedIn = $body.text().includes('ADMIN') || $body.text().includes('로그아웃');
+
+    if (isAlreadyLoggedIn) {
+      // 🟢 [상태 2] 이미 로그인된 메인 화면일 때
+      cy.log('🟢 이미 로그인된 상태(대시보드)입니다. 로그인 과정을 패스합니다.');
+
+    } else {
+      // 🔴 [상태 3] 로그인 창도 없고, 메인 화면 텍스트도 없으면 렌더링 실패로 간주합니다.
+      cy.log('🔴 화면 렌더링 실패(흰 화면) 감지! 페이지를 새로고침합니다.');
+      cy.reload();
+      cy.wait(3000); // 새로고침 후 안정화 대기
+
+      // 새로고침 후 최종 확인 및 실행
+      cy.get('body').then(($newBody) => {
+        if ($newBody.find('input[aria-label="사용자 계정"]').length > 0) {
+          cy.log('🟡 새로고침 후 로그인 화면 복구됨: 로그인을 수행합니다.');
+          
+          cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
+          cy.get('input[aria-label="패스워드"]').should('exist').type('Manager1!', { force: true }); 
+          cy.get('input[aria-label="패스워드"]').type('{enter}', { force: true });
+          
+          cy.wait(8000);
+        } else {
+          cy.log('🟢 새로고침 후 로그인된 상태로 진입 확인. 패스합니다.');
+        }
+      });
+    }
+  }
+});
+
+cy.log('🚀 원래 사이트(LogCatch) 진입 및 로그인 로직 무사 통과!');
+
+cy.wait(8000); // 페이지 로딩 및 안정화 대기
  
 // =============================================
 // STEP : 소명 - 종합현황 탭 방금 취소건 검색하기 
@@ -470,24 +597,48 @@ Cypress.on('uncaught:exception', (err, runnable) => {
     return true; // 다른 중요한 에러는 정상적으로 잡음
 });
 
-cy.contains('button', '소명').click({ force: true });
-    cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.log('--- 소명 > 관리 서브메뉴 클릭 ---');
-    //서브메뉴 관리 클릭 (정교하게)
-    cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('관리').click({ force: true });
-    cy.wait(3000);
+  const navigateToManagement = (retryCount = 0) => {
+  const MAX_RETRIES = 3;
+
+  cy.log(`--- 소명 > 관리 서브메뉴 클릭 (시도: ${retryCount + 1}) ---`);
   
-// '관리' 클릭 후 화면이 멈췄는지 확인하고, 멈췄다면 새로고침 후 재진입
-cy.get('body').then(($body) => {
-    // 로딩 아이콘(.v-progress-circular 등)이 계속 떠 있다면 새로고침 수행
-    if ($body.find('.v-progress-circular').length > 0) {
-        cy.log('🔄 로딩 아이콘 감지! 새로고침 후 재진입합니다.');
-        cy.reload();
-        cy.wait(3000);
-        
-        cy.log('✅ 재진입 성공!');
+  // 1. 클릭 시도
+  cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('관리').click({ force: true });
+  cy.wait(2000);
+
+  // 2. Body 상태 확인
+  cy.get('body').then(($body) => {
+    // 성공 기준: '종합 현황' 텍스트를 가진 요소가 있는지 확인
+    const isSuccess = $body.find('.v-btn__content').filter((index, el) => {
+        return Cypress.$(el).text().trim() === '종합 현황';
+    }).length > 0;
+
+    // 로딩바 확인
+    const isLoading = $body.find('.v-progress-circular').length > 0;
+
+    // 로직: 성공하지 못했고(탭이 안 보이고), 로딩 중이거나 탭이 없는 상황
+    if (!isSuccess && retryCount < MAX_RETRIES) {
+      cy.log('🔄 종합현황이 확인되지 않음. 새로고침 후 재진입...');
+      
+      cy.reload();
+      cy.wait(3000);
+      
+      cy.contains('button', '소명').click({ force: true });
+      cy.wait(1000);
+      
+      navigateToManagement(retryCount + 1); // 재귀 호출
+    } else if (!isSuccess) {
+      throw new Error('❌ 재시도 횟수 초과: 종합 현황 탭을 찾을 수 없습니다.');
+    } else {
+      cy.log('✅ 성공! 종합 현황 탭이 확인되었습니다.');
     }
-});
+  });
+};
+
+// 최초 호출
+cy.contains('button', '소명').click({ force: true });
+cy.wait(1000);
+navigateToManagement();
 
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
@@ -504,11 +655,11 @@ cy.get('body').then(($body) => {
 
     // 소속 클릭하여 전체 선택 
     cy.get('.material-icons').filter(':visible').contains('settings').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('.v-list__tile__title').filter(':visible').contains('인사팀').closest('.v-list__tile').click({ force: true });
     // 화면 본문(body)에 ESC 키 전송 (팝업창 닫는 동작 )
     cy.get('body').type('{esc}');
-    cy.wait(500);
+    cy.wait(1000);
 
     // 사용자 계정 클릭하여 아이디 입력
     //cy.get('input[aria-label="사용자 계정"]').filter(':visible').click({ force: true });
