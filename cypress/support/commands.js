@@ -30,50 +30,55 @@
 Cypress.Commands.add('login', (userId, password) => {
     cy.log(`🔑 [${userId}] 계정으로 로그인 진행`);
 
-    // 1. 일단 메인 도메인으로 이동합니다. 
-    // (다른 도메인에 있을 때 clearCookies를 하면 현재 도메인 것만 지워지기 때문)
     cy.visit('https://10.10.54.21:18443/logcatch/login');
     cy.wait(3000);
 
-    // 2. 화면 상태 완벽 방어 로직 (이미 로그인 됨 vs 렌더링 실패)
+    // 2. 화면 상태 방어 로직 (기존 유지)
     cy.get('body').then(($body) => {
-        // 화면에 로그인 아이디 입력칸이 없다면? (대시보드로 튕겼거나 흰 화면)
         if ($body.find('input[aria-label="사용자 계정"]').length === 0) {
-            
-            // [상태 A] 이전 세션이 살아있어서 대시보드 화면이 뜬 경우
             if ($body.text().includes('로그아웃') || $body.text().includes('님')) {
-                cy.log('⚠️ 이전 도메인의 세션이 살아있습니다. 강제 로그아웃을 수행합니다.');
-                // 우측 상단 'O O O 님' 클릭 (누가 로그인되어있든 공통 처리)
+                cy.log('⚠️ 이전 세션 감지, 로그아웃 처리');
                 cy.contains('span', '님').should('be.visible').click({ force: true });
-                cy.wait(500);
                 cy.contains('.v-list__tile__title', '로그아웃').should('be.visible').click({ force: true });
-                cy.wait(2000); // 로그아웃 완료 및 로그인 화면 진입 대기
-            } 
-            // [상태 B] 그냥 화면이 하얗게 렌더링 실패한 경우
-            else {
-                cy.log('🔴 화면 렌더링 실패 감지! 페이지를 새로고침합니다.');
+                cy.wait(2000);
+            } else {
                 cy.reload();
                 cy.wait(2000);
             }
         }
     });
 
-    // 3. 확실하게 로그인 화면이 보장된 상태에서 쿠키/세션 깔끔하게 한번 더 청소
     cy.clearCookies();
     cy.clearLocalStorage();
 
-    // 4. 아이디/비번 입력 및 엔터 (이전 값이 남아있을 수 있으니 clear() 먼저 수행)
+    // 4. 입력 및 로그인 시도
     cy.get('input[aria-label="사용자 계정"]').should('exist').clear({ force: true }).type(userId, { force: true });
     cy.get('input[aria-label="패스워드"]').should('exist').clear({ force: true }).type(password, { force: true });
-    cy.get('input[aria-label="패스워드"]').type('{enter}', { force: true });
+    cy.contains('button', '로그인').click({ force: true }); // 엔터보다 클릭이 확실할 때가 많습니다.
 
-    // 5. 중복 로그인 알림창 방어 로직
+    // 5. 중복 로그인 및 경고창 방어 로직 (수정된 부분)
     cy.wait(2000);
     cy.get('body').then(($body) => {
+        // 상황 1: 일반 모달(이미 접속 중)
         if ($body.find('.v-card__title:contains("이미 접속 중인 계정입니다."):visible').length > 0) {
-            cy.log('⚠️ 알림창 발견! 확인 버튼을 클릭합니다.');
-            cy.contains('.v-card__title', '이미 접속 중인 계정입니다.').closest('.v-card').contains('확인').click({ force: true });
+            cy.log('⚠️ 모달 알림창 발견! 확인 클릭');
+            cy.contains('.v-card', '확인').find('button').click({ force: true });
             cy.wait(1000);
+        }
+        
+        // 상황 2: 에러 경고창 (동일 계정 다른 곳 접속) - 이미지 속 상황
+        if ($body.find('.v-alert.error:contains("동일 계정으로 다른 곳에서 접속되었습니다."):visible').length > 0) {
+            cy.log('⚠️ 동일 계정 접속 경고 감지! 다시 아이디/비번 입력 시도');
+            
+            // 경고창 닫기 (X 버튼 클릭)
+            cy.get('.v-alert.error').find('.v-alert__dismissible').click({ force: true });
+            cy.wait(500);
+
+            // 다시 입력 (이미 입력되어 있다면 지우고 재입력)
+            cy.get('input[aria-label="사용자 계정"]').clear({ force: true }).type(userId, { force: true });
+            cy.get('input[aria-label="패스워드"]').clear({ force: true }).type(password, { force: true });
+            cy.contains('button', '로그인').click({ force: true });
+            cy.wait(2000);
         }
     });
 
