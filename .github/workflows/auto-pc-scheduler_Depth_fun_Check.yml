@@ -281,6 +281,11 @@ jobs:
     needs: cypress-run  # Job 1가 끝나야 시작
     if: always()
     runs-on: [self-hosted, PC-Auto]
+    strategy:
+      fail-fast: false
+      matrix:
+        # 병렬로 실행할 컨테이너(러너) 번호 정의
+        containers: [1, 2, 3, 4, 5]
     env:
       CYPRESS_API_URL: "http://10.10.54.5:1234/"
       CYPRESS_RECORD_KEY: "my-secret-key"
@@ -368,7 +373,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Depth-Raw-Data-Restart
+          name: Depth-Raw-Data-02-${{ matrix.containers }}
           path: |
             **/reports/json_logs/*.json
             **/screenshots/**/*.png
@@ -379,12 +384,17 @@ jobs:
           
 
   # ====================================================
-  # [Job 1.5] 02_Depth 독립적인 스크립트 실행
+  # [Job 1.5] 08_Depth 독립적인 스크립트 실행
   # ====================================================
   new-independent-job:
     needs: job-1-1  # Job 1가 끝나야 시작
     if: always()
     runs-on: [self-hosted, PC-Auto]
+    strategy:
+      fail-fast: false
+      matrix:
+        # 병렬로 실행할 컨테이너(러너) 번호 정의
+        containers: [1, 2, 3, 4, 5]
     env:
       CYPRESS_API_URL: "http://10.10.54.5:1234/"
       CYPRESS_RECORD_KEY: "my-secret-key"
@@ -473,7 +483,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Depth-Raw-Data-Restart
+          name: Depth-Raw-Data-08-${{ matrix.containers }}
           path: |
             **/reports/json_logs/*.json
             **/screenshots/**/*.png
@@ -575,7 +585,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Depth-Raw-Data-Restart
+          name: Depth-Raw-Data-07
           path: |
             **/reports/json_logs/*.json
             **/screenshots/**/*.png
@@ -677,7 +687,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Depth-Raw-Data-Restart
+          name: Depth-Raw-Data-06
           path: |
             **/reports/json_logs/*.json
             **/screenshots/**/*.png
@@ -783,7 +793,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Depth-Raw-Data-Restart
+          name: Depth-Raw-Data-11
           path: |
             **/reports/json_logs/*.json
             **/screenshots/**/*.png
