@@ -824,6 +824,19 @@ jobs:
           Remove-Item -Path "final_report_Depth" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "downloaded_url" -Recurse -Force -ErrorAction SilentlyContinue
           Write-Host "Clear Finish!"
+      
+      - name: 🔍 누락 파일 디버깅
+        run: |
+          $allSpecs = Get-ChildItem -Path "cypress/e2e/Depth_functions_check" -Recurse -Filter "*.cy.js"
+          $foundSpecs = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json"
+          
+          Write-Host "총 예상 파일 수: $($allSpecs.Count)"
+          foreach ($spec in $allSpecs) {
+              if ($foundSpecs.FullName -notmatch $spec.Name.Replace(".cy.js", "")) {
+                  Write-Host "❌ 누락된 테스트 파일 발견: $($spec.Name)"
+              }
+          }
+
 
       - name: Get Current Time
         run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -848,7 +861,6 @@ jobs:
       - name: 🔍 파일 구조 확인
         run: Get-ChildItem -Path all_raw_data -Recurse    
 
-      # 👇 [통합 로직] 폴더 구조가 바뀌어도 찾을 수 있게 **/*.json 사용
       - name: 🔄 리포트 하나로 통합하기
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
@@ -856,12 +868,24 @@ jobs:
 
           npm install mochawesome-merge mochawesome-report-generator --no-save
 
-          # 1. JSON 파일 병합 (가장 넓은 범위로 탐색)
-          cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
-          
-          # 2. HTML 생성
-          # 여기에 --reportFilename "LogCatch_Depth_fun_Report" 추가
-          npx marge merged_report.json --reportDir ./final_report_Depth --inline --charts --reportTitle "Depth Function Report" --reportFilename "LogCatch_Depth_fun_Report" --saveJson=false
+          # 1. 병합할 JSON 파일 목록을 정밀하게 탐색 (dummy.json 제외)
+          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" | 
+                       Where-Object { $_.Name -ne "dummy.json" }
+
+          if ($jsonFiles.Count -eq 0) {
+              Write-Host "⚠️ 병합할 JSON 리포트 파일이 없습니다. 통합을 건너뜁니다."
+          } else {
+              Write-Host "🚀 총 $($jsonFiles.Count)개의 리포트 파일을 병합합니다."
+              
+              # 2. 파일 목록을 공백으로 구분하여 병합 명령어 실행 (가장 확실한 방법)
+              $fileList = ($jsonFiles.FullName -join " ")
+              cmd /c "npx mochawesome-merge $fileList > merged_report.json"
+              
+              # 3. HTML 리포트 생성
+              npx marge merged_report.json --reportDir ./final_report_Depth --inline --charts --reportTitle "Depth Function Report" --reportFilename "LogCatch_Depth_fun_Report" --saveJson=false
+              
+              Write-Host "✅ 리포트 통합 완료: ./final_report_Depth/LogCatch_Depth_fun_Report.html"
+          }
 
       - name: Send Google Chat (Depth)
         if: always() 
