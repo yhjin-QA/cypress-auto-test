@@ -44,16 +44,82 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 });
 
 
-
 // ===============================================
 // WAS (JEUS) -엑설 다운로드 버튼이용한 사전소명 CASE
 // ===============================================
 
+
 // ==========================================
 // STEP : 로그인
 // ==========================================
- cy.login('admin', 'Manager1!');
- cy.wait(5000);   
+    // 1. 사이트 방문
+    cy.visit('https://10.10.54.21:18443/logcatch/login');
+    cy.wait(5000); // 로딩 대기
+
+    ////////////새로고침코드//////
+      cy.get('body').then(($body) => {
+      // 만약 입력창이 안 보인다면? (흰 화면 상태라면?)
+      if ($body.find('input[aria-label="사용자 계정"]').length === 0) {
+        cy.log('🔴 화면 렌더링 실패 감지! 페이지를 새로고침합니다.');
+    
+      // 새로고침 실행
+      cy.reload();
+    
+      // 다시 한번 안정화 대기
+      cy.wait(2000);
+      } else {
+        cy.log('🟢 화면이 정상적으로 로드되었습니다.');
+      }
+     });
+     //////////////////////////////////////
+
+    // 2. 아이디 입력
+    cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
+
+    // 3. 비밀번호 입력
+    cy.get('input[aria-label="패스워드"]').should('exist').type('Manager1!', { force: true }); 
+    
+    // 4. 로그인 실행 (버튼 클릭 대신 엔터키 사용)
+    // 설명: 버튼 클릭보다 엔터키가 '중복 클릭'이나 '이동 에러'가 훨씬 적게 발생합니다.
+    cy.get('input[aria-label="패스워드"]').type('{enter}', { force: true });
+
+    
+
+   // -----------------------------------------------------------
+   // [추가된 부분] "이미 로그인" 알림창 처리 (조건부 로직)
+   // -----------------------------------------------------------
+   cy.wait(2000); // 팝업이 뜨는 찰나의 시간을 기다려줍니다.
+   cy.get('body').then(($body) => {
+    
+    // 2. jQuery 문법(.find)으로 해당 요소가 있는지 '길이(length)'로 체크합니다.
+    // 주의: 여기서는 cy.contains를 쓰면 안 됩니다!
+    if ($body.find('.v-card__title:contains("이미 접속 중인 계정입니다."):visible').length > 0) {
+        
+        cy.log('⚠️ 알림창 발견! 확인 버튼을 클릭합니다.');
+
+        // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
+        cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
+          .closest('.v-card')
+          .contains('확인')
+          .click(); // 여기서 force: true를 주면 더 안전합니다.
+          
+        cy.wait(1000); // 팝업 닫힘 대기
+    } else {
+        cy.log('✅ 알림창이 없습니다. 넘어갑니다.');
+    }
+});
+
+    // 5. [중요] 로그인 성공 검증 (URL 변경 확인)
+    // 로그인이 성공해서 URL에서 '/login'이 빠질 때까지 최대 10초간 기다립니다.
+    // 만약 여기서 실패한다면 "아이디/비번"이 틀렸거나 서버 문제(Access Deny)입니다.
+    cy.url({ timeout: 10000 }).should('not.include', '/login');
+    // -----------------------------------------------------------
+
+     
+    //6. 화면 안정화 대기
+     cy.wait(3000);
+    
+    //로그인 성공
  
 
 // ==========================================
@@ -66,7 +132,7 @@ cy.get('body').then(($body) => {
   if ($body.find('.g-IConfig:visible').length === 0) {
   cy.log('🔴 톱니바퀴 아이콘 렌더링 실패 감지! 페이지 새로고침');
         cy.reload();
-        cy.wait(3000);
+        cy.wait(7000);
       }
 });
 
@@ -79,9 +145,9 @@ cy.get('body').then(($body) => {
   if ($body.find('button.side-menu:contains("설정"):visible').length === 0) {
       cy.log('🔴 ChunkLoadError 감지! (사이드 메뉴 렌더링 실패). 새로고침 후 재시도합니다.');
       cy.reload();
-      cy.wait(3000);
+      cy.wait(7000);
       cy.get('.g-IConfig').should('be.visible').click({ force: true });
-      cy.wait(2000);
+      cy.wait(7000);
        }
   });
  cy.log('✅ 관리자 메뉴 렌더링 및 클릭 완벽 성공');
@@ -101,224 +167,23 @@ cy.contains('.v-list__tile__title', '사전 소명 설정').should('be.visible')
 cy.wait(2000); // 화면 전환 대기
 
 cy.log('--- 사전 소명 설정화면 검증 시작 ---');
-// 페이지 헤더 영역이 확실히 보일 때까지 대기
-cy.get('.c-headline', { timeout: 10000 }).should('contain', '소명 사유');
+cy.contains('.c-headline', /소명 사유.*설정/, { timeout: 15000 }).should('be.visible');
 
-
-//초기화 작업------------------------------------------------------------
-// ===============================================
-// STEP : 추가한 auto_사전소명설정 그룹 삭제
-// ===============================================
-// 1. visible 검증을 생략하고 해당 텍스트를 포함하는 요소를 찾습니다.
-cy.contains('.text-label', 'auto_사전소명설정', { timeout: 10000 })
-  .invoke('show') // 요소가 숨겨져 있다면 강제로 보이게 함
-  .then(($el) => {
-    // 2. 마우스를 올리는 이벤트를 시뮬레이션합니다.
-    cy.wrap($el).trigger('mouseover', { force: true });
-
-// 1. 해당 텍스트를 가진 라벨을 찾습니다.
-cy.contains('.text-label', 'auto_사전소명설정', { timeout: 10000 })
-  .then(($label) => {
-    
-    let $row = $label.closest('.v-list-item'); // 1단계 부모
-    if ($row.length === 0) $row = $label.parents('div').eq(2); // 없을 경우 대비
-
-    // 3. 그 행 내부에서만 휴지통을 찾습니다.
-    cy.wrap($row).find('i.fa-trash').invoke('css', 'display', 'block').click({ force: true });
-  });
-
-});
 
 // ===============================================
-// STEP :  auto_사전소명설정 삭제 알림창 처리 
+// STEP : 'auto_사전소명설정' 존재 검증
 // ===============================================
-// [수정된 팝업 처리 코드]
-cy.log('🧹 소명 사유 그룹  팝업 확인 처리 시작');
+cy.log('🔎 [검증] 그룹 저장 상태 확인 중...');
 
-// '삭제하시겠습니까?'라는 문구가 있는 팝업 영역을 찾습니다.
-cy.contains('p', '삭제하시겠습니까?', { timeout: 10000 }).should('be.visible').closest('.v-card') // 해당 문구가 들어있는 카드(팝업)를 찾습니다.
-  .within(() => {
-    // 2. 그 카드 안에 있는 '확인' 버튼만 정확히 클릭합니다.
-    cy.contains('button', '확인').click({ force: true });
-  });
-  //팝업창 사라짐 확인
-  cy.contains('p', '삭제하시겠습니까?').should('not.be.visible');
-  cy.wait(1000);
+// 2. 목록에 'auto_사전소명설정'이 여전히 존재하는지 확인
+cy.contains('.text-label', 'auto_사전소명설정', { timeout: 10000 }).should('exist');
 
-// ===============================================
-// STEP : 모든 소명사유 삭제 작업 
-// ===============================================
-// [소명 사유 목록 정의]
-const reasonList = [
-  '서비스 이용 제한 및 계정 관련',
-  '업무 처리 및 데이터 수정 관련',
-  '업무관련 파일 다운로드',
-  '기타/일반적 상황'
-];
+cy.log('🎉 auto_사전소명설정 그룹 검증 완료!');
 
-reasonList.forEach((reason) => {
-  cy.log(`삭제 대상: ${reason}`);
 
-  // 1. 해당 소명 사유 텍스트가 있는 행(tr 등)을 찾습니다.
-  // 개발자 도구에서 테이블의 행 단위를 나타내는 태그(tr, .v-data-table__wrapper 등)를 확인하세요.
-  // 여기서는 텍스트를 포함하는 행을 찾는 범용적인 방법을 사용합니다.
-  cy.contains('td', reason) // '소명 사유' 셀의 텍스트 확인
-    .parent()               // 해당 셀의 부모인 행(Row)으로 이동
-    .find('i.fa-trash')     // 그 행 내부의 휴지통 아이콘을 찾음
-    .click({ force: true });
 
-  // 2. 삭제 확인 팝업이 뜬다면 '확인' 클릭
-  cy.contains('button', '확인').click({ force: true });
-  cy.wait(500);
-
-   // 팝업 알림창 
-   cy.log('🧹 소명 취소 팝업 확인 처리 시작');
-
-   // '신청 상태의 소명 1건을 취소합니다.'라는 문구가 있는 팝업 영역을 찾습니다.
-   cy.contains('p', '정말로 삭제하시겠습니까? 삭제 시 소명 사유 그룹에 등록된 사유도 삭제 됩니다.', { timeout: 10000 }).should('be.visible')
-   .closest('.v-card') // 해당 문구가 들어있는 카드(팝업)를 찾습니다.
-   .within(() => {
-    // 2. 그 카드 안에 있는 '확인' 버튼만 정확히 클릭합니다.
-    cy.contains('button', '확인').click({ force: true });
-    });
-
-    //팝업창 사라짐 확인
-    cy.contains('p', '정말로 삭제하시겠습니까? 삭제 시 소명 사유 그룹에 등록된 사유도 삭제 됩니다.').should('not.be.visible');
-    cy.wait(1000);
-  
-    
-});
-
-// [데이터 삭제 확인 검증]
-cy.log('🧹 모든 소명사유 삭제 확인');
-cy.contains('td', 'No data available', { timeout: 10000 }).should('be.visible');
 
 //-------------------------------------------------------------------------------------------
-
-
-
-// ===============================================
-// STEP : 소명 사유 설정 입력
-// ===============================================
-
-
-// [반복문을 이용한 입력 및 저장 처리]
-reasonList.forEach((reason) => {
-  cy.log(`입력 중: ${reason}`);
-
-  // 1. textarea를 먼저 특정합니다.
-  const textArea = cy.get('textarea[placeholder="소명 사유"]');
-  
-  // 2. textarea와 같은 'form' 또는 '부모 컨테이너'를 찾고 그 안의 저장 버튼을 찾습니다.
-  textArea
-    .should('be.visible')
-    .clear()
-    .type(reason, { force: true });
-
-  // 3. textarea의 가장 가까운 공통 부모(예: .v-form)를 기준으로 저장 버튼 찾기
-  textArea
-    .closest('.v-form') // textarea가 들어있는 폼 영역
-    .parent()           // 해당 폼을 포함하는 div
-    .contains('button', '저장') // 그 안의 '저장' 버튼
-    .find('.v-btn__content')
-    .click({ force: true });
-
-  cy.wait(1000); 
-});
-
-
-// ===============================================
-// STEP : + 버튼 클릭하여 그룹 명 추가 
-// ===============================================
-// 첫 번째 '+' 아이콘만 클릭
-cy.get('i.v-icon.fa-plus').first().click({ force: true });
-cy.wait(2000)
-
-// ===============================================
-// STEP : [소명 사유 그룹 추가 팝업 처리]
-// ===============================================
-// [수정된 팝업 처리 코드]
-cy.log('📝 소명 사유 그룹 추가 팝업 입력 시작');
-
-// 1. .c-headline이 'visible'이 될 때까지 기다리는 대신,
-// 팝업이 로딩되기를 잠시 대기합니다. (이미지상으로 팝업이 확실히 뜬다면 사용)
-cy.wait(1000); 
-
-// 2. 'visible' 검증 전에, 텍스트가 DOM에 존재하는지(exist) 먼저 확인합니다.
-cy.contains('.c-headline', '소명 사유 그룹 추가', { timeout: 10000 }).should('exist');
-
-// 3. 입력창이 보일 때까지 대기합니다 (입력창은 visible 상태여야 하므로 더 정확합니다)
-cy.get('input[aria-label="소명 사유 그룹 추가"]', { timeout: 10000 }).should('be.visible').clear().type('auto_사전소명설정', { force: true });
-cy.wait(1000); 
-
-// 4. 저장 버튼 클릭
-cy.contains('button', '저장').click({ force: true });
-cy.wait(1000); 
-
-
-
-// ===============================================
-// STEP : 'auto_사전소명설정' 그룹 클릭
-// ===============================================
-// [그룹 선택 로직]
-cy.log('🖱️ auto_사전소명설정 그룹 클릭 시도');
-// 1. .should('be.visible')을 제거하고, 
-// 텍스트가 존재하기만 하면 바로 클릭하도록 합니다.
-cy.contains('.text-label', 'auto_사전소명설정', { timeout: 10000 })
-  .click({ force: true }); // 강제 클릭
-
-
-// ===============================================
-// STEP : 'auto_사전소명설정' 설정
-// ===============================================
-
-// 1. 'auto_사전소명설정' 그룹 클릭
-cy.contains('.text-label', 'auto_사전소명설정', { timeout: 10000 }).click({ force: true });
-cy.wait(1000); // 로딩 대기
-
-// [반복문을 이용한 소명 사유 선택 및 저장 처리]
-reasonList.forEach((reason) => {
-  cy.log(`사유 선택 중: ${reason}`);
-
-  // 1. 상세 영역 카드 내부에서 콤보박스 클릭
-  cy.contains('.c-headline', 'auto_사전소명설정').closest('.v-card')
-    .within(() => {
-      cy.get('input[aria-label="소명 사유"]').click({ force: true });
-      cy.wait(1000);
-    });
-  
-  // 2. 중요! 리스트 항목은 카드 밖에 생성될 수 있으므로
-  // 'within' 바깥에서 전체 페이지를 대상으로 찾습니다.
-  cy.contains('.v-list__tile__title', reason, { timeout: 10000 }).should('be.visible').click({ force: true });
-  cy.get('body').type('{esc}');  
-  cy.wait(1000);
-});
-
-//접두사 소명내용 입력하는 곳
-cy.log('📝 접두사 소명 내용 입력 시작');
-// 상세 영역 내부로 검색 범위 제한
-cy.contains('.c-headline', 'auto_사전소명설정').closest('.v-card')
-  .within(() => {
-    // 1. textarea를 찾아 입력
-    cy.get('textarea[placeholder="접두사 소명 내용"]').should('be.visible').clear()
-      .type('다음 아래 사유에 해당하는 번호를 입력해주시기 바랍니다.', { force: true });
-  });
-
-
-// 3. 'auto_사전소명설정' 상세 영역의 저장 버튼 클릭
-cy.log('💾 그룹 설정 저장');
-// 해당 헤드라인이 있는 상세 영역의 저장 버튼 타겟팅
-cy.contains('.c-headline', 'auto_사전소명설정')
-  .closest('.v-card') // 상세 영역 카드 전체
-  .within(() => {
-    cy.contains('button', '저장')
-      .find('.v-btn__content')
-      .click({ force: true });
-  });
-
-cy.wait(3000);
-
-
 
 // ===============================================
 // STEP : 관리 - 시스템 - 접속기록 수집기 화면이동
@@ -337,7 +202,7 @@ cy.wait(3000);
 cy.contains('.pl-1', 'Log Tracer_10.10.54.31_8088').should('be.visible').click({ force: true });
 
 
-// 맨티스 이슈 : 
+// 맨티스 이슈 :  http://bug.warevalley.com/view.php?id=37567
 // 삭제시 UI에서는 삭제되지만 DB에서는 남아있는 문제 
 // // ======================================================
 // // STEP : 시스템 - 접속기록 수집기 - 사전 소명 이벤트 삭제 처리
@@ -456,10 +321,11 @@ cy.contains('.v-card', '사전 소명 이벤트 추가').within(() => {
   cy.contains('button', '저장').click({ force: true });
 });
 
-cy.wait(1000);
+cy.wait(2000);
+
 
 // ===============================================
-// STEP : 사전 소명 이벤트 추가 데이터 저장 검증
+// STEP : 사전 소명 이벤트 추가 데이터 존재 확인
 // ===============================================
 
 cy.log('🔍 데이터 저장 성공 여부 검증 시작');
@@ -487,28 +353,30 @@ cy.clearLocalStorage();
 
 cy.intercept('GET', '/tester3/api/file-download*').as('excelDownload');
 
-// 2. 새로운 도메인(10.10.54.31)으로 점프하여 동작 수행
 cy.origin('http://10.10.54.31:8088', () => {
   Cypress.on('uncaught:exception', () => false);
 
-  cy.log('1️⃣ tester3 사이트에 접속합니다.');
   cy.visit('/tester3', { timeout: 60000 });
   cy.wait(3000);
 
-  // 3. Excel 버튼 클릭 전 prompt 처리 로직 추가 
-  // 엑셀버튼을 클릭하면 팝업창에서 1누르고 확인버튼 클릭수행 (미리 예약 방식)
-  cy.log('2️⃣ prompt 팝업 처리를 준비합니다.');
+  // 팝업 처리 로직을 버튼 클릭 직전에 확실하게 적용
   cy.window().then((win) => {
-    // 팝업이 뜨면 자동으로 '1'을 입력하고 확인을 누름
-    cy.stub(win, 'prompt').returns('1');
+    // 기존 prompt를 stub으로 덮어씁니다.
+    cy.stub(win, 'prompt').callsFake((message) => {
+     // cy.log 대신 console.log 사용 (에러 방지)
+      console.log('📢 감지된 팝업 문구:', message);
+      return '1'; // 1을 반환하고 확인을 누름
+    }).as('promptStub'); // 나중에 호출 여부 확인을 위해 별칭 지정
   });
-
 
   cy.log('3️⃣ Excel 버튼을 클릭합니다.');
   cy.get('#excel_btn')
     .should('be.visible')
     .invoke('removeAttr', 'target')
     .click({ force: true });
+
+  // 2. 팝업 호출 검증
+  cy.get('@promptStub', { timeout: 10000 }).should('have.been.called');
 });
 
 // 4. 다운로드 완료 대기
@@ -636,8 +504,20 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
   cy.contains('사전 소명 메뉴 접근').should('be.visible');
   cy.contains('DEFAULT').should('be.visible');
   cy.contains('존재').should('be.visible');
-  cy.contains('소명 불필요').should('be.visible');  
+  cy.contains('소명 불필요').should('be.visible'); 
+  // [신규] 시간 검증 로직
+  cy.get('a.ellipsis').first().invoke('text').then((text) => {
+    const logTime = new Date(text.trim()).getTime(); // 로그의 시간
+    const now = new Date().getTime(); // 현재 시간
+    const diffMinutes = Math.abs(now - logTime) / (1000 * 60); // 차이를 분 단위로 계산
+
+    cy.log(`로그 시간: ${text}, 차이: ${diffMinutes.toFixed(2)}분`);
+    
+    // 2분(120,000ms) 이내인지 확인
+    expect(diffMinutes).to.be.below(2);
   });
+  
+});
 
 cy.log('🎉 사전소명 메뉴 접근  검증 완료!');
 
@@ -646,7 +526,7 @@ cy.log('🎉 사전소명 메뉴 접근  검증 완료!');
 // ==========================================
 // [FINAL] 테스트 종료 및 메뉴 닫기
 // ==========================================
-cy.log('🎉 소명 - 사전 소명 테스트 시나리오 성공적으로 완료!');
+cy.log('🎉 소명 - 사전 소명_발생 테스트 시나리오 성공적으로 완료!');
 cy.get('body').type('{esc}');
 cy.get('body').click('center', { force: true });
 

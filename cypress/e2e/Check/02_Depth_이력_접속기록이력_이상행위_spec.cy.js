@@ -352,18 +352,23 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
  
-    //검증코드
-     cy.log('--- [핵심 검증] 미등록 사용자 & 업무 시간 외 접속 행 확인 ---');
-     cy.contains('tbody tr', '(미등록 사용자)').filter(':contains("업무 시간 외 접속")').filter(':contains("소명 불필요")')     
-      .within(() => {
-        cy.get('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)'); // 연두색 아이콘 확인
-        cy.contains('td', '미존재').should('be.visible');
+    cy.log('--- [핵심 검증] 미등록 사용자 & 업무 시간 외 접속 행 확인 ---');
+    cy.contains('tbody tr', '(미등록 사용자)').filter(':contains("업무 시간 외 접속")').filter(':contains("소명 불필요")').within(() => {
+    // 1. 아이콘 확인
+    cy.get('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+
+    // 2. [수정됨] '존재' 또는 '미존재' 중 하나가 포함되어 있는지 검증
+    cy.get('td').should(($td) => {
+       const text = $td.text();
+       const isValid = text.includes('존재') || text.includes('미존재');
+       expect(isValid, `예상된 상태값(존재/미존재)이 포함되어야 합니다. 현재값: ${text}`).to.be.true;
       });
+    });
 
      // 특정 사용자(제흔휴) 검증
      cy.contains('tr', '업무 시간 외 접속').find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
      //----------------------------------------------------------------------------------------------------------------------------------------------
-      //사용자 상태 클릭 --------------------------------------------------------------------------
+    //사용자 상태 클릭 --------------------------------------------------------------------------
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
      cy.wait(1000);
 

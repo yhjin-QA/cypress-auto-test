@@ -246,12 +246,12 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
 
-    // 검색결과 2026-02-20 선택하기
-    cy.contains('.v-select__selection', '2026-02-20').filter(':visible').closest('.v-input').find('.v-icon').click({ force: true });
+    // 검색결과 2026-03-20 선택하기
+    cy.contains('.v-select__selection', '2026-03-20').filter(':visible').closest('.v-input').find('.v-icon').click({ force: true });
     cy.wait(1000);
 
     // 1. 먼저 드롭다운 박스를 클릭해서 리스트를 엽니다.
-    cy.contains('.v-select__selection', '2026-02-20').click({ force: true });
+    cy.contains('.v-select__selection', '2026-03-20').click({ force: true });
     cy.wait(500); // 메뉴가 열리는 애니메이션 대기
 
     cy.log('⏬ 가상 스크롤 영역을 끝까지 내리기 위해 연속 스크롤을 시도합니다.');
