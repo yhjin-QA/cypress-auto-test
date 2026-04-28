@@ -179,9 +179,25 @@ jobs:
           Write-Host "🚀 Cypress 바이너리 확인 및 설치..."
           npx cypress install 
           
-          # 2. 11번 파일을 찾아서 아예 삭제 ("*11_Depth*" 시작하는 파일들 이 러너 환경에서만 삭제됨 )
+          # 02번 파일을 찾아서 아예 삭제 ("*02_Depth*" 시작하는 파일들 이 러너 환경에서만 삭제됨 )
+          Get-ChildItem -Path "cypress/e2e/Depth_functions_check" -Recurse | Where-Object { $_.Name -like "*02_Depth*" } | Remove-Item -Force
+          Write-Host "✅ [Job 1] 02_Depth 태스크 파일을 물리적으로 제거하여 실행에서 제외했습니다."
+
+          # 08번 파일을 찾아서 아예 삭제 ("*08_Depth*" 시작하는 파일들 이 러너 환경에서만 삭제됨 )
+          Get-ChildItem -Path "cypress/e2e/Depth_functions_check" -Recurse | Where-Object { $_.Name -like "*08_Depth*" } | Remove-Item -Force
+          Write-Host "✅ [Job 1] 08_Depth 태스크 파일을 물리적으로 제거하여 실행에서 제외했습니다."
+
+          # 07번 파일을 찾아서 아예 삭제 ("*07_Depth*" 시작하는 파일들 이 러너 환경에서만 삭제됨 )
+          Get-ChildItem -Path "cypress/e2e/Depth_functions_check" -Recurse | Where-Object { $_.Name -like "*07_Depth*" } | Remove-Item -Force
+          Write-Host "✅ [Job 1] 06_Depth 태스크 파일을 물리적으로 제거하여 실행에서 제외했습니다."
+
+          # 06번 파일을 찾아서 아예 삭제 ("*06_Depth*" 시작하는 파일들 이 러너 환경에서만 삭제됨 )
+          Get-ChildItem -Path "cypress/e2e/Depth_functions_check" -Recurse | Where-Object { $_.Name -like "*06_Depth*" } | Remove-Item -Force
+          Write-Host "✅ [Job 1] 06_Depth 태스크 파일을 물리적으로 제거하여 실행에서 제외했습니다."
+
+          # 11번 파일을 찾아서 아예 삭제 ("*11_Depth*" 시작하는 파일들 이 러너 환경에서만 삭제됨 )
           Get-ChildItem -Path "cypress/e2e/Depth_functions_check" -Recurse | Where-Object { $_.Name -like "*11_Depth*" } | Remove-Item -Force
-          Write-Host "✅ [Job 1] 운영 태스크 파일을 물리적으로 제거하여 실행에서 제외했습니다."
+          Write-Host "✅ [Job 1] 11_Depth 파일을 물리적으로 제거하여 실행에서 제외했습니다."
 
 
           # 3. 실행
@@ -257,12 +273,424 @@ jobs:
             cypress/screenshots
           retention-days: 1
           if-no-files-found: ignore
+
+  # ====================================================
+  # [Job 1.1] 02_Depth  독립적인 스크립트 실행
+  # ====================================================
+  job-1-1:
+    needs: cypress-run  # Job 1가 끝나야 시작
+    if: always()
+    runs-on: [self-hosted, PC-Auto]
+    env:
+      CYPRESS_API_URL: "http://10.10.54.5:1234/"
+      CYPRESS_RECORD_KEY: "my-secret-key"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      COMMIT_INFO_MESSAGE: ${{ github.event.head_commit.message }}
+      NO_COLOR: 1
+      CI: true
+      # continue-on-error: true # 에러가 나도 업로드는 해야 함
+       # 👇 아래 두 줄을 추가하세요! (계정권한 부족 문제 해결)
+      CYPRESS_CACHE_FOLDER: ${{ github.workspace }}\.cypress-cache
+      TEMP: ${{ github.workspace }}\.temp
+      # 👇 [신규 추가] 보안 처리된 DB 및 SSH 비밀번호 주입
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+      PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          clean: true       # 이전 작업 찌꺼기 강제 삭제
+          fetch-depth: 1    # 최근 커밋 하나만 가져와서 속도 향상 및 네트워크 부하 감소
+      - name: Cypress Run (Restart Task Spec)
+        run: |
+          # 1. 초기 설정 및 설치
+          $ErrorActionPreference = "Continue" 
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          
+          Write-Host "📦 패키지 설치 시작 (node-ssh 포함)..."
+          # 🌟 기존 install 대신 ci를 사용하여 package.json에 명시된 버전을 정확히 설치합니다.
+          npm ci
+          
+          Write-Host "🚀 Cypress 바이너리 확인 및 설치..."
+          npx cypress install 
+
+          # 2. 💡 파일 존재 여부 체크 및 예외 처리 보완
+          # 경로가 'cypress/e2e/Depth_functions_check' 인지 다시 한번 확인하세요.
+          $targetFile = Get-ChildItem -Path "cypress/e2e/Depth_functions_check" -Recurse | 
+                        Where-Object { $_.Name -like "*02_Depth*" } | 
+                        Select-Object -First 1
+
+          if (-not $targetFile) {
+              # 💡 에러 대신 'SKIP' 메시지를 남기고 성공(exit 0)으로 종료합니다.
+              Write-Host "⚠️ [SKIP] 실행할 테스트 파일(*02_Depth*)이 폴더에 존재하지 않습니다."
+              Write-Host "👉 Job 1(cypress-run)에서 이미 삭제되었거나 경로가 다를 수 있습니다. 작업을 건너뜁니다."
+              exit 0 
+          }
+
+          # 파일이 있을 경우에만 아래 로직 실행
+          $targetSpec = $targetFile.FullName
+          Write-Host "🚀 [Job 1.1] 단독 실행 파일: $targetSpec"
+
+          # 실행 시 변수를 따옴표로 감싸서 공백/한글 이슈 방지
+          # 파이프(|)를 제거하고 cmd 내부에서 직접 리다이렉트(>) 하도록 변경합니다.
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth 2>&1" | Out-File -FilePath cypress.log -Encoding utf8
+         
+          if (Test-Path cypress.log) { Get-Content cypress.log }
+
+          # 💡 [개선] 로그가 있는지 확인하고 한 번만 읽어서 변수에 담고 출력합니다.
+          if (Test-Path cypress.log) {
+              $logContent = Get-Content cypress.log -Raw -Encoding UTF8
+              Write-Host "==================== [ Cypress Log Summary ] ===================="
+              Write-Host $logContent
+              Write-Host "================================================================="
+          } else {
+              $logContent = ""
+          }
+
+          # 💡 종료 코드 분석 및 '깡통 에러(matched no report files)' 판별
+          # $LASTEXITCODE는 바로 위 cmd 실행 결과의 종료 코드를 참조합니다.
+          if ($LASTEXITCODE -ne 0) {
+              if ($logContent -match "matched no report files") {
+                  Write-Host "✅ [INFO] 할당된 테스트가 없어 발생한 리포터 에러입니다. 성공(exit 0)으로 처리합니다."
+                  exit 0
+              } else {
+                  Write-Host "❌ 실제 테스트 실패 또는 시스템 에러가 발생했습니다."
+                  exit 1
+              }
+          }
+
+      - name: 📂 리포트 데이터 업로드 (Restart Spec)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Depth-Raw-Data-Restart
+          path: |
+            **/reports/json_logs/*.json
+            **/screenshots/**/*.png
+          retention-days: 1
+          # 💡 [필수] 파일이 없을 때(Skip 시) 에러나 경고를 내지 않도록 설정
+          if-no-files-found: ignore          
+
+          
+
+  # ====================================================
+  # [Job 1.5] 02_Depth 독립적인 스크립트 실행
+  # ====================================================
+  new-independent-job:
+    needs: job-1-1  # Job 1가 끝나야 시작
+    if: always()
+    runs-on: [self-hosted, PC-Auto]
+    env:
+      CYPRESS_API_URL: "http://10.10.54.5:1234/"
+      CYPRESS_RECORD_KEY: "my-secret-key"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      COMMIT_INFO_MESSAGE: ${{ github.event.head_commit.message }}
+      NO_COLOR: 1
+      CI: true
+      # continue-on-error: true # 에러가 나도 업로드는 해야 함
+       # 👇 아래 두 줄을 추가하세요! (계정권한 부족 문제 해결)
+      CYPRESS_CACHE_FOLDER: ${{ github.workspace }}\.cypress-cache
+      TEMP: ${{ github.workspace }}\.temp
+      # 👇 [신규 추가] 보안 처리된 DB 및 SSH 비밀번호 주입
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+      PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          clean: true       # 이전 작업 찌꺼기 강제 삭제
+          fetch-depth: 1    # 최근 커밋 하나만 가져와서 속도 향상 및 네트워크 부하 감소
+      - name: Cypress Run (Restart Task Spec)
+        run: |
+          # 1. 초기 설정 및 설치
+          $ErrorActionPreference = "Continue" 
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          
+          Write-Host "📦 패키지 설치 시작 (node-ssh 포함)..."
+          # 🌟 기존 install 대신 ci를 사용하여 package.json에 명시된 버전을 정확히 설치합니다.
+          npm ci
+          
+          Write-Host "🚀 Cypress 바이너리 확인 및 설치..."
+          npx cypress install 
+
+          # 2. 💡 파일 존재 여부 체크 및 예외 처리 보완
+          # 경로가 'cypress/e2e/Depth_functions_check' 인지 다시 한번 확인하세요.
+          $targetFile = Get-ChildItem -Path "cypress/e2e/Depth_functions_check" -Recurse | 
+                        Where-Object { $_.Name -like "*08_Depth*" } | 
+                        Select-Object -First 1
+
+          if (-not $targetFile) {
+              # 💡 에러 대신 'SKIP' 메시지를 남기고 성공(exit 0)으로 종료합니다.
+              Write-Host "⚠️ [SKIP] 실행할 테스트 파일(*08_Depth*)이 폴더에 존재하지 않습니다."
+              Write-Host "👉 Job 1(cypress-run)에서 이미 삭제되었거나 경로가 다를 수 있습니다. 작업을 건너뜁니다."
+              exit 0 
+          }
+
+          # 파일이 있을 경우에만 아래 로직 실행
+          $targetSpec = $targetFile.FullName
+          Write-Host "🚀 [Job 1.5] 단독 실행 파일: $targetSpec"
+
+          # 실행 시 변수를 따옴표로 감싸서 공백/한글 이슈 방지
+          # 파이프(|)를 제거하고 cmd 내부에서 직접 리다이렉트(>) 하도록 변경합니다.
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth 2>&1" | Out-File -FilePath cypress.log -Encoding utf8
+         
+          if (Test-Path cypress.log) { Get-Content cypress.log }
+
+          # 💡 [개선] 로그가 있는지 확인하고 한 번만 읽어서 변수에 담고 출력합니다.
+          if (Test-Path cypress.log) {
+              $logContent = Get-Content cypress.log -Raw -Encoding UTF8
+              Write-Host "==================== [ Cypress Log Summary ] ===================="
+              Write-Host $logContent
+              Write-Host "================================================================="
+          } else {
+              $logContent = ""
+          }
+
+          # 💡 종료 코드 분석 및 '깡통 에러(matched no report files)' 판별
+          # $LASTEXITCODE는 바로 위 cmd 실행 결과의 종료 코드를 참조합니다.
+          if ($LASTEXITCODE -ne 0) {
+              if ($logContent -match "matched no report files") {
+                  Write-Host "✅ [INFO] 할당된 테스트가 없어 발생한 리포터 에러입니다. 성공(exit 0)으로 처리합니다."
+                  exit 0
+              } else {
+                  Write-Host "❌ 실제 테스트 실패 또는 시스템 에러가 발생했습니다."
+                  exit 1
+              }
+          }
+
+      - name: 📂 리포트 데이터 업로드 (Restart Spec)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Depth-Raw-Data-Restart
+          path: |
+            **/reports/json_logs/*.json
+            **/screenshots/**/*.png
+          retention-days: 1
+          # 💡 [필수] 파일이 없을 때(Skip 시) 에러나 경고를 내지 않도록 설정
+          if-no-files-found: ignore
+
+  # ====================================================
+  # [Job 1.8] 07_Depth 독립적인 스크립트 실행
+  # ====================================================        
+  job-1-8:
+    needs: new-independent-job  # new-independent-job가 끝나야 시작
+    if: always()
+    runs-on: [self-hosted, PC-Auto]
+    env:
+      CYPRESS_API_URL: "http://10.10.54.5:1234/"
+      CYPRESS_RECORD_KEY: "my-secret-key"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      COMMIT_INFO_MESSAGE: ${{ github.event.head_commit.message }}
+      NO_COLOR: 1
+      CI: true
+      # continue-on-error: true # 에러가 나도 업로드는 해야 함
+       # 👇 아래 두 줄을 추가하세요! (계정권한 부족 문제 해결)
+      CYPRESS_CACHE_FOLDER: ${{ github.workspace }}\.cypress-cache
+      TEMP: ${{ github.workspace }}\.temp
+      # 👇 [신규 추가] 보안 처리된 DB 및 SSH 비밀번호 주입
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+      PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          clean: true       # 이전 작업 찌꺼기 강제 삭제
+          fetch-depth: 1    # 최근 커밋 하나만 가져와서 속도 향상 및 네트워크 부하 감소
+      - name: Cypress Run (Restart Task Spec)
+        run: |
+          # 1. 초기 설정 및 설치
+          $ErrorActionPreference = "Continue" 
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          
+          Write-Host "📦 패키지 설치 시작 (node-ssh 포함)..."
+          # 🌟 기존 install 대신 ci를 사용하여 package.json에 명시된 버전을 정확히 설치합니다.
+          npm ci
+          
+          Write-Host "🚀 Cypress 바이너리 확인 및 설치..."
+          npx cypress install 
+
+          # 2. 💡 파일 존재 여부 체크 및 예외 처리 보완
+          # 경로가 'cypress/e2e/Depth_functions_check' 인지 다시 한번 확인하세요.
+          $targetFile = Get-ChildItem -Path "cypress/e2e/Depth_functions_check" -Recurse | 
+                        Where-Object { $_.Name -like "*07_Depth*" } | 
+                        Select-Object -First 1
+
+          if (-not $targetFile) {
+              # 💡 에러 대신 'SKIP' 메시지를 남기고 성공(exit 0)으로 종료합니다.
+              Write-Host "⚠️ [SKIP] 실행할 테스트 파일(*07_Depth*)이 폴더에 존재하지 않습니다."
+              Write-Host "👉 Job 1(cypress-run)에서 이미 삭제되었거나 경로가 다를 수 있습니다. 작업을 건너뜁니다."
+              exit 0 
+          }
+
+          # 파일이 있을 경우에만 아래 로직 실행
+          $targetSpec = $targetFile.FullName
+          Write-Host "🚀 [Job 1.5] 단독 실행 파일: $targetSpec"
+
+          # 실행 시 변수를 따옴표로 감싸서 공백/한글 이슈 방지
+          # 파이프(|)를 제거하고 cmd 내부에서 직접 리다이렉트(>) 하도록 변경합니다.
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth 2>&1" | Out-File -FilePath cypress.log -Encoding utf8
+         
+          if (Test-Path cypress.log) { Get-Content cypress.log }
+
+          # 💡 [개선] 로그가 있는지 확인하고 한 번만 읽어서 변수에 담고 출력합니다.
+          if (Test-Path cypress.log) {
+              $logContent = Get-Content cypress.log -Raw -Encoding UTF8
+              Write-Host "==================== [ Cypress Log Summary ] ===================="
+              Write-Host $logContent
+              Write-Host "================================================================="
+          } else {
+              $logContent = ""
+          }
+
+          # 💡 종료 코드 분석 및 '깡통 에러(matched no report files)' 판별
+          # $LASTEXITCODE는 바로 위 cmd 실행 결과의 종료 코드를 참조합니다.
+          if ($LASTEXITCODE -ne 0) {
+              if ($logContent -match "matched no report files") {
+                  Write-Host "✅ [INFO] 할당된 테스트가 없어 발생한 리포터 에러입니다. 성공(exit 0)으로 처리합니다."
+                  exit 0
+              } else {
+                  Write-Host "❌ 실제 테스트 실패 또는 시스템 에러가 발생했습니다."
+                  exit 1
+              }
+          }
+
+      - name: 📂 리포트 데이터 업로드 (Restart Spec)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Depth-Raw-Data-Restart
+          path: |
+            **/reports/json_logs/*.json
+            **/screenshots/**/*.png
+          retention-days: 1
+          # 💡 [필수] 파일이 없을 때(Skip 시) 에러나 경고를 내지 않도록 설정
+          if-no-files-found: ignore 
+
+  # ====================================================
+  # [Job 1.9] 06_Depth 독립적인 스크립트 실행
+  # ====================================================
+  job-1-9:
+    needs: job-1-8  # job-1-8가 끝나야 시작
+    if: always()
+    runs-on: [self-hosted, PC-Auto]
+    env:
+      CYPRESS_API_URL: "http://10.10.54.5:1234/"
+      CYPRESS_RECORD_KEY: "my-secret-key"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      COMMIT_INFO_MESSAGE: ${{ github.event.head_commit.message }}
+      NO_COLOR: 1
+      CI: true
+      # continue-on-error: true # 에러가 나도 업로드는 해야 함
+       # 👇 아래 두 줄을 추가하세요! (계정권한 부족 문제 해결)
+      CYPRESS_CACHE_FOLDER: ${{ github.workspace }}\.cypress-cache
+      TEMP: ${{ github.workspace }}\.temp
+      # 👇 [신규 추가] 보안 처리된 DB 및 SSH 비밀번호 주입
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+      PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"               
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          clean: true       # 이전 작업 찌꺼기 강제 삭제
+          fetch-depth: 1    # 최근 커밋 하나만 가져와서 속도 향상 및 네트워크 부하 감소
+      - name: Cypress Run (Restart Task Spec)
+        run: |
+          # 1. 초기 설정 및 설치
+          $ErrorActionPreference = "Continue" 
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          
+          Write-Host "📦 패키지 설치 시작 (node-ssh 포함)..."
+          # 🌟 기존 install 대신 ci를 사용하여 package.json에 명시된 버전을 정확히 설치합니다.
+          npm ci
+          
+          Write-Host "🚀 Cypress 바이너리 확인 및 설치..."
+          npx cypress install 
+
+          # 2. 💡 파일 존재 여부 체크 및 예외 처리 보완
+          # 경로가 'cypress/e2e/Depth_functions_check' 인지 다시 한번 확인하세요.
+          $targetFile = Get-ChildItem -Path "cypress/e2e/Depth_functions_check" -Recurse | 
+                        Where-Object { $_.Name -like "*06_Depth*" } | 
+                        Select-Object -First 1
+
+          if (-not $targetFile) {
+              # 💡 에러 대신 'SKIP' 메시지를 남기고 성공(exit 0)으로 종료합니다.
+              Write-Host "⚠️ [SKIP] 실행할 테스트 파일(*06_Depth*)이 폴더에 존재하지 않습니다."
+              Write-Host "👉 Job 1(cypress-run)에서 이미 삭제되었거나 경로가 다를 수 있습니다. 작업을 건너뜁니다."
+              exit 0 
+          }
+
+          # 파일이 있을 경우에만 아래 로직 실행
+          $targetSpec = $targetFile.FullName
+          Write-Host "🚀 [Job 1.5] 단독 실행 파일: $targetSpec"
+
+          # 실행 시 변수를 따옴표로 감싸서 공백/한글 이슈 방지
+          # 파이프(|)를 제거하고 cmd 내부에서 직접 리다이렉트(>) 하도록 변경합니다.
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth 2>&1" | Out-File -FilePath cypress.log -Encoding utf8
+         
+          if (Test-Path cypress.log) { Get-Content cypress.log }
+
+          # 💡 [개선] 로그가 있는지 확인하고 한 번만 읽어서 변수에 담고 출력합니다.
+          if (Test-Path cypress.log) {
+              $logContent = Get-Content cypress.log -Raw -Encoding UTF8
+              Write-Host "==================== [ Cypress Log Summary ] ===================="
+              Write-Host $logContent
+              Write-Host "================================================================="
+          } else {
+              $logContent = ""
+          }
+
+          # 💡 종료 코드 분석 및 '깡통 에러(matched no report files)' 판별
+          # $LASTEXITCODE는 바로 위 cmd 실행 결과의 종료 코드를 참조합니다.
+          if ($LASTEXITCODE -ne 0) {
+              if ($logContent -match "matched no report files") {
+                  Write-Host "✅ [INFO] 할당된 테스트가 없어 발생한 리포터 에러입니다. 성공(exit 0)으로 처리합니다."
+                  exit 0
+              } else {
+                  Write-Host "❌ 실제 테스트 실패 또는 시스템 에러가 발생했습니다."
+                  exit 1
+              }
+          }
+
+      - name: 📂 리포트 데이터 업로드 (Restart Spec)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Depth-Raw-Data-Restart
+          path: |
+            **/reports/json_logs/*.json
+            **/screenshots/**/*.png
+          retention-days: 1
+          # 💡 [필수] 파일이 없을 때(Skip 시) 에러나 경고를 내지 않도록 설정
+          if-no-files-found: ignore    
+
   
   # ====================================================
-  # [Job 2] 태스크 재시작 테스트 (단독 실행)
+  # [Job 2] 11_Depth 태스크 재시작 테스트 (단독 실행)
   # ====================================================
   restart-task-run:
-    needs: cypress-run  # Job 1이 끝나야 시작
+    needs: job-1-9  # Job 1.9가 끝나야 시작
     if: always()        
     runs-on: [self-hosted, PC-Auto]
     # 👇 [추가] cy2 실행을 위한 환경 변수 복사
@@ -368,7 +796,7 @@ jobs:
   # ====================================================
   notify-result:
     #needs: cypress-run
-    needs: [cypress-run, restart-task-run] # 두 작업이 모두 끝나야 함
+    needs: [cypress-run, job-1-1, new-independent-job, job-1-8, job-1-9, restart-task-run] # 6 작업이 모두 끝나야 함
     if: always()
     runs-on: [self-hosted, PC-Auto]
     
