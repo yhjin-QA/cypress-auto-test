@@ -162,7 +162,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 테스트 자동화시나리오
     // 이력 -  접속기록 이력 자동화 시니라오 테스트 
     // ==========================================
-
+    
 
     // 이력 > 접속 기록 이력 서브메뉴 클릭  -----------------------
     cy.contains('button', '이력').click({ force: true });
@@ -225,8 +225,8 @@ describe('로그캐치 사이트 테스트', () => {
     // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
-    // 2. '3월'이라는 글자를 찾아 클릭합니다.
-     cy.get('.v-date-picker-table--month').filter(':visible').contains('3월').click({ force: true });
+    // 2. '4월'이라는 글자를 찾아 클릭합니다.
+     cy.get('.v-date-picker-table--month').filter(':visible').contains('4월').click({ force: true });
     // 달력 20일 클릭
     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '20일').closest('.v-btn').click({ force: true });
     //달력창 닫기
@@ -245,42 +245,50 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
 
-
-    // 검색결과 2026-03-20 선택하기
-    cy.contains('.v-select__selection', '2026-03-20').filter(':visible').closest('.v-input').find('.v-icon').click({ force: true });
-    cy.wait(1000);
-
-    // 1. 먼저 드롭다운 박스를 클릭해서 리스트를 엽니다.
-    cy.contains('.v-select__selection', '2026-03-20').click({ force: true });
-    cy.wait(500); // 메뉴가 열리는 애니메이션 대기
-
-    cy.log('⏬ 가상 스크롤 영역을 끝까지 내리기 위해 연속 스크롤을 시도합니다.');
-
-    // 1. 현재 열려있는 메뉴창을 잡아서 별명(dropdown)을 붙여줍니다. (코드 길이 단축)
-    cy.get('.v-menu__content:visible').first().as('dropdown');
-
-    // 2. 첫 번째 스크롤 (여기서 멈칫하면서 다음 데이터가 로딩됩니다)
-    cy.get('@dropdown').scrollTo('bottom', { duration: 500 });
-    cy.wait(500); 
-
-    // 3. 두 번째 스크롤 (새로 늘어난 영역의 밑바닥으로 다시 내립니다)
-    cy.get('@dropdown').scrollTo('bottom', { duration: 500 });
-    cy.wait(500);
-
-     // (만약 데이터가 엄청 많다면 이 스크롤 동작을 한 번 더 복사해서 넣어주세요!)
-     // cy.get('@dropdown').scrollTo('bottom', { duration: 500 });
-     // cy.wait(500);
-
-    // 3. 이제 리스트 내에서 4월 14일을 찾아 클릭합니다.
-    cy.get('.v-menu__content:visible').contains('.v-list__tile__title, .v-list-item__title', '2026-04-14').click({ force: true });
-    cy.wait(1000);
     
-    // 선택 후, 입력창(.v-select__selection)에 '2026-04-14'가 표시되는지 검증
-    cy.contains('.v-select__selection', '2026-04-14').should('be.visible');
+   // 1. 오늘 기준 2일 전 날짜 계산 (formattedDate: 2026-04-27)
+   const targetDateObj = new Date();
+   targetDateObj.setDate(targetDateObj.getDate() - 2);
+   const formattedDate = `${targetDateObj.getFullYear()}-${String(targetDateObj.getMonth() + 1).padStart(2, '0')}-${String(targetDateObj.getDate()).padStart(2, '0')}`;
+   cy.log(`🎯 타겟 날짜: ${formattedDate}`);
+
+
+   // 2. [단계 1] '2026-04-20' 선택 로직
+   // 해당 날짜의 드롭다운을 찾아 클릭
+   cy.contains('.v-select__selection', '2026-04-20').filter(':visible').closest('.v-input').find('.v-icon').click({ force: true });
+   cy.wait(1000); // 리스트가 열리는 애니메이션 대기
+
+
+   // 3. [단계 2] 동적 날짜 선택 로직 (재귀적 스크롤)
+   const scrollAndFindDate = (dateToFind, retryCount = 0) => {
+    const MAX_RETRIES = 10;
+  
+    cy.get('.v-menu__content:visible').first().as('dropdown');
+    cy.get('@dropdown').then(($el) => {
+    // 해당 날짜가 현재 DOM에 있는지 확인
+    if ($el.find(`:contains("${dateToFind}")`).length > 0) {
+      cy.log(`🎉 날짜 [${dateToFind}] 발견!`);
+      cy.contains('.v-list__tile__title, .v-list-item__title', dateToFind).click({ force: true });
+    } else if (retryCount < MAX_RETRIES) {
+      cy.log(`⏬ 날짜 [${dateToFind}] 스크롤 탐색 중... (${retryCount + 1})`);
+      cy.get('@dropdown').scrollTo('bottom', { duration: 500 });
+      cy.wait(800);
+      scrollAndFindDate(dateToFind, retryCount + 1);
+    } else {
+      throw new Error(`❌ [${dateToFind}] 날짜를 목록에서 찾을 수 없습니다.`);
+    }
+  });
+};
+
+    // 함수 실행
+    scrollAndFindDate(formattedDate);
+    
+    // [검증코드] 선택 후, 입력창에 targetDate가 표시되는지 검증(오늘날짜 기준 2일전)
+    cy.contains('.v-select__selection', formattedDate).should('be.visible');
     cy.wait(1000);
  
     // 표 검색결과안의 검출유형 검출 문구확인
-    cy.get('tbody').filter(':visible').contains('a', '검출').should('be.visible');
+    cy.get('tbody', { timeout: 10000 }).filter(':visible').contains('a', '검출').should('be.visible');
 
      //////////////////////////////////////////////////////
      // 검출 메뉴창  확인
@@ -291,7 +299,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 검출창 닫기버튼 클릭
      cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
 
     
@@ -301,7 +309,7 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 이력 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 이력 - 검출 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 

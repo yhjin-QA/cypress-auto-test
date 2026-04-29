@@ -236,6 +236,9 @@ cy.log('🚀 다른 도메인(tester3 서버)으로 크로스 오리진 점프�
 cy.clearCookies();
 cy.clearLocalStorage();
 
+// 1. API 응답을 가로채기 위해 intercept 설정 (cy.origin 바깥에서 정의 가능)
+cy.intercept('GET', '**/api/file-download-pdf*').as('pdfDownload');
+
 // 2. 새로운 도메인(10.10.54.31)으로 점프하여 동작 수행
 cy.origin('http://10.10.54.31:8088', () => {
   // 새 도메인 전용 에러 무시 처리
@@ -250,13 +253,22 @@ cy.origin('http://10.10.54.31:8088', () => {
   cy.wait(3000); // 페이지 로딩 대기
   cy.log('✅ 10.10.54.31 서버 접속 완료!');
 
-  // 3. Excel 버튼 클릭 (id 값인 #excel_btn을 타겟팅)
-  cy.log('2️⃣ Excel 버튼을 클릭합니다.');
-  cy.get('#excel_btn').should('be.visible').click({ force: true });
-    
+  // 3. PDF 버튼 클릭 (id 값인 #pdf_btn을 타겟팅)
+  cy.log('2️⃣ PDF 버튼을 클릭합니다.');
+  cy.get('#pdf_btn').should('be.visible').click({ force: true });
+  cy.log('✅ PDF 버튼 클릭 완료!');
   // 엑셀 다운로드 또는 내부 처리 스크립트가 돌아갈 시간을 넉넉히 줍니다.
   cy.wait(5000); 
-  cy.log('✅ Excel 버튼 클릭 완료!');
+
+  // 3. API 응답 완료 검증
+ cy.log('⏳ PDF 다운로드 API 응답을 기다립니다...');
+ cy.wait('@pdfDownload', { timeout: 30000 }).then((interception) => {
+  // 상태 코드 검증
+  expect(interception.response.statusCode).to.eq(200);
+  cy.log('✅ PDF 다운로드 API 응답 검증 완료 (200 OK)!');
+});
+
+  
 });
 
 

@@ -110,17 +110,17 @@ describe('로그캐치 사이트 테스트', () => {
     //로그인 성공
 
 // ----------------------------------------------------------
-// [백업 사전조건 생성] WAS 시스템 로그인 및 이상행위(과다조회) 타격
+// [백업 사전조건 생성] WAS 시스템 로그인 Pdf 파일 다운로드
 // ----------------------------------------------------------
+
 cy.log('🚀 다른 도메인(tester3 서버)으로 크로스 오리진 점프를 시도합니다.');
 
 // 1. 점프 전, 기존 사이트의 세션/쿠키 찌꺼기 완전 삭제 (충돌 방지)
 cy.clearCookies();
 cy.clearLocalStorage();
 
-// 👇 [핵심 1] 엑셀 다운로드 API를 가로챌 준비를 하고 'excelDownload'라는 이름표(별명)를 붙입니다.
-  // URL 뒤에 파라미터가 붙을 수 있으므로 별표(*)를 넣어줍니다.
-  cy.intercept('GET', '/tester3/api/file-download*').as('excelDownload');
+// 1. API 응답을 가로채기 위해 intercept 설정 (cy.origin 바깥에서 정의 가능)
+cy.intercept('GET', '**/api/file-download-pdf*').as('pdfDownload');
 
 // 2. 새로운 도메인(10.10.54.31)으로 점프하여 동작 수행
 cy.origin('http://10.10.54.31:8088', () => {
@@ -129,22 +129,28 @@ cy.origin('http://10.10.54.31:8088', () => {
 
   // 사이트 접속 (origin 블록 안이므로 도메인 제외 경로만 입력)
   cy.log('1️⃣ tester3 사이트에 접속합니다.');
-  cy.visit('/tester3', { timeout: 60000 });
+  cy.visit('/tester3', { 
+    timeout: 60000 
+  });
   
   cy.wait(3000); // 페이지 로딩 대기
   cy.log('✅ 10.10.54.31 서버 접속 완료!');
 
-  // 3. Excel 버튼 클릭 (id 값인 #excel_btn을 타겟팅)
-  cy.log('2️⃣ Excel 버튼을 클릭합니다.');
-  // 👇 [보완 포인트 1] 새 창 열림(target="_blank") 속성을 강제로 제거하여 통신 끊김 방지
-  cy.get('#excel_btn').should('be.visible').invoke('removeAttr', 'target').click({ force: true });
+  // 3. PDF 버튼 클릭 (id 값인 #pdf_btn을 타겟팅)
+  cy.log('2️⃣ PDF 버튼을 클릭합니다.');
+  cy.get('#pdf_btn').should('be.visible').click({ force: true });
+  cy.log('✅ PDF 버튼 클릭 완료!');
+  // 엑셀 다운로드 또는 내부 처리 스크립트가 돌아갈 시간을 넉넉히 줍니다.
+  cy.wait(5000); 
 
+  // 3. API 응답 완료 검증
+ cy.log('⏳ PDF 다운로드 API 응답을 기다립니다...');
+ cy.wait('@pdfDownload', { timeout: 30000 }).then((interception) => {
+  // 상태 코드 검증
+  expect(interception.response.statusCode).to.eq(200);
+  cy.log('✅ PDF 다운로드 API 응답 검증 완료 (200 OK)!');
+ }); 
 });
-// 👇 [해결 포인트 2] origin 블록을 빠져나온 직후, 밖에서 API 응답을 기다립니다!
-cy.log('⏳ 엑셀 다운로드가 완료될 때까지 기다립니다...');
-cy.wait('@excelDownload', { timeout: 30000 }); 
-cy.log('✅ Excel 다운로드 API 응답 완료!');
-cy.wait(2000);
 
 
 // ----------------------------------------------------------
