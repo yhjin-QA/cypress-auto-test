@@ -339,8 +339,8 @@ jobs:
 
               # Cypress 실행 (cy2)
               # --ci-build-id를 Job 1과 동일하게 가져가면 대시보드에서 하나의 빌드로 묶입니다.
-              cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --parallel --group 'Restart-Group' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth 2>&1" | Out-File -FilePath $logFileName -Encoding utf8
-              
+              #cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --parallel --group 'Restart-Group' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth 2>&1" | Out-File -FilePath $logFileName -Encoding utf8
+              cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --group 'Restart-Group' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth 2>&1" | Out-File -FilePath $logFileName -Encoding utf8
               # 로그 출력
               if (Test-Path $logFileName) {
                   $logContent = Get-Content $logFileName -Raw -Encoding UTF8
