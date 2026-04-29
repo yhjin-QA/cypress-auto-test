@@ -185,6 +185,7 @@ jobs:
           foreach ($pattern in $excludeSpecs) {
               Get-ChildItem -Path "cypress/e2e/Depth_functions_check" -Recurse | Where-Object { $_.Name -like $pattern } | Remove-Item -Force
               Write-Host "✅ [Job 1] The $pattern file was physically removed and excluded from execution."
+          }
 
 
           # 3. 실행
