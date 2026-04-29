@@ -362,9 +362,16 @@ cy.get('body').then(($body) => {
             cy.wrap(autoRegLabel).closest('.v-input').find('input[type="checkbox"]').uncheck({ force: true });
             
             cy.get('input[aria-label="메뉴명"]')
-                .clear({ force: true })
-                .type(`Depth_Test_${formattedDate}`, { force: true });
+             .clear({ force: true })
+             .type(`Depth_Test_${formattedDate}`, { force: true });
             cy.wait(500);
+
+            // 메뉴명 입력 후 [등록] 버튼이 있다면 눌러줍니다.
+            const regBtn = $innerBody.find('button.v-btn:contains("등록")');
+            if (regBtn.length > 0 && regBtn.is(':visible')) {
+            cy.wrap(regBtn).click({ force: true });
+            cy.wait(1000); // 등록 처리 대기
+        }
         } 
         // [상황 2] 이미 이름이 있음 = 바로 저장 (사용자님 의견 반영)
         else {
