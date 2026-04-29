@@ -33,18 +33,26 @@ Cypress.Commands.add('login', (userId, password) => {
     cy.visit('https://10.10.54.21:18443/logcatch/login');
     cy.wait(3000);
 
-    // 2. 화면 상태 방어 로직 (기존 유지)
+    // 2. 새로고침 방어 및 세션 처리 통합 로직
     cy.get('body').then(($body) => {
+        // [케이스 A] 입력창이 아예 안 보임 (흰 화면 혹은 렌더링 실패)
         if ($body.find('input[aria-label="사용자 계정"]').length === 0) {
+            
+            // [케이스 B] 이전 세션이 살아있는 경우 (로그아웃 버튼 존재)
             if ($body.text().includes('로그아웃') || $body.text().includes('님')) {
                 cy.log('⚠️ 이전 세션 감지, 로그아웃 처리');
                 cy.contains('span', '님').should('be.visible').click({ force: true });
                 cy.contains('.v-list__tile__title', '로그아웃').should('be.visible').click({ force: true });
                 cy.wait(2000);
-            } else {
+            } 
+            // [케이스 C] 그냥 렌더링 실패인 경우
+            else {
+                cy.log('🔴 화면 렌더링 실패 감지! 새로고침 후 대기.');
                 cy.reload();
-                cy.wait(2000);
+                cy.wait(5000); // 새로고침 후 안정화 대기
             }
+        } else {
+            cy.log('🟢 로그인 화면이 정상적으로 로드되었습니다.');
         }
     });
 

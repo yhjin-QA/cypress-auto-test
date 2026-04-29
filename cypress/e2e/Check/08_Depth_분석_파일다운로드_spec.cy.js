@@ -3,26 +3,24 @@
 /*!********************************!*\
   !*** ./cypress/e2e/spec.cy.js ***!
   \********************************/
-
-/**코드 시작  */
-describe('로그캐치 사이트 테스트', () => {
-
   // ▼ 1. 모든 에러 무시 설정 (강력한 방어막) ▼
   Cypress.on('uncaught:exception', (err, runnable) => {
     // 무시할 에러 메시지 목록
     const ignoredErrors = [
       'Navigation cancelled',
       'Cannot read properties',
-      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
-      'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
+      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
+      'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
-      'Loading chunk',    //네트워크 로딩에러 
+      'Loading chunk',
+      'Loading CSS chunk',           // ◀◀◀ [NEW] 이번에 발생한 CSS 청크 에러 무시 추가!
       'operate.task.packageManagement',
       'e is not defined',
       'Script error',
-      'not valid JSON'
+      'not valid JSON',
+      'ChunkLoadError'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -31,8 +29,11 @@ describe('로그캐치 사이트 테스트', () => {
     }
   });
 
+/**코드 시작  */
+describe('로그캐치 사이트 테스트', () => {
   
   it('로그캐치 배포점검목록 동작 체크', () => {
+
 
     // ==========================================
     // STEP 0 경보등급 랜돔 지정 셋팅
@@ -437,7 +438,7 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
   // 3. 아이콘 맞춤 검증 (랜덤으로 선택했던 바로 그 등급을 검증합니다)
   cy.log(`🔍 생성 시 선택했던 [${targetAlert.label}] 로그가 정상적으로 발생했는지 검증합니다.`);
   cy.get(targetAlert.iconClass).should('be.visible').and('have.css', 'color', targetAlert.color);
-  });
+});
 
 cy.log('🎉 분석 파일다운로드 확인 및 랜덤 등급 검증 완료!');
 

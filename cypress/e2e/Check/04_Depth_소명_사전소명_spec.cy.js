@@ -3,10 +3,6 @@
 /*!********************************!*\
   !*** ./cypress/e2e/spec.cy.js ***!
   \********************************/
-
-/**코드 시작  */
-describe('로그캐치 사이트 테스트', () => {
-
   // ▼ 1. 모든 에러 무시 설정 (강력한 방어막) ▼
   Cypress.on('uncaught:exception', (err, runnable) => {
     // 무시할 에러 메시지 목록
@@ -23,7 +19,8 @@ describe('로그캐치 사이트 테스트', () => {
       'operate.task.packageManagement',
       'e is not defined',
       'Script error',
-      'not valid JSON'
+      'not valid JSON',
+      'ChunkLoadError'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -32,16 +29,10 @@ describe('로그캐치 사이트 테스트', () => {
     }
   });
 
+/**코드 시작  */
+describe('로그캐치 사이트 테스트', () => {
   
   it('로그캐치 배포점검목록 동작 체크', () => {
-
-// [파일 최상단에 딱 한 번만 배치]
-Cypress.on('uncaught:exception', (err, runnable) => {
-    if (err.message.includes('ChunkLoadError') || err.message.includes('Loading CSS chunk')) {
-        return false; // chunk 관련 모든 에러 무시
-    }
-    return true; 
-});
 
 
 
@@ -337,7 +328,7 @@ cy.wait(3000);
 cy.contains('.pl-1', 'Log Tracer_10.10.54.31_8088').should('be.visible').click({ force: true });
 
 
-// 맨티스 이슈 : 
+// 맨티스 이슈 : http://bug.warevalley.com/view.php?id=37567
 // 삭제시 UI에서는 삭제되지만 DB에서는 남아있는 문제 
 // // ======================================================
 // // STEP : 시스템 - 접속기록 수집기 - 사전 소명 이벤트 삭제 처리

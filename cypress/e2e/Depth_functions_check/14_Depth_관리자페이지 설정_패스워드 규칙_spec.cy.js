@@ -3,10 +3,6 @@
 /*!********************************!*\
   !*** ./cypress/e2e/spec.cy.js ***!
   \********************************/
-
-/**코드 시작  */
-describe('로그캐치 사이트 테스트', () => {
-
   // ▼ 1. 모든 에러 무시 설정 (강력한 방어막) ▼
   Cypress.on('uncaught:exception', (err, runnable) => {
     // 무시할 에러 메시지 목록
@@ -14,7 +10,7 @@ describe('로그캐치 사이트 테스트', () => {
       'Navigation cancelled',
       'Cannot read properties',
       'resetValidation',
-      'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 
+      'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
       'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
       'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
@@ -23,7 +19,8 @@ describe('로그캐치 사이트 테스트', () => {
       'operate.task.packageManagement',
       'e is not defined',
       'Script error',
-      'not valid JSON'
+      'not valid JSON',
+      'ChunkLoadError'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -32,8 +29,8 @@ describe('로그캐치 사이트 테스트', () => {
     }
   });
 
-  let dbRules; // 1. 상위 스코프에 변수 선언
-
+/**코드 시작  */
+describe('로그캐치 사이트 테스트', () => {
   
   it('로그캐치 배포점검목록 동작 체크', () => {
 

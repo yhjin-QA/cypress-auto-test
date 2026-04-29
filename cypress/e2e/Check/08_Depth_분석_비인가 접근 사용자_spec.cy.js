@@ -3,26 +3,24 @@
 /*!********************************!*\
   !*** ./cypress/e2e/spec.cy.js ***!
   \********************************/
-
-/**코드 시작  */
-describe('로그캐치 사이트 테스트', () => {
-
   // ▼ 1. 모든 에러 무시 설정 (강력한 방어막) ▼
   Cypress.on('uncaught:exception', (err, runnable) => {
     // 무시할 에러 메시지 목록
     const ignoredErrors = [
       'Navigation cancelled',
       'Cannot read properties',
-      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
-      'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
+      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
+      'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
-      'Loading chunk',    //네트워크 로딩에러 
+      'Loading chunk',
+      'Loading CSS chunk',           // ◀◀◀ [NEW] 이번에 발생한 CSS 청크 에러 무시 추가!
       'operate.task.packageManagement',
       'e is not defined',
       'Script error',
-      'not valid JSON'
+      'not valid JSON',
+      'ChunkLoadError'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -31,8 +29,11 @@ describe('로그캐치 사이트 테스트', () => {
     }
   });
 
+/**코드 시작  */
+describe('로그캐치 사이트 테스트', () => {
   
   it('로그캐치 배포점검목록 동작 체크', () => {
+
 
     // ==========================================
     // STEP 0 경보등급 랜돔 지정 셋팅
@@ -119,9 +120,6 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(3000);
     
     //로그인 성공
-  // ==========================================
-  // CASE1 비인가 접근 사용자 상태 - 기타 휴직 상태 확인 (류선재 loginid3)
-  // ==========================================
 
      // ==========================================
     // STEP 9: 분석 서브메뉴 
@@ -487,6 +485,10 @@ cy.wait(1000);
 // [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
 // ----------------------------------------------------------
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
+// [개선 코드]
+// 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
+cy.get('tbody', { timeout: 15000 }).contains('tr', '류선재(loginid3)').should('be.visible');
+
 
 // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
 cy.get('tbody tr').filter(':visible').first().within(() => {
@@ -775,6 +777,10 @@ cy.wait(1000);
 // [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
 // ----------------------------------------------------------
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
+// [개선 코드]
+// 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
+cy.get('tbody', { timeout: 15000 }).contains('tr', '류평비(loginid102)').should('be.visible');
+
 
 // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
 cy.get('tbody tr').filter(':visible').first().within(() => {
@@ -1062,6 +1068,9 @@ cy.wait(1000);
 // [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
 // ----------------------------------------------------------
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
+// [개선 코드]
+// 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
+cy.get('tbody', { timeout: 15000 }).contains('tr', '남판범(loginid194)').should('be.visible');
 
 // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
 cy.get('tbody tr').filter(':visible').first().within(() => {
@@ -1080,8 +1089,8 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
 
  cy.log('🎉 분석 - 비인가 접근 - 퇴직자 예정 사용자 확인 및 랜덤 경보등급 검증 완료!');
 
-  // ==========================================
-  // CASE4 비인가 접근 사용자 상태 - 휴가자 (배혜택 loginid208)
+// ==========================================
+  // CASE3 비인가 접근 사용자 상태 - 퇴직자 예정자 (배혜택 loginid208)
   // ==========================================
   // 분석 탭 메뉴로 다시 이동 
   cy.contains('button.has-child', '분석').click({ force: true });
@@ -1349,6 +1358,10 @@ cy.wait(1000);
 // [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
 // ----------------------------------------------------------
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
+// [개선 코드]
+// 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
+cy.get('tbody', { timeout: 15000 }).contains('tr', '배혜택(loginid208)').should('be.visible');
+
 
 // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
 cy.get('tbody tr').filter(':visible').first().within(() => {

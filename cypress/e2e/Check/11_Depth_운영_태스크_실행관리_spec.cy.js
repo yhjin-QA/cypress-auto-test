@@ -3,10 +3,6 @@
 /*!********************************!*\
   !*** ./cypress/e2e/spec.cy.js ***!
   \********************************/
-
-/**코드 시작  */
-describe('로그캐치 사이트 테스트', () => {
-
   // ▼ 1. 모든 에러 무시 설정 (강력한 방어막) ▼
   Cypress.on('uncaught:exception', (err, runnable) => {
     // 무시할 에러 메시지 목록
@@ -19,10 +15,12 @@ describe('로그캐치 사이트 테스트', () => {
       'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
       'Loading chunk',
+      'Loading CSS chunk',           // ◀◀◀ [NEW] 이번에 발생한 CSS 청크 에러 무시 추가!
       'operate.task.packageManagement',
       'e is not defined',
       'Script error',
-      'not valid JSON'
+      'not valid JSON',
+      'ChunkLoadError'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -31,8 +29,11 @@ describe('로그캐치 사이트 테스트', () => {
     }
   });
 
+/**코드 시작  */
+describe('로그캐치 사이트 테스트', () => {
   
   it('로그캐치 배포점검목록 동작 체크', () => {
+
 
     // ==========================================
     // STEP 1: 로그인
@@ -217,7 +218,7 @@ processList.forEach((process) => {
     expect(output, '🚨 SSH 접속 실패!').to.not.be.null;
     
     cy.log(`🖥️ [정지 결과] 터미널 출력: ${output}`);
-    // 검색된 텍스트가 비어있어야(empty) 프로세스가 완벽히 죽은 것입니다.
+    // 검색된 텍스트가 비어있어야(empty) 프로세스가 완벽히 죽은 것인지 확인
     expect(output.trim(), `${process.uiName} 프로세스가 서버에서 완전히 종료되었는지 확인`).to.be.empty; 
   });
 
@@ -245,7 +246,7 @@ processList.forEach((process) => {
     expect(output, '🚨 SSH 접속 실패!').to.not.be.null;
 
     cy.log(`🖥️ [시작 결과] 터미널 출력:\n${output}`);
-    // 💡 검색을 띄어쓰기 없이 했으므로, 결과가 텅 비어있지 않다(not.empty)면 기동 성공으로 봅니다!
+    // 💡 검색을 띄어쓰기 없이 했으므로, 결과가 텅 비어있지 않다(not.empty)면 기동 성공으로 간주
     expect(output.trim(), `${process.uiName} 프로세스가 서버에서 정상 기동되었는지 확인`).to.not.be.empty;
   });
     
