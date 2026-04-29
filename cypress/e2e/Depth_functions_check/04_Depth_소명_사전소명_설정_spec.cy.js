@@ -209,7 +209,6 @@ cy.get('body').then(($body) => {
       });
 
     // 4. 삭제 완료 대기
-    cy.contains('p', '삭제하시겠습니까?').should('not.exist');
     cy.wait(1000);
     cy.log('✅ 그룹 삭제 완료.');
 

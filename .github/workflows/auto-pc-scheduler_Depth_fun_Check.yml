@@ -172,20 +172,19 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-          Write-Host "📦 패키지 설치 시작 (node-ssh 포함)..."
+          Write-Host "📦Starting package installation (including node-ssh)..."
           # 🌟 기존 install 대신 ci를 사용하여 package.json에 명시된 버전을 정확히 설치합니다.
           npm ci
           
-          Write-Host "🚀 Cypress 바이너리 확인 및 설치..."
+          Write-Host "🚀 Checking and installing Cypress binaries..."
           npx cypress install 
           
           # 2. 특정 파일들을 찾아서 아예 삭제 (Job 1 메인 실행에서 제외)
-          $excludeSpecs = @("*06_Depth*", "*07_Depth*", "*10_Depth*","*11_Depth*")
+          $excludeSpecs = @("*11_Depth*")
           
           foreach ($pattern in $excludeSpecs) {
               Get-ChildItem -Path "cypress/e2e/Depth_functions_check" -Recurse | Where-Object { $_.Name -like $pattern } | Remove-Item -Force
-              Write-Host "✅ [Job 1] $pattern 파일을 물리적으로 제거하여 실행에서 제외했습니다."
-          }
+              Write-Host "✅ [Job 1] The $pattern file was physically removed and excluded from execution."
 
 
           # 3. 실행
@@ -205,10 +204,10 @@ jobs:
           # $LASTEXITCODE는 바로 위 cmd 실행 결과의 종료 코드를 가지고 있습니다.
           if ($LASTEXITCODE -ne 0) {
               if ($logContent -match "matched no report files") {
-                  Write-Host "✅ [INFO] 할당된 테스트가 없어 발생한 리포터 에러입니다. 정상 종료 처리합니다."
+                  Write-Host "✅ [INFO] Reporter error caused by no assigned tests. Processing for normal termination.."
                   exit 0
               } else {
-                  Write-Host "❌ 실제 테스트 실패 또는 시스템 에러가 발생했습니다."
+                  Write-Host "❌ An actual test failure or system error occurred."
                   exit 1
               }
           }
@@ -230,15 +229,15 @@ jobs:
                 # 👇 앞부분은 우리가 원하는 '진짜 IP'로 고정해서 붙입니다.
                 $realUrl = "http://10.10.54.5:8080$runPath"
                 
-                Write-Host "✅ 대시보드 URL 생성 완료: $realUrl"
+                Write-Host "✅ Dashboard URL creation complete: $realUrl"
                 echo $realUrl | Out-File -FilePath run_url.txt -Encoding UTF8
             } else {
-                Write-Host "⚠️ 로그에서 Run ID를 찾을 수 없습니다."
+                Write-Host "⚠️ Run ID cannot be found in log."
                 # 실패 시 프로젝트 목록 페이지로 안내
                 echo "http://10.10.54.5:8080/projects" | Out-File -FilePath run_url.txt -Encoding UTF8
             }
           } else {
-             Write-Host "❌ cypress.log 파일이 없습니다."
+             Write-Host "❌ The cypress.log file is missing."
           }
 
       - name: Upload URL File
@@ -303,23 +302,23 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          Write-Host "📦 패키지 설치 시작 (node-ssh 포함)..."
+          Write-Host "📦 Starting package installation (including node-ssh)..."
           # 🌟 기존 install 대신 ci를 사용하여 package.json에 명시된 버전을 정확히 설치합니다.
           npm ci
           
-          Write-Host "🚀 Cypress 바이너리 확인 및 설치..."
+          Write-Host "🚀 Checking and installing Cypress binaries..."
           npx cypress install 
 
           # 🌟 [수정 포인트] 실행할 파일 패턴을 07번 -> 06번 ->10번 -> 11번 순서대로 배열에 정의합니다.
           # 나중에 다른 파일을 추가하고 싶으면 이 배열에 추가만 하면 됩니다.
-          $specsToRun = @("*07_Depth*", "*06_Depth*", "*10_Depth*", "*11_Depth*")
+          $specsToRun = @("*11_Depth*")
           
           $overallSuccess = $true
 
           foreach ($pattern in $specsToRun) {
               Write-Host "`n"
               Write-Host "-----------------------------------------------------------------"
-              Write-Host "🔍 검색 패턴: $pattern 에 대한 실행을 시작합니다."
+              Write-Host "🔍 Starts execution for search pattern: $pattern."
               
               # 파일 찾기
               $targetFile = Get-ChildItem -Path "cypress/e2e/Depth_functions_check" -Recurse | 
@@ -327,12 +326,12 @@ jobs:
                             Select-Object -First 1
 
               if (-not $targetFile) {
-                  Write-Host "⚠️ [SKIP] 패턴($pattern)에 매칭되는 파일을 찾을 수 없습니다. 다음으로 넘어갑니다."
+                  Write-Host "⚠️ [SKIP] No files matching pattern ($pattern) were found. Moving on to the next step."
                   continue
               }
 
               $targetSpec = $targetFile.FullName
-              Write-Host "🚀 실행 파일 결정: $targetSpec"
+              Write-Host "🚀 Determining the executable file : $targetSpec"
 
               # 개별 실행 로그 관리를 위해 파일명 추출
               $logFileName = "cypress_" + $targetFile.BaseName + ".log"
@@ -344,16 +343,16 @@ jobs:
               # 로그 출력
               if (Test-Path $logFileName) {
                   $logContent = Get-Content $logFileName -Raw -Encoding UTF8
-                  Write-Host "===== [ $pattern 실행 로그 요약 ] ====="
+                  Write-Host "===== [ $pattern Execution Log Summary ] ====="
                   Write-Host $logContent
               }
 
               # 종료 코드 확인
               if ($LASTEXITCODE -ne 0) {
                   if ($logContent -match "matched no report files") {
-                      Write-Host "✅ [INFO] 할당된 테스트 없음(Reporter error). 무시하고 계속 진행합니다."
+                      Write-Host "✅ [INFO] No tests assigned (Reporter error). Ignore and continue."
                   } else {
-                      Write-Host "❌ $pattern 실행 중 에러가 발생했습니다."
+                      Write-Host "❌An error occurred while executing $pattern."
                       $overallSuccess = $false
                       # 필요하다면 여기서 'break'를 걸어 뒤의 파일을 실행 안 하게 할 수 있습니다.
                   }
@@ -364,10 +363,10 @@ jobs:
 
           # 모든 반복문 종료 후 전체 상태 결정
           if (-not $overallSuccess) {
-              Write-Host "🚨 하나 이상의 테스트가 실패했습니다."
+              Write-Host "🚨 One or more tests failed."
               exit 1
           } else {
-              Write-Host "🎉 모든 지정된 테스트가 정상적으로 종료되었습니다."
+              Write-Host "🎉 All specified tests have finished successfully."
               exit 0
           }
 
@@ -467,7 +466,7 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          Write-Host "============= [Debug Log: Flaky-Free Detector V10 (Strict Pass Check)] ============="
+          Write-Host "============= [Debug Log: Flaky & Ghost Detector V9 (Perfect Extraction)] ============="
           
           $nodeScript = @"
           const fs = require('fs');
@@ -495,12 +494,13 @@ jobs:
               const jsonFiles = findFiles('all_raw_data', '.json');
               const pngFiles = findFiles('all_raw_data', '.png');
 
-              // 1. JSON 분석
+              // 1. JSON 분석 (무적의 정규식 추출법 도입)
               jsonFiles.forEach(file => {
                   try {
                       const rawText = fs.readFileSync(file, 'utf8');
                       const data = JSON.parse(rawText);
                       
+                      // 💡 JSON 구조 무시하고 텍스트 전체에서 파일명(.cy.js)을 냅다 찾아냅니다!
                       let specName = null;
                       const match = rawText.match(/([^\\/":*?<>|]+\.cy\.js)/);
                       if (match) {
@@ -508,13 +508,10 @@ jobs:
                       }
 
                       if (specName && data.stats) {
-                          // [핵심] 성공 이력이 1개라도 있으면 '면죄부' 부여
-                          if (data.stats.passes > 0) {
-                              passedSpecs.add(specName);
-                          }
-                          // 실패 이력이 있으면 일단 후보로 등록
                           if (data.stats.failures > 0) {
                               failedSpecs.add(specName);
+                          } else if (data.stats.passes > 0 || data.stats.pending > 0) {
+                              passedSpecs.add(specName); // 이제 합격 명단에 이름이 쑥쑥 들어갑니다!
                           }
                       }
                   } catch (e) { /* 무시 */ }
@@ -528,8 +525,13 @@ jobs:
                   }
               });
 
-              // 3. 최종 평가 (실패 목록에서 성공 이력이 있는 것은 제거)
-              let finalSpecs = Array.from(failedSpecs).filter(spec => !passedSpecs.has(spec));
+              // 3. 최종 평가 (Flaky 소거)
+              let finalSpecs = [];
+              failedSpecs.forEach(spec => {
+                  if (!passedSpecs.has(spec)) {
+                      finalSpecs.push(spec);
+                  }
+              });
 
               console.log('DEBUG_PASSED=' + Array.from(passedSpecs).join(', '));
               console.log('DEBUG_FAILED=' + finalSpecs.join(', '));
@@ -565,8 +567,6 @@ jobs:
           
           $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
-          
-          # 시스템 에러나 취소 상태 체크
           if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") {
               if (-not $isActuallyFailed -and $restartStatus -ne "success") {
                   $isActuallyFailed = $true
@@ -605,7 +605,6 @@ jobs:
           $payload = @{ text = ($msgLines -join "`n") } | ConvertTo-Json -Compress
           $utf8Bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
           Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes
-          
 
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: always() && env.FINAL_STATUS == 'FAIL'
