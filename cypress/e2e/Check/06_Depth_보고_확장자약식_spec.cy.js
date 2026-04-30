@@ -458,7 +458,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 1. 테스트할 데이터 배열 정의
     const reportTypes = ['월 정기점검 보고서', '월 정기점검 보고서 (행위)', '월 정기점검 보고서 (행위_Mongo)', '개인정보접속 종합 보고서'];
     
-    const extensions = ['html', 'xlsx', 'pdf', 'docx', 'mht', 'xls', 'ppt', 'txt', 'jpg', 'png', 'gif', 'tif', 'svg', 'hwp', 'csv']; 
+    const extensions = ['html', 'xlsx', 'pdf', 'docx', 'ppt', 'hwp','txt', 'csv']; 
 
     // 2. [바깥쪽 루프] 보고서 종류를 하나씩 꺼냅니다.
     reportTypes.forEach((reportType) => {

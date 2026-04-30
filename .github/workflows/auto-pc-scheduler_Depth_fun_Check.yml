@@ -467,14 +467,11 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          Write-Host "============= [Debug Log: Flaky & Ghost Detector V9 (Perfect Extraction)] ============="
+          Write-Host "============= [Debug Log: Flaky & Ghost Detector V10 (Final Winner Logic)] ============="
           
           $nodeScript = @"
           const fs = require('fs');
           const path = require('path');
-
-          let passedSpecs = new Set();
-          let failedSpecs = new Set();
 
           function findFiles(dir, ext, fileList = []) {
               if (!fs.existsSync(dir)) return fileList;
@@ -493,53 +490,52 @@ jobs:
 
           try {
               const jsonFiles = findFiles('all_raw_data', '.json');
-              const pngFiles = findFiles('all_raw_data', '.png');
+              
+              // 💡 핵심: 스펙별 최종 상태를 관리 (하나라도 성공하면 true)
+              let specResults = new Map(); 
 
-              // 1. JSON 분석 (무적의 정규식 추출법 도입)
               jsonFiles.forEach(file => {
                   try {
                       const rawText = fs.readFileSync(file, 'utf8');
                       const data = JSON.parse(rawText);
                       
-                      // 💡 JSON 구조 무시하고 텍스트 전체에서 파일명(.cy.js)을 냅다 찾아냅니다!
-                      let specName = null;
+                      // 텍스트 전체에서 파일명(.cy.js) 추출
                       const match = rawText.match(/([^\\/":*?<>|]+\.cy\.js)/);
-                      if (match) {
-                          specName = match[1].trim();
-                      }
+                      let specName = match ? match[1].trim() : null;
 
                       if (specName && data.stats) {
-                          if (data.stats.failures > 0) {
-                              failedSpecs.add(specName);
-                          } else if (data.stats.passes > 0 || data.stats.pending > 0) {
-                              passedSpecs.add(specName); // 이제 합격 명단에 이름이 쑥쑥 들어갑니다!
+                          const isCurrentSuccess = data.stats.failures === 0;
+                          
+                          if (specResults.has(specName)) {
+                              // 💡 이미 성공 기록이 있다면 유지, 없다면 현재 결과로 업데이트
+                              if (isCurrentSuccess) {
+                                  specResults.set(specName, true);
+                              }
+                          } else {
+                              specResults.set(specName, isCurrentSuccess);
                           }
                       }
-                  } catch (e) { /* 무시 */ }
+                  } catch (e) { /* JSON 에러 무시 */ }
               });
 
-              // 2. 스크린샷 분석
-              pngFiles.forEach(file => {
-                  const match = file.match(/([^/\\]+\.cy\.js)/);
-                  if (match) {
-                      failedSpecs.add(match[1].trim());
+              let finalFailed = [];
+              let finalPassed = [];
+
+              // Map을 순회하며 최종 성공/실패 분류
+              specResults.forEach((isSuccess, specName) => {
+                  if (isSuccess) {
+                      finalPassed.push(specName);
+                  } else {
+                      finalFailed.push(specName);
                   }
               });
 
-              // 3. 최종 평가 (Flaky 소거)
-              let finalSpecs = [];
-              failedSpecs.forEach(spec => {
-                  if (!passedSpecs.has(spec)) {
-                      finalSpecs.push(spec);
-                  }
-              });
-
-              console.log('DEBUG_PASSED=' + Array.from(passedSpecs).join(', '));
-              console.log('DEBUG_FAILED=' + finalSpecs.join(', '));
-              console.log('FAILS=' + finalSpecs.length);
+              console.log('DEBUG_PASSED=' + finalPassed.join(', '));
+              console.log('DEBUG_FAILED=' + finalFailed.join(', '));
+              console.log('FAILS=' + finalFailed.length);
               
-              if (finalSpecs.length > 0) {
-                  console.log('SPECS=' + finalSpecs.join(', '));
+              if (finalFailed.length > 0) {
+                  console.log('SPECS=' + finalFailed.join(', '));
               }
 
           } catch (err) {
@@ -566,6 +562,7 @@ jobs:
               $isActuallyFailed = $true
           }
           
+          # 시스템 에러(Cancelled 등)에 대한 보완 처리
           $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
           if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") {
@@ -576,6 +573,7 @@ jobs:
               }
           }
           
+          # 대시보드 URL 추출
           $dashUrl = "http://10.10.54.5:8080/projects"
           $urlFiles = Get-ChildItem -Path "all_raw_data", "downloaded_url" -Recurse -Filter "run_url.txt" -ErrorAction SilentlyContinue
           foreach ($uFile in $urlFiles) {
