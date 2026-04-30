@@ -561,7 +561,10 @@ jobs:
           if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") {
               if (-not $isActuallyFailed -and $restartStatus -ne "success") {
                   $isActuallyFailed = $true
-                  $totalFailCount = ($totalFailCount -eq 0) ? 1 : $totalFailCount
+                  # 삼항 연산자 대신 일반 if문 사용
+                  if ($totalFailCount -eq 0) {
+                      $totalFailCount = 1
+                  }
                   $specListString = "System Error or Cancelled"
               }
           }

@@ -339,62 +339,68 @@ describe('로그캐치 사이트 테스트', () => {
 cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
 cy.wait(1500); 
 
-// 🌟 [개선된 메뉴 설정 제어]
-cy.get('body').then(($body) => {
-    // 1. 펼침/닫힘 판별 (화살표 아이콘이나 메뉴명 입력창 존재 여부로 확인)
-    const isClosed = $body.find('label.clickable i.fa-angle-right').length > 0;
-    const isMenuNameVisible = $body.find('input[aria-label="메뉴명"]').is(':visible');
+// 🌟 [개선된 메뉴 설정 제어: 확실한 펼침 보장형]
 
-    // 닫혀있고, 메뉴명 입력창도 안 보인다면 클릭해서 펼칩니다.
-    if (isClosed && !isMenuNameVisible) {
-        cy.log('📁 메뉴 설정이 닫혀 있어 펼칩니다.');
-        cy.wrap($body).contains('label.clickable span', '메뉴 설정').click({ force: true });
-        cy.wait(1000);
-    }
+// 1. 검출 팝업 오픈 후 팝업 내부의 고정 요소가 뜰 때까지 대기 (안정화)
+cy.get('.v-dialog--active', { timeout: 10000 }).should('be.visible');
 
-    // 2. 내부 상태 파악 및 동작
-   cy.get('body').then(($innerBody) => {
+// 2. 메뉴 설정 영역이 열려있는지 확인하고, 닫혀있다면 열릴 때까지 처리
+const ensureMenuOpen = () => {
+    cy.get('body').then(($body) => {
+        const isMenuNameVisible = $body.find('input[aria-label="메뉴명"]:visible').length > 0;
+
+        if (!isMenuNameVisible) {
+            cy.log('📁 메뉴 설정이 닫혀 있거나 렌더링 전입니다. 클릭을 시도합니다.');
+            // '메뉴 설정' 글자 혹은 인접한 화살표 아이콘 클릭
+            cy.contains('label.clickable span', '메뉴 설정')
+              .should('be.visible')
+              .click({ force: true });
+            
+            // 클릭 후 메뉴명 입력창이 나타날 때까지 명시적 대기 (최대 5초)
+            cy.get('input[aria-label="메뉴명"]', { timeout: 5000 }).should('be.visible');
+        } else {
+            cy.log('🟢 메뉴 설정이 이미 펼쳐져 있습니다.');
+        }
+    });
+};
+
+ensureMenuOpen();
+
+// 3. 이후 내부 상태 파악 및 동작 진행
+cy.get('body').then(($innerBody) => {
+    // ... 기존 Case 1, Case 2 로직 ...
     const autoRegLabel = $innerBody.find('label:contains("메뉴명 자동 등록")');
     const menuNameInput = $innerBody.find('input[aria-label="메뉴명"]');
+    // 버튼 텍스트가 정확히 '등록'인 것만 필터링
     const regBtn = $innerBody.find('button.v-btn').filter(':visible').filter((i, el) => Cypress.$(el).text().trim() === '등록');
 
-    // [Case 1] 자동 등록 해제 필요 상황
     if (autoRegLabel.length > 0 && autoRegLabel.is(':visible')) {
         cy.log('📝 [Case 1] 자동 등록 해제 및 신규 입력');
         cy.wrap(autoRegLabel).closest('.v-input').find('input[type="checkbox"]').uncheck({ force: true });
-        cy.wrap(menuNameInput).clear({ force: true }).type(`Depth_Test_${formattedDate}`, { force: true });
+        cy.wrap(menuNameInput).should('be.visible').clear({ force: true }).type(`Depth_Test_${formattedDate}`, { force: true });
         cy.wait(500);
 
-        // 등록 버튼 클릭
         if (regBtn.length > 0) {
             cy.wrap(regBtn).click({ force: true });
-            cy.wait(1500); // 등록 후 시스템 반영 대기
+            cy.wait(1500);
         }
-    } 
-    // [Case 2] 이미 이름이 있는 상황
-    else {
+    } else {
         cy.log('✅ [Case 2] 메뉴명 존재 확인. 등록 여부 체크...');
-        
-        // 이름은 있는데 시스템에서 '등록'을 요구하는 경우 (등록 버튼이 보인다면 클릭)
         if (regBtn.length > 0) {
-            cy.log('🔄 등록 버튼이 활성화되어 있어 클릭합니다.');
+            cy.log('🔄 등록 버튼 클릭');
             cy.wrap(regBtn).click({ force: true });
             cy.wait(1500);
         }
     }
 
-    // 3. 공통 저장 프로세스
-    cy.log('💾 최종 저장 시도');
-    // 저장 버튼 클릭 (화면에 '확인' 버튼이 뜬 경우를 대비해 예외 처리 추가)
-    cy.get('button.v-btn').filter(':visible').contains('저장').first().click({ force: true });
+    // 최종 저장 버튼 (첫 번째 버튼이 아닐 수 있으므로 정확히 '저장' 텍스트 확인)
+    cy.contains('button.v-btn:visible', '저장').should('be.visible').click({ force: true });
     
-    // 알림창이 "메뉴 등록을 먼저..." 가 뜬다면 여기서 실패하므로, 
-    // 정상적인 "저장하시겠습니까?" 가 뜰 때까지 기다립니다.
     cy.contains('메뉴를 저장하시겠습니까?', { timeout: 10000 }).should('be.visible');
     cy.contains('button.v-btn:visible', '확인').click({ force: true });
     cy.wait(1000); 
- });
 });
+
 
 
    
@@ -925,7 +931,7 @@ cy.get('body').then(($body) => {
 
 
 
-     //HTTP Response 탭 클릭---------------------
+//HTTP Response 탭 클릭---------------------
      cy.contains('span.tab-title', 'HTTP Response').should('be.visible').click({ force: true });
      cy.wait(500);
 
@@ -934,46 +940,53 @@ cy.get('body').then(($body) => {
      .within(() => {
        // 그 행 안에서 URL 값이 포함되어 있는지 확인
        cy.contains('keep-alive').should('exist');
+       
       });
+      cy.log('✅ HTTP Response 검증 성공!');
 
-     //SQL  탭 클릭------------------------------------------------------------------
-    // 1. 검증하고 싶은 타겟 컬럼 리스트 정의
-const targets = ['menuNo', 'id', 'name', 'user_nm', 'password'];
 
-// 2. SQL 탭 클릭 및 데이터 로딩 대기
+
+// ====================================================================
+// 3. SQL 탭 검증
+// ====================================================================
+// 변수명을 sqlTargets로 변경
+const sqlTargets = ['menuNo', 'id', 'name', 'user_nm', 'password', 'Url'];
+
 cy.contains('span.tab-title', 'SQL').should('be.visible').click({ force: true });
 cy.wait(1500); 
 
-// 3. 에디터 텍스트를 읽어와서 반복문(forEach)으로 검증 실행
-cy.get('.monaco-editor').first().invoke('text').then((editorText) => {
+cy.get('.v-dialog--active').within(() => {
+    let editorText = '';
     
-    cy.log('🚀 [SQL-Table 매칭 검증] 시작');
+    cy.get('.monaco-editor .view-line').each(($line) => {
+        editorText += $line.text() + ' ';
+    }).then(() => {
+        const cleanEditorText = editorText.replace(/[\u00a0\t\n\r]/g, ' ');
+        cy.log(`📝 [SQL] 추출된 순수 SQL: ${cleanEditorText}`); 
 
-    targets.forEach((colName) => {
-        // 에디터 텍스트 내에 해당 컬럼명이 포함되어 있는지 확인 (대소문자 구분 없이 체크하려면 toLowerCase() 활용 가능)
-        if (editorText.includes(colName)) {
-            cy.log(`🔍 [${colName}] 감지됨 -> 테이블 컬럼 존재 여부 확인`);
-
-            // [핵심 수정 부분]
-            // 1. matchCase: false 옵션을 주어 대소문자 구분을 무시합니다.
-            // 2. span 태그 내부에 공백이 많으므로 td가 아닌 span을 직접 찾거나 
-            //    공백을 포함해 검색할 수 있도록 합니다.
-            cy.contains('span', new RegExp(`^\\s*${colName}\\s*$`, 'i'), { timeout: 10000 })
-              .should('be.visible');
+        sqlTargets.forEach((colName) => {
+            const regex = new RegExp(`"?\\b${colName}\\b"?`, 'i');
             
-            cy.log(`✅ [${colName}] 항목 매칭 성공!`);
-        } else {
-            cy.log(`⏭️ [${colName}] 항목은 쿼리에 없으므로 건너뜁니다.`);
-        }
+            if (regex.test(cleanEditorText)) {
+                cy.log(`🔍 [${colName}] 감지됨 -> 하단 테이블 확인 시작`);
+                
+                // SQL 탭은 ColumnNm이 맞으므로 그대로 유지
+                cy.contains('th', 'ColumnNm').closest('table').within(() => {
+                    cy.get('td, span').filter((index, el) => {
+                        const text = Cypress.$(el).text().trim();
+                        return text.toLowerCase() === colName.toLowerCase();
+                    }).should('be.visible');
+                });
+                
+                cy.log(`✅ [${colName}] 매칭 성공!`);
+            } else {
+                cy.log(`⏭️ [${colName}] 항목은 현재 쿼리에 포함되어 있지 않아 검증을 패스합니다.`);
+            }
+        });
     });
-
-    cy.log('✨ 모든 타겟 항목 검증 완료');
 });
 
-
-
-
-     // 검출팝업 왼쪽 HTTP 상세 팝업 닫기 
+     // 검출팝업 왼쪽 HTTP 상세 팝업 닫기 -----------------------------------------------------------------
      cy.get('i.material-icons').contains('close').filter(':visible').first().click({ force: true });
      cy.wait(500);
 
