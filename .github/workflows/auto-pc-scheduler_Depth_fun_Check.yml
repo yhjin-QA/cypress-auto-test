@@ -464,10 +464,11 @@ jobs:
           NOW: ${{ env.NOW }}
 
         run: |
+          run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          Write-Host "============= [Debug Log: Flaky & Ghost Detector V10 (Final Winner Logic)] ============="
+          Write-Host "============= [Debug Log: Flaky & Ghost Detector V11 (Latest Result Priority)] ============="
           
           $nodeScript = @"
           const fs = require('fs');
@@ -482,38 +483,33 @@ jobs:
                   if (stat.isDirectory()) {
                       findFiles(fullPath, ext, fileList);
                   } else if (file.endsWith(ext) && file !== 'merged_report.json') {
-                      fileList.push(fullPath);
+                      // 💡 파일 경로와 함께 수정 시간(mtime)을 함께 저장
+                      fileList.push({ path: fullPath, mtime: stat.mtime });
                   }
               }
               return fileList;
           }
 
           try {
-              const jsonFiles = findFiles('all_raw_data', '.json');
+              let filesWithTime = findFiles('all_raw_data', '.json');
               
-              // 💡 핵심: 스펙별 최종 상태를 관리 (하나라도 성공하면 true)
+              // 💡 1. 파일을 생성 시간순(오래된 순 -> 최신 순)으로 정렬
+              filesWithTime.sort((a, b) => a.mtime - b.mtime);
+              
               let specResults = new Map(); 
 
-              jsonFiles.forEach(file => {
+              // 💡 2. 정렬된 순서대로 읽으며 Map을 업데이트 (최신 파일이 이전 결과를 덮어씀)
+              filesWithTime.forEach(fileObj => {
                   try {
-                      const rawText = fs.readFileSync(file, 'utf8');
+                      const rawText = fs.readFileSync(fileObj.path, 'utf8');
                       const data = JSON.parse(rawText);
-                      
-                      // 텍스트 전체에서 파일명(.cy.js) 추출
                       const match = rawText.match(/([^\\/":*?<>|]+\.cy\.js)/);
                       let specName = match ? match[1].trim() : null;
 
                       if (specName && data.stats) {
                           const isCurrentSuccess = data.stats.failures === 0;
-                          
-                          if (specResults.has(specName)) {
-                              // 💡 이미 성공 기록이 있다면 유지, 없다면 현재 결과로 업데이트
-                              if (isCurrentSuccess) {
-                                  specResults.set(specName, true);
-                              }
-                          } else {
-                              specResults.set(specName, isCurrentSuccess);
-                          }
+                          // 💡 최신 데이터가 이전 상태를 무조건 덮어쓰도록 설정 (Overwrite)
+                          specResults.set(specName, isCurrentSuccess);
                       }
                   } catch (e) { /* JSON 에러 무시 */ }
               });
@@ -521,7 +517,6 @@ jobs:
               let finalFailed = [];
               let finalPassed = [];
 
-              // Map을 순회하며 최종 성공/실패 분류
               specResults.forEach((isSuccess, specName) => {
                   if (isSuccess) {
                       finalPassed.push(specName);
@@ -551,27 +546,29 @@ jobs:
           
           $totalFailCount = 0
           $specListString = ""
-          $isActuallyFailed = $false
           
           foreach ($line in $nodeOut) {
               if ($line -match "^FAILS=(\d+)") { $totalFailCount = [int]$matches[1] }
               if ($line -match "^SPECS=(.*)") { $specListString = $matches[1].Trim() }
           }
           
-          if ($totalFailCount -gt 0) {
-              $isActuallyFailed = $true
-          }
+          # 💡 [중요] 실제 노드 결과값이 0보다 큰지 확인
+          $isActuallyFailed = $totalFailCount -gt 0
           
-          # 시스템 에러(Cancelled 등)에 대한 보완 처리
+          # 시스템 상태 보완 로직
           $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
+          
           if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") {
               if (-not $isActuallyFailed -and $restartStatus -ne "success") {
                   $isActuallyFailed = $true
-                  $totalFailCount = if ($totalFailCount -eq 0) { 1 } else { $totalFailCount }
+                  $totalFailCount = ($totalFailCount -eq 0) ? 1 : $totalFailCount
                   $specListString = "System Error or Cancelled"
               }
           }
+          
+          # (이하 대시보드 URL 및 구글챗 전송 로직 동일)
+          # ...
           
           # 대시보드 URL 추출
           $dashUrl = "http://10.10.54.5:8080/projects"

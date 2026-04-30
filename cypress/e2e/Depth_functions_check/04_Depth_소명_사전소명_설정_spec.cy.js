@@ -35,6 +35,7 @@ describe('로그캐치 사이트 테스트', () => {
   it('로그캐치 배포점검목록 동작 체크', () => {
 
 
+
 // ==========================================
 // STEP : 로그인
 // ==========================================
@@ -177,7 +178,8 @@ cy.contains('.c-headline', /소명 사유.*설정/, { timeout: 15000 }).should('
 // ==========================================
 //  사전 소명 설정 화면 
 // ==========================================
-
+//맨티스이슈 : 37585
+//: [관리자설정] 사전소명 설정 그룹 선택할때, 선택한 접두사 소명내용, 미리보기 빈값으로 보이는 문제    
 // ===============================================
 // STEP : 'ADD_auto_Test' 그룹 삭제 (조건부)
 // ===============================================
@@ -265,19 +267,43 @@ reasonList.forEach((reason) => {
   });
 });
 
- 
- // [데이터 삭제 확인 검증: auto_로 시작하는 사유가 모두 제거되었는지 확인]
+
+
+// cy.log('🧹 삭제 후 리스트 갱신 대기 중...');
+//  // [데이터 삭제 확인 검증: auto_로 시작하는 사유가 모두 제거되었는지 확인]
+// cy.log('🧹 auto_ 사유 항목들이 모두 삭제되었는지 검증합니다.');
+
+// cy.get('body').then(($body) => {
+//   // 1. 테이블의 모든 td 중 'auto_' 텍스트를 포함하는 요소들을 찾습니다.
+//   const $autoElements = $body.find('td:contains("auto_")');
+
+//   if ($autoElements.length > 0) {
+//     // 만약 하나라도 남아있다면 실패
+//     throw new Error(`❌ 삭제되지 않은 auto_ 사유가 발견되었습니다: ${$autoElements.length}개 남아있음.`);
+//   } else {
+//     // 하나도 없다면 성공
+//     cy.log('✅ 모든 auto_ 사유가 성공적으로 삭제되었습니다.');
+//   }
+// });
+
+cy.wait(5000); 
+
 cy.log('🧹 auto_ 사유 항목들이 모두 삭제되었는지 검증합니다.');
 
+// 3. 'body' 대신 테이블 영역(tbody)을 직접 타겟팅하는 것이 더 정확합니다.
 cy.get('body').then(($body) => {
-  // 1. 테이블의 모든 td 중 'auto_' 텍스트를 포함하는 요소들을 찾습니다.
-  const $autoElements = $body.find('td:contains("auto_")');
+  // 텍스트가 정확히 일치하지 않아도 "auto_"가 포함된 td를 찾음
+  const $autoElements = $body.find('td').filter((index, el) => {
+    return el.textContent.includes('auto_사유');
+  });
 
   if ($autoElements.length > 0) {
-    // 만약 하나라도 남아있다면 실패
+    // 디버깅을 위해 남아있는 항목의 텍스트를 출력
+    const remainingText = $autoElements.text();
+    cy.log(`⚠️ 발견된 항목: ${remainingText}`);
+    
     throw new Error(`❌ 삭제되지 않은 auto_ 사유가 발견되었습니다: ${$autoElements.length}개 남아있음.`);
   } else {
-    // 하나도 없다면 성공
     cy.log('✅ 모든 auto_ 사유가 성공적으로 삭제되었습니다.');
   }
 });

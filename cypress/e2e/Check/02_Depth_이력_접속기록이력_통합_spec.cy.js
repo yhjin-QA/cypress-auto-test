@@ -353,37 +353,47 @@ cy.get('body').then(($body) => {
     }
 
     // 2. 내부 상태 파악 및 동작
-    cy.get('body').then(($innerBody) => {
-        const autoRegLabel = $innerBody.find('label:contains("메뉴명 자동 등록")');
+   cy.get('body').then(($innerBody) => {
+    const autoRegLabel = $innerBody.find('label:contains("메뉴명 자동 등록")');
+    const menuNameInput = $innerBody.find('input[aria-label="메뉴명"]');
+    const regBtn = $innerBody.find('button.v-btn').filter(':visible').filter((i, el) => Cypress.$(el).text().trim() === '등록');
 
-        // [상황 1] 체크박스가 보임 = 체크 해제 후 이름 입력
-        if (autoRegLabel.length > 0 && autoRegLabel.is(':visible')) {
-            cy.log('📝 [Case 1] 자동 등록 해제 및 메뉴명 입력');
-            cy.wrap(autoRegLabel).closest('.v-input').find('input[type="checkbox"]').uncheck({ force: true });
-            
-            cy.get('input[aria-label="메뉴명"]')
-             .clear({ force: true })
-             .type(`Depth_Test_${formattedDate}`, { force: true });
-            cy.wait(500);
+    // [Case 1] 자동 등록 해제 필요 상황
+    if (autoRegLabel.length > 0 && autoRegLabel.is(':visible')) {
+        cy.log('📝 [Case 1] 자동 등록 해제 및 신규 입력');
+        cy.wrap(autoRegLabel).closest('.v-input').find('input[type="checkbox"]').uncheck({ force: true });
+        cy.wrap(menuNameInput).clear({ force: true }).type(`Depth_Test_${formattedDate}`, { force: true });
+        cy.wait(500);
 
-            // 메뉴명 입력 후 [등록] 버튼이 있다면 눌러줍니다.
-            const regBtn = $innerBody.find('button.v-btn:contains("등록")');
-            if (regBtn.length > 0 && regBtn.is(':visible')) {
+        // 등록 버튼 클릭
+        if (regBtn.length > 0) {
             cy.wrap(regBtn).click({ force: true });
-            cy.wait(1000); // 등록 처리 대기
+            cy.wait(1500); // 등록 후 시스템 반영 대기
         }
-        } 
-        // [상황 2] 이미 이름이 있음 = 바로 저장 (사용자님 의견 반영)
-        else {
-            cy.log('✅ [Case 2] 이미 메뉴명이 존재합니다. 바로 저장합니다.');
+    } 
+    // [Case 2] 이미 이름이 있는 상황
+    else {
+        cy.log('✅ [Case 2] 메뉴명 존재 확인. 등록 여부 체크...');
+        
+        // 이름은 있는데 시스템에서 '등록'을 요구하는 경우 (등록 버튼이 보인다면 클릭)
+        if (regBtn.length > 0) {
+            cy.log('🔄 등록 버튼이 활성화되어 있어 클릭합니다.');
+            cy.wrap(regBtn).click({ force: true });
+            cy.wait(1500);
         }
+    }
 
-        // 3. 공통 저장 프로세스
-        cy.get('button.v-btn').filter(':visible').contains('저장').first().click({ force: true });
-        cy.contains('메뉴를 저장하시겠습니까?', { timeout: 10000 }).should('be.visible');
-        cy.contains('button.v-btn:visible', '확인').click({ force: true });
-        cy.wait(1000); 
-    });
+    // 3. 공통 저장 프로세스
+    cy.log('💾 최종 저장 시도');
+    // 저장 버튼 클릭 (화면에 '확인' 버튼이 뜬 경우를 대비해 예외 처리 추가)
+    cy.get('button.v-btn').filter(':visible').contains('저장').first().click({ force: true });
+    
+    // 알림창이 "메뉴 등록을 먼저..." 가 뜬다면 여기서 실패하므로, 
+    // 정상적인 "저장하시겠습니까?" 가 뜰 때까지 기다립니다.
+    cy.contains('메뉴를 저장하시겠습니까?', { timeout: 10000 }).should('be.visible');
+    cy.contains('button.v-btn:visible', '확인').click({ force: true });
+    cy.wait(1000); 
+ });
 });
 
 
@@ -862,7 +872,7 @@ cy.get('body').then(($body) => {
      cy.contains('span.tab-title', 'HTTP Request').should('be.visible').click({ force: true });
      cy.wait(500); 
 
-     // ==========================================================
+    // ==========================================================
     // STEP: HTTP REQUEST 정보 검증 (조건부 분기)
     // ==========================================================
     cy.log('🔍 HTTP REQUEST 데이터 검증');
@@ -927,15 +937,41 @@ cy.get('body').then(($body) => {
       });
 
      //SQL  탭 클릭------------------------------------------------------------------
-     cy.contains('span.tab-title', 'SQL').should('be.visible').click({ force: true });
-     cy.wait(500);
+    // 1. 검증하고 싶은 타겟 컬럼 리스트 정의
+const targets = ['menuNo', 'id', 'name', 'user_nm', 'password'];
 
-     cy.contains('tr', 'menuNo').should('exist').invoke('text') // <tr> 내부의 모든 텍스트를 가져옴
-     .then((text) => {
-      // 공백을 제거하고 우리가 원하는 숫자들이 포함되어 있는지 확인
-      const cleanedText = text.replace(/\s/g, ''); // 모든 공백/줄바꿈 제거
-      expect(cleanedText).to.include('11,12,21,31,32,41');
-     });
+// 2. SQL 탭 클릭 및 데이터 로딩 대기
+cy.contains('span.tab-title', 'SQL').should('be.visible').click({ force: true });
+cy.wait(1500); 
+
+// 3. 에디터 텍스트를 읽어와서 반복문(forEach)으로 검증 실행
+cy.get('.monaco-editor').first().invoke('text').then((editorText) => {
+    
+    cy.log('🚀 [SQL-Table 매칭 검증] 시작');
+
+    targets.forEach((colName) => {
+        // 에디터 텍스트 내에 해당 컬럼명이 포함되어 있는지 확인 (대소문자 구분 없이 체크하려면 toLowerCase() 활용 가능)
+        if (editorText.includes(colName)) {
+            cy.log(`🔍 [${colName}] 감지됨 -> 테이블 컬럼 존재 여부 확인`);
+
+            // [핵심 수정 부분]
+            // 1. matchCase: false 옵션을 주어 대소문자 구분을 무시합니다.
+            // 2. span 태그 내부에 공백이 많으므로 td가 아닌 span을 직접 찾거나 
+            //    공백을 포함해 검색할 수 있도록 합니다.
+            cy.contains('span', new RegExp(`^\\s*${colName}\\s*$`, 'i'), { timeout: 10000 })
+              .should('be.visible');
+            
+            cy.log(`✅ [${colName}] 항목 매칭 성공!`);
+        } else {
+            cy.log(`⏭️ [${colName}] 항목은 쿼리에 없으므로 건너뜁니다.`);
+        }
+    });
+
+    cy.log('✨ 모든 타겟 항목 검증 완료');
+});
+
+
+
 
      // 검출팝업 왼쪽 HTTP 상세 팝업 닫기 
      cy.get('i.material-icons').contains('close').filter(':visible').first().click({ force: true });

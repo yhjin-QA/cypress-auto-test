@@ -493,7 +493,6 @@ cy.wait(500);
 cy.get('.menuable__content__active').filter(':visible').within(() => {
   
   // 2. 그 활성 팝업창 안에서 '파일다운로드'를 찾습니다.
-  // 이제 엉뚱한 숨김 처리된 팝업의 글자를 찾을 위험이 0%가 됩니다.
   cy.contains('.v-list__tile__title', '개인정보 유형 과다사용').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
 });
 cy.wait(1000); // 클릭 후 메뉴가 닫힐 시간 대기
