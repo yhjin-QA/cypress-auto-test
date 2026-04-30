@@ -464,7 +464,6 @@ jobs:
           NOW: ${{ env.NOW }}
 
         run: |
-          run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
@@ -567,8 +566,6 @@ jobs:
               }
           }
           
-          # (이하 대시보드 URL 및 구글챗 전송 로직 동일)
-          # ...
           
           # 대시보드 URL 추출
           $dashUrl = "http://10.10.54.5:8080/projects"
