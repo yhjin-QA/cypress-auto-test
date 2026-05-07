@@ -476,6 +476,10 @@ cy.get('.menuable__content__active').filter(':visible').within(() => {
 cy.wait(500); // 클릭 후 메뉴가 닫힐 시간 대기
 // 선택 후 메뉴 닫기
 cy.get('body').type('{esc}');
+
+//이상행위검색뜰수있는시간 주기 
+cy.wait(10000);
+
     
 //검색버튼 클릭
 cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -1349,6 +1353,9 @@ cy.get('.menuable__content__active').filter(':visible').within(() => {
 cy.wait(500); // 클릭 후 메뉴가 닫힐 시간 대기
 // 선택 후 메뉴 닫기
 cy.get('body').type('{esc}');
+
+//이상행위검색뜰수있는시간 주기 
+cy.wait(10000); 
     
 //검색버튼 클릭
 cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
