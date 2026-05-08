@@ -548,13 +548,29 @@ describe('로그캐치 사이트 테스트', () => {
       const myFile = files.find(file => 
         file.includes('tester3') && file.toLowerCase().endsWith(foundExtension)
       );
-
-      if (myFile) {
-        cy.log(`✅ 다운로드 성공! 파일명: ${myFile}`);
-      }
-
       // 검증: 파일이 존재해야 함
       expect(myFile, `다운로드 폴더 내에 tester3 패턴의 ${foundExtension} 파일이 존재해야 합니다.`).to.not.be.undefined;
+      if (myFile) {
+        cy.log(`✅ 파일 확인 완료: ${myFile}`);
+        
+        const filePath = `cypress/downloads/${myFile}`;
+        
+        // 만들어두신 태스크를 호출해 파일 상태를 가져옵니다.
+        cy.task('getFileStats', filePath).then((stats) => {
+          cy.log(`📊 파일 실제 용량: ${stats.size} bytes`);
+
+          // 검증 2: 0바이트 빈 껍데기 파일인지 체크
+          expect(stats.size, '파일 용량 0바이트 초과 정상 확인').to.be.greaterThan(0);
+
+          // 검증 3: 엑셀(.xlsx)이나 PDF(.pdf)는 껍데기 포맷만으로도 기본 용량을 차지합니다.
+          // 따라서 100 bytes보다 작다면 손상된 파일일 확률이 매우 높으므로 엄격하게 체크합니다.
+          if (foundExtension === '.xlsx' || foundExtension === '.pdf') {
+            expect(stats.size, `${foundExtension} 파일 최소 용량(100 bytes) 이상 무결성 확인`).to.be.at.least(100);
+          }
+          
+          cy.log(`✅ 파일 유효성(용량) 검증 완벽 통과!`);
+        });
+      }
     });
   });
     

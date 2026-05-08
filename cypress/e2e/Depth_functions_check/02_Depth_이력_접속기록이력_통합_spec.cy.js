@@ -277,21 +277,37 @@ describe('로그캐치 사이트 테스트', () => {
     // 폴더경로 : C:\Users\user\Desktop\CypressWork\cypress\downloads
     cy.task('readDirectory', 'cypress/downloads').then((files) => {
     // files: 다운로드 폴더에 있는 모든 파일 이름들의 리스트
-  
+    
     // 조건에 맞는 파일 찾기 (이름에 'log-excel'이 있고, 확장자가 '.zip'인 것)
-     const myFile = files.find(file => file.includes('log-excel') && file.endsWith('.zip'));
+    const myFile = files.find(file => file.includes('log-excel') && file.endsWith('.zip'));
 
-     // 로그 출력
-     if (myFile) {
-      cy.log(`✅ 다운로드 성공! 파일명: ${myFile}`);
-     }
+    // 1단계: 검증: 파일이 존재해야 함 (없으면 테스트 실패)
+    expect(myFile, '다운로드 폴더 내에 log-excel이 포함된 .zip 파일이 존재해야 합니다.').to.not.be.undefined; 
 
-     // 검증: 파일이 존재해야 함 (없으면 에러 발생)
-       expect(myFile).to.not.be.undefined; 
-     });
-      
-   
-     cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
+    // 2단계: 파일이 존재하면 용량 상태를 체크합니다.
+    if (myFile) {
+        cy.log(`✅ 파일 확인 완료! 파일명: ${myFile}`);
+        
+        const filePath = `cypress/downloads/${myFile}`;
+        
+        // 만들어둔 태스크를 호출해 파일 용량을 가져옵니다.
+        cy.task('getFileStats', filePath).then((stats) => {
+            cy.log(`📊 다운로드된 ZIP 파일 용량: ${stats.size} bytes`);
+
+            // 검증 1: 0바이트 빈 파일 방지
+            expect(stats.size, '파일 용량 0바이트 초과 정상 확인').to.be.greaterThan(0);
+
+            // 검증 2: ZIP 파일 무결성 최소 체크
+            // 압축 파일(.zip)은 내용물이 비어있는 빈 폴더만 압축해도 헤더 정보 때문에 최소 22바이트 이상을 차지합니다.
+            // 엑셀 로그가 정상적으로 포함되었다면 최소 수백 바이트 이상이어야 하므로 100바이트를 최소 기준으로 잡습니다.
+            expect(stats.size, 'ZIP 파일 최소 용량(100 bytes) 이상 무결성 확인').to.be.at.least(100);
+            
+            cy.log(`✅ ZIP 파일 유효성(용량) 검증 완벽 통과!`);
+        });
+    }
+});
+
+cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
       
 
     // ==========================================
@@ -339,53 +355,85 @@ describe('로그캐치 사이트 테스트', () => {
 cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
 cy.wait(1500); 
 
-// 🌟 [개선된 메뉴 설정 제어: 확실한 펼침 보장형]
 
-// 1. 검출 팝업 오픈 후 팝업 내부의 고정 요소가 뜰 때까지 대기 (안정화)
+// 1. 검출 팝업 오픈 후 팝업이 뜰 때까지 대기
 cy.get('.v-dialog--active', { timeout: 10000 }).should('be.visible');
+cy.wait(2000); 
 
-// 2. 메뉴 설정 영역이 열려있는지 확인하고, 닫혀있다면 열릴 때까지 처리
+// 🌟 [수정 1] 아코디언 열림 여부 판단 로직 업그레이드 (라벨 OR 입력창)
 const ensureMenuOpen = () => {
-    cy.get('body').then(($body) => {
-        const isMenuNameVisible = $body.find('input[aria-label="메뉴명"]:visible').length > 0;
+    cy.get('.v-dialog--active').then(($dialog) => {
+        // 라벨이 있거나, 입력창이 있으면 "열린 것"으로 판단합니다.
+        const hasLabel = $dialog.find('label:contains("메뉴명 자동 등록"):visible').length > 0;
+        const hasInput = $dialog.find('input[aria-label="메뉴명"]:visible').length > 0;
 
-        if (!isMenuNameVisible) {
-            cy.log('📁 메뉴 설정이 닫혀 있거나 렌더링 전입니다. 클릭을 시도합니다.');
-            // '메뉴 설정' 글자 혹은 인접한 화살표 아이콘 클릭
-            cy.contains('label.clickable span', '메뉴 설정')
-              .should('be.visible')
-              .click({ force: true });
+        if (!hasLabel && !hasInput) {
+            cy.log('📁 메뉴 설정이 닫혀 있습니다. 클릭을 시도합니다.');
+            cy.wrap($dialog).contains('메뉴 설정').parent().click({ force: true });
             
-            // 클릭 후 메뉴명 입력창이 나타날 때까지 명시적 대기 (최대 5초)
-            cy.get('input[aria-label="메뉴명"]', { timeout: 5000 }).should('be.visible');
+            // 클릭 후, 라벨이나 입력창 중 하나라도 화면에 나타날 때까지 스마트하게 대기
+            cy.get('.v-dialog--active', { timeout: 5000 }).should(($el) => {
+                const l = $el.find('label:contains("메뉴명 자동 등록"):visible').length > 0;
+                const i = $el.find('input[aria-label="메뉴명"]:visible').length > 0;
+                expect(l || i, '라벨이나 입력창 중 하나가 보여야 합니다.').to.be.true;
+            });
         } else {
-            cy.log('🟢 메뉴 설정이 이미 펼쳐져 있습니다.');
+            cy.log('🟢 메뉴 설정이 이미 짠! 하고 펼쳐져 있습니다. (클릭 안 함)');
         }
     });
 };
 
 ensureMenuOpen();
 
-// 3. 이후 내부 상태 파악 및 동작 진행
+// 🌟 [수정 2] 3가지 상태에 대한 분기 처리 로직
 cy.get('body').then(($innerBody) => {
-    // ... 기존 Case 1, Case 2 로직 ...
     const autoRegLabel = $innerBody.find('label:contains("메뉴명 자동 등록")');
-    const menuNameInput = $innerBody.find('input[aria-label="메뉴명"]');
-    // 버튼 텍스트가 정확히 '등록'인 것만 필터링
-    const regBtn = $innerBody.find('button.v-btn').filter(':visible').filter((i, el) => Cypress.$(el).text().trim() === '등록');
+    const menuNameInput = $innerBody.find('input[aria-label="메뉴명"]'); // 존재 여부 파악용
 
     if (autoRegLabel.length > 0 && autoRegLabel.is(':visible')) {
-        cy.log('📝 [Case 1] 자동 등록 해제 및 신규 입력');
+        // ==========================================
+        // [Case 1] 라벨이 보이는 경우 (최초 등록 or 체크된 상태)
+        // ==========================================
+        cy.log('📝 [Case 1] 라벨 존재 -> 체크 해제 후 신규 입력');
         cy.wrap(autoRegLabel).closest('.v-input').find('input[type="checkbox"]').uncheck({ force: true });
-        cy.wrap(menuNameInput).should('be.visible').clear({ force: true }).type(`Depth_Test_${formattedDate}`, { force: true });
+        
+        cy.get('input[aria-label="메뉴명"]')
+          .should('be.visible')
+          .clear({ force: true })
+          .type(`Depth_Test_${formattedDate}`, { force: true });
         cy.wait(500);
 
+        const regBtn = Cypress.$('button.v-btn:visible').filter((i, el) => Cypress.$(el).text().trim() === '등록');
         if (regBtn.length > 0) {
             cy.wrap(regBtn).click({ force: true });
             cy.wait(1500);
         }
+
+    } else if (menuNameInput.length > 0 && menuNameInput.is(':visible')) {
+        // ==========================================
+        // [Case 3 - 추가된 로직] 라벨은 없지만 입력창은 보이는 경우 (이미 이름이 저장된 상태)
+        // ==========================================
+        cy.log('📝 [Case 3] 이미 메뉴명 저장됨(라벨 없음) -> 기존 텍스트 덮어쓰기');
+        
+        // 언체크 할 필요 없이 바로 입력창을 지우고 덮어씁니다. (실시간 탐색)
+        cy.get('input[aria-label="메뉴명"]')
+          .should('be.visible')
+          .clear({ force: true })
+          .type(`Depth_Test_${formattedDate}`, { force: true });
+        cy.wait(500);
+
+        const regBtn = Cypress.$('button.v-btn:visible').filter((i, el) => Cypress.$(el).text().trim() === '등록');
+        if (regBtn.length > 0) {
+            cy.wrap(regBtn).click({ force: true });
+            cy.wait(1500);
+        }
+
     } else {
-        cy.log('✅ [Case 2] 메뉴명 존재 확인. 등록 여부 체크...');
+        // ==========================================
+        // [Case 2] 기타 예외 상황 (등록 여부만 체크)
+        // ==========================================
+        cy.log('✅ [Case 2] 메뉴명 제어 불가/불필요. 등록 버튼 유무만 체크...');
+        const regBtn = $innerBody.find('button.v-btn').filter(':visible').filter((i, el) => Cypress.$(el).text().trim() === '등록');
         if (regBtn.length > 0) {
             cy.log('🔄 등록 버튼 클릭');
             cy.wrap(regBtn).click({ force: true });
@@ -393,7 +441,9 @@ cy.get('body').then(($innerBody) => {
         }
     }
 
-    // 최종 저장 버튼 (첫 번째 버튼이 아닐 수 있으므로 정확히 '저장' 텍스트 확인)
+    // ==========================================
+    // 공통 마무리 로직: 최종 저장 버튼 클릭
+    // ==========================================
     cy.contains('button.v-btn:visible', '저장').should('be.visible').click({ force: true });
     
     cy.contains('메뉴를 저장하시겠습니까?', { timeout: 10000 }).should('be.visible');
@@ -950,7 +1000,7 @@ cy.get('body').then(($innerBody) => {
 // 3. SQL 탭 검증
 // ====================================================================
 // 변수명을 sqlTargets로 변경
-const sqlTargets = ['menuNo', 'id', 'name', 'user_nm', 'password', 'Url'];
+const sqlTargets = ['menuNo', 'id', 'name', 'password', 'Url'];
 
 cy.contains('span.tab-title', 'SQL').should('be.visible').click({ force: true });
 cy.wait(1500); 

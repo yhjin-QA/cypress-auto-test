@@ -124,6 +124,22 @@ module.exports = defineConfig({
         }, // 👈 기존 마지막 태스크에 쉼표(,) 유지
 
         // ==========================================
+        // 🌟 새로 추가: 파일의 상태(용량 포함)를 가져오는 태스크
+        // ==========================================
+        getFileStats(filePath) {
+          const resolvedPath = path.resolve(filePath);
+          if (fs.existsSync(resolvedPath)) {
+            const stats = fs.statSync(resolvedPath);
+            return {
+              size: stats.size, // 파일 용량 (bytes)
+              isFile: stats.isFile() // 파일 여부(디렉토리 등과 구분)
+            };
+          }
+          return null; // 파일이 없으면 null 반환
+        },
+
+
+        // ==========================================
         // 👇 [신규 추가] SSH 원격 접속을 위한 태스크 (서버 검증용)
         // ==========================================
         // async runSSH(command) {

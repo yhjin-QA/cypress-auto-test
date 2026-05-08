@@ -718,6 +718,9 @@ cy.get('body').type('{esc}');
     
     cy.get('body').type('{esc}');
 
+    //검색결과를 위한 여유시간 주기 (10초)
+    cy.wait(10000);
+
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(5000);
@@ -981,6 +984,9 @@ cy.get('body').type('{esc}');
     cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
     cy.wait(500);
     cy.get('body').type('{esc}');
+
+    //검색결과를 위한 여유시간 주기 (10초)
+    cy.wait(10000);
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
