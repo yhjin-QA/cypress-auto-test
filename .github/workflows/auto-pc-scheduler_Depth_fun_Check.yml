@@ -482,33 +482,46 @@ jobs:
                   if (stat.isDirectory()) {
                       findFiles(fullPath, ext, fileList);
                   } else if (file.endsWith(ext) && file !== 'merged_report.json') {
-                      // 💡 파일 경로와 함께 수정 시간(mtime)을 함께 저장
-                      fileList.push({ path: fullPath, mtime: stat.mtime });
+                      fileList.push(fullPath);
                   }
               }
               return fileList;
           }
 
           try {
-              let filesWithTime = findFiles('all_raw_data', '.json');
+              const jsonFiles = findFiles('all_raw_data', '.json');
               
-              // 💡 1. 파일을 생성 시간순(오래된 순 -> 최신 순)으로 정렬
-              filesWithTime.sort((a, b) => a.mtime - b.mtime);
-              
+              // 💡 핵심: 스펙별 최종 상태를 관리
               let specResults = new Map(); 
 
-              // 💡 2. 정렬된 순서대로 읽으며 Map을 업데이트 (최신 파일이 이전 결과를 덮어씀)
-              filesWithTime.forEach(fileObj => {
+              jsonFiles.forEach(filePath => {
                   try {
-                      const rawText = fs.readFileSync(fileObj.path, 'utf8');
+                      const rawText = fs.readFileSync(filePath, 'utf8');
                       const data = JSON.parse(rawText);
+                      
+                      // 파일명(.cy.js) 추출
                       const match = rawText.match(/([^\\/":*?<>|]+\.cy\.js)/);
                       let specName = match ? match[1].trim() : null;
 
                       if (specName && data.stats) {
-                          const isCurrentSuccess = data.stats.failures === 0;
-                          // 💡 최신 데이터가 이전 상태를 무조건 덮어쓰도록 설정 (Overwrite)
-                          specResults.set(specName, isCurrentSuccess);
+                          const hasFailures = data.stats.failures > 0;
+                          
+                          if (!specResults.has(specName)) {
+                              // 처음 발견된 스펙이면 상태 저장
+                              specResults.set(specName, hasFailures ? 'FAIL' : 'PASS');
+                          } else {
+                              // 💡 이미 기록이 있는 경우 (재실행/Flaky 상황)
+                              const currentStatus = specResults.get(specName);
+                              
+                              // 만약 현재 파일이 '성공'이고 이전이 '실패'였다면 -> 재시도로 성공한 것이므로 PASS 업데이트
+                              // 만약 현재 파일이 '실패'라면 -> 이전이 성공이었더라도 다시 실패한 것이므로 FAIL 유지
+                              if (hasFailures) {
+                                  specResults.set(specName, 'FAIL');
+                              } else {
+                                  // 성공한 리포트가 들어왔을 때만 PASS로 변경 (이게 Flaky 해결책)
+                                  specResults.set(specName, 'PASS');
+                              }
+                          }
                       }
                   } catch (e) { /* JSON 에러 무시 */ }
               });
@@ -516,8 +529,8 @@ jobs:
               let finalFailed = [];
               let finalPassed = [];
 
-              specResults.forEach((isSuccess, specName) => {
-                  if (isSuccess) {
+              specResults.forEach((status, specName) => {
+                  if (status === 'PASS') {
                       finalPassed.push(specName);
                   } else {
                       finalFailed.push(specName);
