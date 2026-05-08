@@ -246,51 +246,37 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     
-   // 1. 오늘 기준 2일 전 날짜 계산 (formattedDate: 2026-04-27)
-   const targetDateObj = new Date();
-   targetDateObj.setDate(targetDateObj.getDate() - 2);
-   const formattedDate = `${targetDateObj.getFullYear()}-${String(targetDateObj.getMonth() + 1).padStart(2, '0')}-${String(targetDateObj.getDate()).padStart(2, '0')}`;
-   cy.log(`🎯 타겟 날짜: ${formattedDate}`);
+   // 🌟 1. 탐색할 날짜 배열 만들기 함수 (공통)
+const getFormattedDate = (offsetDays) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays); // offsetDays가 -2면 2일 전, 0이면 오늘
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
-   // 오늘  날짜 계산 (formattedDate: 2026-04-27)
-   const targetDateObj_sub = new Date();
-   const formattedDate_sub = `${targetDateObj_sub.getFullYear()}-${String(targetDateObj_sub.getMonth() + 1).padStart(2, '0')}-${String(targetDateObj_sub.getDate()).padStart(2, '0')}`;
-   cy.log(`🎯 타겟 날짜_sub: ${formattedDate_sub}`);
-
-
-   // 2. [단계 1] '2026-04-20' 선택 로직
-   // 해당 날짜의 드롭다운을 찾아 클릭
-   cy.contains('.v-select__selection', '2026-04-20').filter(':visible').closest('.v-input').find('.v-icon').click({ force: true });
-   cy.wait(1000); // 리스트가 열리는 애니메이션 대기
+// 탐색할 타겟 날짜 목록 (2일 전, 1일 전, 오늘)
+const targetDates = [
+    getFormattedDate(-2), 
+    getFormattedDate(-1), 
+    getFormattedDate(0)   
+];
+cy.log(`🎯 순차 탐색할 날짜 목록: ${targetDates.join(', ')}`);
 
 
-   // 3. [단계 2] 동적 날짜 선택 로직 (재귀적 스크롤)
-   const scrollAndFindDate = (dateToFind, retryCount = 0) => {
-   const MAX_RETRIES = 10;
-  
+// 🌟 2. 동적 날짜 선택 로직 (재귀적 스크롤 - 기존에 만드신 함수 유지)
+const scrollAndFindDate = (dateToFind, retryCount = 0) => {
+    const MAX_RETRIES = 10;
     cy.get('.v-menu__content:visible').first().as('dropdown');
     cy.get('@dropdown').then(($el) => {
-        
-        // 🌟 [핵심 수정 포인트] 
-        // 그냥 글자만 찾는 게 아니라, '화면에 눈으로 보이는(:visible)' 항목만 찾도록 엄격하게 제한합니다.
         const $foundItem = $el.find(`.v-list__tile__title:contains("${dateToFind}"):visible, .v-list-item__title:contains("${dateToFind}"):visible`);
 
         if ($foundItem.length > 0) {
             cy.log(`🎉 화면에서 날짜 [${dateToFind}] 찐 발견!`);
-            
-            // 찾아낸 바로 그 요소를 정확히 클릭
             cy.wrap($foundItem).first().click({ force: true });
-            
         } else if (retryCount < MAX_RETRIES) {
-            cy.log(`⏬ 날짜 [${dateToFind}] 안 보여서 스크롤 내리는 중... (${retryCount + 1})`);
-            
-            // 아래로 스크롤
+            cy.log(`⏬ 날짜 [${dateToFind}] 탐색을 위해 스크롤 내리는 중... (${retryCount + 1})`);
             cy.get('@dropdown').scrollTo('bottom', { duration: 500 });
-            cy.wait(800); // 스크롤 후 애니메이션/렌더링 대기
-            
-            // 다시 자기 자신을 호출 (재귀)
+            cy.wait(800); 
             scrollAndFindDate(dateToFind, retryCount + 1);
-            
         } else {
             throw new Error(`❌ [${dateToFind}] 날짜를 스크롤 끝까지 내려도 찾을 수 없습니다.`);
         }
@@ -298,59 +284,65 @@ describe('로그캐치 사이트 테스트', () => {
 };
 
 
-    // 함수 실행
-    scrollAndFindDate(formattedDate);
-    
-    // [검증코드] 선택 후, 입력창에 targetDate가 표시되는지 검증(오늘날짜 기준 2일전)
-    cy.contains('.v-select__selection', formattedDate).should('be.visible');
+// 🌟 3. [핵심] 하루씩 전진하며 탐색하는 재귀 로직
+// dateIndex: 탐색할 배열의 순서 (0, 1, 2)
+// currentUIText: 현재 드롭다운 창에 적혀있어서 클릭해야 할 텍스트
+const searchSequential = (dateIndex, currentUIText) => {
+    // [종료 조건 1] 배열의 모든 날짜(오늘)까지 다 찾아봤는데도 없는 경우 -> 에러 발생
+    if (dateIndex >= targetDates.length) {
+        cy.log('❌ 지정된 3일 치 기간 내에 검출 데이터가 없습니다.');
+        // 의도적으로 테스트를 실패시키기 위해 엄격한 검증(Assertion) 실행
+        cy.get('tbody:visible a:contains("검출")').should('be.visible');
+        return; 
+    }
+
+    const dateToFind = targetDates[dateIndex];
+    cy.log(`▶️ [탐색 ${dateIndex + 1}/${targetDates.length}] ${dateToFind} 날짜 조회 시작`);
+
+    // 1) 현재 화면에 적혀있는 날짜 영역을 눌러서 리스트 열기
+    cy.contains('.v-select__selection', currentUIText).filter(':visible').click({ force: true });
     cy.wait(1000);
- 
-    // 🌟 1. 2일 전 날짜(formattedDate)로 데이터 로딩 대기
+
+    // 2) 날짜 스크롤 탐색 및 선택 함수 실행
+    scrollAndFindDate(dateToFind);
+
+    // 3) 날짜가 잘 바뀌었는지 검증
+    cy.contains('.v-select__selection', dateToFind).should('be.visible');
+    
+    // 데이터 로딩 대기
     cy.wait(2000); 
 
-// 🌟 2. 조건부 검증 로직 시작 (에러 발생 없이 표 데이터 유무 확인)
-cy.get('body').then(($body) => {
-    // 표 안에 '검출' 데이터가 있는지 확인 (에러 내지 않고 length만 체크)
-    const hasDetection = $body.find('tbody:visible a:contains("검출"):visible').length > 0;
+    // 4) 조건부 검증 로직 (에러 발생 없이 표 데이터 유무 확인)
+    cy.get('body').then(($body) => {
+        const hasDetection = $body.find('tbody:visible a:contains("검출"):visible').length > 0;
 
-    if (hasDetection) {
-        // [Case 1] 2일 전 날짜에 데이터가 있는 경우
-        cy.log('✅ 2일 전 날짜에 검색 결과(검출)가 존재합니다.');
-        
-        // 데이터가 있으니 바로 '검출' 클릭
-        cy.get('tbody', { timeout: 10000 }).filter(':visible').contains('a', '검출').should('be.visible').click({ force: true });
-        cy.wait(1000);
-        
-    } else {
-        // [Case 2] 2일 전 날짜에 데이터가 없는 경우 -> 오늘 날짜(formattedDate_sub)로 변경 (유연하게 한번다시 검색)
-        cy.log('⚠️ 2일 전 검색 결과가 없습니다. 오늘 날짜로 재검색합니다.');
+        if (hasDetection) {
+            // [종료 조건 2] 데이터를 찾은 경우 -> 검출 버튼 누르고 완전 종료!
+            cy.log(`✅ [${dateToFind}] 날짜에서 검색 결과(검출)를 찾았습니다!`);
+            cy.get('tbody', { timeout: 10000 }).filter(':visible').contains('a', '검출').should('be.visible').click({ force: true });
+            cy.wait(1000);
+        } else {
+            // 데이터를 못 찾은 경우 -> 다음 인덱스(dateIndex + 1)로 자기 자신을 다시 호출
+            cy.log(`⚠️ [${dateToFind}] 검색 결과 없음. 하루 앞당겨 재검색합니다.`);
+            // 다음 탐색 시 드롭다운을 열려면 "방금 우리가 입력한 날짜(dateToFind)"를 눌러야 하므로 인자로 넘겨줌
+            searchSequential(dateIndex + 1, dateToFind);
+        }
+    });
+};
 
-        // 1) 입력창에 적혀있는 2일 전 날짜(formattedDate) 영역을 눌러서 리스트를 다시 엽니다.
-        // 글자를 직접 클릭하는 것이 가장 안전합니다.
-        cy.contains('.v-select__selection', formattedDate).filter(':visible').click({ force: true });
-        cy.wait(1000);
+// 🌟 4. 함수 최초 실행
+// 초기 화면에 '2026-04-20'이 세팅되어 있으므로 이를 기준으로 첫 탐색 시작
+searchSequential(0, '2026-04-20');
 
-        // 2) 만들어두신 스크롤 함수로 오늘 날짜(formattedDate_sub) 탐색 및 선택
-        scrollAndFindDate(formattedDate_sub);
 
-        // 3) 오늘 날짜가 잘 선택되었는지 검증
-        cy.contains('.v-select__selection', formattedDate_sub).should('be.visible');
-        cy.wait(1000);
+// =====================================================
+// 검출창 닫기 (위의 함수 안에서 팝업을 열었으므로 공통 실행)
+// =====================================================
+cy.log('검출 팝업 닫기 진행');
+cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+cy.wait(1000);
 
-        cy.get('tbody', { timeout: 10000 }).filter(':visible').contains('a', '검출').should('be.visible').click({ force: true });
-        cy.wait(1000);
-    }
-});
-
-   // =====================================================
-   // 검출창 닫기 (위의 분기문에서 팝업을 열었으므로 공통 실행)
-   // =====================================================
-   cy.log('검출 팝업 닫기 진행');
-   cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
-   cy.wait(1000);
-
-    
-    cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
+cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
 
     
     // ==========================================
