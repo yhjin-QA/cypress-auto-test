@@ -246,19 +246,16 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     
-   // 🌟 1. 탐색할 날짜 배열 만들기 함수 (공통)
+  // 🌟 1. 탐색할 날짜 배열 만들기 함수 (공통)
 const getFormattedDate = (offsetDays) => {
     const d = new Date();
-    d.setDate(d.getDate() + offsetDays); // offsetDays가 -2면 2일 전, 0이면 오늘
+    d.setDate(d.getDate() + offsetDays); // offsetDays가 음수면 과거, 0이면 오늘
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
-// 탐색할 타겟 날짜 목록 (2일 전, 1일 전, 오늘)
-const targetDates = [
-    getFormattedDate(-2), 
-    getFormattedDate(-1), 
-    getFormattedDate(0)   
-];
+// 🌟 [핵심 수정] 탐색할 타겟 날짜 목록 (7일 전 ~ 오늘, 총 8일)
+// Array.from을 사용하여 -7부터 0까지 총 8개의 날짜를 자동으로 배열에 담습니다.
+const targetDates = Array.from({ length: 8 }, (_, i) => getFormattedDate(-7 + i));
 cy.log(`🎯 순차 탐색할 날짜 목록: ${targetDates.join(', ')}`);
 
 
@@ -285,12 +282,13 @@ const scrollAndFindDate = (dateToFind, retryCount = 0) => {
 
 
 // 🌟 3. [핵심] 하루씩 전진하며 탐색하는 재귀 로직
-// dateIndex: 탐색할 배열의 순서 (0, 1, 2)
+// dateIndex: 탐색할 배열의 순서 (0부터 7까지)
 // currentUIText: 현재 드롭다운 창에 적혀있어서 클릭해야 할 텍스트
 const searchSequential = (dateIndex, currentUIText) => {
     // [종료 조건 1] 배열의 모든 날짜(오늘)까지 다 찾아봤는데도 없는 경우 -> 에러 발생
     if (dateIndex >= targetDates.length) {
-        cy.log('❌ 지정된 3일 치 기간 내에 검출 데이터가 없습니다.');
+        // 문구 수정: 3일 치 -> 8일 치
+        cy.log('❌ 지정된 8일 치 기간(7일 전~오늘) 내에 검출 데이터가 없습니다.');
         // 의도적으로 테스트를 실패시키기 위해 엄격한 검증(Assertion) 실행
         cy.get('tbody:visible a:contains("검출")').should('be.visible');
         return; 
