@@ -79,7 +79,7 @@ describe('Jar 라이브러리 정합성 검증 테스트', () => {
                     .filter(plugin => plugin.length > 0);
 
                 expect(requiredPlugins.length, '✅ logcatch.plugins 파일 정상 읽기 완료 (항목 존재함)').to.be.greaterThan(0);
-                cy.log(`📋 [META-INF/logcatch.plugins] 필요 플러그인 목록: ${requiredPlugins.join(', ')}`);
+                cy.log(`📋 [META-INF/logcatch.plugins] 필요 라이브러리파일 목록: ${requiredPlugins.join(', ')}`);
 
                 // 4. /home/logcatch/common/lib 폴더에 위 플러그인들이 전부 존재하는지 확인
                 const commonLibPath = '/home/logcatch/common/lib';
