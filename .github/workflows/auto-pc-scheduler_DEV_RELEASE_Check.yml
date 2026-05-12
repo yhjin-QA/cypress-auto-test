@@ -43,7 +43,14 @@ jobs:
 
           # 💡 [필수 추가 1] 이 스텝에서도 SSH를 쓰려면 변수를 다시 정의해야 합니다.
           $keyPath = "$env:TEMP\id_auto"
-          $env:SSH_KEY_DATA.Trim() | Out-File -FilePath $keyPath -Encoding ASCII
+
+           # 1. 파일이 이미 존재하면 강제로 삭제 (에러 무시)
+          if (Test-Path $keyPath) {
+          Remove-Item -Path $keyPath -Force -ErrorAction SilentlyContinue
+          }
+
+          $env:SSH_KEY_DATA.Trim() | Out-File -FilePath $keyPath -Encoding ASCII -Force
+          
           $target = "${{ secrets.QA_SERVER_USER }}@${{ secrets.QA_SERVER_IP }}"
           $remotePath = "/home/${{ secrets.QA_SERVER_USER }}/deploy"
 

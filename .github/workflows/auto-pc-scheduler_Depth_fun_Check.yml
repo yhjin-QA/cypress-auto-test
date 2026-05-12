@@ -467,7 +467,7 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          Write-Host "============= [Debug Log: Flaky & Ghost Detector V11 (Latest Result Priority)] ============="
+          Write-Host "============= [Debug Log: Flaky & Ghost Detector V12 (Time-Priority Logic)] ============="
           
           $nodeScript = @"
           const fs = require('fs');
@@ -482,46 +482,34 @@ jobs:
                   if (stat.isDirectory()) {
                       findFiles(fullPath, ext, fileList);
                   } else if (file.endsWith(ext) && file !== 'merged_report.json') {
-                      fileList.push(fullPath);
+                      // 💡 파일 경로와 수정 시간(mtime)을 함께 저장
+                      fileList.push({ path: fullPath, mtime: stat.mtime.getTime() });
                   }
               }
               return fileList;
           }
 
           try {
-              const jsonFiles = findFiles('all_raw_data', '.json');
+              let jsonFilesWithTime = findFiles('all_raw_data', '.json');
               
-              // 💡 핵심: 스펙별 최종 상태를 관리
+              // 💡 1. 파일을 생성 시간순(오래된 순 -> 최신 순)으로 정렬
+              jsonFilesWithTime.sort((a, b) => a.mtime - b.mtime);
+              
               let specResults = new Map(); 
 
-              jsonFiles.forEach(filePath => {
+              // 💡 2. 정렬된 순서대로 읽으면서 Map 업데이트 (최신 결과가 이전 결과를 Overwrite)
+              jsonFilesWithTime.forEach(fileObj => {
                   try {
-                      const rawText = fs.readFileSync(filePath, 'utf8');
+                      const rawText = fs.readFileSync(fileObj.path, 'utf8');
                       const data = JSON.parse(rawText);
                       
-                      // 파일명(.cy.js) 추출
                       const match = rawText.match(/([^\\/":*?<>|]+\.cy\.js)/);
                       let specName = match ? match[1].trim() : null;
 
                       if (specName && data.stats) {
                           const hasFailures = data.stats.failures > 0;
-                          
-                          if (!specResults.has(specName)) {
-                              // 처음 발견된 스펙이면 상태 저장
-                              specResults.set(specName, hasFailures ? 'FAIL' : 'PASS');
-                          } else {
-                              // 💡 이미 기록이 있는 경우 (재실행/Flaky 상황)
-                              const currentStatus = specResults.get(specName);
-                              
-                              // 만약 현재 파일이 '성공'이고 이전이 '실패'였다면 -> 재시도로 성공한 것이므로 PASS 업데이트
-                              // 만약 현재 파일이 '실패'라면 -> 이전이 성공이었더라도 다시 실패한 것이므로 FAIL 유지
-                              if (hasFailures) {
-                                  specResults.set(specName, 'FAIL');
-                              } else {
-                                  // 성공한 리포트가 들어왔을 때만 PASS로 변경 (이게 Flaky 해결책)
-                                  specResults.set(specName, 'PASS');
-                              }
-                          }
+                          // 💡 최신 파일의 상태로 덮어쓰기
+                          specResults.set(specName, hasFailures ? 'FAIL' : 'PASS');
                       }
                   } catch (e) { /* JSON 에러 무시 */ }
               });
@@ -564,20 +552,16 @@ jobs:
               if ($line -match "^SPECS=(.*)") { $specListString = $matches[1].Trim() }
           }
           
-          # 💡 [중요] 실제 노드 결과값이 0보다 큰지 확인
           $isActuallyFailed = $totalFailCount -gt 0
           
-          # 시스템 상태 보완 로직
+          # 시스템 상태 보완 (Job 결과값 참조)
           $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
           
           if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") {
               if (-not $isActuallyFailed -and $restartStatus -ne "success") {
                   $isActuallyFailed = $true
-                  # 삼항 연산자 대신 일반 if문 사용
-                  if ($totalFailCount -eq 0) {
-                      $totalFailCount = 1
-                  }
+                  if ($totalFailCount -eq 0) { $totalFailCount = 1 }
                   $specListString = "System Error or Cancelled"
               }
           }
