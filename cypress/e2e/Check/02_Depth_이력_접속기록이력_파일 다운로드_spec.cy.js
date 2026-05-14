@@ -254,25 +254,62 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // ==========================================================
-    // [검증코드] 검색 결과 첫 번째 행(최신 데이터) 정밀 검증
-    // ==========================================================
-    cy.log('🧐 검색 결과 최상단(첫 번째 행) 데이터를 검증합니다.');
+// [검증코드] 검색 결과 첫 번째 행(최신 데이터) 동적 정밀 검증
+// ==========================================================
+cy.log('🧐 검색 결과 최상단(첫 번째 행) 데이터를 검증합니다.');
 
-    // 화면에 보이는 표의 첫 번째 행을 잡고 그 안에서만(within) 검사를 수행합니다.
-    cy.get('tbody tr').filter(':visible').first().within(() => {
-  
-     // 1. 파일명 검증 (span 태그)
-     // 정규식 설명: 'tester3-'로 시작하고, 중간에 숫자가 변하더라도 무시하며, '.xlsx' 또는 '.pdf'로 끝남
-     cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.(xlsx|pdf)/i).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)'); // 꼼꼼하게 검은색 폰트인지도 확인합니다.
+// 화면에 보이는 표의 첫 번째 행을 잡고 그 안에서만(within) 검사를 수행합니다.
+cy.get('tbody tr').filter(':visible').first().within(() => {
 
-     // 2. 다운로드 URI 경로 검증 (span 태그)
-     cy.get('span.ellipsis.text-xs-left').contains('/tester3/api/file-download').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    // 💡 핵심: 'a' 태그의 텍스트를 먼저 읽어와서 어떤 데이터인지 판단합니다.
+    cy.get('a.ellipsis.text-xs-left').then(($aTag) => {
+        const systemName = $aTag.text().trim(); // 앞뒤 공백 제거한 텍스트 추출
 
-     // 3. 업무시스템명 검증 (a 태그)
-     // 주의: 시스템명은 span이 아니라 'a' 태그이므로 정확히 타겟팅합니다.
-     cy.get('a.ellipsis.text-xs-left').contains('JEUS_tester3').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+        if (systemName.includes('JEUS_tester3')) {
+            // ==========================================
+            // [분기 1] 기존 'tester3' 데이터가 첫 행인 경우
+            // ==========================================
+            cy.log('📌 [JEUS_tester3] 데이터 검증을 시작합니다.');
+
+            // 1. 파일명 검증
+            cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.(xlsx|pdf)/i)
+                .should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+
+            // 2. 다운로드 URI 경로 검증
+            cy.get('span.ellipsis.text-xs-left').contains('/tester3/api/file-download')
+                .should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+
+            // 3. 업무시스템명 색상 검증 (이미 찾은 $aTag를 재사용)
+            cy.wrap($aTag).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+
+        } else if (systemName.includes('리눅스_VIP고객')) {
+            // ==========================================
+            // [분기 2] 새로운 'VIP 고객' 데이터가 첫 행인 경우
+            // ==========================================
+            cy.log('📌 [리눅스_VIP고객] 데이터 검증을 시작합니다.');
+
+            // 1. 파일명 검증
+            cy.get('span.ellipsis.text-xs-left').contains('VIP_Customers_Export.csv')
+                .should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+
+            // 2. 다운로드 URI 경로 검증
+            cy.get('span.ellipsis.text-xs-left').contains('/crm/download.jsp')
+                .should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+
+            // 3. 업무시스템명 색상 검증
+            cy.wrap($aTag).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+
+        } else {
+            // ==========================================
+            // [예외 처리] 전혀 모르는 데이터가 첫 행에 온 경우
+            // ==========================================
+            throw new Error(`❌ 예상치 못한 업무시스템명이 첫 행에 나타났습니다: ${systemName}`);
+        }
     });
-    cy.log('✅ 검색 결과 첫 번째 행 데이터 검증 완벽 통과!');
+});
+
+cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!');
+
     cy.log('✅ 이력 - 파일 다운로드 탭 진입 및 데이터 출력 확인 완료!');
 
     // ==========================================

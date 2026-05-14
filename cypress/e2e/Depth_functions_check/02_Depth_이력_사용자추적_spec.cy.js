@@ -255,13 +255,13 @@ describe('로그캐치 사이트 테스트', () => {
     
 
 
-    // 부서 : 총무팀 -------------------------------------------------------------------------------------------
+    // 부서 : 품질관리팀 -------------------------------------------------------------------------------------------
     // 부서/소속 클릭하여 리스트 열기
     cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
     cy.wait(500);
 
-    // 리스트에서 '총무팀'가 나타날 때까지 기다리고 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '총무팀', { timeout: 10000 }).should('be.visible').click({ force: true });
+    // 리스트에서 '품질관리팀'가 나타날 때까지 기다리고 클릭
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '품질관리팀', { timeout: 10000 }).should('be.visible').click({ force: true });
     cy.wait(500);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
@@ -271,11 +271,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // [검증] 검색 결과 검증
-    cy.get('tbody tr', { timeout: 10000 }).contains('총무팀').should('be.visible');
+    cy.get('tbody tr', { timeout: 10000 }).contains('품질관리팀').should('be.visible');
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('총무팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('품질관리팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
      });
      //---------------------------------------------------------------------------------------------------------------
 
@@ -745,12 +745,12 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
-    // 부서/소속 - 인사팀
+    // 부서/소속 - 품질관리팀
     // 부서/소속 클릭하여 리스트 열기
     cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
     cy.wait(500);
-    // 리스트에서 '인사팀'가 나타날 때까지 기다리고 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '인사팀', { timeout: 10000 }).should('be.visible').click({ force: true });
+    // 리스트에서 '품질관리팀'가 나타날 때까지 기다리고 클릭
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '품질관리팀', { timeout: 10000 }).should('be.visible').click({ force: true });
     cy.wait(500);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
@@ -760,18 +760,18 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     cy.wait(500);
 
     // '호준'라고 직접 타이핑 (필터링 유도)
-    cy.get('input[aria-label="정보 사용자"]').filter(':visible').type('호준');
+    cy.get('input[aria-label="정보 사용자"]').filter(':visible').type('윤호');
     cy.wait(800); // 필터링된 결과가 나타날 때까지 대기
 
     // 필터링되어 나타난 항목 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '호준 (hojun)').should('be.visible').click({ force: true });
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '진윤호 (yunho)').should('be.visible').click({ force: true });
     cy.wait(500);
     // 3. 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
 
     // 사용자 계정에 hojun 입력하기 
-    cy.get('input[aria-label="사용자 계정"]').filter(':visible').clear().type('hojun');
+    cy.get('input[aria-label="사용자 계정"]').filter(':visible').clear().type('yunho');
     cy.wait(500);
 
     // 사용자 IP에 10.10.54.5 입력 
@@ -823,10 +823,10 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     cy.get('a').contains('리눅스_배송관리').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
 
     // [부서/소속] - a 태그 + ellipsis 클래스
-    cy.get('a.ellipsis').contains('인사팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a.ellipsis').contains('품질관리팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
 
     // [정보 사용자] - a 태그 + ellipsis 클래스
-    cy.get('a.ellipsis').contains('호준 (hojun)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a.ellipsis').contains('진윤호 (yunho)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
 
     // [접속 IP 주소] - span 태그 (성공하셨던 패턴!)
     cy.get('span.ellipsis').contains('10.10.54.5').should('be.visible');
@@ -837,36 +837,53 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     
     
     // ==========================================
-    // 엑셀 다운로드 
-    // ========================================== 
-    // 엑셀 다운로드 클릭하는 코드 
-    cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
-    cy.wait(500);
-    // 3. 사라지는 것 확인
-    cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
-    //실제 로컬 폴더 다운로드 시간 주기
-    cy.wait(7000);
+// 엑셀 다운로드 
+// ========================================== 
+// 1. 엑셀 다운로드 클릭
+cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
+cy.wait(500);
+
+// 2. 안내 메시지(스낵바) 사라지는 것 대기
+cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
+
+// 3. 실제 로컬 폴더 다운로드 시간 부여 (충분한 대기)
+cy.wait(7000);
+
+// [검증] 다운로드 폴더를 확인합니다.
+// 폴더경로 : cypress/downloads
+cy.task('readDirectory', 'cypress/downloads').then((files) => {
     
-    // [검증] 다운로드 폴더를 확인합니다.
-    // 수행시 기존에 다운로드 받아두었던 파일은 자동으로 지움(사전초기화)
-    // 폴더경로 : C:\Users\user\Desktop\CypressWork\cypress\downloads
-    cy.task('readDirectory', 'cypress/downloads').then((files) => {
-    // files: 다운로드 폴더에 있는 모든 파일 이름들의 리스트
-  
     // 조건에 맞는 파일 찾기 (이름에 'log-excel'이 있고, 확장자가 '.zip'인 것)
-     const myFile = files.find(file => file.includes('log-excel') && file.endsWith('.zip'));
+    const myFile = files.find(file => file.includes('log-excel') && file.endsWith('.zip'));
 
-     // 로그 출력
-     if (myFile) {
-      cy.log(`✅ 다운로드 성공! 파일명: ${myFile}`);
-     }
+    // 검증 1: 파일 존재 여부 확인
+    expect(myFile, '✅ 다운로드 폴더 내 타겟 파일(.zip) 존재 여부 확인 완료').to.not.be.undefined;
 
-     // 검증: 파일이 존재해야 함 (없으면 에러 발생)
-       expect(myFile).to.not.be.undefined; 
-     });
+    // 파일이 존재한다면, 이어서 용량 검증 진행
+    if (myFile) {
+        cy.log(`✅ 다운로드 파일 확인! 파일명: ${myFile}`);
+        
+        // 다운로드된 파일의 상대 경로 세팅
+        const downloadedFilePath = `cypress/downloads/${myFile}`;
 
-    
-    cy.log('✅ 사용자 추적 엑셀 다운로드 확인 완료!');
+        // 검증 2: 파일 용량 체크 (0바이트 이상인지 확인)
+        // 💡 인코딩을 'null'로 주면 파일을 텍스트가 아닌 바이트(Buffer) 데이터로 읽어옵니다.
+        cy.readFile(downloadedFilePath, null).then((fileBuffer) => {
+            const fileSize = fileBuffer.length;
+            cy.log(`📦 확인된 파일 용량: ${fileSize} bytes`);
+            
+            // 용량이 0보다 커야 합격! (빈 파일이면 에러 발생)
+            expect(
+                fileSize, 
+                `✅ 파일용량확인 :  ${myFile} 용량 0바이트 초과 검증 완료`
+            ).to.be.greaterThan(0);
+
+            cy.log('✅ 파일 다운로드 및 정상 용량(0바이트 초과) 검증 완벽 통과!');
+        });
+    }
+});
+
+cy.log('✅ 사용자 추적 엑셀 다운로드 전체 플로우 확인 완료!');
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기

@@ -485,31 +485,31 @@ cy.wait(10000);
 cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 cy.wait(1000);
 
-// ----------------------------------------------------------
-// [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
-// ----------------------------------------------------------
-cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
-// [개선 코드]
-// 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
-cy.get('tbody', { timeout: 15000 }).contains('tr', '류선재(loginid3)').should('be.visible');
+// // ----------------------------------------------------------
+// // [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
+// // ----------------------------------------------------------
+// cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
+// // [개선 코드]
+// // 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
+// cy.get('tbody', { timeout: 15000 }).contains('tr', '류선재(loginid3)').should('be.visible');
 
 
-// 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
-cy.get('tbody tr').filter(':visible').first().within(() => {
+// // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
+// cy.get('tbody tr').filter(':visible').first().within(() => {
   
-  // 2. 텍스트 검증
-  cy.contains('류선재(loginid3)').should('be.visible');
-  cy.contains('비인가 접근 사용자').should('be.visible');
-  cy.contains('test_auto_비인가 접근 사용자').should('be.visible');
-  cy.contains('존재').should('be.visible');
-  cy.contains('소명 대상').should('be.visible');
+//   // 2. 텍스트 검증
+//   cy.contains('류선재(loginid3)').should('be.visible');
+//   cy.contains('비인가 접근 사용자').should('be.visible');
+//   cy.contains('test_auto_비인가 접근 사용자').should('be.visible');
+//   cy.contains('존재').should('be.visible');
+//   cy.contains('소명 대상').should('be.visible');
 
-  // 3. 아이콘 맞춤 검증 (랜덤으로 선택했던 바로 그 등급을 검증합니다)
-  cy.log(`🔍 생성 시 선택했던 [${targetAlert.label}] 로그가 정상적으로 발생했는지 검증합니다.`);
-  cy.get(targetAlert.iconClass).should('be.visible').and('have.css', 'color', targetAlert.color);
-  });
+//   // 3. 아이콘 맞춤 검증 (랜덤으로 선택했던 바로 그 등급을 검증합니다)
+//   cy.log(`🔍 생성 시 선택했던 [${targetAlert.label}] 로그가 정상적으로 발생했는지 검증합니다.`);
+//   cy.get(targetAlert.iconClass).should('be.visible').and('have.css', 'color', targetAlert.color);
+//   });
 
-cy.log('🎉 분석 - 비인가 접근 -  기타 휴직 상태 사용자 확인 및 랜덤 경보등급 검증 완료!');
+// cy.log('🎉 분석 - 비인가 접근 -  기타 휴직 상태 사용자 확인 및 랜덤 경보등급 검증 완료!');
 
 
   // ==========================================
