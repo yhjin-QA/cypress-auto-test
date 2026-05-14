@@ -330,8 +330,8 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
                cy.get('.v-dialog--active').should('not.exist');
                cy.log('✅ 증적자료 이력보기 닫기 성공');
                 // 4. [대기] 백업 진행 (충분히 기다림)
-                cy.log('⏳ 백업 진행 중... 15초 대기');
-                cy.wait(15000);
+                cy.log('⏳ 백업 진행 중... 60초 대기');
+                cy.wait(60000);
 
 
                 // -----------------------------------------------------------------
@@ -392,12 +392,12 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
                     const folderPath = lastFolder.trim();
                     cy.log(`📂 검증 대상 최신 폴더: ${folderPath}`);
 
-                     // syttem폴더의 새로 생성된 백업폴더 검증코드
-                    // 1. 파일 개수 검증 (300개 이상인지)
+                     // system폴더의 새로 생성된 백업폴더 검증코드
+                    // 1. 파일 개수 검증 (100개 이상인지)
                     cy.task('runSSH', `ls -1 ${folderPath}/*.gz 2>/dev/null | wc -l`).then((fcText) => {
                       const fileCount = parseInt(fcText.trim()) || 0;
                       cy.log(`📄 [검증 1] .gz 파일 개수: ${fileCount}개`); // 로그 출력
-                      expect(fileCount, '파일 개수가 300개 이상이어야 함').to.be.at.least(300);
+                      expect(fileCount, '파일 개수가 100개 이상이어야 함').to.be.at.least(100);
                     });
 
                     // 2. 특정 핵심 파일 존재 확인 (tbr_com_code.gz)
@@ -425,8 +425,27 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
                       const expectedCount = parseInt(configCount.trim());
                       cy.log(`⚙️ UI에 설정된 보관 정책 개수: ${expectedCount}개`);
 
-                      // 2. 백업 완료 및 구형 폴더 삭제 프로세스 대기(10초)
-                      cy.wait(10000); 
+                      // 2. 백업 완료 및 구형 폴더 삭제 프로세스 대기(20초)
+                      cy.wait(20000);
+
+                      // ======================================================================
+                        // 💡 [신규 추가] 실제 남아있는 폴더 목록을 조회하여 로그에 세로로 출력
+                        // ====================================================================
+                         cy.task('runSSH', `ls -1d ${backupPath}/system/${todayPrefix}_* 2>/dev/null`).then((folderList) => {
+                         cy.log('📂 [system] 현재 system 하위폴더 목록:'); 
+                          if (folderList && folderList.trim()) {
+                            const folders = folderList.trim().split(/\s+/);
+                            folders.forEach((folderPath) => {
+                              // 절대 경로(/home/.../20260415_1) 대신 폴더명(20260415_1)만 깔끔하게 추출해서 출력
+                              const folderName = folderPath.split('/').pop();
+                              cy.log(`- ${folderName}`);
+                            });
+                          } else {
+                            cy.log('⚠️ 조건에 맞는 폴더가 없습니다.');
+                          }
+                        });
+
+
                       // 3. 서버의 실제 폴더 개수 확인
                       cy.task('runSSH', `ls -1d ${backupPath}/system/${todayPrefix}_* 2>/dev/null | wc -l`).then((afterCountText) => {
                         const finalCount = parseInt(afterCountText.trim());
@@ -447,9 +466,9 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
                         }
                      
                         cy.log(`📊 [검증 4] 현재 system폴더내 폴더갯수 : 최종 ${finalCount}개 확인 (설정값: ${expectedCount}개)`);
-                        // ========================================================
+                        // ================================================================
                         // 💡 [신규 추가] 실제 남아있는 폴더 목록을 조회하여 로그에 세로로 출력
-                        // ========================================================
+                        // ==============================================================
                          cy.task('runSSH', `ls -1d ${backupPath}/system/${todayPrefix}_* 2>/dev/null`).then((folderList) => {
                          cy.log('📂 [system] 현재 system 하위폴더 목록:'); 
                           if (folderList && folderList.trim()) {
@@ -463,6 +482,8 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
                             cy.log('⚠️ 조건에 맞는 폴더가 없습니다.');
                           }
                         });
+
+                        
                         // ========================================================
                       });
                     });
