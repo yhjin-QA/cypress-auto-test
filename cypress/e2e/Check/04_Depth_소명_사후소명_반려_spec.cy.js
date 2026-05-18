@@ -413,10 +413,10 @@ cy.contains('button', '소명 처리').click({ force: true });
     });
 
 // ========================================================
-// STEP : 인사팀 부서장(hojun) 로그인 (기존 세션/쿠키 자동 초기화)
+// STEP : 인사팀 부서장 로그인 (기존 세션/쿠키 자동 초기화)
 // ========================================================
-cy.log('📋 부서장 ( 인사팀 부서장 : hojun )으로 로그인 진행 ');
-cy.login('hojun', 'Manager1!@');
+cy.log('📋 부서장 ( 인사팀 부서장 )으로 로그인 진행 ');
+cy.login('loginid194', 'Manager1!');
 
 // =============================================
 // STEP : 소명 - 나의 소명 - '승인하기' 탭 이동 및 소명 건 확인
@@ -435,7 +435,7 @@ cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
 
 
 //부서장 권한있는 유저가 로그인시
-cy.log('🧹 부서장 유저(hojun) 소명 - 나의 소명 클릭 '); 
+cy.log('🧹 부서장 소명 - 나의 소명 클릭 '); 
 cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('나의 소명').click({ force: true });
 cy.wait(2000);
 
@@ -624,7 +624,7 @@ cy.get('body').then(($body) => {
     cy.get('body').type('{esc}');
     cy.wait(500);
 
-    // 사용자 계정 클릭하여 hojun 아이디 입력
+    // 사용자 계정 클릭하여 아이디 입력
     //cy.get('input[aria-label="사용자 계정"]').filter(':visible').click({ force: true });
     cy.contains('.v-label', '사용자 계정').closest('.v-input').find('input').type('loginid445', { force: true });
 

@@ -467,7 +467,7 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          Write-Host "============= [Debug Log: Flaky & Ghost Detector V12 (Time-Priority Logic)] ============="
+          Write-Host "============= [Debug Log: Flaky & Ghost Detector V13 (True End-Time Priority)] ============="
           
           $nodeScript = @"
           const fs = require('fs');
@@ -482,36 +482,54 @@ jobs:
                   if (stat.isDirectory()) {
                       findFiles(fullPath, ext, fileList);
                   } else if (file.endsWith(ext) && file !== 'merged_report.json') {
-                      // 💡 파일 경로와 수정 시간(mtime)을 함께 저장
-                      fileList.push({ path: fullPath, mtime: stat.mtime.getTime() });
+                      fileList.push(fullPath);
                   }
               }
               return fileList;
           }
 
           try {
-              let jsonFilesWithTime = findFiles('all_raw_data', '.json');
-              
-              // 💡 1. 파일을 생성 시간순(오래된 순 -> 최신 순)으로 정렬
-              jsonFilesWithTime.sort((a, b) => a.mtime - b.mtime);
-              
-              let specResults = new Map(); 
+              const jsonFiles = findFiles('all_raw_data', '.json');
+              let extractedResults = [];
 
-              // 💡 2. 정렬된 순서대로 읽으면서 Map 업데이트 (최신 결과가 이전 결과를 Overwrite)
-              jsonFilesWithTime.forEach(fileObj => {
+              jsonFiles.forEach(file => {
                   try {
-                      const rawText = fs.readFileSync(fileObj.path, 'utf8');
+                      const rawText = fs.readFileSync(file, 'utf8');
                       const data = JSON.parse(rawText);
                       
-                      const match = rawText.match(/([^\\/":*?<>|]+\.cy\.js)/);
-                      let specName = match ? match[1].trim() : null;
+                      // 💡 1. 정규식 대신 Mochawesome의 정확한 구조에서 파일명 추출
+                      let specName = null;
+                      if (data.results && data.results.length > 0 && data.results[0].file) {
+                          specName = path.basename(data.results[0].file);
+                      } else {
+                          // Fallback (예외 상황)
+                          const match = rawText.match(/([^\\/":*?<>|]+\.cy\.js)/);
+                          specName = match ? match[1].trim() : null;
+                      }
 
                       if (specName && data.stats) {
                           const hasFailures = data.stats.failures > 0;
-                          // 💡 최신 파일의 상태로 덮어쓰기
-                          specResults.set(specName, hasFailures ? 'FAIL' : 'PASS');
+                          
+                          // 💡 2. 다운로드된 시간이 아닌 '테스트가 실제로 종료된 시간'을 가져옴
+                          const actualEndTime = data.stats.end ? new Date(data.stats.end).getTime() : 0;
+
+                          extractedResults.push({
+                              specName: specName,
+                              hasFailures: hasFailures,
+                              endTime: actualEndTime
+                          });
                       }
-                  } catch (e) { /* JSON 에러 무시 */ }
+                  } catch (e) { /* JSON 파싱 에러 무시 */ }
+              });
+
+              // 💡 3. 실제 테스트 종료 시간(endTime)을 기준으로 과거 -> 최신 순 정렬
+              extractedResults.sort((a, b) => a.endTime - b.endTime);
+
+              let specResults = new Map(); 
+
+              // 💡 4. 정렬된 순서대로 Map 업데이트 (가장 나중에 끝난 테스트 결과가 최종 상태가 됨)
+              extractedResults.forEach(result => {
+                  specResults.set(result.specName, result.hasFailures ? 'FAIL' : 'PASS');
               });
 
               let finalFailed = [];
@@ -544,7 +562,6 @@ jobs:
           Write-Host "Node.js Output:"
           $nodeOut | ForEach-Object { Write-Host $_ }
           
-          
           $totalFailCount = 0
           $specListString = ""
           
@@ -556,27 +573,22 @@ jobs:
           # 💡 1차 확인: JSON 리포트 상에서 실제 실패(FAILS > 0)가 있는가?
           $isActuallyFailed = $totalFailCount -gt 0
           
-          # 💡 2차 확인: 시스템 상태 보완 (Job 1 & Job 2 상태)
+          # 💡 2차 확인: 시스템 상태 보완
           $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
           
-          # [핵심 수정] 실제 실패(FAILS)가 0건일 때만 크래시/취소 여부를 검사합니다.
           if (-not $isActuallyFailed) {
-              # Case A: Job 1이 터졌는데, Job 2가 'success'로 덮어주지 못한 경우 (진짜 시스템 에러)
               if (($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") -and $restartStatus -ne "success") {
                   $isActuallyFailed = $true
                   $totalFailCount = 1
                   $specListString = "[Job 1: Cypress-Run] System Error or Cancelled (No JSON)"
               } 
-              # Case B: Job 2 자체가 터진 경우 (진짜 시스템 에러)
               elseif ($restartStatus -eq "failure" -or $restartStatus -eq "cancelled") {
                   $isActuallyFailed = $true
                   $totalFailCount = 1
                   $specListString = "[Job 2: Restart-Task] System Error or Cancelled (No JSON)"
               }
-              # 💡 만약 Job 1이 failure여도, Job 2가 success라면 위 조건들을 모두 무시하고 '성공(PASS)'으로 넘어갑니다!
           }
-          
           
           # 대시보드 URL 추출
           $dashUrl = "http://10.10.54.5:8080/projects"
