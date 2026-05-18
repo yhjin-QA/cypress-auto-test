@@ -804,7 +804,7 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
  cy.log('🎉 분석 - 비인가 접근 - 퇴직자 사용자 확인 및 랜덤 경보등급 검증 완료!');
 
   // ==========================================
-  // CASE3 비인가 접근 사용자 상태 - 퇴직자 예정자 (남판범 loginid194)
+  // CASE3 비인가 접근 사용자 상태 - 퇴직자 예정자
   // ==========================================
   // 분석 탭 메뉴로 다시 이동 
   cy.contains('button.has-child', '분석').click({ force: true });
@@ -852,7 +852,7 @@ cy.origin('http://10.10.54.22:8080', () => {
   // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
   cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
   cy.visit('/uat/uia/egovLoginUsr.do');
-  cy.get('#id').should('be.visible').clear().type('loginid194');
+  cy.get('#id').should('be.visible').clear().type('loginid102');
   cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
 
   // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
@@ -1074,13 +1074,13 @@ cy.wait(1000);
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
 // [개선 코드]
 // 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
-cy.get('tbody', { timeout: 15000 }).contains('tr', '남판범(loginid194)').should('be.visible');
+cy.get('tbody', { timeout: 15000 }).contains('tr', '류평비(loginid102)').should('be.visible');
 
 // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
 cy.get('tbody tr').filter(':visible').first().within(() => {
   
   // 2. 텍스트 검증
-  cy.contains('남판범(loginid194)').should('be.visible');
+  cy.contains('류평비(loginid102)').should('be.visible');
   cy.contains('비인가 접근 사용자').should('be.visible');
   cy.contains('test_auto_비인가 접근 사용자').should('be.visible');
   cy.contains('존재').should('be.visible');

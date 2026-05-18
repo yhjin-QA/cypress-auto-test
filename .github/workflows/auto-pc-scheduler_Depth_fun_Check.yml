@@ -467,7 +467,7 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          Write-Host "============= [Debug Log: Flaky & Ghost Detector V13 (True End-Time Priority)] ============="
+          Write-Host "============= [Debug Log: Flaky & Ghost Detector V14 (Smart Recovery Tracker)] ============="
           
           $nodeScript = @"
           const fs = require('fs');
@@ -482,7 +482,7 @@ jobs:
                   if (stat.isDirectory()) {
                       findFiles(fullPath, ext, fileList);
                   } else if (file.endsWith(ext) && file !== 'merged_report.json') {
-                      fileList.push(fullPath);
+                      fileList.push({ path: fullPath, mtime: stat.mtime.getTime() });
                   }
               }
               return fileList;
@@ -492,26 +492,22 @@ jobs:
               const jsonFiles = findFiles('all_raw_data', '.json');
               let extractedResults = [];
 
-              jsonFiles.forEach(file => {
+              jsonFiles.forEach(fileObj => {
                   try {
-                      const rawText = fs.readFileSync(file, 'utf8');
+                      const rawText = fs.readFileSync(fileObj.path, 'utf8');
                       const data = JSON.parse(rawText);
                       
-                      // 💡 1. 정규식 대신 Mochawesome의 정확한 구조에서 파일명 추출
                       let specName = null;
                       if (data.results && data.results.length > 0 && data.results[0].file) {
                           specName = path.basename(data.results[0].file);
                       } else {
-                          // Fallback (예외 상황)
                           const match = rawText.match(/([^\\/":*?<>|]+\.cy\.js)/);
                           specName = match ? match[1].trim() : null;
                       }
 
                       if (specName && data.stats) {
                           const hasFailures = data.stats.failures > 0;
-                          
-                          // 💡 2. 다운로드된 시간이 아닌 '테스트가 실제로 종료된 시간'을 가져옴
-                          const actualEndTime = data.stats.end ? new Date(data.stats.end).getTime() : 0;
+                          const actualEndTime = data.stats.end ? new Date(data.stats.end).getTime() : fileObj.mtime;
 
                           extractedResults.push({
                               specName: specName,
@@ -522,14 +518,22 @@ jobs:
                   } catch (e) { /* JSON 파싱 에러 무시 */ }
               });
 
-              // 💡 3. 실제 테스트 종료 시간(endTime)을 기준으로 과거 -> 최신 순 정렬
+              // 시간순 정렬 (과거 -> 최신)
               extractedResults.sort((a, b) => a.endTime - b.endTime);
 
               let specResults = new Map(); 
+              let flakyRecovered = new Set(); // 💡 새로 추가: 실패했다가 성공으로 뒤집힌 녀석들 기록
 
-              // 💡 4. 정렬된 순서대로 Map 업데이트 (가장 나중에 끝난 테스트 결과가 최종 상태가 됨)
               extractedResults.forEach(result => {
-                  specResults.set(result.specName, result.hasFailures ? 'FAIL' : 'PASS');
+                  if (result.hasFailures) {
+                      specResults.set(result.specName, 'FAIL');
+                  } else {
+                      // 이전에 실패였는데 지금 성공이 들어왔다면 Flaky 복구 성공!
+                      if (specResults.get(result.specName) === 'FAIL') {
+                          flakyRecovered.add(result.specName);
+                      }
+                      specResults.set(result.specName, 'PASS');
+                  }
               });
 
               let finalFailed = [];
@@ -546,6 +550,7 @@ jobs:
               console.log('DEBUG_PASSED=' + finalPassed.join(', '));
               console.log('DEBUG_FAILED=' + finalFailed.join(', '));
               console.log('FAILS=' + finalFailed.length);
+              console.log('FLAKY_RECOVERED=' + flakyRecovered.size); // 복구 카운트 출력
               
               if (finalFailed.length > 0) {
                   console.log('SPECS=' + finalFailed.join(', '));
@@ -563,30 +568,32 @@ jobs:
           $nodeOut | ForEach-Object { Write-Host $_ }
           
           $totalFailCount = 0
+          $flakyRecoveredCount = 0
           $specListString = ""
           
           foreach ($line in $nodeOut) {
               if ($line -match "^FAILS=(\d+)") { $totalFailCount = [int]$matches[1] }
+              if ($line -match "^FLAKY_RECOVERED=(\d+)") { $flakyRecoveredCount = [int]$matches[1] }
               if ($line -match "^SPECS=(.*)") { $specListString = $matches[1].Trim() }
           }
           
-          # 💡 1차 확인: JSON 리포트 상에서 실제 실패(FAILS > 0)가 있는가?
+          # 💡 1. 실제 JSON 리포트에 실패가 남아있는가?
           $isActuallyFailed = $totalFailCount -gt 0
           
-          # 💡 2차 확인: 시스템 상태 보완
           $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
           
+          # 💡 2. 시스템 상태 보완 (Job이 실패했는데 JSON은 다 통과했다고 거짓말하는 경우 색출)
           if (-not $isActuallyFailed) {
-              if (($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") -and $restartStatus -ne "success") {
-                  $isActuallyFailed = $true
-                  $totalFailCount = 1
-                  $specListString = "[Job 1: Cypress-Run] System Error or Cancelled (No JSON)"
-              } 
-              elseif ($restartStatus -eq "failure" -or $restartStatus -eq "cancelled") {
-                  $isActuallyFailed = $true
-                  $totalFailCount = 1
-                  $specListString = "[Job 2: Restart-Task] System Error or Cancelled (No JSON)"
+              if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled" -or $restartStatus -eq "failure" -or $restartStatus -eq "cancelled") {
+                  
+                  # [핵심] JSON 상으로는 다 통과인데, 실패를 복구한 흔적(Flaky)조차 없다?
+                  # -> 이것은 JSON 파일이 업로드/다운로드 과정에서 덮어씌워져 유실된 심각한 에러입니다!
+                  if ($flakyRecoveredCount -eq 0) {
+                      $isActuallyFailed = $true
+                      $totalFailCount = 1
+                      $specListString = "⚠️ 대시보드 확인 요망 (테스트 실패 혹은 아티팩트 유실됨)"
+                  }
               }
           }
           

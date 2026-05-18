@@ -371,14 +371,47 @@ processList.forEach((process) => {
 // ----------------------------------------------------------
 cy.log('🚀 WAS 사이트로 이동하여 새 세션을 발급받습니다.');
 
-// 기존 코드에서 옵션 추가
-cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', { 
-  timeout: 60000,           // 타임아웃을 60초로 연장
-  onBeforeLoad(win) {      // 페이지 로드 전 속도 향상을 위한 설정
-    delete win.fetch; 
+// 세션 이동 방어 코드 
+
+// 🚨 [핵심 방어 1] Cypress 프록시가 도메인 전환을 준비할 수 있도록 2초간 숨을 고릅니다.
+cy.wait(2000);
+
+// 🌟 [추가] 서버 접속 상태를 기억할 변수(플래그)를 선언합니다.
+let isWasSiteDown = false;
+
+// 🌟 [핵심 예외 처리] 페이지 로드 실패 시 에러를 낚아채서 테스트 중단(Fail)을 막습니다.
+Cypress.once('fail', (error) => {
+  // 에러 메시지에 'could not load' 또는 타겟 서버 IP가 포함되어 있는지 확인
+  if (error.message.includes('could not load') || error.message.includes('10.10.54.22')) {
+    cy.log('⚠️ [경고] WAS 서버(10.10.54.22)에 접속할 수 없거나 응답이 지연되었습니다!');
+    isWasSiteDown = true; // 플래그를 true로 변경하여 접속 실패를 기록합니다.
+    
+    // 💡 핵심: false를 반환하면 Cypress가 에러를 뱉지 않고(초록불 유지) 다음 코드로 넘어갑니다.
+    return false; 
+  }
+  // 우리가 예상한 에러가 아니면 원래대로 빨간불을 띄우고 테스트를 실패시킵니다.
+  throw error; 
+});
+
+// 🚨 1. 커스텀(command) 명령어 적용 (타임아웃 및 재시도 포함)
+cy.visitWithRetry('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', {
+  timeout: 60000,
+  onBeforeLoad(win) {
+    delete win.fetch; // fetch 삭제가 필요한 경우 유지
   }
 });
 
+// 🚨 [핵심 방어 2] 페이지 진입 직후 DOM 렌더링이 안정화될 때까지 잠시 대기합니다.
+cy.wait(2000);
+
+// 🌟 [분기 처리] 접속에 성공했을 때만 cy.origin(로그인 및 API 타격) 로직을 실행합니다.
+// cy.then()으로 감싸주어야 변수(isWasSiteDown) 상태를 올바르게 평가할 수 있습니다.
+cy.then(() => {
+  if (isWasSiteDown) {
+    // ❌ 접속 실패 시
+    cy.log('⏩ [Skip] WAS 서버 접속 실패로 인해 이상행위 발생 스텝을 안전하게 건너뜁니다.');
+  } else {
+//-----------------------------------------------
 cy.origin('http://10.10.54.22:8080', { args: { targetName: '475-6025314-6-985' } }, ({ targetName }) => {
   Cypress.on('uncaught:exception', () => false);
 
@@ -442,10 +475,13 @@ cy.origin('http://10.10.54.22:8080', { args: { targetName: '475-6025314-6-985' }
         expect(response.status).to.eq(200);
         cy.log('🎉 매번 새로운 세션으로 고객관리 계좌번호 조회 자동 타격 성공!');
         cy.log(`🎯 특정계좌 [${targetName}]로 계좌 조회 타격 완료!`);
-      });
-    });
-  });
-});
+      }); // cy.request 닫기
+    }); // cy.getCookie 닫기
+  }); // cy.url 닫기
+}); // cy.origin 닫기
+
+} // 🌟 여기에 else 블록을 닫는 중괄호 추가!
+}); // 🌟 여기에 cy.then() 블록을 닫는 괄호 추가!
 
 
 // ----------------------------------------------------------

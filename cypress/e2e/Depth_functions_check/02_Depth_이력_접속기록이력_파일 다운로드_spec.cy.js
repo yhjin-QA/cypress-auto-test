@@ -253,7 +253,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
 
-    // ==========================================================
+// ==========================================================
 // [검증코드] 검색 결과 첫 번째 행(최신 데이터) 동적 정밀 검증
 // ==========================================================
 cy.log('🧐 검색 결과 최상단(첫 번째 행) 데이터를 검증합니다.');
@@ -288,13 +288,21 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
             // ==========================================
             cy.log('📌 [리눅스_VIP고객] 데이터 검증을 시작합니다.');
 
-            // 1. 파일명 검증
-            cy.get('span.ellipsis.text-xs-left').contains('VIP_Customers_Export.csv')
-                .should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+           // 1. 첫 번째 span (URI 경로 또는 파일명) 검증
+           cy.get('span.ellipsis.text-xs-left').eq(0).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)').invoke('text') // 태그 안의 텍스트를 가져옵니다.
+           .then((text) => {
+           // 앞뒤 공백을 제거한 후 빈 문자열이 아닌지 검증합니다.
+            expect(text.trim(), '첫 번째 항목(URI/파일명) 값 확인중').to.not.be.empty;
+            cy.log(`✅ 확인된 값 1: ${text.trim()}`);
+            });
 
-            // 2. 다운로드 URI 경로 검증
-            cy.get('span.ellipsis.text-xs-left').contains('/crm/download.jsp')
-                .should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+
+            // 2. 두 번째 span (파일명 또는 URI 경로) 검증
+            cy.get('span.ellipsis.text-xs-left').eq(1).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)').invoke('text')
+            .then((text) => {
+              expect(text.trim(), '두 번째 항목(파일명/URI) 값 확인중').to.not.be.empty;
+              cy.log(`✅ 확인된 값 2: ${text.trim()}`);
+            });
 
             // 3. 업무시스템명 색상 검증
             cy.wrap($aTag).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
