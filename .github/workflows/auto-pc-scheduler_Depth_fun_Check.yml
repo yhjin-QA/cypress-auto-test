@@ -462,142 +462,78 @@ jobs:
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
           NOW: ${{ env.NOW }}
-
+          
         run: |
           $OutputEncoding = [System.Text.Encoding]::UTF8
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           
-          Write-Host "============= [Debug Log: Flaky & Ghost Detector V14 (Smart Recovery Tracker)] ============="
-          
-          $nodeScript = @"
-          const fs = require('fs');
-          const path = require('path');
-
-          function findFiles(dir, ext, fileList = []) {
-              if (!fs.existsSync(dir)) return fileList;
-              const files = fs.readdirSync(dir);
-              for (const file of files) {
-                  const fullPath = path.join(dir, file);
-                  const stat = fs.statSync(fullPath);
-                  if (stat.isDirectory()) {
-                      findFiles(fullPath, ext, fileList);
-                  } else if (file.endsWith(ext) && file !== 'merged_report.json') {
-                      fileList.push({ path: fullPath, mtime: stat.mtime.getTime() });
-                  }
-              }
-              return fileList;
-          }
-
-          try {
-              const jsonFiles = findFiles('all_raw_data', '.json');
-              let extractedResults = [];
-
-              jsonFiles.forEach(fileObj => {
-                  try {
-                      const rawText = fs.readFileSync(fileObj.path, 'utf8');
-                      const data = JSON.parse(rawText);
-                      
-                      let specName = null;
-                      if (data.results && data.results.length > 0 && data.results[0].file) {
-                          specName = path.basename(data.results[0].file);
-                      } else {
-                          const match = rawText.match(/([^\\/":*?<>|]+\.cy\.js)/);
-                          specName = match ? match[1].trim() : null;
-                      }
-
-                      if (specName && data.stats) {
-                          const hasFailures = data.stats.failures > 0;
-                          const actualEndTime = data.stats.end ? new Date(data.stats.end).getTime() : fileObj.mtime;
-
-                          extractedResults.push({
-                              specName: specName,
-                              hasFailures: hasFailures,
-                              endTime: actualEndTime
-                          });
-                      }
-                  } catch (e) { /* JSON 파싱 에러 무시 */ }
-              });
-
-              // 시간순 정렬 (과거 -> 최신)
-              extractedResults.sort((a, b) => a.endTime - b.endTime);
-
-              let specResults = new Map(); 
-              let flakyRecovered = new Set(); // 💡 새로 추가: 실패했다가 성공으로 뒤집힌 녀석들 기록
-
-              extractedResults.forEach(result => {
-                  if (result.hasFailures) {
-                      specResults.set(result.specName, 'FAIL');
-                  } else {
-                      // 이전에 실패였는데 지금 성공이 들어왔다면 Flaky 복구 성공!
-                      if (specResults.get(result.specName) === 'FAIL') {
-                          flakyRecovered.add(result.specName);
-                      }
-                      specResults.set(result.specName, 'PASS');
-                  }
-              });
-
-              let finalFailed = [];
-              let finalPassed = [];
-
-              specResults.forEach((status, specName) => {
-                  if (status === 'PASS') {
-                      finalPassed.push(specName);
-                  } else {
-                      finalFailed.push(specName);
-                  }
-              });
-
-              console.log('DEBUG_PASSED=' + finalPassed.join(', '));
-              console.log('DEBUG_FAILED=' + finalFailed.join(', '));
-              console.log('FAILS=' + finalFailed.length);
-              console.log('FLAKY_RECOVERED=' + flakyRecovered.size); // 복구 카운트 출력
-              
-              if (finalFailed.length > 0) {
-                  console.log('SPECS=' + finalFailed.join(', '));
-              }
-
-          } catch (err) {
-              console.log('ERROR=' + err.message);
-          }
-          "@
-          
-          $nodeScript | Out-File -FilePath "detect_flaky.js" -Encoding UTF8
-          $nodeOut = node detect_flaky.js
-          
-          Write-Host "Node.js Output:"
-          $nodeOut | ForEach-Object { Write-Host $_ }
-          
+          $failedSpecNames = @()
+          $isActuallyFailed = $false
           $totalFailCount = 0
-          $flakyRecoveredCount = 0
-          $specListString = ""
+
+          Write-Host "============= [🔍 데이터 정밀 분석 시작 (Depth 전용 핀셋 추출)] ============="
           
-          foreach ($line in $nodeOut) {
-              if ($line -match "^FAILS=(\d+)") { $totalFailCount = [int]$matches[1] }
-              if ($line -match "^FLAKY_RECOVERED=(\d+)") { $flakyRecoveredCount = [int]$matches[1] }
-              if ($line -match "^SPECS=(.*)") { $specListString = $matches[1].Trim() }
+          # [Step 1] 개별 JSON 리포트 전수 조사 
+          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "merged_report.json" }
+          
+          foreach ($file in $jsonFiles) {
+              try {
+                  $rawContent = Get-Content $file.FullName -Raw -Encoding UTF8
+                  $content = $rawContent | ConvertFrom-Json
+                  
+                  # 💡 러너 리포트에 1개 이상의 실패가 있다면 분석 시작
+                  if ($content.stats -and [int]$content.stats.failures -gt 0) {
+                      $isActuallyFailed = $true
+                      $totalFailCount += [int]$content.stats.failures
+                      
+                      # 💡 [핵심 보완: 핀셋 추출] 
+                      # 같은 러너에서 성공한 스펙은 무시하고, '실제로 실패한 스펙'만 정확히 골라냅니다.
+                      foreach ($result in $content.results) {
+                          $resultStr = $result | ConvertTo-Json -Depth 10 -Compress
+                          
+                          # 해당 스펙(파일) 결과 내부에 "fail": true 가 있는지 확인
+                          if ($resultStr -match '"fail":true' -or $resultStr -match '"state":"failed"') {
+                              $fName = ""
+                              if ($result.file) { $fName = $result.file }
+                              elseif ($result.fullFile) { $fName = $result.fullFile }
+                              else {
+                                  $m = [regex]::Match($resultStr, '(?:"file"|"fullFile"):"([^"]+\.cy\.js)"')
+                                  if ($m.Success) { $fName = $m.Groups[1].Value }
+                              }
+                              
+                              if ($fName) {
+                                  $failedSpecNames += (Split-Path ($fName -replace '\\', '/') -Leaf)
+                              }
+                          }
+                      }
+                  }
+              } catch {}
           }
-          
-          # 💡 1. 실제 JSON 리포트에 실패가 남아있는가?
-          $isActuallyFailed = $totalFailCount -gt 0
-          
+
+          # [Step 2] Job 자체 상태 확인 (시스템 크래시 대비)
           $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
           $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
-          
-          # 💡 2. 시스템 상태 보완 (Job이 실패했는데 JSON은 다 통과했다고 거짓말하는 경우 색출)
-          if (-not $isActuallyFailed) {
-              if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled" -or $restartStatus -eq "failure" -or $restartStatus -eq "cancelled") {
-                  
-                  # [핵심] JSON 상으로는 다 통과인데, 실패를 복구한 흔적(Flaky)조차 없다?
-                  # -> 이것은 JSON 파일이 업로드/다운로드 과정에서 덮어씌워져 유실된 심각한 에러입니다!
-                  if ($flakyRecoveredCount -eq 0) {
-                      $isActuallyFailed = $true
-                      $totalFailCount = 1
-                      $specListString = "⚠️ 대시보드 확인 요망 (테스트 실패 혹은 아티팩트 유실됨)"
+          if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled" -or $restartStatus -eq "failure" -or $restartStatus -eq "cancelled") {
+              $isActuallyFailed = $true
+          }
+
+          # 중복 제거 및 1차 필터링
+          $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
+
+          # [Step 3] 스크린샷 물리 경로 추적 (최후의 보루)
+          # JSON에서 진짜 실패한 파일명을 이미 찾았다면 스크린샷은 뒤지지 않음 (Flaky 찌꺼기 방지)
+          if ($isActuallyFailed -and $uniqueFailures.Count -eq 0) {
+              $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*failed*.png" -ErrorAction SilentlyContinue
+              if ($failedScreenshots.Count -gt 0) {
+                  foreach ($shot in $failedScreenshots) {
+                      $shotMatches = [regex]::Matches($shot.FullName, '([^\\/":*?<>|]+\.cy\.js)')
+                      foreach ($m in $shotMatches) { $failedSpecNames += $m.Value.Trim() }
                   }
+                  $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
               }
           }
-          
-          # 대시보드 URL 추출
+
+          # [Step 4] 대시보드 URL 탐색
           $dashUrl = "http://10.10.54.5:8080/projects"
           $urlFiles = Get-ChildItem -Path "all_raw_data", "downloaded_url" -Recurse -Filter "run_url.txt" -ErrorAction SilentlyContinue
           foreach ($uFile in $urlFiles) {
@@ -608,26 +544,44 @@ jobs:
               }
           }
 
-          $time = "$env:NOW"
+          # [Step 5] 메시지 조립 (Depth 전용 변수 적용)
+          $vName = if ($env:HARDCODED_VERSION) { $env:HARDCODED_VERSION } else { "Unknown" }
+          $time  = "$env:NOW"
+          
           if ($isActuallyFailed) {
               "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-              $title = $env:MSG_FAIL + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
-              $detailSpec = if ($specListString) { $specListString } else { "Unknown Spec" }
-              $statusDetail = "FAIL: $totalFailCount script ( $detailSpec )"
+              $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$vName)"
+              
+              $count = if ($totalFailCount -gt 0) { $totalFailCount } elseif ($uniqueFailures.Count -gt 0) { $uniqueFailures.Count } else { 1 }
+              $specListString = if ($uniqueFailures.Count -gt 0) { $uniqueFailures -join ", " } else { "System Error or Crash" }
+              
+              $statusDetail = "FAIL: $count script ( $specListString )"
           } else {
               "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-              $title = $env:MSG_SUCCESS + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
-              $statusDetail = ""
+              $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$vName)"
+              $statusDetail = "" 
           }
 
           $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          $msgLines = @("$title", "($time)")
-          if ($statusDetail) { $msgLines += "$statusDetail" }
-          $msgLines += ("", "$($env:LABEL_DASH) : $dashUrl", "$($env:LABEL_GIT) : $runUrl")
 
+          # 메시지 라인 생성
+          $msgLines = @()
+          if ($isActuallyFailed) {
+              $msgLines += "$title"
+              $msgLines += "($time)"
+              $msgLines += "$statusDetail"
+          } else {
+              $msgLines += "$title"
+              $msgLines += "($time)"
+          }
+          $msgLines += ""
+          $msgLines += "$($env:LABEL_DASH) : $dashUrl"
+          $msgLines += "$($env:LABEL_GIT) : $runUrl"
+          
+          # 전송
           $payload = @{ text = ($msgLines -join "`n") } | ConvertTo-Json -Compress
           $utf8Bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
-          Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes
+          Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes  
 
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: always() && env.FINAL_STATUS == 'FAIL'

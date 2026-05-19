@@ -224,12 +224,14 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('사용자 상태').scrollIntoView({ block: 'center' });
     cy.wait(500);
 
+    //Case 기타휴직자 상태
     //사용자 상태 - 기타 휴직상태 ON
-    // eq(1): 퇴직자, eq(2): 퇴직예정자, eq(3): 휴가자, eq(4): 기타 휴직상태
+    // eq(1): 퇴직자, eq(2): 퇴직예정자, eq(3): 휴가자, eq(4): 기타 휴직상태 -----------------------
     //cy.get('label').filter(':contains("사용 여부")').eq(1).click({ force: true });
     //cy.get('label').filter(':contains("사용 여부")').eq(2).click({ force: true });
     cy.get('label').filter(':contains("사용 여부")').eq(4).click({ force: true }); 
     cy.wait(500);
+    //--------------------------------------------------------------------------------------------
 
     // 사용자상태 검증하기 (제대로 ON 상태가 되었는지 확인)
     //cy.get('label').filter(':contains("사용 여부")').eq(1).closest('.v-input').find('input[type="checkbox"]').should('be.checked');
@@ -246,18 +248,49 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('tbody').contains('tr', 'test_auto_비인가 접근 사용자').should('be.visible');
 
  
-// ----------------------------------------------------------
-// [STEP 1] WAS 시스템 로그인 및 이상행위(타격)
-// ----------------------------------------------------------
+// ================================================================
+// [STEP 1] WAS 시스템 로그인 및 이상행위 - 기타휴직자 류선재(loginid3)
+// ================================================================
 cy.log('🚀 WAS 사이트로 이동하여 새 세션을 발급받습니다.');
 
-// 기존 코드에서 옵션 추가
-cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', { 
-  timeout: 60000,           // 타임아웃을 60초로 연장
-  onBeforeLoad(win) {      // 페이지 로드 전 속도 향상을 위한 설정
-    delete win.fetch; 
+// 세션 이동 방어 코드 
+// 🚨 [핵심 방어 1] Cypress 프록시가 도메인 전환을 준비할 수 있도록 2초간 숨을 고릅니다.
+cy.wait(2000);
+// 🌟 [추가] 서버 접속 상태를 기억할 변수(플래그)를 선언합니다.
+let isWasSiteDown = false;
+// 🌟 [핵심 예외 처리] 페이지 로드 실패 시 에러를 낚아채서 테스트 중단(Fail)을 막습니다.
+Cypress.once('fail', (error) => {
+  // 에러 메시지에 'could not load' 또는 타겟 서버 IP가 포함되어 있는지 확인
+  if (error.message.includes('could not load') || error.message.includes('10.10.54.22')) {
+    cy.log('⚠️ [경고] WAS 서버(10.10.54.22)에 접속할 수 없거나 응답이 지연되었습니다!');
+    isWasSiteDown = true; // 플래그를 true로 변경하여 접속 실패를 기록합니다.
+    
+    // 💡 핵심: false를 반환하면 Cypress가 에러를 뱉지 않고(초록불 유지) 다음 코드로 넘어갑니다.
+    return false; 
+  }
+  // 우리가 예상한 에러가 아니면 원래대로 빨간불을 띄우고 테스트를 실패시킵니다.
+  throw error; 
+});
+
+// 🚨 1. 커스텀(command) 명령어 적용 (타임아웃 및 재시도 포함)
+cy.visitWithRetry('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', {
+  timeout: 60000,
+  onBeforeLoad(win) {
+    delete win.fetch; // fetch 삭제가 필요한 경우 유지
   }
 });
+
+// 🚨 [핵심 방어 2] 페이지 진입 직후 DOM 렌더링이 안정화될 때까지 잠시 대기합니다.
+cy.wait(2000);
+
+// 🌟 [분기 처리] 접속에 성공했을 때만 cy.origin(로그인 및 API 타격) 로직을 실행합니다.
+// cy.then()으로 감싸주어야 변수(isWasSiteDown) 상태를 올바르게 평가할 수 있습니다.
+cy.then(() => {
+  if (isWasSiteDown) {
+    // ❌ 접속 실패 시
+    cy.log('⏩ [Skip] WAS 서버 접속 실패로 인해 이상행위 발생 스텝을 안전하게 건너뜁니다.');
+  } else {
+//-----------------------------------------------
 
 cy.origin('http://10.10.54.22:8080', () => {
   Cypress.on('uncaught:exception', () => false);
@@ -320,6 +353,10 @@ cy.origin('http://10.10.54.22:8080', () => {
     });
   });
 });
+
+} // 🌟 여기에 else 블록을 닫는 중괄호 추가!
+}); // 🌟 여기에 cy.then() 블록을 닫는 괄호 추가!
+
 
 // ----------------------------------------------------------
 // [STEP 2] 원래 점검 사이트(LogCatch)로 깨끗하게 복귀
@@ -485,36 +522,37 @@ cy.wait(10000);
 cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 cy.wait(1000);
 
-// // ----------------------------------------------------------
-// // [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
-// // ----------------------------------------------------------
-// cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
-// // [개선 코드]
-// // 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
-// cy.get('tbody', { timeout: 15000 }).contains('tr', '류선재(loginid3)').should('be.visible');
+// ----------------------------------------------------------
+// [검증코드] 기타 휴직자 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
+// ----------------------------------------------------------
+cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
+// [개선 코드]
+// 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
+cy.get('tbody', { timeout: 15000 }).contains('tr', '류선재(loginid3)').should('be.visible');
 
 
-// // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
-// cy.get('tbody tr').filter(':visible').first().within(() => {
+// 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
+cy.get('tbody tr').filter(':visible').first().within(() => {
   
-//   // 2. 텍스트 검증
-//   cy.contains('류선재(loginid3)').should('be.visible');
-//   cy.contains('비인가 접근 사용자').should('be.visible');
-//   cy.contains('test_auto_비인가 접근 사용자').should('be.visible');
-//   cy.contains('존재').should('be.visible');
-//   cy.contains('소명 대상').should('be.visible');
+  // 2. 텍스트 검증
+  cy.contains('류선재(loginid3)').should('be.visible');
+  cy.contains('비인가 접근 사용자').should('be.visible');
+  cy.contains('test_auto_비인가 접근 사용자').should('be.visible');
+  cy.contains('존재').should('be.visible');
+  cy.contains('소명 대상').should('be.visible');
 
-//   // 3. 아이콘 맞춤 검증 (랜덤으로 선택했던 바로 그 등급을 검증합니다)
-//   cy.log(`🔍 생성 시 선택했던 [${targetAlert.label}] 로그가 정상적으로 발생했는지 검증합니다.`);
-//   cy.get(targetAlert.iconClass).should('be.visible').and('have.css', 'color', targetAlert.color);
-//   });
+  // 3. 아이콘 맞춤 검증 (랜덤으로 선택했던 바로 그 등급을 검증합니다)
+  cy.log(`🔍 생성 시 선택했던 [${targetAlert.label}] 로그가 정상적으로 발생했는지 검증합니다.`);
+  cy.get(targetAlert.iconClass).should('be.visible').and('have.css', 'color', targetAlert.color);
+  });
+  
+  
+ cy.log('🎉 분석 - 비인가 접근 -  기타 휴직 상태 사용자 확인 및 랜덤 경보등급 검증 완료!');
 
-// cy.log('🎉 분석 - 비인가 접근 -  기타 휴직 상태 사용자 확인 및 랜덤 경보등급 검증 완료!');
 
-
-  // ==========================================
-  // CASE2 비인가 접근 사용자 상태 - 퇴직자 확인 (류평비 loginid102)
-  // ==========================================
+  // ===============================================================
+  // CASE2 비인가 접근 사용자 상태 - 퇴직자 확인 (류평비 loginid102) 점검시작
+  // ===============================================================
   // 분석 탭 메뉴로 다시 이동 
   cy.contains('button.has-child', '분석').click({ force: true });
   cy.wait(2000); // 메뉴 펼쳐짐 대기
@@ -804,7 +842,7 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
  cy.log('🎉 분석 - 비인가 접근 - 퇴직자 사용자 확인 및 랜덤 경보등급 검증 완료!');
 
   // ==========================================
-  // CASE3 비인가 접근 사용자 상태 - 퇴직자 예정자
+  // CASE3 비인가 접근 사용자 상태 - 퇴직자 예정자  (남판범 loginid194)
   // ==========================================
   // 분석 탭 메뉴로 다시 이동 
   cy.contains('button.has-child', '분석').click({ force: true });
@@ -852,7 +890,7 @@ cy.origin('http://10.10.54.22:8080', () => {
   // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
   cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
   cy.visit('/uat/uia/egovLoginUsr.do');
-  cy.get('#id').should('be.visible').clear().type('loginid102');
+  cy.get('#id').should('be.visible').clear().type('loginid194');
   cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
 
   // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
@@ -1074,13 +1112,13 @@ cy.wait(1000);
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
 // [개선 코드]
 // 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
-cy.get('tbody', { timeout: 15000 }).contains('tr', '류평비(loginid102)').should('be.visible');
+cy.get('tbody', { timeout: 15000 }).contains('tr', '남판범(loginid194)').should('be.visible');
 
 // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
 cy.get('tbody tr').filter(':visible').first().within(() => {
   
   // 2. 텍스트 검증
-  cy.contains('류평비(loginid102)').should('be.visible');
+  cy.contains('남판범(loginid194)').should('be.visible');
   cy.contains('비인가 접근 사용자').should('be.visible');
   cy.contains('test_auto_비인가 접근 사용자').should('be.visible');
   cy.contains('존재').should('be.visible');
