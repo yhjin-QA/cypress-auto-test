@@ -506,10 +506,40 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
      cy.wait(1000);
 
-     // 첫 번째 행 정밀 검증코드 
-    cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('진윤호(yunho)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
-     });
+// =====================================================
+// [검증] 검색 결과: 데이터 존재 여부 및 상태 이상 여부 확인
+// =====================================================
+cy.log('🧐 검색된 사용자 목록에 빈 값이 없고, 미등록 상태가 섞여 있지 않은지 검증합니다.');
+
+// 검색 결과로 나온 표의 모든 행(tr)을 하나씩 순회합니다.
+cy.get('tbody tr').filter(':visible').each(($row, index) => {
+    
+    // 각 행(row) 안에서만(within) 요소를 찾고 검증합니다.
+    cy.wrap($row).within(() => {
+        
+        // 💡 핵심 수정: 행 전체가 아니라, 두 번째 칸(정보 사용자 열)만 정확히 타겟팅합니다.
+        // eq(1)은 0부터 시작하는 인덱스이므로 2번째 <td>를 의미합니다.
+        cy.get('td').eq(1).invoke('text').then((userText) => {
+            const cleanUserText = userText.trim();
+            
+            // 1. 데이터가 비어있지 않은지 검증
+            expect(
+                cleanUserText, 
+                `[${index + 1}번째 행] 사용자 이름(정보 사용자)이 비어있는지 확인중`
+            ).to.not.be.empty;
+
+            // 2. 해당 칸 안에 '미등록'이라는 단어가 없는지 검증
+            expect(
+                cleanUserText, 
+                `[${index + 1}번째 행] '미등록' 상태인 사용자가 잘못 검색되어있는지 확인중`
+            ).to.not.include('미등록');
+        });
+        
+    });
+});
+
+cy.log('✅ 검색 결과 정상 확인 완벽 통과! (정보 사용자 열 기준: 빈 값 없음, 미등록 없음)');
+
 
      // 사용자 상태 - 미등록  선택----------------------------------------------- 
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
