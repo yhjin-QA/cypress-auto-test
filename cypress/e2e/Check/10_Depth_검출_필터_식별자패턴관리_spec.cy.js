@@ -372,13 +372,10 @@ processList.forEach((process) => {
 cy.log('🚀 WAS 사이트로 이동하여 새 세션을 발급받습니다.');
 
 // 세션 이동 방어 코드 
-
 // 🚨 [핵심 방어 1] Cypress 프록시가 도메인 전환을 준비할 수 있도록 2초간 숨을 고릅니다.
 cy.wait(2000);
-
 // 🌟 [추가] 서버 접속 상태를 기억할 변수(플래그)를 선언합니다.
 let isWasSiteDown = false;
-
 // 🌟 [핵심 예외 처리] 페이지 로드 실패 시 에러를 낚아채서 테스트 중단(Fail)을 막습니다.
 Cypress.once('fail', (error) => {
   // 에러 메시지에 'could not load' 또는 타겟 서버 IP가 포함되어 있는지 확인

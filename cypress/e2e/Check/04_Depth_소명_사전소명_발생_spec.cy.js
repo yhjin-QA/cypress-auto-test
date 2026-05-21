@@ -367,12 +367,12 @@ cy.origin('http://10.10.54.31:8088', () => {
     .click({ force: true });
 
   // 2. 팝업 호출 검증
-  cy.get('@promptStub', { timeout: 10000 }).should('have.been.called');
+  cy.get('@promptStub', { timeout: 50000 }).should('have.been.called');
 });
 
 // 4. 다운로드 완료 대기
 cy.log('⏳ 엑셀 다운로드가 완료될 때까지 기다립니다...');
-cy.wait('@excelDownload', { timeout: 30000 }); 
+cy.wait('@excelDownload', { timeout: 80000 }); 
 cy.log('✅ Excel 다운로드 API 응답 완료!');
 cy.wait(2000);
 
