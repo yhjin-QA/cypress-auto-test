@@ -218,21 +218,43 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('처리').should('be.visible');
 
 
-    // ==========================================
-    // 🌟 [추가] 동적 날짜 계산 로직 (현재 달 기준)
-    // ==========================================
-    const today = new Date();
-    const currentMonthNum = today.getMonth() + 1; // 이번 달 숫자 (예: 5, 6)
-    const currentMonthText = `${currentMonthNum}월`; // 예: "5월", "6월"
 
-    // 💡 Date 객체의 일(Day) 자리에 0을 넣으면 '이전 달의 마지막 날'을 구해주는 꼼수를 사용합니다!
-    // 즉, 다음 달의 0일 = 이번 달의 말일이 됩니다.
-    const lastDayNum = new Date(today.getFullYear(), currentMonthNum, 0).getDate(); 
+  // ==========================================
+  // 🌟 [완벽 수정] 동적 날짜 계산 로직선언 (전월 기준)
+  // ==========================================
+  const today = new Date();
 
-    // 동적 정규식 생성 (공백 무시하고 정확히 매칭)
-    const firstDayRegex = new RegExp(`^\\s*1일\\s*$`);
-    const lastDayRegex = new RegExp(`^\\s*${lastDayNum}일\\s*$`);
-    cy.log(`📅 동적 기간 세팅 준비 완료: ${currentMonthText} 1일 ~ ${lastDayNum}일`);
+  // 1월에 실행할 경우 작년 12월로 넘어가야 하므로 Date 객체 자체를 한 달 전으로 돌립니다.
+  const prevMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+
+  // 기존 변수명(currentMonthText)을 그대로 유지하여 다른 코드에서 발생하는 참조 에러를 방지합니다.
+  const currentMonthNum = prevMonthDate.getMonth() + 1; // 전월 숫자 (예: 4)
+  const currentMonthText = `${currentMonthNum}월`; // 예: "4월"
+
+  // 전월의 마지막 날(말일) 구하기
+  const lastDayNum = new Date(prevMonthDate.getFullYear(), currentMonthNum, 0).getDate(); 
+
+  const firstDayRegex = new RegExp(`^\\s*1일\\s*$`);
+  const lastDayRegex = new RegExp(`^\\s*${lastDayNum}일\\s*$`);
+  cy.log(`📅 동적 기간 세팅 준비 완료: ${currentMonthText} 1일 ~ ${lastDayNum}일`);
+
+
+
+    // // ==========================================
+    // // 🌟 [추가] 동적 날짜 계산 로직 (현재 달 기준)
+    // // ==========================================
+    // const today = new Date();
+    // const currentMonthNum = today.getMonth() + 1; // 이번 달 숫자 (예: 5, 6)
+    // const currentMonthText = `${currentMonthNum}월`; // 예: "5월", "6월"
+
+    // // 💡 Date 객체의 일(Day) 자리에 0을 넣으면 '이전 달의 마지막 날'을 구해주는 꼼수를 사용합니다!
+    // // 즉, 다음 달의 0일 = 이번 달의 말일이 됩니다.
+    // const lastDayNum = new Date(today.getFullYear(), currentMonthNum, 0).getDate(); 
+
+    // // 동적 정규식 생성 (공백 무시하고 정확히 매칭)
+    // const firstDayRegex = new RegExp(`^\\s*1일\\s*$`);
+    // const lastDayRegex = new RegExp(`^\\s*${lastDayNum}일\\s*$`);
+    // cy.log(`📅 동적 기간 세팅 준비 완료: ${currentMonthText} 1일 ~ ${lastDayNum}일`);
 
 
     //달력표를 펼침 
