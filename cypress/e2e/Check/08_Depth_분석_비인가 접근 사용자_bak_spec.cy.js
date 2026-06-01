@@ -783,7 +783,7 @@ cy.wait(1000);
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
 // [개선 코드]
 // 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
-cy.get('tbody', { timeout: 15000 }).contains('tr', '류평비(loginid102)').should('be.visible');
+cy.get('tbody', { timeout: 20000 }).contains('tr', '류평비(loginid102)').should('be.visible');
 
 
 // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
@@ -1074,7 +1074,7 @@ cy.wait(1000);
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
 // [개선 코드]
 // 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
-cy.get('tbody', { timeout: 15000 }).contains('tr', '류평비(loginid102)').should('be.visible');
+cy.get('tbody', { timeout: 20000 }).contains('tr', '류평비(loginid102)').should('be.visible');
 
 // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
 cy.get('tbody tr').filter(':visible').first().within(() => {

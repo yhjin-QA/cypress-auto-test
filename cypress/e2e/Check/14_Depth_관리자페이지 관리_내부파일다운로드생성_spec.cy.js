@@ -365,6 +365,20 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('button', '보고').click({ force: true });
     cy.wait(2000);
 
+
+    // ==========================================
+    // 페이지수 5-> 25 개 옵션 변경 
+    // ==========================================
+    // 1. 엉뚱한 화살표 대신, 화면 하단에 '5'라고 적혀있는 페이지 선택 박스를 콕 집어 클릭합니다.
+    cy.contains('.v-select__selection', '5').click({ force: true });
+    cy.wait(500); // 콤보박스 메뉴가 스르륵 열릴 때까지 대기
+    // 2. 열린 메뉴(.v-menu__content) 안에서 '25'을 찾아서 클릭합니다.
+    // (클래스명에 얽매이지 않고 텍스트 '25'을 포함한 요소를 강제 클릭하도록 유연하게 작성)
+    cy.get('.v-menu__content').filter(':visible').contains('25') .click({ force: true });
+    // 3. 목록이 25개로 갱신될 시간을 넉넉히 줍니다.
+    cy.wait(3000);
+    
+
     cy.contains('tr', `내부파일다운로드_생성_보고서_auto_${formattedDate}`).find('.fa-trash').click({ force: true });
     cy.wait(1000);
     // 삭제 확인 팝업 처리
