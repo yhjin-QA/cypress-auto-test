@@ -257,12 +257,13 @@ describe('로그캐치 사이트 테스트', () => {
     // cy.log(`📅 동적 기간 세팅 준비 완료: ${currentMonthText} 1일 ~ ${lastDayNum}일`);
 
 
-    //달력표를 펼침 
+    //달력표를 펼침  
     // ==========================================
-    // '기간 시작일자' 셋팅 (이번 달 1일)
+    // '기간 시작일자' 셋팅 ( 1일)
     // ==========================================
     cy.log(`📅 대상기간 시작일자를 ${currentMonthText} 1일로 셋팅합니다.`);
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    //cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(0) .closest('.v-input').find('.material-icons').contains('event').click({ force: true });
     cy.wait(1000);
 
     // 연/월 선택 모드로 변경하여 '이번 달(동적 변수)' 선택
@@ -275,16 +276,24 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // ==========================================
-    // '기간 종료일자' 셋팅 (이번 달 말일)
+    // '기간 종료일자' 셋팅 (말일)
     // ==========================================
     cy.log(`📅 대상기간 종료일자를 ${currentMonthText} ${lastDayNum}일로 셋팅합니다.`);
     // 🌟 [수정 포인트] 화면에 보이는 전체 readonly 입력창 중 2번째(eq(1))의 달력 아이콘 클릭!
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1) .closest('.v-input').find('.material-icons').contains('event').click({ force: true });
     cy.wait(1000);
+
+    cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
+    cy.get('.v-date-picker-table--month').filter(':visible').contains(currentMonthText).click({ force: true });
+
     // 말일 선택 (계산된 말일 정규식 사용)
     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', lastDayRegex).closest('.v-btn').click({ force: true });
     cy.get('body').type('{esc}');
-    cy.wait(500);
+    cy.wait(1000);   
+
+    // 검색버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(3000); 
 
 
     // 조건 입력 
