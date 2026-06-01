@@ -481,12 +481,16 @@ cy.contains('div:visible', '전체:', { timeout: 30000 }).invoke('text')
     cy.wait(1000);
 
     // ==========================================
-    // '기간 종료일자' 셋팅 (이번 달 말일)
+    // '기간 종료일자' 셋팅 (말일)
     // ==========================================
     cy.log(`📅 대상기간 종료일자를 ${currentMonthText} ${lastDayNum}일로 셋팅합니다.`);
     // 🌟 [수정 포인트] 화면에 보이는 전체 readonly 입력창 중 2번째(eq(1))의 달력 아이콘 클릭!
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1) .closest('.v-input').find('.material-icons').contains('event').click({ force: true });
     cy.wait(1000);
+
+    cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
+    cy.get('.v-date-picker-table--month').filter(':visible').contains(currentMonthText).click({ force: true });
+
     // 말일 선택 (계산된 말일 정규식 사용)
     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', lastDayRegex).closest('.v-btn').click({ force: true });
     cy.get('body').type('{esc}');
@@ -495,6 +499,8 @@ cy.contains('div:visible', '전체:', { timeout: 30000 }).invoke('text')
     // 검색버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(3000); 
+
+     
 
 
 // ==========================================
@@ -646,7 +652,7 @@ cy.get('.apexcharts-legend').eq(0).find('.apexcharts-legend-text').each(($legend
     // cy.wait(500);
 
 // ==========================================
-// 1. 대상기간 '시작일자' 셋팅 (이번 달 1일)
+// 1. 대상기간 '시작일자' 셋팅 (1일)
 // ==========================================
 cy.log(`📅 대상기간 시작일자를 ${currentMonthText} 1일로 셋팅합니다.`);
 
@@ -663,17 +669,22 @@ cy.get('body').type('{esc}');
 cy.wait(500);
 
 // ==========================================
-// 2. 대상기간 '종료일자' 셋팅 (이번 달 말일)
+// 2. 대상기간 '종료일자' 셋팅 (말일)
 // ==========================================
 cy.log(`📅 대상기간 종료일자를 ${currentMonthText} ${lastDayNum}일로 셋팅합니다.`);
 
 cy.get('input[aria-label="대상기간 종료일자"]').closest('.v-input').find('.material-icons').last().contains('event').click({ force: true });
 cy.wait(500);
 
+ // 🌟 [핵심 추가] 하단 코드에도 '월(Month)'을 이전 달로 변경하는 로직을 삽입합니다.
+cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
+cy.get('.v-date-picker-table--month').filter(':visible').contains(currentMonthText).click({ force: true });
+
 // 말일 선택 (계산된 말일 정규식 사용)
 cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', lastDayRegex).closest('.v-btn').click({ force: true });
 cy.get('body').type('{esc}');
 cy.wait(500);
+
 
 // 저장버튼 클릭 
 cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
