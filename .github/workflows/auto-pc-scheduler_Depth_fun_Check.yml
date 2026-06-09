@@ -174,8 +174,8 @@ jobs:
 
           Write-Host "📦Starting package installation (including node-ssh)..."
           # 🌟 기존 install 대신 ci를 사용하여 package.json에 명시된 버전을 정확히 설치합니다.
-          npm ci
           
+          npm ci
           Write-Host "🚀 Checking and installing Cypress binaries..."
           npx cypress install 
           
@@ -189,8 +189,9 @@ jobs:
 
 
           # 3. 실행
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Depth_functions_check/**/*.cy.js' --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth 2>&1" | Out-File -FilePath cypress.log -Encoding utf8
-
+          # 💡 [핵심 수정] mochawesome 리포터 설정을 명령어에 직접 주입하여 각 테스트의 JSON 데이터 생성을 강제합니다.
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Depth_functions_check/**/*.cy.js' --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth --reporter mochawesome --reporter-options `"reportDir=cypress/reports/json_logs,overwrite=false,html=false,json=true`" 2>&1" | Out-File -FilePath cypress.log -Encoding utf8
+          
           # 💡 [핵심 개선] 로그가 있는지 확인하고 한 번만 읽어서 변수에 담고 출력합니다.
           if (Test-Path cypress.log) {
               $logContent = Get-Content cypress.log -Raw -Encoding UTF8
@@ -340,7 +341,8 @@ jobs:
               # Cypress 실행 (cy2)
               # --ci-build-id를 Job 1과 동일하게 가져가면 대시보드에서 하나의 빌드로 묶입니다.
               #cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --parallel --group 'Restart-Group' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth 2>&1" | Out-File -FilePath $logFileName -Encoding utf8
-              cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --group 'Restart-Group' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth 2>&1" | Out-File -FilePath $logFileName -Encoding utf8
+              cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --group 'Restart-Group' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Depth --reporter mochawesome --reporter-options `"reportDir=cypress/reports/json_logs,overwrite=false,html=false,json=true`" 2>&1" | Out-File -FilePath $logFileName -Encoding utf8
+              
               # 로그 출력
               if (Test-Path $logFileName) {
                   $logContent = Get-Content $logFileName -Raw -Encoding UTF8
@@ -433,77 +435,25 @@ jobs:
       # 👇 [통합 로직] 폴더 구조가 바뀌어도 찾을 수 있게 **/*.json 사용
       - name: 🔄 리포트 하나로 통합하기
         run: |
-         $OutputEncoding = [System.Text.Encoding]::UTF8
-   
-         [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-   
-         npm install mochawesome-merge mochawesome-report-generator --no-save
+          npm install mochawesome-merge mochawesome-report-generator --no-save
 
-   
-         $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" |
-                 Where-Object { $_.Name -notlike "dummy*" } |
-                 ForEach-Object { $_.FullName }
+          # 💡 1. dummy.json을 제외한 진짜 결과 JSON 파일이 있는지 체크합니다.
+          $realJsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" | Where-Object { $_.Name -ne "dummy.json" }
+          
+          if ($realJsonFiles.Count -gt 0) {
+              # 💡 2. 실제 결과가 존재한다면 병합 리포트가 오염되지 않게 dummy.json을 삭제합니다.
+              Get-ChildItem -Path "all_raw_data" -Recurse -Filter "dummy.json" | Remove-Item -Force
+              Write-Host "✅ 실제 테스트 결과 JSON이 존재하여 dummy.json을 제거했습니다."
+          } else {
+              Write-Host "⚠️ 실제 결과 JSON이 없어 dummy.json으로 병합을 진행합니다 (시스템 에러/취소 대비)."
+          }
 
-   
-                 Write-Host "📋 병합 대상 파일 수: $($jsonFiles.Count)"
-   
-                 $jsonFiles | ForEach-Object { Write-Host "  - $_" }
-
-   
-                 if ($jsonFiles.Count -eq 0) {
-   
-                 Write-Host "❌ 병합할 JSON 파일 없음"
-   
-                 exit 1
-   
-                }
-
-   
-                # ✅ stdout만 파일로 저장 (경고는 stderr로 분리됨)
-   
-                & npx mochawesome-merge @jsonFiles | Out-File -FilePath merged_report.json -Encoding UTF8
-
-   
-                if ($LASTEXITCODE -ne 0) {
-   
-                Write-Host "❌ mochawesome-merge 실패"
-   
-                exit 1
-   
-              }
-
-   
-              Write-Host "✅ merged_report.json: $((Get-Item merged_report.json).Length) bytes"
-
-   
-              npx marge merged_report.json `
-   
-              --reportDir ./final_report_Depth `
-   
-              --inline --charts `
-   
-              --reportTitle "Depth Function Report" `
-   
-              --reportFilename "LogCatch_Depth_fun_Report" `
-   
-              --saveJson=false
-
-   
-              $html = "final_report_Depth/LogCatch_Depth_fun_Report.html"
-   
-              if (Test-Path $html) {
-   
-              Write-Host "✅ HTML 생성 완료: $((Get-Item $html).Length) bytes"
-   
-              } else {
-   
-              Write-Host "❌ HTML 생성 실패"
-   
-              exit 1
-   
-            }
-
+          # 3. JSON 파일 병합 및 HTML 리포트 생성
+          cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
+          npx marge merged_report.json --reportDir ./final_report_Depth --inline --charts --reportTitle "Depth Function Report" --reportFilename "LogCatch_Depth_fun_Report" --saveJson=false
 
       - name: Send Google Chat (Depth)
         if: always() 
