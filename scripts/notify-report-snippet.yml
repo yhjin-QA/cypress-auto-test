@@ -1,0 +1,35 @@
+# ============================================================
+# 기존 워크플로우 notify-result Job에 추가할 스텝 예시
+# ============================================================
+# mochawesome JSON 병합 후, 아래 두 스텝을 추가하면
+# 매 실행마다 HTML 상세 리포트가 이메일로 발송됩니다.
+# ============================================================
+
+      # ── HTML 상세 리포트 생성 ────────────────────────────────────
+      - name: Generate HTML Report
+        if: always()
+        id: html_report
+        run: |
+          node scripts/generate-html-report.js `
+            cypress/reports/json_logs `
+            cypress/reports/test-report.html
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+
+      # ── 이메일 발송 (HTML 리포트 첨부) ──────────────────────────
+      # 기존 이메일 발송 스텝을 아래로 교체하거나 병합하세요
+      - name: Send Email with HTML Report
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port:    465
+          secure:         true
+          username:       ${{ secrets.MAIL_USERNAME }}
+          password:       ${{ secrets.MAIL_PASSWORD }}
+          subject:        "[테스트결과][Auto-PC] 로그캐치 ${{ env.TEST_TYPE }} — 통과율 ${{ steps.html_report.outputs.pass_rate }}%"
+          to:             ${{ secrets.MAIL_USERNAME }}
+          from:           "LogCatch CI <${{ secrets.MAIL_USERNAME }}>"
+          html_body:      file://cypress/reports/test-report.html
+          attachments:    cypress/reports/test-report.html
+          # ↑ html_body: 이메일 본문을 HTML 리포트로 설정 (인라인 표시)
+          # ↑ attachments: 첨부 파일로도 포함

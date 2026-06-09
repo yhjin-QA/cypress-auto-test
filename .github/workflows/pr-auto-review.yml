@@ -1,0 +1,341 @@
+name: PR Auto Review (Cypress CI/CD)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/**'
+      - 'cypress/**'
+      - 'cypress.config.js'
+      - 'package.json'
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  pr-review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: files
+        run: |
+          git diff --name-only origin/${{ github.base_ref }}...HEAD > changed_files.txt
+          echo "=== Changed files ==="
+          cat changed_files.txt
+
+      - name: Run Checks
+        id: checks
+        run: |
+          ISSUES=""
+          WARNINGS=""
+          PASS_LIST=""
+
+          CHANGED=$(cat changed_files.txt)
+
+          # ============================================================
+          # [1] GitHub Actions 워크플로우 파일 검사
+          # ============================================================
+          for file in $(echo "$CHANGED" | grep '\.github/workflows/.*\.yml$'); do
+            [ ! -f "$file" ] && continue
+            echo "🔍 Checking workflow: $file"
+
+            # [보안] CYPRESS_RECORD_KEY 하드코딩 확인
+            if grep -nP 'CYPRESS_RECORD_KEY\s*:\s*"(?!\$\{\{)[^"]' "$file" > /dev/null 2>&1; then
+              LINE=$(grep -nP 'CYPRESS_RECORD_KEY\s*:\s*"(?!\$\{\{)[^"]' "$file" | head -1 | cut -d: -f1)
+              ISSUES="$ISSUES
+
+              🔴 **[보안] CYPRESS_RECORD_KEY 하드코딩** \`$file\` (${LINE}번째 줄)
+
+              → \`CYPRESS_RECORD_KEY: \${{ secrets.CYPRESS_RECORD_KEY }}\` 로 변경하세요"
+            else
+              PASS_LIST="$PASS_LIST
+
+              ✅ CYPRESS_RECORD_KEY 시크릿 사용 확인 (\`$file\`)"
+            fi
+
+            # [보안] 기타 민감 정보 하드코딩 확인
+            if grep -nP '(PASSWORD|SECRET|TOKEN|KEY)\s*:\s*"(?!\$\{\{)[^"]{4,}' "$file" > /dev/null 2>&1; then
+              LINE=$(grep -nP '(PASSWORD|SECRET|TOKEN|KEY)\s*:\s*"(?!\$\{\{)[^"]{4,}' "$file" | head -1 | cut -d: -f1)
+              ISSUES="$ISSUES
+
+              🔴 **[보안] 민감 정보 하드코딩 의심** \`$file\` (${LINE}번째 줄)
+
+              → secrets 또는 환경변수로 이동하세요"
+
+              fi
+
+            # [버전] HARDCODED_VERSION 하드코딩 확인
+            if grep -nP 'HARDCODED_VERSION\s*:\s*"[0-9]' "$file" > /dev/null 2>&1; then
+              LINE=$(grep -nP 'HARDCODED_VERSION\s*:\s*"[0-9]' "$file" | head -1 | cut -d: -f1)
+              VER=$(grep -oP 'HARDCODED_VERSION\s*:\s*"\K[^"]+' "$file" | head -1)
+              WARNINGS="$WARNINGS
+
+              🟡 **[버전] HARDCODED_VERSION 하드코딩** \`$file\` (${LINE}번째 줄)
+
+              현재 값: \`$VER\` — 배포 시 업데이트 누락에 주의하세요"
+            fi
+
+            # [버그] ci-build-id 접미사 불일치 확인
+            SUFFIXES=$(grep -oP '\-\-ci-build-id\s+[^\s"]+' "$file" | grep -oP '\-[A-Za-z]+$' | sort -u)
+            SUFFIX_COUNT=$(echo "$SUFFIXES" | grep -v '^$' | wc -l)
+            if [ "$SUFFIX_COUNT" -gt 1 ]; then
+              SUFFIX_LIST=$(echo "$SUFFIXES" | tr '\n' ' ')
+              ISSUES="$ISSUES
+
+              🔴 **[버그] ci-build-id 접미사 불일치** \`$file\`
+
+              발견된 접미사: \`$SUFFIX_LIST\`— Job 간 같은 접미사를 사용해야 대시보드에서 하나의 빌드로 묶입니다"
+            fi
+
+            # [보안] SSL 검증 비활성화 확인
+            if grep -n 'NODE_TLS_REJECT_UNAUTHORIZED.*:.*0' "$file" > /dev/null 2>&1; then
+              WARNINGS="$WARNINGS
+
+              🟡 **[보안] SSL 검증 비활성화** \`$file\`
+
+              \`NODE_TLS_REJECT_UNAUTHORIZED: 0\` — 내부망 전용 설정인지 확인하세요"
+            fi
+
+            # [성능] node_modules 캐싱 없음 확인
+            if grep -q 'npm ci\|npm install' "$file" && ! grep -q 'actions/cache' "$file"; then
+              WARNINGS="$WARNINGS
+
+              🟡 **[성능] node_modules 캐싱 없음** \`$file\`
+
+              \`actions/cache@v4\`로 \`node_modules\`와 \`~/.cache/Cypress\`를 캐싱하면 실행 시간 단축 가능합니다
+
+              \`\`\`yaml
+
+              - uses: actions/cache@v4
+
+              with:
+
+                path: |
+
+                node_modules
+
+                ~/.cache/Cypress
+
+                key: \${{ runner.os }}-node-\${{ hashFiles('package-lock.json') }}
+
+                \`\`\`"
+            fi
+
+            # [품질] npm install (npm ci 권장)
+            if grep -nP '^\s+npm install(?!\s+(mochawesome|cy2|--no-save|--save-dev|-g))' "$file" > /dev/null 2>&1; then
+              LINE=$(grep -nP '^\s+npm install(?!\s+(mochawesome|cy2|--no-save|--save-dev|-g))' "$file" | head -1 | cut -d: -f1)
+              WARNINGS="$WARNINGS
+
+              🟡 **[품질] npm install 사용** \`$file\` (${LINE}번째 줄)
+
+              CI 환경에서는 \`npm ci\`를 권장합니다 (package-lock.json 기반 재현 가능한 설치)"
+            fi
+
+            # [품질] fail-fast: false 누락 (matrix 있는 경우)
+            if grep -q 'matrix:' "$file" && ! grep -q 'fail-fast: false' "$file"; then
+              WARNINGS="$WARNINGS
+
+              🟡 **[품질] fail-fast 설정 없음** \`$file\`
+
+              matrix 병렬 실행 시 \`fail-fast: false\`가 없으면 하나의 러너 실패가 전체를 중단시킵니다"
+            fi
+
+          done
+
+          # ============================================================
+          # [2] Cypress 테스트 파일 검사
+          # ============================================================
+          for file in $(echo "$CHANGED" | grep 'cypress/e2e/.*\.cy\.js$'); do
+            [ ! -f "$file" ] && continue
+            echo "🔍 Checking test: $file"
+
+            # cy.wait() 하드코딩된 숫자 (안티패턴)
+            if grep -nP 'cy\.wait\(\d{3,}' "$file" > /dev/null 2>&1; then
+              LINES=$(grep -nP 'cy\.wait\(\d{3,}' "$file" | head -3 | cut -d: -f1 | tr '\n' ', ' | sed 's/,$//')
+              WARNINGS="$WARNINGS
+
+              🟡 **[테스트 품질] cy.wait() 고정 숫자 사용** \`$file\` (${LINES}번째 줄)
+
+              \`cy.wait(3000)\` 대신 \`cy.intercept()\` 또는 \`cy.get().should('be.visible')\`로 동적 대기를 권장합니다"
+            fi
+
+            # describe 블록 없음
+            if ! grep -q 'describe(' "$file"; then
+              WARNINGS="$WARNINGS
+
+              🟡 **[구조] describe 블록 없음** \`$file\`
+
+              테스트를 \`describe()\`로 그룹핑하면 리포트 가독성이 향상됩니다"
+            fi
+
+            # beforeEach 없이 반복 로그인 패턴
+            LOGIN_COUNT=$(grep -c 'cy.visit\|cy.login\|로그인' "$file" 2>/dev/null || echo 0)
+            if [ "$LOGIN_COUNT" -gt 2 ] && ! grep -q 'beforeEach' "$file"; then
+              WARNINGS="$WARNINGS
+
+              🟡 **[최적화] 반복 작업 감지** \`$file\`
+
+              로그인/방문 등 반복 작업은 \`beforeEach()\`로 추출하면 중복을 줄일 수 있습니다"
+
+              fi
+
+          done
+
+          # ============================================================
+          # [3] cypress.config.js 검사
+          # ============================================================
+          if echo "$CHANGED" | grep -q 'cypress\.config\.js'; then
+            echo "🔍 Checking cypress.config.js"
+
+            # [보안] 비밀번호 평문 fallback 패턴 (|| "...") 감지
+            if grep -nP 'process\.env\.\w+\s*\|\|\s*"[^"]+"' cypress.config.js > /dev/null 2>&1; then
+              LINES=$(grep -nP 'process\.env\.\w+\s*\|\|\s*"[^"]+"' cypress.config.js | \
+                      grep -iP 'password|secret|key|token' | \
+                      head -3 | cut -d: -f1 | tr '\n' ', ' | sed 's/,$//')
+              if [ -n "$LINES" ]; then
+                ISSUES="$ISSUES
+
+                🔴 **[보안] 비밀번호 평문 fallback 감지** \`cypress.config.js\` (${LINES}번째 줄)
+
+                \`process.env.SSH_PASSWORD || \"chakra\"\` 형태는 환경변수 미설정 시 평문이 GitHub에 노출됩니다
+
+                → fallback 제거 후 환경변수 미설정 시 명시적 에러를 던지는 방식을 권장합니다
+
+                \`\`\`js
+
+                const pw = process.env.SSH_PASSWORD;
+
+                if (!pw) throw new Error('SSH_PASSWORD 환경변수가 설정되지 않았습니다.');
+
+                \`\`\`
+
+                로컬 개발용은 \`.env\` 파일 + \`dotenv\` 패키지를 사용하고 \`.gitignore\`에 추가하세요"
+              fi
+            fi
+
+            # [보안] projectId 유효성 확인 (Cypress Cloud ID는 7자리 영숫자)
+            if grep -nP 'projectId\s*:\s*"(?![a-z0-9]{7}")' cypress.config.js > /dev/null 2>&1; then
+              PID=$(grep -oP 'projectId\s*:\s*"\K[^"]+' cypress.config.js | head -1)
+              WARNINGS="$WARNINGS
+
+              🟡 **[설정] projectId 형식 확인 필요** \`cypress.config.js\`
+
+              현재 값: \`\"$PID\"\` — Cypress Cloud project ID는 \`7yuixr\` 같은 7자리 영숫자 형식입니다
+
+              내부 대시보드 서버를 사용 중이라면 해당 서버의 실제 project ID를 확인하세요"
+            fi
+
+            # [품질] 랜덤 파일명 사용 확인
+            if grep -q 'Math.random()' cypress.config.js; then
+              WARNINGS="$WARNINGS
+
+              🟡 **[품질] 랜덤 리포트 파일명** \`cypress.config.js\`
+
+
+              \`Math.random()\` 대신 타임스탬프 기반 파일명을 권장합니다 (정렬 및 추적 용이)
+
+              \`\`\`js
+
+              reportFilename: \`report_\${new Date().toISOString().replace(/[:.]/g, '-')}\`
+
+              \`\`\`"
+            fi
+
+            # 통과 항목 확인
+            if grep -q 'retries' cypress.config.js; then
+              PASS_LIST="$PASS_LIST
+
+              ✅ retries 설정 확인 (\`cypress.config.js\`)"
+            fi
+            if grep -q 'viewportWidth' cypress.config.js; then
+              PASS_LIST="$PASS_LIST
+
+              ✅ viewport 설정 확인 (\`cypress.config.js\`)"
+            fi
+          fi
+
+          # ============================================================
+          # 결과 저장
+          # ============================================================
+          {
+            echo "ISSUES<<DELIM"
+            echo "$ISSUES"
+            echo "DELIM"
+            echo "WARNINGS<<DELIM"
+            echo "$WARNINGS"
+            echo "DELIM"
+            echo "PASS_LIST<<DELIM"
+            echo "$PASS_LIST"
+            echo "DELIM"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Post Review Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issues   = `${{ steps.checks.outputs.ISSUES }}`.trim();
+            const warnings = `${{ steps.checks.outputs.WARNINGS }}`.trim();
+            const passList = `${{ steps.checks.outputs.PASS_LIST }}`.trim();
+
+            const issueCount   = issues   ? (issues.match(/🔴/g)   || []).length : 0;
+            const warningCount = warnings ? (warnings.match(/🟡/g) || []).length : 0;
+
+            let body = `## 🤖 PR Auto Review — Cypress CI/CD\n\n`;
+
+            // 요약 배지
+            if (issueCount === 0 && warningCount === 0) {
+              body += `> **✅ 모든 검사 통과!** 변경된 파일에서 문제를 발견하지 못했습니다.\n\n`;
+            } else {
+              body += `> 🔴 수정 필요 **${issueCount}건** &nbsp;|&nbsp; 🟡 개선 권장 **${warningCount}건**\n\n`;
+            }
+
+            if (issues) {
+              body += `### 🔴 수정 필요\n${issues}\n\n`;
+            }
+            if (warnings) {
+              body += `### 🟡 개선 권장\n${warnings}\n\n`;
+            }
+            if (passList) {
+              body += `<details>\n<summary>✅ 통과 항목 보기</summary>\n\n${passList}\n\n</details>\n\n`;
+            }
+
+            body += `---\n`;
+            body += `*검사 항목: 보안키 하드코딩 · 버전 하드코딩 · ci-build-id 일관성 · SSL 설정 · 캐싱 · npm ci · cy.wait() 안티패턴 · retries 설정*\n`;
+            body += `*변경 감지 경로: \`.github/workflows/**\` · \`cypress/e2e/**\` · \`cypress.config.js\` · \`package.json\`*`;
+
+            // 기존 봇 코멘트가 있으면 업데이트, 없으면 새로 작성
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' &&
+              c.body.includes('PR Auto Review — Cypress CI/CD')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body,
+              });
+              console.log('✅ 기존 리뷰 코멘트 업데이트 완료');
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+              console.log('✅ 새 리뷰 코멘트 작성 완료');
+            }

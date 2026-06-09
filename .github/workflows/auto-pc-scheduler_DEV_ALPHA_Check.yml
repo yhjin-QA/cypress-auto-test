@@ -423,12 +423,12 @@ jobs:
 
           # 2. 💡 파일 존재 여부 체크 및 예외 처리
           $targetFile = Get-ChildItem -Path "cypress/e2e/Basic_functions_Dev_check" -Recurse | 
-                        Where-Object { $_.Name -like "*11_Dev_Basic*" } | 
+                        Where-Object { $_.Name -like "*11_Dev_UI*" } | 
                         Select-Object -First 1
 
           if (-not $targetFile) {
               # 💡 에러(Write-Error) 대신 정보성 메시지 출력 후 종료
-              Write-Host "⚠️ [SKIP] 실행할 테스트 파일(*11_Dev_Basic*)이 존재하지 않습니다. 작업을 건너뜁니다."
+              Write-Host "⚠️ [SKIP] 실행할 테스트 파일(*11_Dev_UI*)이 존재하지 않습니다. 작업을 건너뜁니다."
               exit 0  # 🚀 성공 코드를 반환하여 파이프라인 중단을 막음
           }
 
@@ -436,7 +436,7 @@ jobs:
           Write-Host "🚀 [Job 2] 단독 실행 파일: $targetSpec"
 
           # 실행 시 변수를 따옴표로 감싸서 공백/한글 이슈 방지
-          cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --group 'Restart-Job' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --group 'Restart-Job' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
          
           Get-Content cypress_restart.log
 
