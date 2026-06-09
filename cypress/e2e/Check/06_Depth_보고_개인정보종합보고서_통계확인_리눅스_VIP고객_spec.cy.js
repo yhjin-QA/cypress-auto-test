@@ -170,7 +170,7 @@ cy.log(`📅 동적 기간 세팅 준비 완료: ${currentMonthText} 1일 ~ ${la
     
       //차트 상세페이지 이동
       // 2. 이제 이 블록 안에서는 '해당 차트 내부'만 검색합니다! (다른 차트 간섭 X) - 리눅스_VIP고객
-      // first -jEus  last - 리눅스_VIP고객
+      // first -jEUS_tester3  last - JEUS_CRM고객관리
      cy.get('.apexcharts-legend-text').should('be.visible').eq(2).click({ force: true });
    });
 
