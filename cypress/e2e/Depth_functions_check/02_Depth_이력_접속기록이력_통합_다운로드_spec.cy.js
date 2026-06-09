@@ -257,7 +257,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     //맨티스 이슈 등록해둠 - v3.0.4_r34865 (37313) 
     // 엑셀 다운로드 클릭하는 코드 
-    cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
+    cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드1').click({ force: true });
     cy.wait(500);
     // 엑셀 파일 다운로드 확인창 진행
     // 파일다운로드 그룹 선택 (팝업창에서찾기 )
