@@ -171,7 +171,7 @@ cy.log(`📅 동적 기간 세팅 준비 완료: ${currentMonthText} 1일 ~ ${la
       //차트 상세페이지 이동
       // 2. 이제 이 블록 안에서는 '해당 차트 내부'만 검색합니다! (다른 차트 간섭 X) - 리눅스_VIP고객
       // first -jEus  last - 리눅스_VIP고객
-     cy.get('.apexcharts-legend-text').should('be.visible').last().click({ force: true });
+     cy.get('.apexcharts-legend-text').should('be.visible').eq(2).click({ force: true });
    });
 
    cy.wait(500);
@@ -320,9 +320,9 @@ cy.get('.apexcharts-legend').eq(1).find('.apexcharts-legend-text').each(($legend
     cy.log('✅ 이상행위 유형별 현황 번째 차트 데이터 동적 추출 및 저장 완료!');
 });
 
-// ===============================================
+// ==========================================
 // 3번째 차트(업무시스템별 현황) 동적 데이터 추출 및 저장
-// ================================================
+// ==========================================
 cy.log('📊 업무시스템별 개인정보사용현황(3번째) 차트 데이터를 동적으로 추출합니다.');
 
 // 1. 2번 차트와 데이터가 섞이지 않도록 새로운 빈 객체를 만듭니다.

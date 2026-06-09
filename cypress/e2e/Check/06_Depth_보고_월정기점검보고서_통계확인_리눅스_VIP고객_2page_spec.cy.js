@@ -409,7 +409,7 @@ cy.contains('div:visible', '전체:', { timeout: 30000 }).invoke('text')
      .within(() => {
     
      // 2. 이제 이 블록 안에서는 '해당 차트 내부'만 검색합니다! (다른 차트 간섭 X)
-     cy.get('.apexcharts-legend-text').should('be.visible').last().click({ force: true });
+     cy.get('.apexcharts-legend-text').should('be.visible').eq(2).click({ force: true });
    });
 
    cy.wait(500);

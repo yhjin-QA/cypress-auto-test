@@ -307,6 +307,29 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
             // 3. 업무시스템명 색상 검증
             cy.wrap($aTag).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
 
+        } else if (systemName.includes('JEUS_CRM고객관리')) {
+            // ==========================================
+            // 🌟 [분기 3] 새로운 'CRM 고객관리' 데이터가 첫 행인 경우
+            // ==========================================
+            cy.log('📌 [JEUS_CRM고객관리] 데이터 검증을 시작합니다.');
+
+            // 1. 첫 번째 span 검증
+            cy.get('span.ellipsis.text-xs-left').eq(0).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)').invoke('text')
+            .then((text) => {
+                expect(text.trim(), '첫 번째 항목 값 확인중').to.not.be.empty;
+                cy.log(`✅ 확인된 값 1: ${text.trim()}`);
+            });
+
+            // 2. 두 번째 span 검증
+            cy.get('span.ellipsis.text-xs-left').eq(1).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)').invoke('text')
+            .then((text) => {
+                expect(text.trim(), '두 번째 항목 값 확인중').to.not.be.empty;
+                cy.log(`✅ 확인된 값 2: ${text.trim()}`);
+            });
+
+            // 3. 업무시스템명 색상 검증
+            cy.wrap($aTag).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+
         } else {
             // ==========================================
             // [예외 처리] 전혀 모르는 데이터가 첫 행에 온 경우
