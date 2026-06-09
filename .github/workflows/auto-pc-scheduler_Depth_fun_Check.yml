@@ -433,37 +433,77 @@ jobs:
       # 👇 [통합 로직] 폴더 구조가 바뀌어도 찾을 수 있게 **/*.json 사용
       - name: 🔄 리포트 하나로 통합하기
         run: |
-          $OutputEncoding = [System.Text.Encoding]::UTF8
-          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-          npm install mochawesome-merge mochawesome-report-generator --no-save
-          # ✅ PowerShell로 파일 목록 수집 (dummy.json 제외)
-          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" |
+         $OutputEncoding = [System.Text.Encoding]::UTF8
+   
+         [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+   
+         npm install mochawesome-merge mochawesome-report-generator --no-save
+
+   
+         $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" |
                  Where-Object { $_.Name -notlike "dummy*" } |
                  ForEach-Object { $_.FullName }
+
+   
                  Write-Host "📋 병합 대상 파일 수: $($jsonFiles.Count)"
+   
                  $jsonFiles | ForEach-Object { Write-Host "  - $_" }
+
+   
                  if ($jsonFiles.Count -eq 0) {
+   
                  Write-Host "❌ 병합할 JSON 파일 없음"
+   
                  exit 1
-                 }
-                 # ✅ 파일 경로 직접 전달 (glob 미사용)
-                 $mergedJson = & npx mochawesome-merge @jsonFiles
-                 $mergedJson | Out-File -FilePath merged_report.json -Encoding UTF8
-                 Write-Host "✅ merged_report.json: $((Get-Item merged_report.json).Length) bytes"
-                 # HTML 생성
-                 npx marge merged_report.json `
-                 --reportDir ./final_report_Depth `
-                 --inline --charts `
-                 --reportTitle "Depth Function Report" `
-                 --reportFilename "LogCatch_Depth_fun_Report" `
-                 --saveJson=false
-                 $html = "final_report_Depth/LogCatch_Depth_fun_Report.html"
-                 if (Test-Path $html) {
-                 Write-Host "✅ HTML 생성 완료: $((Get-Item $html).Length) bytes"
-                 } else {
-                 Write-Host "❌ HTML 생성 실패"
-                 exit 1  
-                 }
+   
+                }
+
+   
+                # ✅ stdout만 파일로 저장 (경고는 stderr로 분리됨)
+   
+                & npx mochawesome-merge @jsonFiles | Out-File -FilePath merged_report.json -Encoding UTF8
+
+   
+                if ($LASTEXITCODE -ne 0) {
+   
+                Write-Host "❌ mochawesome-merge 실패"
+   
+                exit 1
+   
+              }
+
+   
+              Write-Host "✅ merged_report.json: $((Get-Item merged_report.json).Length) bytes"
+
+   
+              npx marge merged_report.json `
+   
+              --reportDir ./final_report_Depth `
+   
+              --inline --charts `
+   
+              --reportTitle "Depth Function Report" `
+   
+              --reportFilename "LogCatch_Depth_fun_Report" `
+   
+              --saveJson=false
+
+   
+              $html = "final_report_Depth/LogCatch_Depth_fun_Report.html"
+   
+              if (Test-Path $html) {
+   
+              Write-Host "✅ HTML 생성 완료: $((Get-Item $html).Length) bytes"
+   
+              } else {
+   
+              Write-Host "❌ HTML 생성 실패"
+   
+              exit 1
+   
+            }
+
 
       - name: Send Google Chat (Depth)
         if: always() 
