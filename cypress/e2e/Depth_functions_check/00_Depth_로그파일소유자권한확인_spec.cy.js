@@ -30,7 +30,7 @@
   });
 
 /** 코드 시작 */
-describe('로그캐치 배포 점검 - 소유권 통합 확인', () => {
+describe('로그캐치 Depth 배포점검 - 로그파일 소유자(logcatch) 통합 확인', () => {
 
   const targetPaths = [
     '/home/logcatch/logs/',
