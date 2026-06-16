@@ -30,9 +30,9 @@
   });
 
 /**코드 시작  */
-describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
+describe('로그캐치 사이트 테스트', () => {
   
-  it('06_Depth_보고_월정기점검보고서_통계확인_리눅스_VIP고객_2page 자동화 시나리오', () => {
+  it('로그캐치 배포점검목록 동작 체크', () => {
 
 
     // ==========================================
@@ -409,6 +409,7 @@ cy.contains('div:visible', '전체:', { timeout: 30000 }).invoke('text')
      .within(() => {
     
      // 2. 이제 이 블록 안에서는 '해당 차트 내부'만 검색합니다! (다른 차트 간섭 X)
+     //eq(0)-jEus eq(1)- 리눅스배송관리 eq(2)-리눅스_VIP고객
      cy.get('.apexcharts-legend-text').should('be.visible').eq(2).click({ force: true });
    });
 
