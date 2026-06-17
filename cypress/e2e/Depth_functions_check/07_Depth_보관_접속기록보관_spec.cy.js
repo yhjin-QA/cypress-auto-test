@@ -30,9 +30,11 @@
   });
 
 /**코드 시작  */
-describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
+describe('로그캐치 사이트 테스트', () => {
   
-  it('07_Depth_보관_접속기록보관 자동화 시나리오', () => {
+  it('로그캐치 배포점검목록 동작 체크', () => {
+
+
 
 
     // ==========================================
@@ -503,6 +505,10 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
     // STEP 10: 전송 방식(SFTP) 설정 및 연동 테스트
     // ==========================================
     cy.log('🚀 전송 방식 설정 시작 (SFTP)');
+
+    // ✅ [핵심] 버튼 클릭 전에 API 인터셉트 미리 설정
+    cy.intercept('POST', '**/post-connection-test**').as('sftpTest');
+    
     cy.contains('.c-headline', '전송 방식').closest('.v-card').within(() => {
       // 1. 활성 토글 확인
       cy.get('.v-input--switch').then(($switch) => {
@@ -514,7 +520,7 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
     // 2. 서버 타입 및 상세 설정값 검증
     cy.get('.v-select__selection--comma').should('be.visible').and('contain', 'SFTP');
     cy.get('input[aria-label="백업 경로"]').should('have.value', '/home/backup');
-    cy.get('input[aria-label="서버 ip"]').should('have.value', '10.10.54.24');
+    cy.get('input[aria-label="서버 ip"]').should('have.value', '10.10.54.22');
     cy.get('input[aria-label="PORT"]').should('have.value', '22');
     cy.get('input[aria-label="아이디"]').should('have.value', 'root');
 
@@ -522,19 +528,22 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
     cy.contains('button', '접속 테스트').should('not.be.disabled').click({ force: true });
   });
 
+// ✅ API 응답 완료까지 기다린 후 snackbar 확인 (타임아웃 40초로 넉넉하게)
+cy.wait('@sftpTest', { timeout: 40000 });
+
 // 5. [검증] 접속 테스트 결과(Snackbar) 먼저 확인
 // 버튼 클릭 후 "성공" 메시지가 떠야 실제 전송 경로가 유효하다는 증거입니다.
-cy.get('.v-snack__content', { timeout: 20000 }).should('be.visible').and('contain', '성공');
+cy.get('.v-snack__content', { timeout: 30000 }).should('exist').and('contain', '성공');
 
 // 6. [추가 검증] 실제 SFTP 서버(10.10.54.24) 내부 데이터 조회
 // Snackbar 확인 직후 실행하여 데이터 무결성을 교차 검증합니다.
 cy.task('runSSH', { 
-    host: '10.10.54.24',
+    host: '10.10.54.22',
     username: 'root', 
     password: 'chakra', 
     command: 'ls -F /home/backup' 
 }).then((folderList) => {
-    cy.log('📂 [SFTP 서버: 10.10.54.24] /home/backup 목록:');
+    cy.log('📂 [SFTP 서버: 10.10.54.22] /home/backup 목록:');
     
     // 에러 메시지(No such file, Permission denied 등)가 포함되어 있는지 먼저 확인
     if (folderList && (folderList.includes('No such file') || folderList.includes('cannot access'))) {

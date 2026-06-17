@@ -30,9 +30,9 @@
   });
 
 /**코드 시작  */
-describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
+describe('로그캐치 사이트 테스트', () => {
   
-  it('10_Depth_검출_검출 메뉴 관리 자동화 시나리오', () => {
+  it('로그캐치 배포점검목록 동작 체크', () => {
 
 
     // ==========================================
@@ -334,7 +334,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
        cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
        cy.wait(1000);
        // 업무시스템중 리눅스_배송관리 클릭하는 코드
-       cy.contains('.v-list__tile__title', '윈도우_배송관리').should('be.visible').click();
+       cy.contains('.v-list__tile__title', '윈도우_배송관리').scrollIntoView().should('be.visible').click();
        cy.wait(1000);
        // 선택한 컨텍스트 메뉴 닫기
        cy.get('body').type('{esc}');
