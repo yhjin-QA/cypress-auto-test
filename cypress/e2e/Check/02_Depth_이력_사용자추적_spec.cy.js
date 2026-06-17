@@ -679,6 +679,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      cy.get('.v-list__tile__title').contains('미등록').should('be.visible').click({ force: true });
      cy.wait(500);
+     cy.get('body').type('{esc}');
 
      //검색버튼 클릭
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -839,51 +840,60 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
 // ==========================================
 // 엑셀 다운로드 
 // ========================================== 
-// 1. 엑셀 다운로드 클릭
-cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
-cy.wait(500);
 
-// 2. 안내 메시지(스낵바) 사라지는 것 대기
-cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
-
-// 3. 실제 로컬 폴더 다운로드 시간 부여 (충분한 대기)
-cy.wait(10000);
-
-// [검증] 다운로드 폴더를 확인합니다.
-// 폴더경로 : cypress/downloads
-cy.task('readDirectory', 'cypress/downloads').then((files) => {
-    
-    // 조건에 맞는 파일 찾기 (이름에 'log-excel'이 있고, 확장자가 '.zip'인 것)
-    const myFile = files.find(file => file.includes('log-excel') && file.endsWith('.zip'));
-
-    // 검증 1: 파일 존재 여부 확인
-    expect(myFile, '✅ 다운로드 폴더 내 타겟 파일(.zip) 존재 여부 확인 완료').to.not.be.undefined;
-
-    // 파일이 존재한다면, 이어서 용량 검증 진행
-    if (myFile) {
-        cy.log(`✅ 다운로드 파일 확인! 파일명: ${myFile}`);
-        
-        // 다운로드된 파일의 상대 경로 세팅
-        const downloadedFilePath = `cypress/downloads/${myFile}`;
-
-        // 검증 2: 파일 용량 체크 (0바이트 이상인지 확인)
-        // 💡 인코딩을 'null'로 주면 파일을 텍스트가 아닌 바이트(Buffer) 데이터로 읽어옵니다.
-        cy.readFile(downloadedFilePath, null).then((fileBuffer) => {
-            const fileSize = fileBuffer.length;
-            cy.log(`📦 확인된 파일 용량: ${fileSize} bytes`);
-            
-            // 용량이 0보다 커야 합격! (빈 파일이면 에러 발생)
-            expect(
-                fileSize, 
-                `✅ 파일용량확인 :  ${myFile} 용량 0바이트 초과 검증 완료`
-            ).to.be.greaterThan(0);
-
-            cy.log('✅ 파일 다운로드 및 정상 용량(0바이트 초과) 검증 완벽 통과!');
+    // [수정 1] 다운로드 전 현재 파일 목록 스냅샷 저장
+    cy.task('readDirectory', 'cypress/downloads').as('filesBefore');
+ 
+    // [수정 2] API intercept 미리 설정 (실제 엔드포인트 확인 후 URL 수정)
+    cy.intercept('POST', '**/excel**').as('excelRequest');
+ 
+    // 엑셀 다운로드 버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
+    cy.wait(500);
+ 
+    // [수정 3] snackbar 나타남 → 사라짐 순서로 대기 (기존 코드는 순서 오류)
+    cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible');
+    cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
+ 
+    // [수정 4] 새 파일이 생길 때까지 폴링 검증 (고정 cy.wait 대체)
+    cy.get('@filesBefore').then((filesBefore) => {
+      const checkNewFile = (attempt = 0) => {
+        if (attempt > 15) {
+          throw new Error('❌ 다운로드 파일 생성 타임아웃 (30초 초과)');
+        }
+ 
+        cy.task('readDirectory', 'cypress/downloads').then((filesAfter) => {
+          const newFile = filesAfter.find(f =>
+            !filesBefore.includes(f) && f.includes('log-excel') && f.endsWith('.zip')
+          );
+ 
+          if (newFile) {
+            cy.log(`✅ 새 파일 확인! 파일명: ${newFile}`);
+ 
+            // [수정 5] 파일 용량 체크 (로그 포함)
+            cy.readFile(`cypress/downloads/${newFile}`, null).then((fileBuffer) => {
+              const fileSize = fileBuffer.length;
+              cy.log(`📦 확인된 파일 용량: ${fileSize} bytes`);
+ 
+              expect(
+                fileSize,
+                `✅ 파일 용량 0바이트 초과 검증: ${newFile}`
+              ).to.be.greaterThan(0);
+ 
+              cy.log('✅ 파일 다운로드 및 용량 검증 완벽 통과!');
+            });
+          } else {
+            cy.log(`⏳ 파일 대기 중... (${attempt + 1}/15)`);
+            cy.wait(2000);
+            checkNewFile(attempt + 1);
+          }
         });
-    }
-});
-
-cy.log('✅ 사용자 추적 엑셀 다운로드 전체 플로우 확인 완료!');
+      };
+ 
+      checkNewFile();
+    });
+ 
+    cy.log('✅ 사용자 추적 엑셀 다운로드 전체 플로우 확인 완료!');
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기

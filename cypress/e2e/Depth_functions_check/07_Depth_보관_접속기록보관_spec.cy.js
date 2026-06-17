@@ -119,37 +119,76 @@ cy.log('🚀 다른 도메인(tester3 서버)으로 크로스 오리진 점프�
 cy.clearCookies();
 cy.clearLocalStorage();
 
-// 1. API 응답을 가로채기 위해 intercept 설정 (cy.origin 바깥에서 정의 가능)
+// 💡 API 가로채기는 반드시 cy.origin 내부에서 선언해야 해당 도메인의 호출을 잡을 수 있습니다.
 cy.intercept('GET', '**/api/file-download-pdf*').as('pdfDownload');
 
-// 2. 새로운 도메인(10.10.54.31)으로 점프하여 동작 수행
-cy.origin('http://10.10.54.31:8088', () => {
-  // 새 도메인 전용 에러 무시 처리
-  Cypress.on('uncaught:exception', () => false);
+// 💡 2. 다운로드 전 기존 파일 목록(filesBefore)을 먼저 읽어옵니다.
+cy.task('readDirectory', 'cypress/downloads').then((filesBefore = []) => {
 
-  // 사이트 접속 (origin 블록 안이므로 도메인 제외 경로만 입력)
-  cy.log('1️⃣ tester3 사이트에 접속합니다.');
-  cy.visit('/tester3', { 
-    timeout: 60000 
+  // 3. 새로운 도메인(10.10.54.31)으로 점프 
+  // (args를 통해 바깥에서 구한 filesBefore 데이터를 내부로 전달합니다)
+  cy.origin('http://10.10.54.31:8088', { args: { filesBefore } }, ({ filesBefore }) => {
+    
+    // 새 도메인 전용 에러 무시 처리
+    Cypress.on('uncaught:exception', () => false);
+    
+
+    // 사이트 접속
+    cy.log('1️⃣ tester3 사이트에 접속합니다.');
+    cy.visit('/tester3', { timeout: 60000 });
+    cy.wait(3000); // 페이지 로딩 대기
+    cy.log('✅ 10.10.54.31 서버 접속 완료!');
+
+    // PDF 버튼 클릭
+    cy.log('2️⃣ PDF 버튼을 클릭합니다.');
+    cy.get('#pdf_btn').should('be.visible').click({ force: true });
+    cy.log('✅ PDF 버튼 클릭 완료!');
+
+    // API 응답 완료 검증
+    cy.log('⏳ PDF 다운로드 API 응답을 기다립니다...');
+    cy.wait('@pdfDownload', { timeout: 30000 }).then((interception) => {
+      // 상태 코드 검증
+      expect(interception.response.statusCode).to.eq(200);
+      cy.log('✅ PDF 다운로드 API 응답 검증 완료 (200 OK)!');
+    }); 
+
+    // 💡 4. 파일 다운로드를 확인하는 재귀 함수를 명확하게 선언합니다.
+    const checkPdfDownload = (attempt = 0) => {
+      // 무한 루프 방지 (15번 시도 후 에러 발생)
+      if (attempt > 15) {
+        throw new Error('❌ PDF 파일 다운로드 대기 시간 초과');
+      }
+
+      cy.task('readDirectory', 'cypress/downloads').then((filesAfter) => {
+        // filesBefore에 없던 새로운 PDF 파일 찾기
+        const newPdf = filesAfter.find(f => !filesBefore.includes(f) && f.endsWith('.pdf'));
+
+        if (newPdf) {
+          cy.log(`✅ PDF 파일 확인: ${newPdf}`);
+
+      // =====================================================
+      // 🌟 [핵심 수정] cy.origin 내부에서는 Buffer(null) 대신 'base64' 문자열로 읽어야 안전합니다.
+      // =====================================================
+      cy.readFile(`cypress/downloads/${newPdf}`, 'base64').then((base64String) => {
+        // base64로 인코딩된 문자열의 길이를 통해 파일이 0바이트가 아님을 검증합니다.
+        const fileSize = base64String.length;
+        cy.log(`📦 PDF 파일 크기 (Base64 길이): ${fileSize}`);
+        
+        expect(fileSize, 'PDF 파일이 정상적으로 다운로드 됨 (0바이트 초과)').to.be.greaterThan(0);
+        cy.log('🎉 PDF 다운로드 및 용량 검증 완벽 성공!');
+      });
+
+    } else {
+      cy.log(`⏳ 다운로드 파일 생성 대기 중... (${attempt + 1}/15)`);
+      cy.wait(2000);
+      checkPdfDownload(attempt + 1);
+    }
+      });
+    };
+
+    // 💡 5. 위에서 만든 검증 함수 최초 실행
+    checkPdfDownload(0);
   });
-  
-  cy.wait(3000); // 페이지 로딩 대기
-  cy.log('✅ 10.10.54.31 서버 접속 완료!');
-
-  // 3. PDF 버튼 클릭 (id 값인 #pdf_btn을 타겟팅)
-  cy.log('2️⃣ PDF 버튼을 클릭합니다.');
-  cy.get('#pdf_btn').should('be.visible').click({ force: true });
-  cy.log('✅ PDF 버튼 클릭 완료!');
-  // 엑셀 다운로드 또는 내부 처리 스크립트가 돌아갈 시간을 넉넉히 줍니다.
-  cy.wait(5000); 
-
-  // 3. API 응답 완료 검증
- cy.log('⏳ PDF 다운로드 API 응답을 기다립니다...');
- cy.wait('@pdfDownload', { timeout: 30000 }).then((interception) => {
-  // 상태 코드 검증
-  expect(interception.response.statusCode).to.eq(200);
-  cy.log('✅ PDF 다운로드 API 응답 검증 완료 (200 OK)!');
- }); 
 });
 
 
@@ -219,7 +258,7 @@ cy.get('body').then(($body) => {
 cy.log('🚀 원래 사이트(LogCatch) 진입 및 로그인 로직 무사 통과!');
 
 cy.wait(8000); // 페이지 로딩 및 안정화 대기
-
+cy.get('.side-menu', { timeout: 15000 }).should('be.visible');
 
 
 
@@ -321,183 +360,142 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
                     }
                 });
                 
-                //이력보기 창 닫기
-                // 활성화된 팝업 자체에 포커스를 주고 ESC 연타
-               // 1. 활성화된 다이얼로그와 오버레이 배경을 DOM에서 완전히 삭제
-               cy.get('.v-dialog__content--active').invoke('remove');
-               cy.get('.v-overlay--active').invoke('remove');
-               // 2. 팝업이 사라졌는지 확인
-               cy.get('.v-dialog--active').should('not.exist');
-               cy.log('✅ 증적자료 이력보기 닫기 성공');
-                // 4. [대기] 백업 진행 (충분히 기다림)
-                cy.log('⏳ 백업 진행 중... 60초 대기');
-                cy.wait(60000);
+                // 이력 보기 창 닫기
+                // 1. 활성화된 다이얼로그와 오버레이 배경을 DOM에서 강제 삭제
+                cy.get('.v-dialog__content--active').invoke('remove');
+                cy.get('.v-overlay--active').invoke('remove');
 
-
-                // -----------------------------------------------------------------
-                // [백업 후 상세 검증 시작]
-                // -----------------------------------------------------------------
-
-                // [audit-trail] 폴더 검증코드
-                cy.task('runSSH', `ls -d ${auditPath}`).then(() => {
-                    // Mongo 증분 확인
-                    cy.task('runSSH', `ls -1 ${auditPath}/mongo.tgz.enc* 2>/dev/null | wc -l`).then((am) => {
-                        // 🌟 아래와 같이 mongoEnd 변수를 선언해야 합니다.
-                        const mongoEnd = parseInt(am.trim()) || 0;
-                        // ▼ 백업 후 로그 추가 (Mongo)
-                        cy.log(`📊 [백업 완료] Mongo 파일: ${mongoStart}개 -> ${mongoEnd}개`);
-                        expect(parseInt(am)).to.be.greaterThan(mongoStart);
-                    });
-                    // Postgres 증분 확인
-                    cy.task('runSSH', `ls -1 ${auditPath}/postgres.tgz.enc* 2>/dev/null | wc -l`).then((ap) => {
-                        const postgresEnd = parseInt(ap.trim()) || 0;
-                        // ▼ 백업 후 로그 추가 (Postgres)
-                        cy.log(`📊 [백업 완료] Postgres 파일: ${postgresStart}개 -> ${postgresEnd}개`);
-                        expect(parseInt(ap)).to.be.greaterThan(postgresStart);
-                    });
-                    // 최신 파일 확인
-                    cy.task('runSSH', `ls -1t ${auditPath}/*.tgz.enc* | head -n 2`).then((lf) => cy.log(`✅ 최신 파일: ${lf}`));
-                });
-
-                // [contentLedger ] 폴더 내 파일존재 확인 - 접속기록 이력 파일
-                // 오늘날짜.tgz.enc 파일 생성확인
-                cy.task('runSSH', `ls ${backupPath}/contentLedger/*/${todayPrefix}.tgz.enc`).then((r) => expect(r).to.include(todayPrefix));
+                // 제거 후 안정화 대기 + 최종 확인
+                cy.wait(500);
+                // 2. 팝업이 사라졌는지 확인
+                cy.get('.v-dialog--active').should('not.exist');
+                cy.log('✅ 증적자료 이력보기 닫기 성공');
                 
-                // [explanationFiles] 폴더 내 파일존재 확인 - 파일다운로드 이력
-                // 파일다운로드 이력 있으면 오늘날짜.tgz.enc 파일 생성확인
-                cy.task('runSSH', `ls ${backupPath}/explanationFiles/*/${todayPrefix}.tgz.enc`).then((r) => expect(r).to.include(todayPrefix));
-                // cy.task('runSSH', `ls -1 ${backupPath}/explanationFiles/*/*.tgz.enc 2>/dev/null`).then((result) => {
-                //  // 1. 파일이 아예 없는 경우 방어
-                //  expect(result.trim(), '파일이 최소 1개 이상 존재해야 함').to.not.be.empty;
-                //  // 2. 줄바꿈(\n)을 기준으로 문자열을 쪼개서 배열로 만듭니다.
-                //  const fileList = result.trim().split('\n');
-                //   cy.log(`📄 총 ${fileList.length}개의 파일이 발견되었습니다.`);
+                // ✅ 수정 - audit-trail 폴더 파일 생성을 폴링으로 감지
+                cy.log('⏳ 백업 완료 대기 중 (최대 120초)...');
 
-                //    // 3. 발견된 '모든' 파일이 숫자 8자리 포맷을 지키는지 각각 확인합니다.
-                //    fileList.forEach((file) => {
-                //     expect(file, `파일명 예외 확인: ${file}`).to.match(/\d{8}\.tgz\.enc/);
-                //    });
-                //    });
+                // 💡 1. 화살표 함수 대신 일반 함수(function)로 선언하여 스코프 꼬임 방지
+                function runPostBackupValidation() {
+                    cy.log('🚀 [백업 후 상세 검증 시작]');
 
-                 // [System 폴더] 개수 유지 및 최신 폴더 상세 검증
-                cy.wait(7000); // 삭제 로직 작동 대기
-                cy.task('runSSH', `ls -1d ${backupPath}/system/${todayPrefix}_* 2>/dev/null | wc -l`).then((afterCountText) => {
-                  const finalCount = parseInt(afterCountText.trim());
-                  cy.log(`📊 [신규 백업폴더추가 ]System 내 백업폴더 개수: ${finalCount}개`);
-                  // 백업 전(beforeCount)보다 현재 개수가 크거나 같다면 백업은 성공한 것임
-                  expect(finalCount).to.be.at.least(beforeCount);
-
-                  // 가장 최신 폴더(방금 생성된 폴더) 하나만 타겟팅
-                  cy.task('runSSH', `ls -d ${backupPath}/system/${todayPrefix}_* | tail -n 1`).then((lastFolder) => {
-                    const folderPath = lastFolder.trim();
-                    cy.log(`📂 검증 대상 최신 폴더: ${folderPath}`);
-
-                     // system폴더의 새로 생성된 백업폴더 검증코드
-                    // 1. 파일 개수 검증 (100개 이상인지)
-                    cy.task('runSSH', `ls -1 ${folderPath}/*.gz 2>/dev/null | wc -l`).then((fcText) => {
-                      const fileCount = parseInt(fcText.trim()) || 0;
-                      cy.log(`📄 [검증 1] .gz 파일 개수: ${fileCount}개`); // 로그 출력
-                      expect(fileCount, '파일 개수가 100개 이상이어야 함').to.be.at.least(100);
-                    });
-
-                    // 2. 특정 핵심 파일 존재 확인 (tbr_com_code.gz)
-                    const checkFile = 'tbr_com_code.gz';
-                    cy.task('runSSH', `ls ${folderPath}/${checkFile}`).then((fr) => {
-                      cy.log(`✔️ [검증 2] 필수 파일(${checkFile}) 존재 확인`); // 로그 출력
-                      expect(fr).to.include(checkFile);
-                    });
-
-                    // 3. 폴더 용량 확인 (0보다 큰지)
-                    // du -sh는 사람이 보기 편한 용량(예: 1.2G), du -s는 정확한 블록 숫자입니다.
-                    cy.task('runSSH', `du -sh ${folderPath}`).then((sizeText) => {
-                      const fullSizeInfo = sizeText.trim(); 
-                      cy.log(`📦 [검증 3] 폴더 전체 용량: ${fullSizeInfo}`); // 로그 출력 (예: 1.5G  /home/...)
-                      // 용량 숫자만 따로 뽑아서 0보다 큰지 체크
-                      const numericSize = parseInt(fullSizeInfo.split('\t')[0]);
-                      expect(numericSize).to.be.greaterThan(0);                      
-                    });
-
-                    // -----------------------------------------------------------------
-                    // [시스템폴더 검증] UI 설정된 '보관 개수'만큼 폴더가 유지되는지 확인 (Rotation)
-                    // -----------------------------------------------------------------
-                    // UI설정화면에서 '보관 개수' 설정값을 먼저 읽어옵니다.
-                    cy.get('input[aria-label="보관 개수"]').invoke('val').then((configCount) => {
-                      const expectedCount = parseInt(configCount.trim());
-                      cy.log(`⚙️ UI에 설정된 보관 정책 개수: ${expectedCount}개`);
-
-                      // 2. 백업 완료 및 구형 폴더 삭제 프로세스 대기(20초)
-                      cy.wait(20000);
-
-                      // ======================================================================
-                        // 💡 [신규 추가] 실제 남아있는 폴더 목록을 조회하여 로그에 세로로 출력
-                        // ====================================================================
-                         cy.task('runSSH', `ls -1d ${backupPath}/system/${todayPrefix}_* 2>/dev/null`).then((folderList) => {
-                         cy.log('📂 [system] 현재 system 하위폴더 목록:'); 
-                          if (folderList && folderList.trim()) {
-                            const folders = folderList.trim().split(/\s+/);
-                            folders.forEach((folderPath) => {
-                              // 절대 경로(/home/.../20260415_1) 대신 폴더명(20260415_1)만 깔끔하게 추출해서 출력
-                              const folderName = folderPath.split('/').pop();
-                              cy.log(`- ${folderName}`);
-                            });
-                          } else {
-                            cy.log('⚠️ 조건에 맞는 폴더가 없습니다.');
-                          }
+                    // [audit-trail] 폴더 검증코드
+                    cy.task('runSSH', `ls -d ${auditPath}`).then(() => {
+                        // Mongo 증분 확인
+                        cy.task('runSSH', `ls -1 ${auditPath}/mongo.tgz.enc* 2>/dev/null | wc -l`).then((am) => {
+                            const mongoEnd = parseInt(am.trim()) || 0;
+                            cy.log(`📊 [백업 완료] Mongo 파일: ${mongoStart}개 -> ${mongoEnd}개`);
+                            expect(parseInt(am)).to.be.greaterThan(mongoStart);
                         });
-
-
-                      // 3. 서버의 실제 폴더 개수 확인
-                      cy.task('runSSH', `ls -1d ${backupPath}/system/${todayPrefix}_* 2>/dev/null | wc -l`).then((afterCountText) => {
-                        const finalCount = parseInt(afterCountText.trim());
-
-                        // [수정된 핵심 로직]
-                        // 1. 현재 개수는 UI 설정값(최대치)을 초과해서는 안 됩니다.
-                        expect(finalCount).to.be.at.most(expectedCount);
-                        // 2. 만약 현재 개수가 설정값(최대치)보다 적다면? 
-                        // -> 아직 데이터가 쌓이는 중이므로, 최소한 백업 전(beforeCount)보다는 늘어났어야 합니다.
-                        if (finalCount < expectedCount) {
-                          cy.log('📝  system폴더내 보관개수가 최대치에 도잘하지 않았습니다. 증분 확인을 수행합니다.');
-                          expect(finalCount).to.be.at.least(beforeCount); 
-                        } else {
-                          // 3. 만약 현재 개수가 설정값과 같다면?
-                          // -> 이미 꽉 찬 상태에서 로테이션이 일어난 것이므로 정상입니다.
-                          cy.log('📝 system폴더내 보관개수 최대치에 도달하여 로테이션이 정상 작동 중입니다.');
-                          expect(finalCount).to.equal(expectedCount);
-                        }
-                     
-                        cy.log(`📊 [검증 4] 현재 system폴더내 폴더갯수 : 최종 ${finalCount}개 확인 (설정값: ${expectedCount}개)`);
-                        // ================================================================
-                        // 💡 [신규 추가] 실제 남아있는 폴더 목록을 조회하여 로그에 세로로 출력
-                        // ==============================================================
-                         cy.task('runSSH', `ls -1d ${backupPath}/system/${todayPrefix}_* 2>/dev/null`).then((folderList) => {
-                         cy.log('📂 [system] 현재 system 하위폴더 목록:'); 
-                          if (folderList && folderList.trim()) {
-                            const folders = folderList.trim().split(/\s+/);
-                            folders.forEach((folderPath) => {
-                              // 절대 경로(/home/.../20260415_1) 대신 폴더명(20260415_1)만 깔끔하게 추출해서 출력
-                              const folderName = folderPath.split('/').pop();
-                              cy.log(`- ${folderName}`);
-                            });
-                          } else {
-                            cy.log('⚠️ 조건에 맞는 폴더가 없습니다.');
-                          }
-                        });
-
                         
-                        // ========================================================
-                      });
+                        // Postgres 증분 확인
+                        cy.task('runSSH', `ls -1 ${auditPath}/postgres.tgz.enc* 2>/dev/null | wc -l`).then((ap) => {
+                            const postgresEnd = parseInt(ap.trim()) || 0;
+                            cy.log(`📊 [백업 완료] Postgres 파일: ${postgresStart}개 -> ${postgresEnd}개`);
+                            expect(parseInt(ap)).to.be.greaterThan(postgresStart);
+                        });
+                        
+                        // 최신 파일 확인
+                        cy.task('runSSH', `ls -1t ${auditPath}/*.tgz.enc* | head -n 2`).then((lf) => cy.log(`✅ 최신 파일: ${lf}`));
                     });
-                   //---------------------------------------------------------------------------
-                  });
-                });
-                //---------------------------------------------------------------------------
-                cy.log(' ✅ 백업 폴더(/home/logcatch/backup) 검증 확인완료');
 
-            }); // beforePostgres 끝
-        }); // beforeMongo 끝
-    }); // beforeCount 끝
-}); // backupPath 끝
+                    cy.task('runSSH', `ls ${backupPath}/contentLedger/*/${todayPrefix}.tgz.enc`).then((r) => expect(r).to.include(todayPrefix));
+                    cy.task('runSSH', `ls ${backupPath}/explanationFiles/*/${todayPrefix}.tgz.enc`).then((r) => expect(r).to.include(todayPrefix));
 
+                    cy.wait(7000); // 삭제 로직 작동 대기
+                    cy.task('runSSH', `ls -1d ${backupPath}/system/${todayPrefix}_* 2>/dev/null | wc -l`).then((afterCountText) => {
+                        const finalCount = parseInt(afterCountText.trim());
+                        cy.log(`📊 [신규 백업폴더추가] System 내 백업폴더 개수: ${finalCount}개`);
+                        expect(finalCount).to.be.at.least(beforeCount);
+
+                        cy.task('runSSH', `ls -d ${backupPath}/system/${todayPrefix}_* | tail -n 1`).then((lastFolder) => {
+                            const folderPath = lastFolder.trim();
+                            cy.log(`📂 검증 대상 최신 폴더: ${folderPath}`);
+
+                            cy.task('runSSH', `ls -1 ${folderPath}/*.gz 2>/dev/null | wc -l`).then((fcText) => {
+                                const fileCount = parseInt(fcText.trim()) || 0;
+                                expect(fileCount, '파일 개수가 100개 이상이어야 함').to.be.at.least(100);
+                            });
+
+                            const checkFile = 'tbr_com_code.gz';
+                            cy.task('runSSH', `ls ${folderPath}/${checkFile}`).then((fr) => {
+                                expect(fr).to.include(checkFile);
+                            });
+
+                            cy.task('runSSH', `du -sh ${folderPath}`).then((sizeText) => {
+                                const fullSizeInfo = sizeText.trim(); 
+                                const numericSize = parseInt(fullSizeInfo.split('\t')[0]);
+                                expect(numericSize).to.be.greaterThan(0);                      
+                            });
+
+                            cy.get('input[aria-label="보관 개수"]').invoke('val').then((configCount) => {
+                                const expectedCount = parseInt(configCount.trim());
+                                cy.log(`⚙️ UI에 설정된 보관 정책 개수: ${expectedCount}개`);
+
+                                cy.wait(20000);
+
+                                cy.task('runSSH', `ls -1d ${backupPath}/system/${todayPrefix}_* 2>/dev/null`).then((folderList) => {
+                                    cy.log('📂 [system] 현재 system 하위폴더 목록:'); 
+                                    if (folderList && folderList.trim()) {
+                                        const folders = folderList.trim().split(/\s+/);
+                                        folders.forEach((path) => cy.log(`- ${path.split('/').pop()}`));
+                                    }
+                                });
+
+                                // 💡 2. 여기서 변수명이 중복되어 에러가 났을 수 있으므로 rotatedText, rotatedCount로 변경했습니다.
+                                cy.task('runSSH', `ls -1d ${backupPath}/system/${todayPrefix}_* 2>/dev/null | wc -l`).then((rotatedText) => {
+                                    const rotatedCount = parseInt(rotatedText.trim());
+
+                                    expect(rotatedCount).to.be.at.most(expectedCount);
+                                    
+                                    if (rotatedCount < expectedCount) {
+                                        cy.log('📝 system폴더내 보관개수가 최대치에 도달하지 않았습니다. 증분 확인을 수행합니다.');
+                                        expect(rotatedCount).to.be.at.least(beforeCount); 
+                                    } else {
+                                        cy.log('📝 system폴더내 보관개수 최대치에 도달하여 로테이션이 정상 작동 중입니다.');
+                                        expect(rotatedCount).to.equal(expectedCount);
+                                    }
+                                
+                                    cy.log(`📊 [검증 4] 현재 system폴더내 폴더갯수 : 최종 ${rotatedCount}개 확인 (설정값: ${expectedCount}개)`);
+                                    
+                                    cy.task('runSSH', `ls -1d ${backupPath}/system/${todayPrefix}_* 2>/dev/null`).then((folderList) => {
+                                        cy.log('📂 [system] 현재 system 하위폴더 목록:'); 
+                                        if (folderList && folderList.trim()) {
+                                            const folders = folderList.trim().split(/\s+/);
+                                            folders.forEach((path) => cy.log(`- ${path.split('/').pop()}`));
+                                        }
+                                    });
+                                });
+                            });
+                        });
+                    });
+                    cy.log('✅ 백업 폴더(/home/logcatch/backup) 검증 확인완료');
+                }
+
+                // 💡 일반 함수 형태로 선언 (재귀 호출 안전성 보장)
+                function waitForBackup(attempt = 0) {
+                    if (attempt > 24) throw new Error('❌ 백업 타임아웃 (120초 초과)');
+
+                    cy.task('runSSH', `ls -1 ${auditPath}/mongo.tgz.enc* 2>/dev/null | wc -l`).then((count) => {
+                        const current = parseInt(count.trim()) || 0;
+
+                        if (current > mongoStart) {
+                            cy.log(`✅ 백업 완료 감지! (${attempt * 5}초 경과)`);
+                            runPostBackupValidation(); // 백업 완료 후 검증 함수 실행
+                        } else {
+                            cy.log(`⏳ 백업 진행 중... (${attempt * 5}초 경과)`);
+                            cy.wait(5000);
+                            waitForBackup(attempt + 1);
+                        }
+                    });
+                }
+
+                // 최초 실행 트리거
+                waitForBackup();
+
+            }); // 4. beforePostgres 끝 (닫힘)
+        }); // 3. beforeMongo 끝 (닫힘)
+    }); // 2. beforeCountText 끝 (닫힘)
+}); // 1. backupPath 끝 (닫힘)
    
 
 
@@ -533,7 +531,7 @@ cy.wait('@sftpTest', { timeout: 40000 });
 
 // 5. [검증] 접속 테스트 결과(Snackbar) 먼저 확인
 // 버튼 클릭 후 "성공" 메시지가 떠야 실제 전송 경로가 유효하다는 증거입니다.
-cy.get('.v-snack__content', { timeout: 30000 }).should('exist').and('contain', '성공');
+cy.get('.v-snack__content', { timeout: 50000 }).should('be.visible').and('contain', '성공');
 
 // 6. [추가 검증] 실제 SFTP 서버(10.10.54.24) 내부 데이터 조회
 // Snackbar 확인 직후 실행하여 데이터 무결성을 교차 검증합니다.
