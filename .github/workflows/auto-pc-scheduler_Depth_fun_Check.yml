@@ -440,9 +440,19 @@ jobs:
 
           npm install mochawesome-merge mochawesome-report-generator --no-save
 
+          # 💡 [추가] 스크린샷 경로 복원 - JSON이 참조하는 경로와 일치시키기
+          # JSON 파일은 'cypress/screenshots/...' 경로를 참조하는데
+          # 다운로드된 파일은 'all_raw_data/screenshots/...'에 있어서 불일치 발생
+          if (Test-Path "all_raw_data/screenshots") {
+          New-Item -ItemType Directory -Force -Path "cypress/screenshots" | Out-Null
+          Copy-Item -Path "all_raw_data/screenshots/*" -Destination "cypress/screenshots/" -Recurse -Force
+          Write-Host "✅ 스크린샷 경로 복원 완료 (cypress/screenshots/)"
+          } else {
+            Write-Host "⚠️ 스크린샷 없음 - 건너뜀"
+          }
+
           # 💡 1. dummy.json을 제외한 진짜 결과 JSON 파일이 있는지 체크합니다.
-          $realJsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" | Where-Object { $_.Name -ne "dummy.json" }
-          
+          $realJsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" | Where-Object { $_.Name -ne "dummy.json" }  
           if ($realJsonFiles.Count -gt 0) {
               # 💡 2. 실제 결과가 존재한다면 병합 리포트가 오염되지 않게 dummy.json을 삭제합니다.
               Get-ChildItem -Path "all_raw_data" -Recurse -Filter "dummy.json" | Remove-Item -Force
