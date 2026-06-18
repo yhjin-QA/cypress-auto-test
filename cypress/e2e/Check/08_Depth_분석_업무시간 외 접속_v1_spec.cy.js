@@ -184,9 +184,11 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.wait(500); 
     
     // 업무시스템 - 리눅스 배송관리 선택
-    cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
-    cy.wait(1000);
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+    // cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    // cy.wait(1000);
+    // cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+    // ✅ 개선 - input과 묶어서 한 번에
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     // 업무시스템중 리눅스_배송관리 클릭하는 코드
     cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
     cy.wait(1000);
@@ -223,9 +225,10 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
   cy.get('.menuable__content__active').should('be.visible');
   cy.wait(800);
 
-  // 1. 시간 '13' 클릭
+  // 1. 시간 '10' 클릭
   cy.get('.menuable__content__active .v-time-picker-clock__item').contains(/^10$/).click({ force: true });
-  cy.wait(800);
+  cy.get('.menuable__content__active .v-time-picker-clock__item').contains(/^00$/).should('be.visible'); 
+  
 
   // 2. 분 '00' 클릭
   cy.get('.menuable__content__active .v-time-picker-clock__item').contains(/^00$/).click({ force: true });
@@ -239,7 +242,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 
   // 4. 해당 요일의 값이 진짜로 바뀌었는지 최종 검증
   cy.contains('label', day).parents('div').filter((index, el) => Cypress.$(el).find('input[type="text"]').length >= 2).first().find('input[type="text"]').last().should('have.value', '10:00');
-  cy.log(`✅ [${day}] 13:00 실제 UI 반영 완벽 성공!`);
+  cy.log(`✅ [${day}] 10:00 실제 UI 반영 완벽 성공!`);
   });
   cy.wait(1000);
  
@@ -249,10 +252,11 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
   cy.wait(500);
 
   //----------------------------------------------------------------------------------------------------------------------------------------------------------------------  
-
-    //test_auto_업무 시간 외 접속 목록에 정책이 잘 추가되었는지 검증하는 코드 
-    cy.get('tbody').contains('tr', 'test_auto_업무 시간 외 접속').should('be.visible');
-
+  //test_auto_업무 시간 외 접속 목록에 정책이 잘 추가되었는지 검증하는 코드 
+  //cy.get('tbody').contains('tr', 'test_auto_업무 시간 외 접속').should('be.visible');
+  cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible');
+  cy.get('.v-snack__content', { timeout: 15000 }).should('not.exist');
+  cy.get('tbody', { timeout: 10000 }).contains('tr', 'test_auto_업무 시간 외 접속').should('be.visible');
 
 // ----------------------------------------------------------
 // [STEP 1] WAS 시스템 로그인 및 이상행위(과다조회) 타격
@@ -419,18 +423,18 @@ cy.get('body').then(($body) => {
   }
 });
 
-// 💡 [STEP 0] 에러 방어막 강화 (JS 청크, CSS 청크, 라우터 에러 모두 무시)
-// 이 코드는 가급적 테스트 파일 최상단(describe 블록 바로 아래 등)에 한 번만 선언해 두는 것이 좋습니다.
-Cypress.on('uncaught:exception', (err, runnable) => {
-  if (
-    err.message.includes('ChunkLoadError') || 
-    err.message.includes('Loading CSS chunk') ||  // 👈 이 부분이 추가되었습니다!
-    err.message.includes('Loading chunk') ||
-    err.message.includes('navigation guard')
-  ) {
-    return false; // Cypress가 테스트를 멈추지 않고 계속 진행하게 함
-  }
-});
+// // 💡 [STEP 0] 에러 방어막 강화 (JS 청크, CSS 청크, 라우터 에러 모두 무시)
+// // 이 코드는 가급적 테스트 파일 최상단(describe 블록 바로 아래 등)에 한 번만 선언해 두는 것이 좋습니다.
+// Cypress.on('uncaught:exception', (err, runnable) => {
+//   if (
+//     err.message.includes('ChunkLoadError') || 
+//     err.message.includes('Loading CSS chunk') ||  // 👈 이 부분이 추가되었습니다!
+//     err.message.includes('Loading chunk') ||
+//     err.message.includes('navigation guard')
+//   ) {
+//     return false; // Cypress가 테스트를 멈추지 않고 계속 진행하게 함
+//   }
+// });
 
 // ---------------------------------------------------------------------------
 // 1. '이력' 버튼 클릭
@@ -474,10 +478,9 @@ cy.get('body').then(($body) => {
 cy.contains('.tab-btn', '이상행위', { timeout: 15000 }).should('be.visible').click({ force: true });
 //------------------------------------------------------------------------------------------------------
 cy.log('✅ 이상행위 탭 진입 성공');
-
-
 // 사용자 검색 - 진윤호(yunho)
 // 1. 콤보박스에 검색어 입력
+cy.contains('.c-headline', '검색 조건', { timeout: 5000 }).should('exist');
 cy.get('input[aria-label="사용자"]').filter(':visible').clear({ force: true }).type('yunho', { force: true });
 cy.wait(1000); 
 // 검색된 콤보박스 리스트  선택하기
@@ -529,7 +532,7 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
       .should('be.visible')
       .and('have.css', 'color', 'rgb(169, 209, 142)');
   } else {
-    cy.log('⚪ 주의 로그가 없습니다. 패스합니다.');
+    cy.log('🟢 주의 로그가 없습니다. 패스합니다.');
   }
 
   // 🟠 [경계] 아이콘 검증
@@ -539,7 +542,7 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
       .should('be.visible')
       .and('have.css', 'color', 'rgb(255, 192, 0)');
   } else {
-    cy.log('⚪ 경계 로그가 없습니다. 패스합니다.');
+    cy.log('🟠 경계 로그가 없습니다. 패스합니다.');
   }
 
   // 🔴 [심각] 아이콘 검증
@@ -549,7 +552,7 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
       .should('be.visible')
       .and('have.css', 'color', 'rgb(244, 67, 54)');
   } else {
-    cy.log('⚪ 심각 로그가 없습니다. 패스합니다.');
+    cy.log('🔴 심각 로그가 없습니다. 패스합니다.');
   }
 
 });

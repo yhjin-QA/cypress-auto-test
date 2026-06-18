@@ -269,35 +269,57 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('input[aria-label="파일명"]').filter(':visible').first().type('AutoDetect1', { force: true });
        cy.wait(1000);
     
-       // 엑셀다운로드 팝업 확인창에서 확인 버튼 클릭
-       cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-
-       // 엑셀파일다운로드 알림창 확인 
-       cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible').and('contain', '파일 다운로드를 요청했습니다');
-    
-       //엑셀파일다운로드 알림창 사라졌는지 확인
+      //  // 엑셀다운로드 팝업 확인창에서 확인 버튼 클릭
+      //  cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+      //  // 엑셀파일다운로드 알림창 확인 
+      //  cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible').and('contain', '파일 다운로드를 요청했습니다');
+           //엑셀파일다운로드 알림창 사라졌는지 확인
        // 알림창이 사라질 때까지(보통 3~5초 뒤) 기다렸다가 안 보이는지 체크
-       cy.get('.v-snack__content', { timeout: 10000 }).should('not.be.visible');
-    
-       //실제 로컬 폴더 다운로드 시간 주기
-       cy.wait(7000);
-    
-    
-       // [검증] 다운로드 폴더를 확인합니다.
-       // 수행시 기존에 다운로드 받아두었던 파일은 자동으로 지움(사전초기화)
-       // 폴더경로 : C:\Users\user\Desktop\CypressWork\cypress\downloads
-       cy.task('readDirectory', 'cypress/downloads').then((files) => {
-       // files: 다운로드 폴더에 있는 모든 파일 이름들의 리스트
-       // 조건에 맞는 파일 찾기 (이름에 'AutoDetect1'이 있고, 확장자가 '.xlsx'인 것)
-      const myFile = files.find(file => file.includes('AutoDetect1') && file.endsWith('.xlsx'));    
-       // 로그 출력
-        if (myFile) {
-          cy.log(`✅ 다운로드 성공! 파일명: ${myFile}`);
-        }
 
-        // 검증: 파일이 존재해야 함 (없으면 에러 발생)
-        expect(myFile).to.not.be.undefined; 
-        });   
+      
+       // ✅ 개선 - 저장 클릭 전 스냅샷 + 폴링
+       cy.task('readDirectory', 'cypress/downloads').then((filesBefore) => {
+        cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+        cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible').and('contain', '파일 다운로드를 요청했습니다');
+        cy.get('.v-snack__content', { timeout: 15000 }).should('not.exist');
+        const checkNewFile = (attempt = 0) => {
+          if (attempt > 15) throw new Error('❌ 엑셀 다운로드 타임아웃');
+          cy.task('readDirectory', 'cypress/downloads').then((filesAfter) => {
+            const myFile = filesAfter.find(f =>
+              !filesBefore.includes(f) && f.includes('AutoDetect1') && f.endsWith('.xlsx')
+            );
+            if (myFile) {
+              cy.log(`✅ 다운로드 성공! 파일명: ${myFile}`);
+              cy.readFile(`cypress/downloads/${myFile}`, 'binary').then((buf) => {
+                expect(buf.length).to.be.greaterThan(0);
+              });
+            } else {
+              cy.wait(2000);
+              checkNewFile(attempt + 1);
+            }
+          });
+        };
+        checkNewFile();
+      }); 
+      //  //실제 로컬 폴더 다운로드 시간 주기
+      //  cy.wait(7000);
+    
+    
+      //  // [검증] 다운로드 폴더를 확인합니다.
+      //  // 수행시 기존에 다운로드 받아두었던 파일은 자동으로 지움(사전초기화)
+      //  // 폴더경로 : C:\Users\user\Desktop\CypressWork\cypress\downloads
+      //  cy.task('readDirectory', 'cypress/downloads').then((files) => {
+      //  // files: 다운로드 폴더에 있는 모든 파일 이름들의 리스트
+      //  // 조건에 맞는 파일 찾기 (이름에 'AutoDetect1'이 있고, 확장자가 '.xlsx'인 것)
+      // const myFile = files.find(file => file.includes('AutoDetect1') && file.endsWith('.xlsx'));    
+      //  // 로그 출력
+      //   if (myFile) {
+      //     cy.log(`✅ 다운로드 성공! 파일명: ${myFile}`);
+      //   }
+
+      //   // 검증: 파일이 존재해야 함 (없으면 에러 발생)
+      //   expect(myFile).to.not.be.undefined; 
+      //   });   
 
        cy.log('✅ 검출 - 검출메뉴관리 - [메뉴 관리] 출력 확인 완료 ');
 
@@ -325,15 +347,17 @@ describe('로그캐치 사이트 테스트', () => {
 
        //기능 확인 1-------------------------------------------------------
        // 미등록 URI 검색 동작 
-
        // 업무시스템 - 리눅스_배송관리 선택
-       cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
-       cy.wait(1000);
-       cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+       //  cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+       //  cy.wait(1000);
+       //  cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+       cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+
+
        // 업무시스템중 리눅스_배송관리 클릭하는 코드
        cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
        cy.wait(1000);
-       // 업무시스템중 리눅스_배송관리 클릭하는 코드
+       // 업무시스템중 윈도우_배송관리 클릭하는 코드
        cy.contains('.v-list__tile__title', '윈도우_배송관리').scrollIntoView().should('be.visible').click();
        cy.wait(1000);
        // 선택한 컨텍스트 메뉴 닫기

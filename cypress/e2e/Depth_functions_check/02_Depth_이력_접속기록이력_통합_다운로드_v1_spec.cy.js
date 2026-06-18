@@ -253,214 +253,65 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
 
-    // ==========================================
-    // CASE1. 엑셀다운로드 : 다운로드 유형 - 날짜별 
-    // ==========================================
-
-    //맨티스 이슈 등록해둠 - v3.0.4_r34865 (37313) 
-    // 엑셀 다운로드 클릭하는 코드 
+   
+ function downloadAndVerify(downloadType) {
+  cy.task('readDirectory', 'cypress/downloads').then((filesBefore) => {
     cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
     cy.wait(500);
-    // 엑셀 파일 다운로드 확인창 진행
-    // 파일다운로드 그룹 선택 (팝업창에서찾기 )
+
     cy.get('.v-dialog--active').find('.v-select__selections').first().click({ force: true });
-    
     cy.wait(500);
     cy.get('.v-list__tile__title').filter(':visible').contains('접속이력 조회 화면 결과 파일').closest('.v-list__tile').click({ force: true });
-    // 다운로드 유형 선택
+
     cy.get('.v-dialog--active').find('.v-select__selections').eq(1).click({ force: true });
-    cy.get('.v-list__tile__title').filter(':visible').contains('날짜별').closest('.v-list__tile').click({ force: true });
-    //개인정보 유형별 상세내역 포함 클릭 
+    cy.get('.v-list__tile__title').filter(':visible').contains(downloadType).closest('.v-list__tile').click({ force: true });
+
     cy.get('.v-dialog--active').contains('label', '개인정보 유형별 상세 내역 포함').click({ force: true });
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-     
-    // 2. [수정] be.visible 대신 exist를 먼저 사용하고, 텍스트 확인을 결합합니다.
-    //cy.contains('엑셀 다운로드 요청에 성공했습니다', { timeout: 10000 }).should('exist'); // 찰나의 순간이라도 DOM에 나타나면 성공 처리
-    //cy.contains(/엑셀.*요청.*성공/, { timeout: 30000 }).should('exist');
 
-    // 3. 사라지는 것 확인
-    // ✅ 수정 - 나타남 확인 후 사라짐 확인
     cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible');
     cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
-    
-    // 맨티스  이슈 등록해둠 (37313) 
-    // 서버에서 zip 파일을 생성하고 다운로드가 100% 완료될 때까지 충분히 기다립니다. (7초 -> 15초로 연장)
-    cy.wait(15000);
-    
-    // [검증] 다운로드 폴더를 확인합니다.
-    // 수행시 기존에 다운로드 받아두었던 파일은 자동으로 지움(사전초기화)
-    // 폴더경로 : C:\Users\user\Desktop\CypressWork\cypress\downloads
-    cy.task('readDirectory', 'cypress/downloads').then((files) => {
-    // files: 다운로드 폴더에 있는 모든 파일 이름들의 리스트
-    
-    // 조건에 맞는 파일 찾기 (이름에 'log-excel'이 있고, 확장자가 '.zip'인 것)
-    const myFile = files.find(file => file.includes('log-excel') && file.endsWith('.zip'));
 
-    // 1단계: 검증: 파일이 존재해야 함 (없으면 테스트 실패)
-    expect(myFile, '다운로드 폴더 내에 log-excel이 포함된 .zip 파일이 존재해야 합니다.').to.not.be.undefined; 
-
-    // 2단계: 파일이 존재하면 용량 상태를 체크합니다.
-    if (myFile) {
-        cy.log(`✅ 파일 확인 완료! 파일명: ${myFile}`);
-        
-        const filePath = `cypress/downloads/${myFile}`;
-        
-        // 만들어둔 태스크를 호출해 파일 용량을 가져옵니다.
-        cy.task('getFileStats', filePath).then((stats) => {
-            cy.log(`📊 다운로드된 ZIP 파일 용량: ${stats.size} bytes`);
-
-            // 검증 1: 0바이트 빈 파일 방지
-            expect(stats.size, '파일 용량 0바이트 초과 정상 확인').to.be.greaterThan(0);
-
-            // 검증 2: ZIP 파일 무결성 최소 체크
-            // 압축 파일(.zip)은 내용물이 비어있는 빈 폴더만 압축해도 헤더 정보 때문에 최소 22바이트 이상을 차지합니다.
-            // 엑셀 로그가 정상적으로 포함되었다면 최소 수백 바이트 이상이어야 하므로 100바이트를 최소 기준으로 잡습니다.
-            expect(stats.size, 'ZIP 파일 최소 용량(100 bytes) 이상 무결성 확인').to.be.at.least(100);
-            
-            cy.log(`✅ ZIP 파일 유효성(용량) 검증 완벽 통과!`);
-        });
-    }
-});
-
-    // ==========================================
-    // CASE2 엑셀다운로드 : 다운로드 유형 -  월단위
-    // ==========================================
- 
-    //맨티스 이슈 등록해둠 - v3.0.4_r34865 (37313) 
-    // 엑셀 다운로드 클릭하는 코드 
-    cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
-    cy.wait(500);
-    // 엑셀 파일 다운로드 확인창 진행
-    // 파일다운로드 그룹 선택 (팝업창에서찾기 )
-    cy.get('.v-dialog--active').find('.v-select__selections').first().click({ force: true });
-    
-    cy.wait(500);
-    cy.get('.v-list__tile__title').filter(':visible').contains('접속이력 조회 화면 결과 파일').closest('.v-list__tile').click({ force: true });
-    // 다운로드 유형 선택
-    cy.get('.v-dialog--active').find('.v-select__selections').eq(1).click({ force: true });
-    cy.get('.v-list__tile__title').filter(':visible').contains('월단위').closest('.v-list__tile').click({ force: true });
-    //개인정보 유형별 상세내역 포함 클릭 
-    cy.get('.v-dialog--active').contains('label', '개인정보 유형별 상세 내역 포함').click({ force: true });
-    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-     
-    // 2. [수정] be.visible 대신 exist를 먼저 사용하고, 텍스트 확인을 결합합니다.
-    //cy.contains('엑셀 다운로드 요청에 성공했습니다', { timeout: 10000 }).should('exist'); // 찰나의 순간이라도 DOM에 나타나면 성공 처리
-    //cy.contains(/엑셀.*요청.*성공/, { timeout: 30000 }).should('exist');
-
-    // 3. 사라지는 것 확인
-    cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
-    
-    // 맨티스  이슈 등록해둠 (37313) 
-    // 서버에서 zip 파일을 생성하고 다운로드가 100% 완료될 때까지 충분히 기다립니다. (7초 -> 15초로 연장)
-    cy.wait(15000);
-    
-    // [검증] 다운로드 폴더를 확인합니다.
-    // 수행시 기존에 다운로드 받아두었던 파일은 자동으로 지움(사전초기화)
-    // 폴더경로 : C:\Users\user\Desktop\CypressWork\cypress\downloads
-    cy.task('readDirectory', 'cypress/downloads').then((files) => {
-    // files: 다운로드 폴더에 있는 모든 파일 이름들의 리스트
-    
-    // 조건에 맞는 파일 찾기 (이름에 'log-excel'이 있고, 확장자가 '.zip'인 것)
-    const myFile = files.find(file => file.includes('log-excel') && file.endsWith('.zip'));
-
-    // 1단계: 검증: 파일이 존재해야 함 (없으면 테스트 실패)
-    expect(myFile, '다운로드 폴더 내에 log-excel이 포함된 .zip 파일이 존재해야 합니다.').to.not.be.undefined; 
-
-    // 2단계: 파일이 존재하면 용량 상태를 체크합니다.
-    if (myFile) {
-        cy.log(`✅ 파일 확인 완료! 파일명: ${myFile}`);
-        
-        const filePath = `cypress/downloads/${myFile}`;
-        
-        // 만들어둔 태스크를 호출해 파일 용량을 가져옵니다.
-        cy.task('getFileStats', filePath).then((stats) => {
-            cy.log(`📊 다운로드된 ZIP 파일 용량: ${stats.size} bytes`);
-
-            // 검증 1: 0바이트 빈 파일 방지
-            expect(stats.size, '파일 용량 0바이트 초과 정상 확인').to.be.greaterThan(0);
-
-            // 검증 2: ZIP 파일 무결성 최소 체크
-            // 압축 파일(.zip)은 내용물이 비어있는 빈 폴더만 압축해도 헤더 정보 때문에 최소 22바이트 이상을 차지합니다.
-            // 엑셀 로그가 정상적으로 포함되었다면 최소 수백 바이트 이상이어야 하므로 100바이트를 최소 기준으로 잡습니다.
-            expect(stats.size, 'ZIP 파일 최소 용량(100 bytes) 이상 무결성 확인').to.be.at.least(100);
-            
-            cy.log(`✅ ZIP 파일 유효성(용량) 검증 완벽 통과!`);
-        });
-    }
-});
+    const checkNewFile = (attempt = 0) => {
+      if (attempt > 30) throw new Error(`❌ [${downloadType}] 다운로드 타임아웃`);
+      cy.task('readDirectory', 'cypress/downloads').then((filesAfter) => {
+        const newFile = filesAfter.find(f =>
+          !filesBefore.includes(f) && f.includes('log-excel') && f.endsWith('.zip')
+        );
+        if (newFile) {
+          cy.log(`✅ [${downloadType}] 다운로드 성공! 파일명: ${newFile}`);
+          cy.task('getFileStats', `cypress/downloads/${newFile}`).then((stats) => {
+            cy.log(`📊 파일 용량: ${stats.size} bytes`);
+            expect(stats.size, '0바이트 빈 파일 방지').to.be.greaterThan(0);
+            expect(stats.size, '최소 100bytes 이상').to.be.at.least(100);
+          });
+        } else {
+          cy.wait(2000);
+          checkNewFile(attempt + 1);
+        }
+      });
+    };
+    checkNewFile();
+  });
+}
 
 
-    // ==========================================
-    // CASE3 엑셀다운로드 : 다운로드 유형 -  전체
-    // ==========================================
- 
-    //맨티스 이슈 등록해둠 - v3.0.4_r34865 (37313) 
-    // 엑셀 다운로드 클릭하는 코드 
-    cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
-    cy.wait(500);
-    // 엑셀 파일 다운로드 확인창 진행
-    // 파일다운로드 그룹 선택 (팝업창에서찾기 )
-    cy.get('.v-dialog--active').find('.v-select__selections').first().click({ force: true });
-    
-    cy.wait(500);
-    cy.get('.v-list__tile__title').filter(':visible').contains('접속이력 조회 화면 결과 파일').closest('.v-list__tile').click({ force: true });
-    // 다운로드 유형 선택
-    cy.get('.v-dialog--active').find('.v-select__selections').eq(1).click({ force: true });
-    cy.get('.v-list__tile__title').filter(':visible').contains('전체').closest('.v-list__tile').click({ force: true });
-    //개인정보 유형별 상세내역 포함 클릭 
-    cy.get('.v-dialog--active').contains('label', '개인정보 유형별 상세 내역 포함').click({ force: true });
-    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-     
-    // 2. [수정] be.visible 대신 exist를 먼저 사용하고, 텍스트 확인을 결합합니다.
-    //cy.contains('엑셀 다운로드 요청에 성공했습니다', { timeout: 10000 }).should('exist'); // 찰나의 순간이라도 DOM에 나타나면 성공 처리
-    //cy.contains(/엑셀.*요청.*성공/, { timeout: 30000 }).should('exist');
+// ==========================================
+// CASE1. 엑셀다운로드 : 다운로드 유형 - 날짜별 
+// ==========================================
+downloadAndVerify('날짜별');
 
-    // 3. 사라지는 것 확인
-    cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
-    
-    // 맨티스  이슈 등록해둠 (37313) 
-    // 서버에서 zip 파일을 생성하고 다운로드가 100% 완료될 때까지 충분히 기다립니다. (7초 -> 15초로 연장)
-    cy.wait(15000);
-    
-    // [검증] 다운로드 폴더를 확인합니다.
-    // 수행시 기존에 다운로드 받아두었던 파일은 자동으로 지움(사전초기화)
-    // 폴더경로 : C:\Users\user\Desktop\CypressWork\cypress\downloads
-    cy.task('readDirectory', 'cypress/downloads').then((files) => {
-    // files: 다운로드 폴더에 있는 모든 파일 이름들의 리스트
-    
-    // 조건에 맞는 파일 찾기 (이름에 'log-excel'이 있고, 확장자가 '.zip'인 것)
-    const myFile = files.find(file => file.includes('log-excel') && file.endsWith('.zip'));
+// ==========================================
+// CASE2. 엑셀다운로드 : 다운로드 유형 - 월단위
+// ==========================================
+downloadAndVerify('월단위');
 
-    // 1단계: 검증: 파일이 존재해야 함 (없으면 테스트 실패)
-    expect(myFile, '다운로드 폴더 내에 log-excel이 포함된 .zip 파일이 존재해야 합니다.').to.not.be.undefined; 
-
-    // 2단계: 파일이 존재하면 용량 상태를 체크합니다.
-    if (myFile) {
-        cy.log(`✅ 파일 확인 완료! 파일명: ${myFile}`);
-        
-        const filePath = `cypress/downloads/${myFile}`;
-        
-        // 만들어둔 태스크를 호출해 파일 용량을 가져옵니다.
-        cy.task('getFileStats', filePath).then((stats) => {
-            cy.log(`📊 다운로드된 ZIP 파일 용량: ${stats.size} bytes`);
-
-            // 검증 1: 0바이트 빈 파일 방지
-            expect(stats.size, '파일 용량 0바이트 초과 정상 확인').to.be.greaterThan(0);
-
-            // 검증 2: ZIP 파일 무결성 최소 체크
-            // 압축 파일(.zip)은 내용물이 비어있는 빈 폴더만 압축해도 헤더 정보 때문에 최소 22바이트 이상을 차지합니다.
-            // 엑셀 로그가 정상적으로 포함되었다면 최소 수백 바이트 이상이어야 하므로 100바이트를 최소 기준으로 잡습니다.
-            expect(stats.size, 'ZIP 파일 최소 용량(100 bytes) 이상 무결성 확인').to.be.at.least(100);
-            
-            cy.log(`✅ ZIP 파일 유효성(용량) 검증 완벽 통과!`);
-        });
-    }
-});
-
-
+// ==========================================
+// CASE3. 엑셀다운로드 : 다운로드 유형 - 전체
+// ==========================================
+downloadAndVerify('전체');
 
 cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
-      
 
 
     // ==========================================
