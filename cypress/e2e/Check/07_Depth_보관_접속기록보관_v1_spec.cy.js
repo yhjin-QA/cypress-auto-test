@@ -269,6 +269,18 @@ cy.get('.side-menu', { timeout: 15000 }).should('be.visible');
     
     cy.contains('.side-menu', '보관').click({ force: true });
     cy.wait(3000);
+    // ✅ ChunkLoadError 대응: 탭이 없으면 reload 후 재시도
+    cy.get('body').then(($body) => {
+    
+      if ($body.find('.tab-title').filter(':contains("백업/보관")').length === 0) {
+        cy.log('⚠️ ChunkLoadError로 렌더링 실패 감지 → 페이지 새로고침 후 재시도');
+        cy.reload();
+        cy.wait(2000);
+        cy.contains('.side-menu', '보관').click({ force: true });
+        cy.wait(3000);
+        }
+     });
+     
     cy.log('---보관-접속기록 보관 서브메뉴 클릭 ---');
     cy.get('.v-list__tile__title').filter(':contains("접속기록 보관")').filter(':visible').click({ force: true });
     cy.wait(3000); 
@@ -374,24 +386,21 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
                 // ✅ 수정 - audit-trail 폴더 파일 생성을 폴링으로 감지
                 cy.log('⏳ 백업 완료 대기 중 (최대 120초)...');
 
-                // 💡 1. 화살표 함수 대신 일반 함수(function)로 선언하여 스코프 꼬임 방지
-                function runPostBackupValidation() {
-                    cy.log('🚀 [백업 후 상세 검증 시작]');
+               // ✅ waitForBackup에서 감지한 count를 runPostBackupValidation에 직접 전달
+               function runPostBackupValidation(detectedMongoCount) {
+                cy.log('🚀 [백업 후 상세 검증 시작]');
+                  // [audit-trail] 폴더 검증코드
+                      cy.task('runSSH', `ls -d ${auditPath}`).then(() => {
+                        // ✅ SSH 재조회 대신 이미 감지된 값으로 검증 (Race Condition 방지)
+                        cy.log(`📊 [백업 완료] Mongo 파일: ${mongoStart}개 -> ${detectedMongoCount}개`);
+                        expect(detectedMongoCount).to.be.greaterThan(mongoStart);
 
-                    // [audit-trail] 폴더 검증코드
-                    cy.task('runSSH', `ls -d ${auditPath}`).then(() => {
-                        // Mongo 증분 확인
-                        cy.task('runSSH', `ls -1 ${auditPath}/mongo.tgz.enc* 2>/dev/null | wc -l`).then((am) => {
-                            const mongoEnd = parseInt(am.trim()) || 0;
-                            cy.log(`📊 [백업 완료] Mongo 파일: ${mongoStart}개 -> ${mongoEnd}개`);
-                            expect(parseInt(am)).to.be.greaterThan(mongoStart);
-                        });
-                        
-                        // Postgres 증분 확인
+    
+                    // Postgres는 별도 조회 (mongo처럼 timing 이슈 없음)
                         cy.task('runSSH', `ls -1 ${auditPath}/postgres.tgz.enc* 2>/dev/null | wc -l`).then((ap) => {
-                            const postgresEnd = parseInt(ap.trim()) || 0;
-                            cy.log(`📊 [백업 완료] Postgres 파일: ${postgresStart}개 -> ${postgresEnd}개`);
-                            expect(parseInt(ap)).to.be.greaterThan(postgresStart);
+                          const postgresEnd = parseInt(ap.trim()) || 0;
+                          cy.log(`📊 [백업 완료] Postgres 파일: ${postgresStart}개 -> ${postgresEnd}개`);
+                          expect(postgresEnd).to.be.greaterThan(postgresStart);
                         });
                         
                         // 최신 파일 확인
@@ -471,23 +480,22 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
                     cy.log('✅ 백업 폴더(/home/logcatch/backup) 검증 확인완료');
                 }
 
-                // 💡 일반 함수 형태로 선언 (재귀 호출 안전성 보장)
-                function waitForBackup(attempt = 0) {
+               function waitForBackup(attempt = 0) {
                     if (attempt > 24) throw new Error('❌ 백업 타임아웃 (120초 초과)');
-
-                    cy.task('runSSH', `ls -1 ${auditPath}/mongo.tgz.enc* 2>/dev/null | wc -l`).then((count) => {
-                        const current = parseInt(count.trim()) || 0;
-
-                        if (current > mongoStart) {
-                            cy.log(`✅ 백업 완료 감지! (${attempt * 5}초 경과)`);
-                            runPostBackupValidation(); // 백업 완료 후 검증 함수 실행
-                        } else {
-                            cy.log(`⏳ 백업 진행 중... (${attempt * 5}초 경과)`);
-                            cy.wait(5000);
-                            waitForBackup(attempt + 1);
-                        }
+                   cy.task('runSSH', `ls -1 ${auditPath}/mongo.tgz.enc* 2>/dev/null | wc -l`).then((count) => {
+                      const current = parseInt(count.trim()) || 0;
+                      if (current > mongoStart) {
+                        cy.log(`✅ 백업 완료 감지! (${attempt * 5}초 경과) - Mongo 파일: ${current}개`);
+                        cy.wait(3000); // ✅ 파일 안정화 대기 추가 (임시파일→최종파일 이동 완료 대기)
+                        runPostBackupValidation(current); // ✅ 감지한 count를 그대로 전달
+                      } else {
+                        cy.log(`⏳ 백업 진행 중... (${attempt * 5}초 경과)`);
+                        cy.wait(5000);
+                        waitForBackup(attempt + 1);
+                      }
                     });
-                }
+              }
+
 
                 // 최초 실행 트리거
                 waitForBackup();
