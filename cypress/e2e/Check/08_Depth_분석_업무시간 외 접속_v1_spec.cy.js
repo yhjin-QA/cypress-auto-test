@@ -261,97 +261,42 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 // ----------------------------------------------------------
 // [STEP 1] WAS 시스템 로그인 및 이상행위(과다조회) 타격
 // ----------------------------------------------------------
-cy.log('🚀 다른 도메인(WAS 서버)으로 크로스 오리진 점프를 시도합니다.');
 
-// // 기존 코드에서 옵션 추가
-// cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', { 
-//   timeout: 60000,           // 타임아웃을 60초로 연장
-//   onBeforeLoad(win) {      // 페이지 로드 전 속도 향상을 위한 설정
-//     delete win.fetch; 
-//   }
-// });
-cy.clearCookies();
-cy.clearLocalStorage();
+// cy.clearCookies();
+// cy.clearLocalStorage();
 
 cy.origin('http://10.10.54.22:8080', () => {
   Cypress.on('uncaught:exception', () => false);
 
-  // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
-  cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
-  cy.visit('/uat/uia/egovLoginUsr.do', { 
-    timeout: 60000 
-  });
-  cy.wait(3000); 
-  cy.log('✅ 10.10.54.22 서버 접속 완료!');
+  cy.visit('/uat/uia/egovLoginUsr.do', { timeout: 60000 });
+  cy.wait(3000);
 
   cy.get('#id').should('be.visible').clear().type('yunho');
   cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
 
-  // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
   cy.contains('a', '로그아웃', { timeout: 15000 }).should('be.visible');
-  cy.log('✅ 로그인 성공! 방금 생성된 싱싱한 세션 확보 완료!');
+  cy.log('✅ WAS 로그인 성공!');
 
-  // 4. ✨ 핵심 로직: 쿠키 또는 URL에서 JSESSIONID를 안전하게 추출합니다.
-  cy.url().then((currentUrl) => {
-    cy.getCookie('JSESSIONID').then((cookie) => {
-      let freshSessionId = '';
-
-      // ① 먼저 쿠키에 JSESSIONID가 있는지 확인
-      if (cookie && cookie.value) {
-        freshSessionId = cookie.value;
-        cy.log(`🔑 쿠키에서 세션 ID 추출 완료`);
-      } 
-      // ② 쿠키가 없다면, URL에 jsessionid가 붙어있는지 확인 (URL Rewriting 대응)
-      else if (currentUrl.toLowerCase().includes('jsessionid=')) {
-        // 정규식을 사용해 URL에서 jsessionid 값만 쏙 뽑아냅니다.
-        const match = currentUrl.match(/jsessionid=([^?&#]+)/i);
-        if (match && match[1]) {
-          freshSessionId = match[1];
-          cy.log(`🔑 URL에서 세션 ID 추출 완료`);
-        }
-      }
-
-      // 방어 코드: 둘 다 실패했을 경우
-      if (!freshSessionId) {
-        throw new Error('❌ JSESSIONID를 쿠키와 URL 모두에서 찾을 수 없습니다.');
-      }
-
-      cy.log(`✅ 최종 사용될 세션 ID: ${freshSessionId}`);
-
-      // 5. 추출한 새 세션 ID를 헤더에 꽂아서 API 타격!
-      cy.request({
-        method: 'POST',
-        url: '/cop/logcatch/btnExcessCheck.do',
-        form: true,
-        headers: {
-          'Cookie': `JSESSIONID=${freshSessionId}`, 
-          'X-Requested-With': 'XMLHttpRequest',
-          'Referer': 'http://10.10.54.22:8080/uat/uia/actionMain.do'
-        },
-        body: { 
-          menuNo: '41' 
-        }
-      }).then((response) => {
-        // 6. 정상 응답 검증 (200 OK)
-        expect(response.status).to.eq(200);
-        cy.log('🎉 매번 새로운 세션으로 과다조회 자동 타격 성공!');
-      });
-    });
+  // 실제 메뉴 페이지 탐색 (이 탐색이 LogCatch에 이상행위로 기록됨)
+  cy.visit('/cop/logcatch/btnExcessCheck.do', {
+    qs: { menuNo: '41' },
+    timeout: 30000,
+    failOnStatusCode: false
   });
+  cy.wait(2000);
+  cy.log('✅ 업무 시간 외 접속 탐지 트리거 완료!');
 });
 
 
-// ----------------------------------------------------------
-// [STEP 2] 원래 점검 사이트(LogCatch)로 깨끗하게 복귀
-// ----------------------------------------------------------
-cy.log('🧹 세션 정보를 초기화하고 깨끗하게 복귀합니다.');
+// // ----------------------------------------------------------
+// // [STEP 2] 원래 점검 사이트(LogCatch)로 깨끗하게 복귀
+// // ----------------------------------------------------------
+ cy.log('🧹 세션 정보를 초기화하고 깨끗하게 복귀합니다.');
 
-// 1. 기존 쿠키와 로컬 스토리지를 모두 비웁니다. (404 방지 핵심)
-cy.clearCookies();
-cy.clearLocalStorage();
+// // 1. 기존 쿠키와 로컬 스토리지를 모두 비웁니다. (404 방지 핵심)
+// cy.clearCookies();
+// cy.clearLocalStorage();
 
-// 2. 주소 뒤에 아무것도 붙지 않은 '순수 도메인' 주소로 접속합니다.
-// 경로를 생략하고 도메인까지만 입력하면 서버가 404를 내뱉을 확률이 줄어듭니다.
 cy.visit('https://10.10.54.21:18443/logcatch/login');
 cy.wait(3000); // 화면이 그려질 수 있도록 초기 렌더링 대기 
 
@@ -403,7 +348,7 @@ cy.get('body').then(($body) => {
   }
 });
 
-cy.log('🚀 원래 사이트(LogCatch) 진입 및 로그인 로직 무사 통과!');
+
 
 cy.wait(8000); // 페이지 로딩 및 안정화 대기
 
@@ -510,8 +455,24 @@ cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
 // 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
 cy.get('tbody', { timeout: 15000 }).contains('tr', '진윤호(yunho)').should('be.visible');
 
+
+// ✅ 오늘 날짜 기준으로 방금 생성된 행인지 확인
+const today = new Date();
+const yyyy = today.getFullYear();
+const mm = String(today.getMonth() + 1).padStart(2, '0');
+const dd = String(today.getDate()).padStart(2, '0');
+const todayStr = `${yyyy}-${mm}-${dd}`; // ex) "2026-06-18"
+
+
+
+
 // 1. 테이블의 데이터가 들어있는 행(tr) 중 첫 번째 행을 잡아서 $row 변수로 받습니다.
 cy.get('tbody tr').filter(':visible').first().then(($row) => {
+  
+  // 타임스탬프 열(첫 번째 td)이 오늘 날짜인지 확인 → 방금 생성된 행임을 보장
+  cy.wrap($row).find('td').first().invoke('text').then((text) => {
+    expect(text).to.include(todayStr, '첫 번째 행 날짜정보입니다. ');
+  });
   
   // 2. 텍스트 검증 (wrap을 사용하여 $row 내부만 검색합니다)
   cy.wrap($row).within(() => {

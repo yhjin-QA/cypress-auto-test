@@ -30,9 +30,9 @@
   });
 
 /**코드 시작  */
-describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
+describe('로그캐치 사이트 테스트', () => {
   
-  it('12_Depth_운영_실행 플랜_스케줄러 자동화 시나리오', () => {
+  it('로그캐치 배포점검목록 동작 체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -175,7 +175,22 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 
     if (hasPolicy) {
       cy.log('🗑️ 기존 정책이 발견되었습니다. 삭제를 진행합니다.');
-    
+      
+     // ✅ 활성 상태면 먼저 중지
+    cy.contains('tr', 'test_auto_무결성검사').then(($row) => {
+      const isActive = Cypress.$($row).text().includes('활성');
+      if (isActive) {
+        cy.log('⏹️ 활성 상태 감지 → 중지 후 삭제');
+        cy.wrap($row).find('.v-input--selection-controls__ripple').click({ force: true });
+        cy.wait(500);
+        cy.contains('.v-btn__content', '중지').closest('button').click({ force: true });
+        cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible');
+        cy.get('.v-snack__content', { timeout: 15000 }).should('not.exist');
+        cy.wait(1000);
+      }
+    });
+      
+      
       // 삭제 버튼(휴지통) 클릭
       cy.contains('tr', 'test_auto_인사연동').find('.fa-trash').click({ force: true });
       cy.wait(500);
@@ -351,6 +366,20 @@ cy.wait(3000);
 
     if (hasPolicy) {
       cy.log('🗑️ 기존 정책이 발견되었습니다. 삭제를 진행합니다.');
+
+      // ✅ 활성 상태면 먼저 중지
+    cy.contains('tr', 'test_auto_무결성검사').then(($row) => {
+      const isActive = Cypress.$($row).text().includes('활성');
+      if (isActive) {
+        cy.log('⏹️ 활성 상태 감지 → 중지 후 삭제');
+        cy.wrap($row).find('.v-input--selection-controls__ripple').click({ force: true });
+        cy.wait(500);
+        cy.contains('.v-btn__content', '중지').closest('button').click({ force: true });
+        cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible');
+        cy.get('.v-snack__content', { timeout: 15000 }).should('not.exist');
+        cy.wait(1000);
+      }
+    });
     
       // 삭제 버튼(휴지통) 클릭
       cy.contains('tr', 'test_auto_무결성검사').find('.fa-trash').click({ force: true });
@@ -445,12 +474,11 @@ cy.wait(3000);
     // '시작'이라는 버튼이 활성화 해당버튼을 클릭합니다.
     cy.contains('.v-btn__content', '시작').closest('button').should('not.be.disabled').click({ force: true });
 
-     // 4. 성공 알림창(Snackbar) 포착 및 텍스트 검증
+    // 4. 성공 알림창(Snackbar) 포착 및 텍스트 검증
     cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible').and('contain', '성공'); // '성공' 문구 포함 확인
 
     // 5. 알림창이 사라질 때까지 대기
-    cy.get('.v-snack__content').should('not.exist');
-    cy.wait(2000); 
+    cy.get('.v-snack__content', { timeout: 15000 }).should('not.exist');
 
     // [최종 확인] 등록했던 이름인 @targetRow2을 사용하여 상태를 확인
     //cy.get('@targetRow2').should('contain', '활성').and('be.visible');
@@ -516,6 +544,22 @@ cy.wait(3000);
 //------------------------------------------------------------------------ 
 
     cy.log('✅ 운영 - 실행플랜 - [스케줄러] 출력 확인 완료 ');
+
+    
+    // /////////////////////////////////////////////////
+    // // 로그폴더 소유자 : logcatch인지 점검 
+    // /////////////////////////////////////////////////
+    // cy.exec(`stat -c "%U" ${logPath}*.log`).then((result) => {
+    //   // 2. 실행 결과(stdout)를 줄바꿈으로 나누어 배열로 만듭니다.
+    //   const owners = result.stdout.split('\n');
+
+    //   // 3. 모든 파일의 소유자가 'logcatch'와 일치하는지 검증합니다.
+    //   owners.forEach((owner) => {
+    //     expect(owner.trim()).to.equal(expectedOwner);
+    //   });
+      
+    //   cy.log('모든 로그 파일의 소유권이 정상입니다.');
+    // });
 
  
     // // 운영 > 실행 플랜  > "실시간 모니터링" 탭을 클릭
