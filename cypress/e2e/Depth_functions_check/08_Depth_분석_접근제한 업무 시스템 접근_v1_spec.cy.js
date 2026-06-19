@@ -249,6 +249,13 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     //test_auto_접근제한 업무 시스템 접근 목록에 정책이 잘 추가되었는지 검증하는 코드 
     cy.get('tbody').contains('tr', 'test_auto_접근제한 업무 시스템 접근').should('be.visible');
 
+// ==================== [여기] WAS 타격 직전 ====================
+// ① 타격 시각 기록
+const hitTime = new Date();
+const hitTimeStr = `${hitTime.getFullYear()}-${String(hitTime.getMonth()+1).padStart(2,'0')}-${String(hitTime.getDate()).padStart(2,'0')} ${String(hitTime.getHours()).padStart(2,'0')}:${String(hitTime.getMinutes()).padStart(2,'0')}:${String(hitTime.getSeconds()).padStart(2,'0')}`;
+cy.log(`⏱️ WAS 타격 시각 기록: ${hitTimeStr}`);
+// ==============================================================
+
 
 // ----------------------------------------------------------
 // [STEP 1] WAS 시스템 로그인 및 배송담당자 김민지 조회 타격 (이상행위 - 열람제한 개인정보 접근)
@@ -502,6 +509,30 @@ cy.get('body').type('{esc}');
 cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 cy.wait(3000);
 
+// ==================== [여기] 검색버튼 클릭 직후 ====================
+// ⑤ 타격 시각 이후 행이 나타날 때까지 폴링
+function waitForNewLog(attempt = 0) {
+    if (attempt > 24) throw new Error('❌ 새 이력 미반영 (120초 초과)');
+
+    cy.get('tbody tr').filter(':visible').then(($rows) => {
+        // 첫 번째 행 타임스탬프가 타격 시각보다 최신인지 확인
+        const firstRowTime = $rows.first().find('td').first().text().trim();
+        const isNew = firstRowTime >= hitTimeStr;
+
+        if (isNew) {
+            cy.log(`✅ 새 이력 감지! 행 시각: ${firstRowTime} >= 타격 시각: ${hitTimeStr}`);
+        } else {
+            cy.log(`⏳ 대기 중... (${attempt * 5}초 경과) 현재 최신: ${firstRowTime}`);
+            cy.wait(5000);
+            cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+            cy.wait(1000);
+            waitForNewLog(attempt + 1);
+        }
+    });
+}
+waitForNewLog();
+// ================================================================
+
 // ----------------------------------------------------------
 // [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
 // ----------------------------------------------------------
@@ -525,8 +556,6 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
   cy.log(`🔍 생성 시 선택했던 [${targetAlert.label}] 로그가 정상적으로 발생했는지 검증합니다.`);
   cy.get(targetAlert.iconClass).should('be.visible').and('have.css', 'color', targetAlert.color);
   });
-
-cy.log('🎉 분석 접근제한 업무 시스템 접근 확인 및 랜덤 등급 검증 완료!');
 
 
   // ==========================================
