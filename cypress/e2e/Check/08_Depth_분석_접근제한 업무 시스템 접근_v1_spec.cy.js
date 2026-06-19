@@ -512,6 +512,7 @@ cy.wait(3000);
 // ==================== [여기] 검색버튼 클릭 직후 ====================
 // ⑤ 타격 시각 이후 행이 나타날 때까지 폴링
 function waitForNewLog(attempt = 0) {
+    // 5초 간격 24회 폴링
     if (attempt > 24) throw new Error('❌ 새 이력 미반영 (120초 초과)');
 
     cy.get('tbody tr').filter(':visible').then(($rows) => {
