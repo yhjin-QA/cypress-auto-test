@@ -30,9 +30,9 @@
   });
 
 /**코드 시작  */
-describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
+describe('로그캐치 사이트 테스트', () => {
   
-  it('08_Depth_분석_개인정보 유형 과다사용 자동화 시나리오', () => {
+  it('로그캐치 배포점검목록 동작 체크', () => {
 
 
     // ==========================================
@@ -251,6 +251,12 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      //개인정보 유형 과다사용 정책 목록에 정책이 잘 추가되었는지 검증하는 코드 
      cy.get('tbody').contains('tr', 'test_auto_개인정보 유형 과다사용').should('be.visible');
 
+// ==================== [여기] WAS 타격 직전 ====================
+// ① 타격 시각 기록
+const hitTime = new Date();
+const hitTimeStr = `${hitTime.getFullYear()}-${String(hitTime.getMonth()+1).padStart(2,'0')}-${String(hitTime.getDate()).padStart(2,'0')} ${String(hitTime.getHours()).padStart(2,'0')}:${String(hitTime.getMinutes()).padStart(2,'0')}:${String(hitTime.getSeconds()).padStart(2,'0')}`;
+cy.log(`⏱️ WAS 타격 시각 기록: ${hitTimeStr}`);
+// ==============================================================
 
 // ----------------------------------------------------------
 // [STEP 1] WAS 시스템 로그인 및 배송담당자 조회 타격 (이상행위 - 개인정보 유형 과다사용)
@@ -493,7 +499,6 @@ cy.wait(500);
 cy.get('.menuable__content__active').filter(':visible').within(() => {
   
   // 2. 그 활성 팝업창 안에서 '파일다운로드'를 찾습니다.
-  // 이제 엉뚱한 숨김 처리된 팝업의 글자를 찾을 위험이 0%가 됩니다.
   cy.contains('.v-list__tile__title', '개인정보 유형 과다사용').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
 });
 cy.wait(1000); // 클릭 후 메뉴가 닫힐 시간 대기
@@ -503,6 +508,30 @@ cy.get('body').type('{esc}');
 //검색버튼 클릭
 cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 cy.wait(1000);
+
+// ==================== [여기] 검색버튼 클릭 직후 ====================
+// ⑤ 타격 시각 이후 행이 나타날 때까지 폴링
+function waitForNewLog(attempt = 0) {
+    if (attempt > 12) throw new Error('❌ 새 이력 미반영 (60초 초과)');
+
+    cy.get('tbody tr').filter(':visible').then(($rows) => {
+        // 첫 번째 행 타임스탬프가 타격 시각보다 최신인지 확인
+        const firstRowTime = $rows.first().find('td').first().text().trim();
+        const isNew = firstRowTime >= hitTimeStr;
+
+        if (isNew) {
+            cy.log(`✅ 새 이력 감지! 행 시각: ${firstRowTime} >= 타격 시각: ${hitTimeStr}`);
+        } else {
+            cy.log(`⏳ 대기 중... (${attempt * 5}초 경과) 현재 최신: ${firstRowTime}`);
+            cy.wait(5000);
+            cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+            cy.wait(1000);
+            waitForNewLog(attempt + 1);
+        }
+    });
+}
+waitForNewLog();
+// ================================================================
 
 // ----------------------------------------------------------
 // [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증

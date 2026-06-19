@@ -238,6 +238,12 @@ describe('로그캐치 사이트 테스트', () => {
     //test_auto_장기 미접속 사용자 목록에 정책이 잘 추가되었는지 검증하는 코드 
     cy.get('tbody').contains('tr', 'test_auto_장기 미접속 사용자').should('be.visible');
 
+// ==================== [여기] WAS 타격 직전 ====================
+// ① 타격 시각 기록
+const hitTime = new Date();
+const hitTimeStr = `${hitTime.getFullYear()}-${String(hitTime.getMonth()+1).padStart(2,'0')}-${String(hitTime.getDate()).padStart(2,'0')} ${String(hitTime.getHours()).padStart(2,'0')}:${String(hitTime.getMinutes()).padStart(2,'0')}:${String(hitTime.getSeconds()).padStart(2,'0')}`;
+cy.log(`⏱️ WAS 타격 시각 기록: ${hitTimeStr}`);
+// ==============================================================
 
 // ----------------------------------------------------------
 // [STEP 1] WAS 시스템 로그인 및 상품목록 조회 타격
@@ -475,6 +481,30 @@ cy.get('body').type('{esc}');
 //검색버튼 클릭
 cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 cy.wait(1000);
+
+// ==================== [여기] 검색버튼 클릭 직후 ====================
+// ⑤ 타격 시각 이후 행이 나타날 때까지 폴링
+function waitForNewLog(attempt = 0) {
+    if (attempt > 12) throw new Error('❌ 새 이력 미반영 (60초 초과)');
+
+    cy.get('tbody tr').filter(':visible').then(($rows) => {
+        // 첫 번째 행 타임스탬프가 타격 시각보다 최신인지 확인
+        const firstRowTime = $rows.first().find('td').first().text().trim();
+        const isNew = firstRowTime >= hitTimeStr;
+
+        if (isNew) {
+            cy.log(`✅ 새 이력 감지! 행 시각: ${firstRowTime} >= 타격 시각: ${hitTimeStr}`);
+        } else {
+            cy.log(`⏳ 대기 중... (${attempt * 5}초 경과) 현재 최신: ${firstRowTime}`);
+            cy.wait(5000);
+            cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+            cy.wait(1000);
+            waitForNewLog(attempt + 1);
+        }
+    });
+}
+waitForNewLog();
+// ================================================================
 
 // ----------------------------------------------------------
 // [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
