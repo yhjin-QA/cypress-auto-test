@@ -34,7 +34,6 @@ describe('로그캐치 사이트 테스트', () => {
   
   it('로그캐치 배포점검목록 동작 체크', () => {
 
-
     // ==========================================
     // STEP 0 경보등급 랜돔 지정 셋팅
     // ==========================================
@@ -137,31 +136,32 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
 
 
-   ///////////////////////////////////////////////
-    // 이상행위 정책 -  개인정보 유형 과다사용 
     ///////////////////////////////////////////////
-    cy.contains('.v-chip__content', '개인정보 유형 과다사용').should('be.visible').click({ force: true });
-    cy.contains('.c-headline', '개인정보 유형 과다사용 정책 목록').should('exist');
+    // 이상행위 정책 -  비인가 IP 접근 
+    ///////////////////////////////////////////////
+    cy.contains('.v-chip__content', '비인가 IP 접근').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '비인가 IP 접근 정책 목록').should('exist');
     // 표 문구열 확인
     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
     cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
 
+
     // 기능 확인 -------------------------------------------------
     cy.log('🔍 기존 정책 존재 여부를 확인합니다.');
     
-    //예외처리  test_auto_개인정보 유형 과다사용 삭제 --------------------------
-    // 1. [조건부 삭제] test_auto_개인정보 유형 과다사용 정책이 있으면 삭제, 없으면 패스
+    //예외처리  test_auto_비인가 IP 접근 삭제 --------------------------
+    // 1. [조건부 삭제] test_auto_비인가 IP 접근 정책이 있으면 삭제, 없으면 패스
     cy.get('body').then(($body) => {
     // jQuery의 :contains 선택자를 이용해 해당 텍스트가 있는 <tr>을 찾습니다.
-    const hasPolicy = $body.find('tr:contains("test_auto_개인정보 유형 과다사용")').length > 0;
+    const hasPolicy = $body.find('tr:contains("test_auto_비인가 IP 접근")').length > 0;
 
     if (hasPolicy) {
       cy.log('🗑️ 기존 정책이 발견되었습니다. 삭제를 진행합니다.');
     
       // 삭제 버튼(휴지통) 클릭
-      cy.contains('tr', 'test_auto_개인정보 유형 과다사용').find('.fa-trash').click({ force: true });
+      cy.contains('tr', 'test_auto_비인가 IP 접근').find('.fa-trash').click({ force: true });
       cy.wait(500);
     
       // 삭제 확인 팝업에서 '확인' 클릭
@@ -169,7 +169,7 @@ describe('로그캐치 사이트 테스트', () => {
       cy.wait(1000); // 삭제 처리가 서버에 반영될 시간 대기
 
       // 추가한 정책 삭제 검증코드 
-      cy.contains('tr', 'test_auto_개인정보 유형 과다사용').should('not.exist'); 
+      cy.contains('tr', 'test_auto_비인가 IP 접근').should('not.exist'); 
       cy.log('✅ 기존 정책 삭제 완료!');
     
     } else {
@@ -185,10 +185,10 @@ describe('로그캐치 사이트 테스트', () => {
            });
     cy.wait(1000);
 
-    // 개인정보 유형 과다사용 정책 추가화면 진입----------------------------------------
+    // 열람 제한 개인정보 접근 정책 추가화면 진입----------------------------------------
     // 정책이름 입력 
-    cy.get('input[aria-label="정책 이름"]').filter(':visible').clear({ force: true }).type('test_auto_개인정보 유형 과다사용', { force: true });
-
+    cy.get('input[aria-label="정책 이름"]').filter(':visible').first().clear({ force: true }).type('test_auto_비인가 IP 접근', { force: true });
+    
     // 정책설정 부분
     // 정책 사용여부 토글 OFF-> ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
@@ -198,58 +198,120 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="소명 여부"]').check({ force: true });
     cy.wait(500); 
 
-    // 업무시스템 - 선택
+     // 업무시스템 - 선택
     cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
     cy.wait(1000);
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
-    // 업무시스템중 '리눅스배송관리' 클릭하는 코드
-    cy.get('.v-menu__content').filter(':visible').contains('리눅스_배송관리').click({ force: true });
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').first().parent().click({ force: true });
     cy.wait(500);
+    // 업무시스템중 '리눅스_배송관리' 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').first().contains('리눅스_배송관리').click({ force: true });
+    cy.wait(500);
+
+    // 드롭다운 닫지 않고 두 번째 선택: 리눅스_VIP고객
+    cy.get('.menuable__content__active').filter(':visible').contains('.v-list__tile__title', '리눅스_VIP고객').scrollIntoView().should('be.visible').click({ force: true });
+    cy.wait(500);
+    
     // 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
 
-    // 경보등급 랜덤 선택하기 ---------------------------------------------------------------------
+    // 경보등급 랜덤 선택하기 
     cy.log(`🎯 경보등급 [${targetAlert.label}] 항목을 선택합니다.`);
     cy.contains('label', targetAlert.label).closest('div').find('.v-input--selection-controls__ripple').click({ force: true });
     cy.wait(500);
     
-    // 랜덤 선택된 상태 확인 검증코드 
+    // 랜덤 선택된 경보등급 상태 확인 검증코드 
     cy.contains('label', targetAlert.label).closest('div').find('input').should('have.attr', 'aria-checked', 'true');
     cy.wait(500);
 
-     // 개인 정보 유형 추가-----------------------------------------------------
-     // 패턴유형 클릭하여 드롭다운 목록 열기---------------------------
-     cy.get('input[aria-label="패턴 유형"]').filter(':visible').click({ force: true });
-     cy.wait(500);
-     // 패턴유형 드롭다운 메뉴에서 주민등록 번호 선택하기
-     cy.get('.v-menu__content').filter(':visible').contains('휴대전화번호').click({ force: true });
-     cy.wait(500);
+    // 허용 IP설정-------------------------------------------------------
+    // 식별자 이름 tester 입력하기 
+    cy.get('input[aria-label="식별자 이름"]').filter(':visible').first().type('{selectall}{backspace}autotester', { force: true });
+    cy.wait(500);
 
-     // 선택한 컨텍스트 메뉴 닫기
-     cy.get('body').type('{esc}');
+    //정보사용자 선택하기
+    cy.get('input[aria-label="정보 사용자"]').filter(':visible').first().click({ force: true });
+    cy.wait(500);
+
+    // 정보 사용자 팝업창에서 이름 검색 - 테스터 입력 
+    cy.get('.v-dialog').filter(':visible').find('input[aria-label="사용자"]').type('박선영', { force: true });
+    cy.wait(500);
+
+    // 정보사용자 팝업창에서 테스터이라는 사람 그옆 체크박스 클릭
+    cy.contains('tr', '박선영').find('.v-icon').click({ force: true });
+    cy.wait(500);
+
+    // 체크가 잘되어있는지 검증코드
+    cy.contains('tr', '박선영').find('.v-icon').should('contain', 'check_box');
+
+    //정보사용자 팝업창 '확인' 버튼 클릭
+    cy.get('.v-dialog__content--active').find('button').contains('확인').click({ force: true });
+    cy.wait(500);
+
+    // 2. 접근 IP 주소 입력 - 10.10.0.1
+    cy.get('input[aria-label="접근 IP 주소"]').filter(':visible').clear({ force: true }).type('10.10.0.1');
+    cy.wait(500);
+    // 3. 넷마스크 입력
+    cy.get('input[aria-label="넷마스크"]').filter(':visible').clear({ force: true }).type('255.255.0.0');
+    cy.wait(500);
+
+    // 허용/비허용' 라벨 옆의 버튼을 클릭 (ON -> OFF)
+    cy.get('input[aria-label="허용/비허용"]').uncheck({ force: true });
+    // [검증] aria-checked 속성이 'false'(꺼짐)로 변했는지 확인
+    cy.get('input[aria-label="허용/비허용"]').should('have.attr', 'aria-checked', 'false');
+
+    // 우측 끝 '추가' 버튼 클릭
+    cy.contains('button', '추가').filter(':visible').click({ force: true });
+    cy.wait(500);
+
+    //---------------------------------------------------------------------------------------------------------------
+    // 허용 IP설정-------------------------------------------------------
+    // 식별자 이름 tester 입력하기 
+    cy.get('input[aria-label="식별자 이름"]').filter(':visible').first().type('{selectall}{backspace}autotester1', { force: true });
+    cy.wait(500);
+
+    //정보사용자 선택하기
+    cy.get('input[aria-label="정보 사용자"]').filter(':visible').first().click({ force: true });
+    cy.wait(500);
+
+    // 정보 사용자 팝업창에서 이름 검색 - 테스터 입력 
+    cy.get('.v-dialog').filter(':visible').find('input[aria-label="사용자"]').type('사원_3', { force: true });
+    cy.wait(500);
+
+    // 정보사용자 팝업창에서 테스터이라는 사람 그옆 체크박스 클릭
+    cy.contains('tr', '사원_3').find('.v-icon').click({ force: true });
+    cy.wait(500);
+
+    // 체크가 잘되어있는지 검증코드
+    cy.contains('tr', '사원_3').find('.v-icon').should('contain', 'check_box');
+
+    //정보사용자 팝업창 '확인' 버튼 클릭
+    cy.get('.v-dialog__content--active').find('button').contains('확인').click({ force: true });
+    cy.wait(500);
+
+    // 2. 접근 IP 주소 입력 - 10.10.0.2
+    cy.get('input[aria-label="접근 IP 주소"]').filter(':visible').clear({ force: true }).type('10.10.0.2');
+    cy.wait(500);
+    // 3. 넷마스크 입력
+    cy.get('input[aria-label="넷마스크"]').filter(':visible').clear({ force: true }).type('255.255.0.0');
+    cy.wait(500);
+
+    // 허용/비허용' 라벨 옆의 버튼을 클릭 (ON -> OFF)
+    cy.get('input[aria-label="허용/비허용"]').uncheck({ force: true });
+    // [검증] aria-checked 속성이 'false'(꺼짐)로 변했는지 확인
+    cy.get('input[aria-label="허용/비허용"]').should('have.attr', 'aria-checked', 'false');
+
+    // 우측 끝 '추가' 버튼 클릭
+    cy.contains('button', '추가').filter(':visible').click({ force: true });
+    cy.wait(500);
+
+    //---------------------------------------------------------------------------------------------------------------
+    // 저장버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+    cy.wait(500);
 
 
-     //패턴 유형 개수 기본값 0 지우고 1 입력하기
-     cy.get('input[aria-label="패턴 유형 개수"]').filter(':visible').type('{selectall}1', { force: true });
-     // 값이 '3'인지 확인
-     cy.get('input[aria-label="패턴 유형 개수"]').filter(':visible').first().should('have.value', '1');
-     cy.wait(500);
-
-     // 패턴유형 '추가' 버튼 클릭
-     cy.contains('.v-btn__content', '추가').filter(':visible').click({ force: true });
-     cy.wait(1000);
-
-   
-     // 추가한 패턴유형 검증하는 코드
-     cy.contains('tr', '휴대전화번호').should('contain', '1');
-     cy.wait(500);
-
-     // 저장버튼 클릭 
-     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-     cy.wait(1000);
-    
-     //개인정보 유형 과다사용 정책 목록에 정책이 잘 추가되었는지 검증하는 코드 
-     cy.get('tbody').contains('tr', 'test_auto_개인정보 유형 과다사용').should('be.visible');
+    //test_auto_비인가 IP 접근 목록에 정책이 잘 추가되었는지 검증하는 코드 
+    cy.get('tbody').contains('tr', 'test_auto_비인가 IP 접근').should('be.visible');
 
 // ==================== [여기] WAS 타격 직전 ====================
 // ① 타격 시각 기록
@@ -258,87 +320,38 @@ const hitTimeStr = `${hitTime.getFullYear()}-${String(hitTime.getMonth()+1).padS
 cy.log(`⏱️ WAS 타격 시각 기록: ${hitTimeStr}`);
 // ==============================================================
 
-// ----------------------------------------------------------
-// [STEP 1] WAS 시스템 로그인 및 배송담당자 조회 타격 (이상행위 - 개인정보 유형 과다사용)
-// ----------------------------------------------------------
-cy.log('🚀 WAS 사이트로 이동하여 새 세션을 발급받습니다.');
+// ========================================
+// WAS 타격: 10.10.54.27 (LOGCATCH SECURE PORTAL - 고객 데이터 유출)
+// ========================================
 
-// 기존 코드에서 옵션 추가
-cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', { 
-  timeout: 60000,           // 타임아웃을 60초로 연장
-  onBeforeLoad(win) {      // 페이지 로드 전 속도 향상을 위한 설정
-    delete win.fetch; 
-  }
-});
+// 1단계: 로그인 (JSESSIONID 획득)
+cy.request({
+    method: 'POST',
+    url: 'http://10.10.54.27/crm/login.jsp',
+    form: true,
+    body: {
+        empId: 'user003',
+        empPw: 'Manager1!'
+    },
+    followRedirect: false,
+    failOnStatusCode: false
+}).then((loginRes) => {
+    cy.log(`✅ 로그인 응답: ${loginRes.status}`); // 302 예상
 
-cy.origin('http://10.10.54.22:8080', { args: { targetName: '김민지' } }, ({ targetName }) => {
-  Cypress.on('uncaught:exception', () => false);
-
-  // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
-  cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
-  cy.visit('/uat/uia/egovLoginUsr.do');
-  cy.get('#id').should('be.visible').clear().type('yunho');
-  cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
-
-  // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
-  cy.contains('a', '로그아웃', { timeout: 15000 }).should('be.visible');
-  cy.log('✅ 로그인 성공! 방금 생성된 세션 확보 완료!');
-
-  // 4. ✨ 핵심 로직: 쿠키 또는 URL에서 JSESSIONID를 안전하게 추출합니다.
-  cy.url().then((currentUrl) => {
-    cy.getCookie('JSESSIONID').then((cookie) => {
-      let freshSessionId = '';
-
-      // ① 먼저 쿠키에 JSESSIONID가 있는지 확인
-      if (cookie && cookie.value) {
-        freshSessionId = cookie.value;
-        cy.log(`🔑 쿠키에서 세션 ID 추출 완료`);
-      } 
-      // ② 쿠키가 없다면, URL에 jsessionid가 붙어있는지 확인 (URL Rewriting 대응)
-      else if (currentUrl.toLowerCase().includes('jsessionid=')) {
-        // 정규식을 사용해 URL에서 jsessionid 값만 쏙 뽑아냅니다.
-        const match = currentUrl.match(/jsessionid=([^?&#]+)/i);
-        if (match && match[1]) {
-          freshSessionId = match[1];
-          cy.log(`🔑 URL에서 세션 ID 추출 완료`);
-        }
-      }
-
-      // 방어 코드: 둘 다 실패했을 경우
-      if (!freshSessionId) {
-        throw new Error('❌ JSESSIONID를 쿠키와 URL 모두에서 찾을 수 없습니다.');
-      }
-
-      cy.log(`✅ 최종 사용될 세션 ID: ${freshSessionId}`);
-
-      // 5. 추출한 새 세션 ID를 헤더에 꽂아서 API 타격!
-      cy.request({
-        method: 'POST',
-        url: '/cop/logcatch/selectDeliveryList.do',
-        form: true,
-        headers: {
-          'Cookie': `JSESSIONID=${freshSessionId}`, 
-          'X-Requested-With': 'XMLHttpRequest',
-          'Referer': 'http://10.10.54.22:8080/uat/uia/actionMain.do'
+    // 2단계: 고객 데이터 유출 실행 (GET)
+    cy.request({
+        method: 'GET',
+        url: 'http://10.10.54.27/crm/soc_matrix.jsp',
+        qs: {
+            action: 'massive_inquiry',
+            _ts: Date.now()
         },
-        body: { 
-          menuNo: '32',
-          pageIndex: 1,  // 🔍 수정: pageindex -> pageIndex (대문자 I)
-          searchCnd: '0', // 🔍 추가 권장: 이미지에 포함된 기본 파라미터들
-          searchWrd: targetName, // 🌟 여기에 특정 사용자 이름 입력
-          bbsId: '',      // 🔍 추가 권장
-          trgetId: ''     // 🔍 추가 권장
-        }
-      }).then((response) => {
-        // 6. 정상 응답 검증 (200 OK)
-        expect(response.status).to.eq(200);
-        cy.log('🎉 매번 새로운 세션으로 과다조회 자동 타격 성공!');
-        cy.log(`🎯 특정 사용자 [${targetName}]으로 배송 담당자 조회 타격 완료!`);
-      });
+        failOnStatusCode: false
+    }).then((res) => {
+        expect(res.status).to.eq(200);
+        cy.log('✅ WAS 타격 완료 (10.10.54.27 고객 데이터 유출)');
     });
-  });
 });
-
 
 
 // ----------------------------------------------------------
@@ -480,15 +493,15 @@ cy.contains('.tab-btn', '이상행위', { timeout: 15000 }).should('be.visible')
 //------------------------------------------------------------------------------------------------------
 cy.log('✅ 이상행위 탭 진입 성공');
 
-// 사용자 검색 - 진윤호(yunho)
-// 1. 콤보박스에 검색어 입력
-cy.get('input[aria-label="사용자"]').filter(':visible').clear({ force: true }).type('yunho', { force: true });
-cy.wait(1000); 
-// 검색된 콤보박스 리스트  선택하기
-cy.contains('.v-list__tile__title', 'yunho').should('be.visible').click({ force: true });
-cy.wait(1000);
-// 선택 후 메뉴 닫기
-cy.get('body').type('{esc}');
+// // 사용자 검색 - 박선영(loginid1)
+// // 1. 콤보박스에 검색어 입력
+// cy.get('input[aria-label="사용자"]').filter(':visible').clear({ force: true }).type('박선영', { force: true });
+// cy.wait(1000); 
+// // 검색된 콤보박스 리스트  선택하기
+// cy.contains('.v-list__tile__title', '박선영').should('be.visible').click({ force: true });
+// cy.wait(1000);
+// // 선택 후 메뉴 닫기
+// cy.get('body').type('{esc}');
 
 
 // 이상행위 유형 선택 
@@ -498,17 +511,18 @@ cy.wait(500);
 // 1. 현재 화면에 열려있는 '진짜' 활성 상태의 팝업창만 타겟팅합니다.
 cy.get('.menuable__content__active').filter(':visible').within(() => {
   
-  // 2. 그 활성 팝업창 안에서 '파일다운로드'를 찾습니다.
-  cy.contains('.v-list__tile__title', '개인정보 유형 과다사용').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+  // 2. 그 활성 팝업창 안에서 '비인가 IP 접근'를 찾습니다.
+  // 이제 엉뚱한 숨김 처리된 팝업의 글자를 찾을 위험이 0%가 됩니다.
+  cy.contains('.v-list__tile__title', '비인가 IP 접근').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
 });
-cy.wait(1000); // 클릭 후 메뉴가 닫힐 시간 대기
+
+cy.wait(500); // 클릭 후 메뉴가 닫힐 시간 대기
 // 선택 후 메뉴 닫기
 cy.get('body').type('{esc}');
     
 //검색버튼 클릭
 cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 cy.wait(1000);
-
 // ==================== [여기] 검색버튼 클릭 직후 ====================
 // ⑤ 타격 시각 이후 행이 나타날 때까지 폴링
 function waitForNewLog(attempt = 0) {
@@ -537,14 +551,18 @@ waitForNewLog();
 // [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
 // ----------------------------------------------------------
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
+// [개선 코드]
+// 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
+cy.get('tbody', { timeout: 15000 }).contains('tr', '사원_3(user003)').should('be.visible');
+
 
 // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
 cy.get('tbody tr').filter(':visible').first().within(() => {
   
   // 2. 텍스트 검증
-  cy.contains('진윤호(yunho)').should('be.visible');
-  cy.contains('개인정보 유형 과다사용').should('be.visible');
-  cy.contains('test_auto_개인정보 유형 과다사용').should('be.visible');
+  cy.contains('사원_3(user003)').should('be.visible');
+  cy.contains('비인가 IP 접근').should('be.visible');
+  cy.contains('test_auto_비인가 IP 접근').should('be.visible');
   cy.contains('존재').should('be.visible');
   cy.contains('소명 대상').should('be.visible');
 
@@ -553,13 +571,13 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
   cy.get(targetAlert.iconClass).should('be.visible').and('have.css', 'color', targetAlert.color);
   });
 
-cy.log('🎉 분석 이상행위  개인정보 유형 과다사용 확인 및 랜덤 등급 검증 완료!');
+cy.log('🎉 분석 비인가 IP 접근 확인 및 랜덤 등급 검증 완료!');
 
 
   // ==========================================
   // [FINAL] 테스트 종료 및 메뉴 닫기
   // ==========================================
-  cy.log('🎉 Depth 분석 - 개인정보 유형 과다사용 테스트 시나리오 성공적으로 완료!');
+  cy.log('🎉 Depth 분석- 비인가 IP 접근 테스트 시나리오 성공적으로 완료!');
   cy.get('body').type('{esc}');
   cy.get('body').click('center', { force: true });
 

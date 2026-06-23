@@ -198,14 +198,15 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('input[aria-label="소명 여부"]').check({ force: true });
     cy.wait(500); 
 
-    // 그룹별 클릭하는 코드 
+   // 그룹별 클릭하는 코드 
     cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
-    // 그룹별중 총무,인사팀 클릭하는 코드
-    cy.get('.v-menu__content').filter(':visible').contains('품질관리팀').click({ force: true });
+    //그룹 전체선택
+    cy.get('.v-menu__content').filter(':visible').contains('서비스기획팀').scrollIntoView().click({ force: true });
     cy.wait(500);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
+
 
     // 경보등급 랜덤 선택하기 
     cy.log(`🎯 경보등급 [${targetAlert.label}] 항목을 선택합니다.`);
@@ -239,7 +240,31 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
       cy.contains('리눅스_배송관리').should('be.visible'); 
     });
      cy.wait(500); 
+     //------------------------------------------------------------------------------------------------------
 
+     // 접근 제한 업무시스템 등록-----------------------------------------------------------------------------
+    // 정책이름 입력하기
+    cy.get('input[aria-label="정책 이름"]').filter(':visible').last().clear({ force: true }).type('test_리눅스_VIP고객관리 제한', { force: true });
+    cy.wait(500);
+    
+    // 업무시스템 - 선택
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').last().scrollIntoView({ block: 'center' }).parent().click({ force: true });
+    cy.wait(500);
+    // 업무시스템중 '리눅스_VIP고객' 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').last().contains('리눅스_VIP고객').click({ force: true });
+    cy.wait(500);
+
+     // 추가버튼 클릭
+    cy.contains('button', '추가').filter(':visible').scrollIntoView({ block: 'center' }).click({ force: true });
+    cy.wait(500);
+
+    //추가된 표안의 잘추가되어있는지 검증코드 
+    cy.contains('tr', 'test_리눅스_VIP고객관리 제한').scrollIntoView({ block: 'center' }) 
+     .within(() => {
+      cy.contains('리눅스_VIP고객').should('be.visible'); 
+    });
+     cy.wait(500); 
+     //------------------------------------------------------------------------------------------------------
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
@@ -257,85 +282,37 @@ cy.log(`⏱️ WAS 타격 시각 기록: ${hitTimeStr}`);
 // ==============================================================
 
 
-// ----------------------------------------------------------
-// [STEP 1] WAS 시스템 로그인 및 배송담당자 김민지 조회 타격 (이상행위 - 열람제한 개인정보 접근)
-// ----------------------------------------------------------
-cy.log('🚀 WAS 사이트로 이동하여 새 세션을 발급받습니다.');
+// ========================================
+// WAS 타격: 10.10.54.27 (LOGCATCH SECURE PORTAL - 고객 데이터 유출)
+// ========================================
 
-// 기존 코드에서 옵션 추가
-cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', { 
-  timeout: 60000,           // 타임아웃을 60초로 연장
-  onBeforeLoad(win) {      // 페이지 로드 전 속도 향상을 위한 설정
-    delete win.fetch; 
-  }
-});
+// 1단계: 로그인 (JSESSIONID 획득)
+cy.request({
+    method: 'POST',
+    url: 'http://10.10.54.27/crm/login.jsp',
+    form: true,
+    body: {
+        empId: 'user005',
+        empPw: 'Manager1!'
+    },
+    followRedirect: false,
+    failOnStatusCode: false
+}).then((loginRes) => {
+    cy.log(`✅ 로그인 응답: ${loginRes.status}`); // 302 예상
 
-cy.origin('http://10.10.54.22:8080', { args: { targetName: '김민지' } }, ({ targetName }) => {
-  Cypress.on('uncaught:exception', () => false);
-
-  // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
-  cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
-  cy.visit('/uat/uia/egovLoginUsr.do');
-  cy.get('#id').should('be.visible').clear().type('yunho');
-  cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
-
-  // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
-  cy.contains('a', '로그아웃', { timeout: 15000 }).should('be.visible');
-  cy.log('✅ 로그인 성공! 방금 생성된 싱싱한 세션 확보 완료!');
-
-  // 4. ✨ 핵심 로직: 쿠키 또는 URL에서 JSESSIONID를 안전하게 추출합니다.
-  cy.url().then((currentUrl) => {
-    cy.getCookie('JSESSIONID').then((cookie) => {
-      let freshSessionId = '';
-
-      // ① 먼저 쿠키에 JSESSIONID가 있는지 확인
-      if (cookie && cookie.value) {
-        freshSessionId = cookie.value;
-        cy.log(`🔑 쿠키에서 세션 ID 추출 완료`);
-      } 
-      // ② 쿠키가 없다면, URL에 jsessionid가 붙어있는지 확인 (URL Rewriting 대응)
-      else if (currentUrl.toLowerCase().includes('jsessionid=')) {
-        // 정규식을 사용해 URL에서 jsessionid 값만 쏙 뽑아냅니다.
-        const match = currentUrl.match(/jsessionid=([^?&#]+)/i);
-        if (match && match[1]) {
-          freshSessionId = match[1];
-          cy.log(`🔑 URL에서 세션 ID 추출 완료`);
-        }
-      }
-
-      // 방어 코드: 둘 다 실패했을 경우
-      if (!freshSessionId) {
-        throw new Error('❌ JSESSIONID를 쿠키와 URL 모두에서 찾을 수 없습니다.');
-      }
-
-      cy.log(`✅ 최종 사용될 세션 ID: ${freshSessionId}`);
-
-      // 5. 추출한 새 세션 ID를 헤더에 꽂아서 API 타격!
-      cy.request({
-        method: 'POST',
-        url: '/cop/logcatch/selectDeliveryList.do',
-        form: true,
-        headers: {
-          'Cookie': `JSESSIONID=${freshSessionId}`, 
-          'X-Requested-With': 'XMLHttpRequest',
-          'Referer': 'http://10.10.54.22:8080/uat/uia/actionMain.do'
+    // 2단계: 고객 데이터 유출 실행 (GET)
+    cy.request({
+        method: 'GET',
+        url: 'http://10.10.54.27/crm/soc_matrix.jsp',
+        qs: {
+            action: 'massive_inquiry',
+            _ts: Date.now()
         },
-        body: { 
-          menuNo: '32',
-          pageIndex: 1,  // 🔍 수정: pageindex -> pageIndex (대문자 I)
-          searchCnd: '0', // 🔍 추가 권장: 이미지에 포함된 기본 파라미터들
-          searchWrd: targetName, // 🌟 여기에 특정 사용자 이름 입력
-          bbsId: '',      // 🔍 추가 권장
-          trgetId: ''     // 🔍 추가 권장
-        }
-      }).then((response) => {
-        // 6. 정상 응답 검증 (200 OK)
-        expect(response.status).to.eq(200);
-        cy.log('🎉 매번 새로운 세션으로 과다조회 자동 타격 성공!');
-        cy.log(`🎯 특정 사용자 [${targetName}]으로 배송 담당자 조회 타격 완료!`);
-      });
+        failOnStatusCode: false
+    }).then((res) => {
+        expect(res.status).to.eq(200);
+        cy.log('✅ WAS 타격 완료 (10.10.54.27 고객 데이터 유출)');
     });
-  });
 });
 
 
@@ -478,15 +455,15 @@ cy.contains('.tab-btn', '이상행위', { timeout: 15000 }).should('be.visible')
 //------------------------------------------------------------------------------------------------------
 cy.log('✅ 이상행위 탭 진입 성공');
 
-// 사용자 검색 - 진윤호(yunho)
-// 1. 콤보박스에 검색어 입력
-cy.get('input[aria-label="사용자"]').filter(':visible').clear({ force: true }).type('yunho', { force: true });
-cy.wait(1000); 
-// 검색된 콤보박스 리스트  선택하기
-cy.contains('.v-list__tile__title', 'yunho').should('be.visible').click({ force: true });
-cy.wait(1000);
-// 선택 후 메뉴 닫기
-cy.get('body').type('{esc}');
+// // 사용자 검색 - 진윤호(yunho)
+// // 1. 콤보박스에 검색어 입력
+// cy.get('input[aria-label="사용자"]').filter(':visible').clear({ force: true }).type('yunho', { force: true });
+// cy.wait(1000); 
+// // 검색된 콤보박스 리스트  선택하기
+// cy.contains('.v-list__tile__title', 'yunho').should('be.visible').click({ force: true });
+// cy.wait(1000);
+// // 선택 후 메뉴 닫기
+// cy.get('body').type('{esc}');
 
 
 // 이상행위 유형 선택 
@@ -540,14 +517,14 @@ waitForNewLog();
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
 // [개선 코드]
 // 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
-cy.get('tbody', { timeout: 20000 }).contains('tr', '진윤호(yunho)').should('be.visible');
+cy.get('tbody', { timeout: 20000 }).contains('tr', '사원_5(user005)').should('be.visible');
 
 
 // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
 cy.get('tbody tr').filter(':visible').first().within(() => {
   
   // 2. 텍스트 검증
-  cy.contains('진윤호(yunho)').should('be.visible');
+  cy.contains('사원_5(user005)').should('be.visible');
   cy.contains('접근제한 업무 시스템 접근').should('be.visible');
   cy.contains('test_auto_접근제한 업무 시스템 접근').should('be.visible');
   cy.contains('존재').should('be.visible');

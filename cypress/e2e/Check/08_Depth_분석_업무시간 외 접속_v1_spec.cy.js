@@ -192,6 +192,11 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // 업무시스템중 리눅스_배송관리 클릭하는 코드
     cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
     cy.wait(1000);
+
+    // 드롭다운 닫지 않고 두 번째 선택: 리눅스_VIP고객
+    cy.get('.menuable__content__active').filter(':visible').contains('.v-list__tile__title', '리눅스_VIP고객').scrollIntoView().should('be.visible').click({ force: true });
+    cy.wait(500);
+
     // 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
 
@@ -264,34 +269,37 @@ const hitTime = new Date();
 const hitTimeStr = `${hitTime.getFullYear()}-${String(hitTime.getMonth()+1).padStart(2,'0')}-${String(hitTime.getDate()).padStart(2,'0')} ${String(hitTime.getHours()).padStart(2,'0')}:${String(hitTime.getMinutes()).padStart(2,'0')}:${String(hitTime.getSeconds()).padStart(2,'0')}`;
 cy.log(`⏱️ WAS 타격 시각 기록: ${hitTimeStr}`);
 // ==============================================================
+// ========================================
+// WAS 타격: 10.10.54.27 (LOGCATCH SECURE PORTAL - 고객 데이터 유출)
+// ========================================
 
-// ----------------------------------------------------------
-// [STEP 1] WAS 시스템 로그인 및 이상행위(과다조회) 타격
-// ----------------------------------------------------------
-
-// cy.clearCookies();
-// cy.clearLocalStorage();
-
-cy.origin('http://10.10.54.22:8080', () => {
-  Cypress.on('uncaught:exception', () => false);
-
-  cy.visit('/uat/uia/egovLoginUsr.do', { timeout: 60000 });
-  cy.wait(3000);
-
-  cy.get('#id').should('be.visible').clear().type('yunho');
-  cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
-
-  cy.contains('a', '로그아웃', { timeout: 15000 }).should('be.visible');
-  cy.log('✅ WAS 로그인 성공!');
-
-  // 실제 메뉴 페이지 탐색 (이 탐색이 LogCatch에 이상행위로 기록됨)
-  cy.visit('/cop/logcatch/btnExcessCheck.do', {
-    qs: { menuNo: '41' },
-    timeout: 30000,
+// 1단계: 로그인 (JSESSIONID 획득)
+cy.request({
+    method: 'POST',
+    url: 'http://10.10.54.27/crm/login.jsp',
+    form: true,
+    body: {
+        empId: 'user004',
+        empPw: 'Manager1!'
+    },
+    followRedirect: false,
     failOnStatusCode: false
-  });
-  cy.wait(2000);
-  cy.log('✅ 업무 시간 외 접속 탐지 트리거 완료!');
+}).then((loginRes) => {
+    cy.log(`✅ 로그인 응답: ${loginRes.status}`); // 302 예상
+
+    // 2단계: 고객 데이터 유출 실행 (GET)
+    cy.request({
+        method: 'GET',
+        url: 'http://10.10.54.27/crm/soc_matrix.jsp',
+        qs: {
+            action: 'massive_inquiry',
+            _ts: Date.now()
+        },
+        failOnStatusCode: false
+    }).then((res) => {
+        expect(res.status).to.eq(200);
+        cy.log('✅ WAS 타격 완료 (10.10.54.27 고객 데이터 유출)');
+    });
 });
 
 
@@ -375,19 +383,6 @@ cy.get('body').then(($body) => {
   }
 });
 
-// // 💡 [STEP 0] 에러 방어막 강화 (JS 청크, CSS 청크, 라우터 에러 모두 무시)
-// // 이 코드는 가급적 테스트 파일 최상단(describe 블록 바로 아래 등)에 한 번만 선언해 두는 것이 좋습니다.
-// Cypress.on('uncaught:exception', (err, runnable) => {
-//   if (
-//     err.message.includes('ChunkLoadError') || 
-//     err.message.includes('Loading CSS chunk') ||  // 👈 이 부분이 추가되었습니다!
-//     err.message.includes('Loading chunk') ||
-//     err.message.includes('navigation guard')
-//   ) {
-//     return false; // Cypress가 테스트를 멈추지 않고 계속 진행하게 함
-//   }
-// });
-
 // ---------------------------------------------------------------------------
 // 1. '이력' 버튼 클릭
 cy.contains('button', '이력').should('be.visible').click({ force: true });
@@ -430,16 +425,16 @@ cy.get('body').then(($body) => {
 cy.contains('.tab-btn', '이상행위', { timeout: 15000 }).should('be.visible').click({ force: true });
 //------------------------------------------------------------------------------------------------------
 cy.log('✅ 이상행위 탭 진입 성공');
-// 사용자 검색 - 진윤호(yunho)
-// 1. 콤보박스에 검색어 입력
-cy.contains('.c-headline', '검색 조건', { timeout: 5000 }).should('exist');
-cy.get('input[aria-label="사용자"]').filter(':visible').clear({ force: true }).type('yunho', { force: true });
-cy.wait(1000); 
-// 검색된 콤보박스 리스트  선택하기
-cy.contains('.v-list__tile__title', 'yunho').should('be.visible').click({ force: true });
-cy.wait(1000);
-// 선택 후 메뉴 닫기
-cy.get('body').type('{esc}');
+// // 사용자 검색 - 진윤호(yunho)
+// // 1. 콤보박스에 검색어 입력
+// cy.contains('.c-headline', '검색 조건', { timeout: 5000 }).should('exist');
+// cy.get('input[aria-label="사용자"]').filter(':visible').clear({ force: true }).type('yunho', { force: true });
+// cy.wait(1000); 
+// // 검색된 콤보박스 리스트  선택하기
+// cy.contains('.v-list__tile__title', 'yunho').should('be.visible').click({ force: true });
+// cy.wait(1000);
+// // 선택 후 메뉴 닫기
+// cy.get('body').type('{esc}');
 
 
 // 이상행위 유형 선택 
@@ -485,7 +480,7 @@ waitForNewLog();
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
 // [개선 코드]
 // 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
-cy.get('tbody', { timeout: 15000 }).contains('tr', '진윤호(yunho)').should('be.visible');
+cy.get('tbody', { timeout: 15000 }).contains('tr', '사원_4(user004)').should('be.visible');
 
 
 // ✅ 오늘 날짜 기준으로 방금 생성된 행인지 확인
@@ -508,7 +503,7 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
   
   // 2. 텍스트 검증 (wrap을 사용하여 $row 내부만 검색합니다)
   cy.wrap($row).within(() => {
-    cy.contains('진윤호(yunho)').should('be.visible');
+    cy.contains('사원_4(user004)').should('be.visible');
     cy.contains('업무 시간 외 접속').should('be.visible');
     cy.contains('test_auto_업무 시간 외 접속').should('be.visible');
     cy.contains('존재').should('be.visible');
