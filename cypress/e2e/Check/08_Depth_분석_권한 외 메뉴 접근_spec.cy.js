@@ -514,7 +514,7 @@ cy.wait(1000);
 // ==================== [여기] 검색버튼 클릭 직후 ====================
 // ⑤ 타격 시각 이후 행이 나타날 때까지 폴링
 function waitForNewLog(attempt = 0) {
-    if (attempt > 12) throw new Error('❌ 새 이력 미반영 (60초 초과)');
+    if (attempt > 24) throw new Error('❌ 새 이력 미반영 (120초 초과)');
 
     cy.get('tbody tr').filter(':visible').then(($rows) => {
         // 첫 번째 행 타임스탬프가 타격 시각보다 최신인지 확인

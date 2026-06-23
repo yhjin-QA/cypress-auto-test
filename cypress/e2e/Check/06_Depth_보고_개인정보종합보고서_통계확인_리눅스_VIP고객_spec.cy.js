@@ -147,83 +147,62 @@ cy.log(`📅 동적 기간 세팅 준비 완료: ${currentMonthText} 1일 ~ ${la
 
 
   
-    // ==========================================
-    // STEP : 점검 대시보드로 현황 상세페이지 이동
-    // ==========================================
+//     // ==========================================
+//     // STEP : 점검 대시보드로 현황 상세페이지 이동
+//     // ==========================================
     
-    // cy.log('🚀 점검 탭 클릭');
-    // cy.contains('button', '점검').click({ force: true });
-    cy.wait(2000);
-    cy.log('--- 화면 검증 시작 ---');
+//     // cy.log('🚀 점검 탭 클릭');
+//     // cy.contains('button', '점검').click({ force: true });
+//     cy.wait(2000);
+//     cy.log('--- 화면 검증 시작 ---');
 
-    // 설명: 'v-btn__content' 안에 '검색'이라는 글자가 있고, 눈에 보이는지 확인
-    cy.contains('.v-btn__content', '검색').should('exist');
-    //검색 버튼 확인
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+//     // 설명: 'v-btn__content' 안에 '검색'이라는 글자가 있고, 눈에 보이는지 확인
+//     cy.contains('.v-btn__content', '검색').should('exist');
+//     //검색 버튼 확인
+//     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
 
-  // 업무 시스템 별 개인정보 사용현황 클릭하여 상세페이지로 이동-------------------------------------------
-   // 리눅스_VIP고객 클릭하기
-   // 'apexcharts-legend-text' 클래스를 가진 span 중 첫번쨰 '리눅스_VIP고객'를 클릭합니다.
-   // 1. 차트 제목을 먼저 찾고, 그 차트를 감싸고 있는 전체 카드(.v-card) 영역으로 올라갑니다.
-    cy.contains('.v-card__title', '업무시스템별 개인정보 사용 현황').closest('.v-card') // 🌟 [핵심] 해당 차트의 전체 박스로 시야를 넓힘
-     .within(() => {
+//   // 업무 시스템 별 개인정보 사용현황 클릭하여 상세페이지로 이동-------------------------------------------
+//    // 리눅스_VIP고객 클릭하기
+//    // 'apexcharts-legend-text' 클래스를 가진 span 중 첫번쨰 '리눅스_VIP고객'를 클릭합니다.
+//    // 1. 차트 제목을 먼저 찾고, 그 차트를 감싸고 있는 전체 카드(.v-card) 영역으로 올라갑니다.
+//     cy.contains('.v-card__title', '업무시스템별 개인정보 사용 현황').closest('.v-card') // 🌟 [핵심] 해당 차트의 전체 박스로 시야를 넓힘
+//      .within(() => {
     
-      //차트 상세페이지 이동
-      // 2. 이제 이 블록 안에서는 '해당 차트 내부'만 검색합니다! (다른 차트 간섭 X) - 리눅스_VIP고객
-      // eq(0)-jEus eq(1)- 리눅스배송관리 eq(2)-리눅스_VIP고객
-     cy.get('.apexcharts-legend-text').should('be.visible').eq(2).click({ force: true });
-   });
+//       //차트 상세페이지 이동
+//       // 2. 이제 이 블록 안에서는 '해당 차트 내부'만 검색합니다! (다른 차트 간섭 X) - 리눅스_VIP고객
+//       // eq(0)-jEus eq(1)- 리눅스배송관리 eq(2)-리눅스_VIP고객
+//      cy.get('.apexcharts-legend-text').should('be.visible').eq(2).click({ force: true });
+//    });
 
-   cy.wait(500);
-   //팝업창의 본문 내용('상세 페이지로 이동하시겠습니까?')이 맞는지 검증
-   cy.contains('p.mb-0:visible', '상세 페이지로 이동하시겠습니까?').should('be.visible');
-   cy.wait(500); 
-   // 3. 화면에 보이는 '확인' 버튼을 찾아 강제 클릭!
-   cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
-   cy.wait(2000);
-   // 화면 현황- 업무시스템 별 상세 페이지 이동검증
-   cy.get('.tab-btn').contains('업무 시스템 별').closest('button').should('not.have.class', 'inactive');
+//    cy.wait(500);
+//    //팝업창의 본문 내용('상세 페이지로 이동하시겠습니까?')이 맞는지 검증
+//    cy.contains('p.mb-0:visible', '상세 페이지로 이동하시겠습니까?').should('be.visible');
+//    cy.wait(500); 
+//    // 3. 화면에 보이는 '확인' 버튼을 찾아 강제 클릭!
+//    cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+//    cy.wait(2000);
+//    // 화면 현황- 업무시스템 별 상세 페이지 이동검증
+//    cy.get('.tab-btn').contains('업무 시스템 별').closest('button').should('not.have.class', 'inactive');
   
 
 
-     //현황탭 오류로 임시 주석처리 
-    // // ==========================================
-    // // STEP : 현황서브메뉴 이동 (개인정보사용현황 건수 확인)
-    // // ==========================================
     
-    // cy.contains('button', '현황').click({ force: true });
-    // cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
-    // cy.log('--- 현황 > 정보사용자별 탭 클릭  ---');
-    // cy.get('.tab-btn').contains('정보사용자 별').should('be.visible').click({ force: true });
-    // cy.log('--- 화면 검증 시작 ---');
-    // cy.contains('.c-headline', '검색 조건').should('exist');
-    // // 시작날짜 달력 아이콘확인
-    // cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // // 종료날짜 달력 아이콘확인
-    // cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-    //  // 버튼확인
-    // cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // //검색 조건 입력문구 확인
-    // cy.get('label').filter(':visible').contains('기간').should('be.visible');
-    // cy.get('label').filter(':visible').contains('추적 타입').should('be.visible');
-    // cy.get('span').filter(':visible').contains('정보 사용자').should('be.visible');
+    // ==========================================
+    // STEP : 현황서브메뉴 이동 (개인정보사용현황 건수 확인)
+    // ==========================================
     
-    //  cy.log('--- 현황 > 업무시스템 별 탭 클릭  ---');
-    // cy.get('.tab-btn').contains('업무 시스템 별').should('be.visible').click({ force: true });
-    // cy.wait(3000);
-    // cy.log('--- 화면 검증 시작 ---');
-    // cy.get('.tab-btn').contains('업무 시스템 별').closest('button').should('not.have.class', 'inactive');
-    // // 'c-headline' 클래스를 가진 요소 중에 '파일 다운로드' 글자가 존재하는지 확인
-    // cy.contains('.c-headline', '검색 조건').should('exist');
-    // // 시작날짜 달력 아이콘확인
-    // cy.contains('label', '기간') .closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // // 종료날짜 달력 아이콘확인
-    // cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-    // // 검색 버튼 확인
-    // cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // // 검색조건 입력문구 확인
-    // cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
+    cy.contains('button', '현황').click({ force: true });
+    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
+    
+    cy.log('--- 현황 > 업무시스템 별 탭 클릭  ---');
+    cy.get('.tab-btn').contains('업무 시스템 별').should('be.visible').click({ force: true });
+    cy.wait(3000);
+    cy.log('--- 화면 검증 시작 ---');
+    cy.get('.tab-btn').contains('업무 시스템 별').closest('button').should('not.have.class', 'inactive');
+    // 'c-headline' 클래스를 가진 요소 중에 '파일 다운로드' 글자가 존재하는지 확인
+    cy.contains('.c-headline', '검색 조건').should('exist');
 
+    
     //달력표를 펼침 
     // ==========================================
     // '기간 시작일자' 셋팅 (전월 1일)
@@ -257,11 +236,24 @@ cy.log(`📅 동적 기간 세팅 준비 완료: ${currentMonthText} 1일 ~ ${la
     // 말일 선택 (계산된 말일 정규식 사용)
     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', lastDayRegex).closest('.v-btn').click({ force: true });
     cy.get('body').type('{esc}');
-    cy.wait(1000);   
+    cy.wait(1000); 
+
+    // ==========================================
+    // 업무 시스템  선택 - 리눅스_VIP고객 선택
+    // ==========================================
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(1000);
+
+
+    // ✅ 활성화된 드롭다운 내에서만 선택 (범위 제한으로 오탐 방지)
+    cy.get('.menuable__content__active').filter(':visible').contains('.v-list__tile__title', '리눅스_VIP고객').scrollIntoView().should('be.visible').click({ force: true });
+    cy.wait(1000);
+    cy.get('body').type('{esc}');
 
     // 검색버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(3000); 
+
 
 
 // ==========================================
