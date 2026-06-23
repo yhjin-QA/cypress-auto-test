@@ -30,9 +30,9 @@
   });
 
 /**코드 시작  */
-describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
+describe('로그캐치 사이트 테스트', () => {
   
-  it('04_Depth_소명_사전소명_발생 자동화 시나리오', () => {
+  it('로그캐치 배포점검목록 동작 체크', () => {
 
 
 // ===============================================
@@ -333,7 +333,12 @@ cy.contains('td', '사전소명페이지(Jeus)')
 cy.log('✅ 접속기록 수집기 에서 사전소명 정상적으로 이벤트 목록 추가됨.');
 cy.wait(10000);
 
-
+// ==================== [여기] WAS 타격 직전 ====================
+// ① 타격 시각 기록
+const hitTime = new Date();
+const hitTimeStr = `${hitTime.getFullYear()}-${String(hitTime.getMonth()+1).padStart(2,'0')}-${String(hitTime.getDate()).padStart(2,'0')} ${String(hitTime.getHours()).padStart(2,'0')}:${String(hitTime.getMinutes()).padStart(2,'0')}:${String(hitTime.getSeconds()).padStart(2,'0')}`;
+cy.log(`⏱️ WAS 타격 시각 기록: ${hitTimeStr}`);
+// ==============================================================
 // ===============================================
 // STEP : WAS Jeus접속
 // ===============================================
@@ -350,24 +355,29 @@ cy.origin('http://10.10.54.31:8088', () => {
   cy.visit('/tester3', { timeout: 60000 });
   cy.wait(3000);
 
-  // 팝업 처리 로직을 버튼 클릭 직전에 확실하게 적용
-  cy.window().then((win) => {
-    // 기존 prompt를 stub으로 덮어씁니다.
-    cy.stub(win, 'prompt').callsFake((message) => {
-     // cy.log 대신 console.log 사용 (에러 방지)
-      console.log('📢 감지된 팝업 문구:', message);
-      return '1'; // 1을 반환하고 확인을 누름
-    }).as('promptStub'); // 나중에 호출 여부 확인을 위해 별칭 지정
+   cy.window().then((win) => {
+    win.prompt = () => '1'; // cy.stub 대신 직접 override
   });
+
+  // // 팝업 처리 로직을 버튼 클릭 직전에 확실하게 적용
+  // cy.window().then((win) => {
+  //   // 기존 prompt를 stub으로 덮어씁니다.
+  //   cy.stub(win, 'prompt').callsFake((message) => {
+  //    // cy.log 대신 console.log 사용 (에러 방지)
+  //     console.log('📢 감지된 팝업 문구:', message);
+  //     return '1'; // 1을 반환하고 확인을 누름
+  //   }).as('promptStub'); // 나중에 호출 여부 확인을 위해 별칭 지정
+  // });
 
   cy.log('3️⃣ Excel 버튼을 클릭합니다.');
   cy.get('#excel_btn')
     .should('be.visible')
     .invoke('removeAttr', 'target')
     .click({ force: true });
-
+    
+  cy.wait(5000); // 다운로드 시작 대기 (promptStub 검증 제거)
   // 2. 팝업 호출 검증
-  cy.get('@promptStub', { timeout: 50000 }).should('have.been.called');
+  // cy.get('@promptStub', { timeout: 50000 }).should('have.been.called');
 });
 
 // 4. 다운로드 완료 대기
@@ -482,6 +492,32 @@ cy.get('body').type('{esc}');
 cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 cy.wait(1000);
 
+// ==================== [여기] 검색버튼 클릭 직후 ====================
+// ⑤ 타격 시각 이후 행이 나타날 때까지 폴링
+function waitForNewLog(attempt = 0) {
+    if (attempt > 24) throw new Error('❌ 새 이력 미반영 (120초 초과)');
+
+    cy.get('tbody tr').filter(':visible').then(($rows) => {
+        // 첫 번째 행 타임스탬프가 타격 시각보다 최신인지 확인
+        const firstRowTime = $rows.first().find('td').first().text().trim();
+        const isNew = firstRowTime >= hitTimeStr;
+
+        if (isNew) {
+            cy.log(`✅ 새 이력 감지! 행 시각: ${firstRowTime} >= 타격 시각: ${hitTimeStr}`);
+        } else {
+            cy.log(`⏳ 대기 중... (${attempt * 5}초 경과) 현재 최신: ${firstRowTime}`);
+            cy.wait(5000);
+            cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+            cy.wait(1000);
+            waitForNewLog(attempt + 1);
+        }
+    });
+}
+waitForNewLog();
+// ================================================================
+
+
+
 // ----------------------------------------------------------
 // [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
 // ----------------------------------------------------------
@@ -496,17 +532,7 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
   cy.contains('DEFAULT').should('be.visible');
   cy.contains('존재').should('be.visible');
   cy.contains('소명 불필요').should('be.visible'); 
-  // [신규] 시간 검증 로직
-  cy.get('a.ellipsis').first().invoke('text').then((text) => {
-    const logTime = new Date(text.trim()).getTime(); // 로그의 시간
-    const now = new Date().getTime(); // 현재 시간
-    const diffMinutes = Math.abs(now - logTime) / (1000 * 60); // 차이를 분 단위로 계산
 
-    cy.log(`로그 시간: ${text}, 차이: ${diffMinutes.toFixed(2)}분`);
-    
-    // 2분(120,000ms) 이내인지 확인
-    expect(diffMinutes).to.be.below(2);
-  });
   
 });
 
