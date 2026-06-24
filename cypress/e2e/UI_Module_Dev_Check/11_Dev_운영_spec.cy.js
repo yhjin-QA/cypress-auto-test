@@ -1650,7 +1650,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-list__tile__title').filter(':contains("인사정보")').filter(':visible').click({ force: true });
     cy.wait(3000); 
 
-    // 운영 > 인사정보보  > "DB 연동" 탭을 클릭
+    // 운영 > 인사정보  > "DB 연동" 탭을 클릭
     cy.log('--- DB 연동 탭 클릭 ---');
     cy.contains('.v-btn__content', 'DB 연동').should('be.visible').click({ force: true });
     cy.wait(3000);
@@ -1758,6 +1758,45 @@ describe('로그캐치 사이트 테스트', () => {
      // 정책 추가버튼 확인
      cy.get('.material-icons.theme--dark') .contains('add').should('be.visible');
      cy.log('✅ 운영 - 외부연동 - [원격 파일 다운로드] 출력 확인 완료 ');
+
+
+     // 운영 > 외부 연동  > "외부 연동 DB 데이터" 탭을 클릭
+     cy.log('--- 외부 연동 DB 데이터 탭 클릭 ---');
+     cy.contains('.v-btn__content', '외부 연동 DB 데이터').should('be.visible').click({ force: true });
+     cy.wait(3000);
+     cy.log('--- 화면 검증 시작 ---');
+     cy.contains('.c-headline', '정책 목록').should('exist');
+     // 표 컬럼 확인
+     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+     cy.get('th').filter(':visible').contains('생성일').should('be.visible');
+     cy.get('th').filter(':visible').contains('생성자').should('be.visible');
+     cy.get('th').filter(':visible').contains('상태').should('be.visible');
+     cy.get('th').filter(':visible').contains('설명').should('be.visible');
+     cy.get('th').filter(':visible').contains('삭제').should('be.visible');
+     // v버튼 아이콘 존재확인
+     cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
+     // 정책 추가버튼 확인
+     cy.get('.material-icons.theme--dark') .contains('add').should('be.visible');
+     cy.log('✅ 운영 - 외부연동 - [외부 연동 DB 데이터] 출력 확인 완료 ');
+
+     // 운영 > 외부 연동  > "주체정보 동기화 정책" 탭을 클릭
+     cy.log('--- 주체정보 동기화 정책 탭 클릭 ---');
+     cy.contains('.v-btn__content', '주체정보 동기화 정책').should('be.visible').click({ force: true });
+     cy.wait(3000);
+     cy.log('--- 화면 검증 시작 ---');
+     cy.contains('.c-headline', '정책 목록').should('exist');
+     // 표 컬럼 확인
+     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+     cy.get('th').filter(':visible').contains('생성일').should('be.visible');
+     cy.get('th').filter(':visible').contains('생성자').should('be.visible');
+     cy.get('th').filter(':visible').contains('상태').should('be.visible');
+     cy.get('th').filter(':visible').contains('설명').should('be.visible');
+     cy.get('th').filter(':visible').contains('삭제').should('be.visible');
+     // v버튼 아이콘 존재확인
+     cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
+     // 정책 추가버튼 확인
+     cy.get('.material-icons.theme--dark') .contains('add').should('be.visible');
+     cy.log('✅ 운영 - 외부연동 - [주체정보 동기화 정책] 출력 확인 완료 ');
 
   
  /*
