@@ -207,6 +207,11 @@ describe('로그캐치 사이트 테스트', () => {
     // 업무시스템중 '리눅스_배송관리' 클릭하는 코드
     cy.get('.v-menu__content').filter(':visible').first().contains('리눅스_배송관리').click({ force: true });
     cy.wait(500);
+
+    // 드롭다운 닫지 않고 두 번째 선택: 리눅스_VIP고객
+    cy.get('.menuable__content__active').filter(':visible').contains('.v-list__tile__title', '리눅스_VIP고객').scrollIntoView().should('be.visible').click({ force: true });
+    cy.wait(500);
+
     // 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
     
@@ -551,7 +556,7 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
 
 
   // ===============================================================
-  // CASE2 비인가 접근 사용자 상태 - 퇴직자 확인 (류평비 loginid102) 점검시작
+  // CASE2 비인가 접근 사용자 상태 - 퇴직자 확인 (사원_13)
   // ===============================================================
   // 분석 탭 메뉴로 다시 이동 
   cy.contains('button.has-child', '분석').click({ force: true });
@@ -578,81 +583,49 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
     cy.wait(500);
+
+// ==================== [여기] WAS 타격 직전 ====================
+// ① 타격 시각 기록
+const hitTime_1 = new Date();
+const hitTimeStr_1 = `${hitTime_1.getFullYear()}-${String(hitTime_1.getMonth()+1).padStart(2,'0')}-${String(hitTime_1.getDate()).padStart(2,'0')} ${String(hitTime_1.getHours()).padStart(2,'0')}:${String(hitTime_1.getMinutes()).padStart(2,'0')}:${String(hitTime_1.getSeconds()).padStart(2,'0')}`;
+cy.log(`⏱️ WAS 타격 시각 기록: ${hitTimeStr_1}`);
+// ==============================================================    
   
 
 // ----------------------------------------------------------
 // [STEP 1] WAS 시스템 로그인 및 이상행위(타격)
 // ----------------------------------------------------------
-cy.log('🚀 WAS 사이트로 이동하여 새 세션을 발급받습니다.');
+// ========================================
+// WAS 타격: 10.10.54.27 (퇴직자) 
+// ========================================
 
-// 기존 코드에서 옵션 추가
-cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', { 
-  timeout: 60000,           // 타임아웃을 60초로 연장
-  onBeforeLoad(win) {      // 페이지 로드 전 속도 향상을 위한 설정
-    delete win.fetch; 
-  }
-});
+// 1단계: 로그인 (JSESSIONID 획득)
+cy.request({
+    method: 'POST',
+    url: 'http://10.10.54.27/crm/login.jsp',
+    form: true,
+    body: {
+        empId: 'user013',
+        empPw: 'Manager1!'
+    },
+    followRedirect: false,
+    failOnStatusCode: false
+}).then((loginRes) => {
+    cy.log(`✅ 로그인 응답: ${loginRes.status}`); // 302 예상
 
-cy.origin('http://10.10.54.22:8080', () => {
-  Cypress.on('uncaught:exception', () => false);
-
-  // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
-  cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
-  cy.visit('/uat/uia/egovLoginUsr.do');
-  cy.get('#id').should('be.visible').clear().type('loginid102');
-  cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
-
-  // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
-  cy.contains('a', '로그아웃', { timeout: 15000 }).should('be.visible');
-  cy.log('✅ 로그인 성공! 방금 생성된 싱싱한 세션 확보 완료!');
-
-  // 4. ✨ 핵심 로직: 쿠키 또는 URL에서 JSESSIONID를 안전하게 추출합니다.
-  cy.url().then((currentUrl) => {
-    cy.getCookie('JSESSIONID').then((cookie) => {
-      let freshSessionId = '';
-
-      // ① 먼저 쿠키에 JSESSIONID가 있는지 확인
-      if (cookie && cookie.value) {
-        freshSessionId = cookie.value;
-        cy.log(`🔑 쿠키에서 세션 ID 추출 완료`);
-      } 
-      // ② 쿠키가 없다면, URL에 jsessionid가 붙어있는지 확인 (URL Rewriting 대응)
-      else if (currentUrl.toLowerCase().includes('jsessionid=')) {
-        // 정규식을 사용해 URL에서 jsessionid 값만 쏙 뽑아냅니다.
-        const match = currentUrl.match(/jsessionid=([^?&#]+)/i);
-        if (match && match[1]) {
-          freshSessionId = match[1];
-          cy.log(`🔑 URL에서 세션 ID 추출 완료`);
-        }
-      }
-
-      // 방어 코드: 둘 다 실패했을 경우
-      if (!freshSessionId) {
-        throw new Error('❌ JSESSIONID를 쿠키와 URL 모두에서 찾을 수 없습니다.');
-      }
-
-      cy.log(`✅ 최종 사용될 세션 ID: ${freshSessionId}`);
-
-      // 5. 추출한 새 세션 ID를 헤더에 꽂아서 API 타격!
-      cy.request({
-        method: 'POST',
-        url: '/cop/logcatch/btnExcessCheck.do',
-        form: true,
-        headers: {
-          'Cookie': `JSESSIONID=${freshSessionId}`, 
-          'X-Requested-With': 'XMLHttpRequest',
-          'Referer': 'http://10.10.54.22:8080/uat/uia/actionMain.do'
+    // 2단계: 고객 데이터 유출 실행 (GET)
+    cy.request({
+        method: 'GET',
+        url: 'http://10.10.54.27/crm/soc_matrix.jsp',
+        qs: {
+            action: 'massive_inquiry',
+            _ts: Date.now()
         },
-        body: { 
-          menuNo: '41' 
-        }
-      }).then((response) => {
-        // 6. 정상 응답 검증 (200 OK)
-        expect(response.status).to.eq(200);
-        cy.log('🎉 매번 새로운 세션으로 과다조회 자동 타격 성공!');
-      });
+        failOnStatusCode: false
+    }).then((res) => {
+        expect(res.status).to.eq(200);
+        cy.log('✅ WAS 타격 완료 (10.10.54.27 고객 데이터 유출)');
     });
-  });
 });
 
 // ----------------------------------------------------------
@@ -814,6 +787,30 @@ cy.get('body').type('{esc}');
 //검색버튼 클릭
 cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 cy.wait(1000);
+// ==================== [여기] 검색버튼 클릭 직후 ====================
+// ⑤ 타격 시각 이후 행이 나타날 때까지 폴링
+function waitForNewLog(attempt = 0) {
+    if (attempt > 12) throw new Error('❌ 새 이력 미반영 (60초 초과)');
+
+    cy.get('tbody tr').filter(':visible').then(($rows) => {
+        // 첫 번째 행 타임스탬프가 타격 시각보다 최신인지 확인
+        const firstRowTime = $rows.first().find('td').first().text().trim();
+        const isNew = firstRowTime >= hitTimeStr_1;
+
+        if (isNew) {
+            cy.log(`✅ 새 이력 감지! 행 시각: ${firstRowTime} >= 타격 시각: ${hitTimeStr_1}`);
+        } else {
+            cy.log(`⏳ 대기 중... (${attempt * 5}초 경과) 현재 최신: ${firstRowTime}`);
+            cy.wait(5000);
+            cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+            cy.wait(1000);
+            waitForNewLog(attempt + 1);
+        }
+    });
+}
+waitForNewLog();
+// ================================================================
+
 
 // ----------------------------------------------------------
 // [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
@@ -821,14 +818,14 @@ cy.wait(1000);
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
 // [개선 코드]
 // 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
-cy.get('tbody', { timeout: 15000 }).contains('tr', '류평비(loginid102)').should('be.visible');
+cy.get('tbody', { timeout: 15000 }).contains('tr', '사원_13(user013)').should('be.visible');
 
 
 // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
 cy.get('tbody tr').filter(':visible').first().within(() => {
   
   // 2. 텍스트 검증
-  cy.contains('류평비(loginid102)').should('be.visible');
+  cy.contains('사원_13(user013)').should('be.visible');
   cy.contains('비인가 접근 사용자').should('be.visible');
   cy.contains('test_auto_비인가 접근 사용자').should('be.visible');
   cy.contains('존재').should('be.visible');
