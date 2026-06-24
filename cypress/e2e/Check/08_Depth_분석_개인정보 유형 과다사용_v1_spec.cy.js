@@ -262,7 +262,6 @@ const hitTimeStr = `${hitTime.getFullYear()}-${String(hitTime.getMonth()+1).padS
 cy.log(`⏱️ WAS 타격 시각 기록: ${hitTimeStr}`);
 // ==============================================================
 
-
 // ========================================
 // WAS 타격: 10.10.54.27 (LOGCATCH SECURE PORTAL - 고객 데이터 유출)
 // ========================================

@@ -478,8 +478,6 @@ cy.contains('div:visible', '전체:', { timeout: 30000 }).invoke('text')
     // ==========================================
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
-
-
     // ✅ 활성화된 드롭다운 내에서만 선택 (범위 제한으로 오탐 방지)
     cy.get('.menuable__content__active').filter(':visible').contains('.v-list__tile__title', '리눅스_VIP고객').scrollIntoView().should('be.visible').click({ force: true });
     cy.wait(1000);
