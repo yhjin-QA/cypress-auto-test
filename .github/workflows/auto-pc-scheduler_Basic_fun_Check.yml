@@ -171,8 +171,7 @@ jobs:
           Write-Host "✅ [Job 1] 운영 태스크 파일을 물리적으로 제거하여 실행에서 제외했습니다."
 
           # 3. 실행
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
-          
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic --reporter mochawesome --reporter-options `"reportDir=cypress/reports/json_logs,overwrite=false,html=false,json=true`" 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           Get-Content cypress.log
 
       - name: Extract Dashboard URL
@@ -278,8 +277,7 @@ jobs:
           Write-Host "🚀 [Job 2] 단독 실행 파일: $targetSpec"
 
           # 실행 시 변수를 따옴표로 감싸서 공백/한글 이슈 방지
-          cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --group 'Restart-Job' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
-         
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --group 'Restart-Job' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic --reporter mochawesome --reporter-options `"reportDir=cypress/reports/json_logs,overwrite=false,html=false,json=true`" 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
           Get-Content cypress_restart.log
           
       - name: 📂 리포트 데이터 업로드 (Restart Spec)
@@ -288,8 +286,8 @@ jobs:
         with:
           name: Basic-Raw-Data-Restart
           path: |
-            cypress/reports/json_logs
-            cypress/screenshots
+            **/reports/json_logs/*.json
+            **/screenshots/**/*.png
           retention-days: 1       
 
   # ====================================================

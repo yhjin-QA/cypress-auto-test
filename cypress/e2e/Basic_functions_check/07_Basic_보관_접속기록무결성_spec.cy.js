@@ -182,7 +182,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 금일로부터 0일 이전 데이터에 대해 검사할지 입력
     // 텍스트를 먼저 찾고 그 텍스트를 감싸는 컴포넌트(입력창 영역)를 찾아서 진짜 input 태그 선택
-    cy.contains('일 이전').closest('div[data-v-173fa03b]').find('input').clear({ force: true }).type('7', { force: true });
+    cy.contains('금일로부터').closest('.v-input__slot').find('input[type="text"]').clear({ force: true }).type('7', { force: true });
     
     // 저장 버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
@@ -209,7 +209,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 금일로부터 0일 이전 데이터에 대해 검사할지 입력  (7->3으로 변경)
     // 텍스트를 먼저 찾고 그 텍스트를 감싸는 컴포넌트(입력창 영역)를 찾아서 진짜 input 태그 선택
-    cy.contains('일 이전').closest('div[data-v-173fa03b]').find('input').clear({ force: true }).type('3', { force: true });
+    cy.contains('금일로부터').closest('.v-input__slot').find('input[type="text"]').clear({ force: true }).type('3', { force: true });
 
     // 저장 버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
@@ -224,7 +224,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('a', 'Test_위변조정책_auto').click({ force: true }); 
     cy.wait(1000);
     cy.get('span[title="특정 기간선택"]').filter(':visible').should('exist');
-    cy.contains('일 이전').closest('div[data-v-173fa03b]').find('input').should('have.value', '3');
+    cy.contains('금일로부터').closest('.v-input__slot').find('input[type="text"]').should('have.value', '3');
     cy.log('✅ 위변조 검사 정책/플랜 변경사항 확인완료!');
 
 
@@ -451,7 +451,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
     cy.wait(1000); 
      // 업무시스템중 윈도우_배송관리 클릭하는 코드
-    cy.contains('.v-list__tile__title', '윈도우_배송관리').should('be.visible').click();
+    cy.contains('.v-list__tile__title', '윈도우_배송관리').scrollIntoView().should('be.visible').click();
     cy.wait(1000);
     // 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
@@ -487,7 +487,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
     cy.wait(1000); 
      // 업무시스템중 윈도우_배송관리 클릭하는 코드
-    cy.contains('.v-list__tile__title', '전체 선택').should('be.visible').click();
+    cy.contains('.v-list__tile__title', '전체 선택').scrollIntoView().should('be.visible').click();
     cy.wait(1000);
     // 선택한 컨텍스트 메뉴 닫기
     // 입력창 옆에 있는 '화살표 아이콘(▼)'을 찾아서 클릭하여 컨텍스트 메뉴 창 닫기

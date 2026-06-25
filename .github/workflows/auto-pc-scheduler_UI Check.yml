@@ -169,9 +169,8 @@ jobs:
           npm install cy2 mochawesome mochawesome-merge mochawesome-report-generator --save-dev
         
 
-          # 👇 [수정] 복잡한 옵션은 다 빼고, config 파일 설정을 따르도록 단순화했습니다.
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Full_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
-
+          
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Full_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI --reporter mochawesome --reporter-options `"reportDir=cypress/reports/json_logs,overwrite=false,html=false,json=true`" 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           Get-Content cypress.log
 
       - name: Extract Dashboard URL
@@ -218,8 +217,8 @@ jobs:
         with:
           name: UI-Raw-Data-${{ matrix.containers }}
           path: |
-            cypress/reports/json_logs
-            cypress/screenshots
+            **/reports/json_logs/*.json
+            **/screenshots/**/*.png
           retention-days: 1
           if-no-files-found: ignore
 

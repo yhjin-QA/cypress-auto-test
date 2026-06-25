@@ -15,16 +15,12 @@ describe('로그캐치 사이트 테스트', () => {
       'Cannot read properties',
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
-      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
-      'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
       'Loading chunk',
-      'Loading CSS chunk',           // ◀◀◀ [NEW] 이번에 발생한 CSS 청크 에러 무시 추가!
       'operate.task.packageManagement',
       'e is not defined',
       'Script error',
-      'not valid JSON',
-      'ChunkLoadError'
+      'not valid JSON'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -128,9 +124,8 @@ describe('로그캐치 사이트 테스트', () => {
     //버튼 확인
     cy.contains('.v-btn__content', 'MASTER 태스크 전체 시작').should('be.visible');
     cy.contains('.v-btn__content', 'MASTER 태스크 전체 정지').should('be.visible');
-   
-   /* 
-    // 기능확인 
+    
+      // 기능확인 
     // ==========================================
     // 실행관리 : 전체 프로세스 정지 및 시작 확인 
     // ==========================================
@@ -145,24 +140,16 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('p', 'Task 종료하시겠습니까?').should('be.visible');
     // 'MASTER 태스크 전체 종료 확인 알림창 확인 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
-    // 대기
-    cy.wait(90000);
+    
 
     //프로세스 정지확인 검증(프로세스 정지상태라면 시작문구로 버튼 변경되어있는상태 ) 
     cy.contains('p', 'Log Collector').should('be.visible');
-    cy.contains('p', 'Log Collector').closest('.v-card').contains('.v-btn__content', '시작').should('be.visible');
-
-    cy.contains('p', 'Discriminator').should('be.visible');
-    cy.contains('p', 'Discriminator').closest('.v-card').contains('.v-btn__content', '시작').should('be.visible');
-
-    cy.contains('p', 'Rule Analyzer').should('be.visible');
-    cy.contains('p', 'Rule Analyzer').closest('.v-card').contains('.v-btn__content', '시작').should('be.visible');
-
-    cy.contains('p', 'Data File Cleaner').should('be.visible');
-    cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '시작').should('be.visible');
-    
-    cy.contains('p', 'Statistics').should('be.visible');
-    cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '시작').should('be.visible');
+   // ✅ 개선: '시작' 버튼으로 바뀔 때까지 최대 90초 대기 (바뀌면 즉시 통과)
+    cy.contains('p', 'Log Collector').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Discriminator').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Rule Analyzer').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
 
 
     // 'MASTER 태스크 전체 시작' 버튼 클릭
@@ -175,27 +162,16 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
     // 'MASTER 태스크 전체 종료 확인 알림창 확인 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
-    // 대기
-    cy.wait(90000);
     
     
     //프로세스 실행확인 검증코드 (프로세스 실행상태라면  정지 문구로 버튼 변경되어있는상태 ) 
-    cy.contains('p', 'Log Collector').should('be.visible');
-    cy.contains('p', 'Log Collector').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
+    cy.contains('p', 'Log Collector').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Discriminator').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Rule Analyzer').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
+    cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
 
-    cy.contains('p', 'Discriminator').should('be.visible');
-    cy.contains('p', 'Discriminator').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
-
-    cy.contains('p', 'Rule Analyzer').should('be.visible');
-    cy.contains('p', 'Rule Analyzer').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
-
-    cy.contains('p', 'Data File Cleaner').should('be.visible');
-    cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
-    
-    cy.contains('p', 'Statistics').should('be.visible');
-    cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
-
-    
+   /* 
     // =============================================
     // 실행관리 : 개별적으로 프로세스 시작 및 정지 기능확인
     // =============================================
@@ -357,9 +333,10 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('p', 'Statistics').should('be.visible');
     cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
     //--------------------------------------------------------------------------------------------------------------
+ */   
     cy.log('✅ 운영 - 태스크 - [실행관리] 출력 확인 완료 ');
-   */  
-
+  
+/*
     // 운영 > 태스크  > "리소스 모니터링" 탭을 클릭
     cy.log('--- 리소스 모니터링 탭 클릭 ---');
     cy.contains('.v-btn__content', '리소스 모니터링').should('be.visible').click({ force: true });
@@ -522,11 +499,11 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(500);
      
      // 콤보박스 리스트안에서 'STATISTICS_2501_20260207.log'를 찾아 클릭합니다.
-     //cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'STATISTICS_2501_20260207.log').click({ force: true });
-     // 'STATISTICS_2501_'로 시작하고 날짜 상관없이 '.log'로 끝나는 항목을 찾아 클릭
-     cy.get('.v-select-list, .v-menu__content').filter(':visible').contains('.v-list__tile__title', /STATISTICS_2501_.*\.log/).click({ force: true });
+     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'STATISTICS_2501_20260207.log').click({ force: true });
      cy.wait(500);
 
+     // 선택이 잘 되었는지 검증코드
+     cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'STATISTICS_2501_20260207.log');
 
      // tail 토글 OFF-> ON
      cy.get('input[aria-label="tail"]').check({ force: true })
@@ -535,23 +512,11 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(5000);
+     cy.wait(2000);
      
      // 로그 출력 검증코드
-     // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 텍스트 확인
-     //cy.get('.view-line').contains('Today statistics no data. skip').should('be.visible');
-     // 핵심 단어만 뽑아서 정규표현식으로 검증
-     //cy.get('.view-line').contains(/statistics.*no data/).should('be.visible');
-     // 1. 에디터 영역(.view-lines)이 잘 보이는지 확인
-     cy.get('.view-lines').should('be.visible').then(($viewLines) => {
-  
-      // 2. 그 안에 렌더링된 텍스트 전체를 가져옵니다.
-      const logText = $viewLines.text().trim();
-  
-     // 3. 텍스트가 비어있지 않은지(길이가 0보다 큰지) 검증
-      expect(logText.length).to.be.greaterThan(0);
-      cy.wrap($viewLines).find('.view-line').should('have.length.greaterThan', 0);
-       });
+     // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 첫줄 텍스트 확인
+     cy.get('.view-line').contains('Today statistics no data. skip').should('be.visible');
      //--------------------------------------------------
 
      // 업무유형 - 규칙 분석기 
@@ -568,11 +533,11 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(500);
      
      // 콤보박스 리스트안에서 'RULEANALYZER_200320260209.log'를 찾아 클릭합니다.
-     //cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'RULEANALYZER_200320260209.log').click({ force: true });
-     // 콤보박스 리스트안에서 'RULEANALYZER_2003'로 시작하고 날짜/시간 상관없이 '.log'로 끝나는 항목을 찾아 클릭합니다.
-     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', /RULEANALYZER_2003.*\.log/).click({ force: true });
+     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'RULEANALYZER_200320260209.log').click({ force: true });
      cy.wait(500);
 
+     // 선택이 잘 되었는지 검증코드
+     cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'RULEANALYZER_200320260209.log');
 
      // tail 토글 OFF-> ON
      cy.get('input[aria-label="tail"]').check({ force: true })
@@ -602,12 +567,12 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="로그 파일"]').click({ force: true });
      cy.wait(500);
      
-     // 콤보박스 리스트안에서 '/SQLPARSER_2001_********.log/'를 찾아 클릭합니다.
-     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', /SQLPARSER_2001_\d{8}\.log/).click({ force: true });
+     // 콤보박스 리스트안에서 'SQLPARSER_2001_20260308.log'를 찾아 클릭합니다.
+     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'SQLPARSER_2001_20260308.log').click({ force: true });
      cy.wait(500);
 
      // 선택이 잘 되었는지 검증코드
-     //cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', /SQLPARSER_2001_\d{8}\.log/);
+     cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'SQLPARSER_2001_20260308.log');
 
      // tail 토글 ON -> OFF
      cy.get('input[aria-label="tail"]').uncheck({ force: true }) // 체크 해제 실행

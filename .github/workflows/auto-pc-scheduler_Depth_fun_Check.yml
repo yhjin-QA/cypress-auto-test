@@ -616,7 +616,7 @@ jobs:
           to: yhjin@warevalley.com
           from: Cypress 알림 봇 <noreply@warevalley.com>
           
-         # 👇 [수정 2] 첨부 파일 경로를 Depth_Report.html로 변경
+          # 👇 [수정 2] 첨부 파일 경로를 Depth_Report.html로 변경
           attachments: final_report_Depth/LogCatch_Depth_fun_Report.html
 
           body: |
