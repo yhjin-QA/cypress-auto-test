@@ -2041,35 +2041,36 @@ describe('로그캐치 사이트 테스트', () => {
      cy.log('✅ 관리 - 정보사용자/그룹 관리 - [관리]탭 출력 확인 완료 ');
 
     cy.wait(2000);
-    // 관리 > 클러스터링 서버 관리 서브메뉴 선택 
-    cy.contains('button.side-menu', '관리').click({ force: true });
-    cy.wait(2000);
-    cy.log('--- 서브메뉴 [클러스터링 서버 관리] 클릭 ---');
+    // v3.0.5.1191_r35135 에서 제거됨.
+    // // 관리 > 클러스터링 서버 관리 서브메뉴 선택 
+    // cy.contains('button.side-menu', '관리').click({ force: true });
+    // cy.wait(2000);
+    // cy.log('--- 서브메뉴 [클러스터링 서버 관리] 클릭 ---');
     
-    cy.get('.v-list__tile__title').filter(':visible').contains('클러스터링 서버 관리').click({ force: true });
-    //cy.contains('.v-list__tile__title', '클러스터링 서버 관리').filter(':visible').click({ force: true });
-    cy.wait(4000); // 화면 전환 대기
-    // 관리 > 클러스터링 서버 관리 > [개인정보 탐색 서버(포그라운드 전용)] 탭 클릭 
-    cy.get('.v-btn__content').filter(':visible').contains('개인정보 탐색 서버(포그라운드 전용)').last().click({ force: true });
-    cy.wait(3000);
-    cy.log('--- 화면 검증 시작 ---');
-    cy.contains('.c-headline', '검색 조건').should('exist');
-    // 검색 버튼 확인
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    cy.contains('.c-headline', '개인정보 탐색 서버').should('exist');
-    // 정책 추가 + 버튼 확인
-    cy.get('.material-icons.theme--dark') .contains('add').should('be.visible');
-    // 표 열 문구 확인 
-    cy.get('th').filter(':visible').contains('아이디').should('be.visible');
-    cy.get('th').filter(':visible').contains('서버 타입').should('be.visible');
-    cy.get('th').filter(':visible').contains('서버 프로토콜').should('be.visible');
-    cy.get('th').filter(':visible').contains('서버 ip').should('be.visible');
-    cy.get('th').filter(':visible').contains('PORT').should('be.visible');
-    cy.get('th').filter(':visible').contains('상세 설명').should('be.visible');
-    cy.get('th').filter(':visible').contains('생성일').should('be.visible');
-    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
-    cy.get('th').filter(':visible').contains('관리').should('be.visible');
-    cy.log('✅ 관리 - 클러스터링 서버 관리 - [개인정보 탐색 서버(포그라운드 전용)]탭 출력 확인 완료 ');
+    // cy.get('.v-list__tile__title').filter(':visible').contains('클러스터링 서버 관리').click({ force: true });
+    // //cy.contains('.v-list__tile__title', '클러스터링 서버 관리').filter(':visible').click({ force: true });
+    // cy.wait(4000); // 화면 전환 대기
+    // // 관리 > 클러스터링 서버 관리 > [개인정보 탐색 서버(포그라운드 전용)] 탭 클릭 
+    // cy.get('.v-btn__content').filter(':visible').contains('개인정보 탐색 서버(포그라운드 전용)').last().click({ force: true });
+    // cy.wait(3000);
+    // cy.log('--- 화면 검증 시작 ---');
+    // cy.contains('.c-headline', '검색 조건').should('exist');
+    // // 검색 버튼 확인
+    // cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+    // cy.contains('.c-headline', '개인정보 탐색 서버').should('exist');
+    // // 정책 추가 + 버튼 확인
+    // cy.get('.material-icons.theme--dark') .contains('add').should('be.visible');
+    // // 표 열 문구 확인 
+    // cy.get('th').filter(':visible').contains('아이디').should('be.visible');
+    // cy.get('th').filter(':visible').contains('서버 타입').should('be.visible');
+    // cy.get('th').filter(':visible').contains('서버 프로토콜').should('be.visible');
+    // cy.get('th').filter(':visible').contains('서버 ip').should('be.visible');
+    // cy.get('th').filter(':visible').contains('PORT').should('be.visible');
+    // cy.get('th').filter(':visible').contains('상세 설명').should('be.visible');
+    // cy.get('th').filter(':visible').contains('생성일').should('be.visible');
+    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('관리').should('be.visible');
+    // cy.log('✅ 관리 - 클러스터링 서버 관리 - [개인정보 탐색 서버(포그라운드 전용)]탭 출력 확인 완료 ');
 
 
     // 관리 > 내부 파일 다운로드 서브메뉴 선택

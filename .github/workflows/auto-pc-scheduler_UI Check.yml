@@ -236,6 +236,9 @@ jobs:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
 
     steps:
+      - name: Checkout  # 👈 추가 필요
+        uses: actions/checkout@v4
+
       # 👇 [필수 추가] 이 단계가 없으면 이전 테스트 결과(Basic)와 현재 결과(UI)가 뒤섞입니다!
       - name: 🧹 기존 데이터 청소 (Clean Workspace)
         run: |
@@ -277,11 +280,29 @@ jobs:
 
           npm install mochawesome-merge mochawesome-report-generator --no-save
 
-          # 1. JSON 파일 병합 (가장 넓은 범위로 탐색)
-          cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
+          # 💡 [추가] 스크린샷 경로 복원 - JSON이 참조하는 경로와 일치시키기
+          # JSON 파일은 'cypress/screenshots/...' 경로를 참조하는데
+          # 다운로드된 파일은 'all_raw_data/screenshots/...'에 있어서 불일치 발생
+          if (Test-Path "all_raw_data/screenshots") {
+          New-Item -ItemType Directory -Force -Path "cypress/screenshots" | Out-Null
+          Copy-Item -Path "all_raw_data/screenshots/*" -Destination "cypress/screenshots/" -Recurse -Force
+          Write-Host "✅ 스크린샷 경로 복원 완료 (cypress/screenshots/)"
+          } else {
+            Write-Host "⚠️ 스크린샷 없음 - 건너뜀"
+          }
+
+          # 💡 1. dummy.json을 제외한 진짜 결과 JSON 파일이 있는지 체크합니다.
+          $realJsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" | Where-Object { $_.Name -ne "dummy.json" }  
+          if ($realJsonFiles.Count -gt 0) {
+              # 💡 2. 실제 결과가 존재한다면 병합 리포트가 오염되지 않게 dummy.json을 삭제합니다.
+              Get-ChildItem -Path "all_raw_data" -Recurse -Filter "dummy.json" | Remove-Item -Force
+              Write-Host "✅ 실제 테스트 결과 JSON이 존재하여 dummy.json을 제거했습니다."
+          } else {
+              Write-Host "⚠️ 실제 결과 JSON이 없어 dummy.json으로 병합을 진행합니다 (시스템 에러/취소 대비)."
+          }
           
           # 2. HTML 생성
-          # 여기에 --reportFilename "LogCatch_UI_Report" 추가
+          cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
           npx marge merged_report.json --reportDir ./final_report_UI --inline --charts --reportTitle "UI Check Report" --reportFilename "LogCatch_UI_Report" --saveJson=false
 
       - name: Send Google Chat (UI)
