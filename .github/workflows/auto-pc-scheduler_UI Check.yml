@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3, 4, 5] # 5병렬 runner 추가
+        containers: [1] # 5병렬 runner 추가
 
     defaults:
       run:
@@ -290,7 +290,7 @@ jobs:
           WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
           JOB_STATUS: ${{ needs.cypress-run.result }}
           # 👇 원하시는 버전명을 여기에 하드코딩 하세요!
-          HARDCODED_VERSION: "3.0.5.0_r34908" 
+          HARDCODED_VERSION: "3.0.5.1191_r35135" 
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "확인결과"
