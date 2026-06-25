@@ -40,8 +40,11 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 1: WAS 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do');
+    //cy.visit('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do');
+    cy.visitWithRetry('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do');
     cy.wait(5000); // 로딩 대기
+
+    
 
     ////////////새로고침코드/////////////////
     cy.get('body').then(($body) => {

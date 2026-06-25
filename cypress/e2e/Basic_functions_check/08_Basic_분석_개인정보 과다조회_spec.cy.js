@@ -282,7 +282,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 그룹 톱니바퀴 클릭해서 뜬 그룹화면에서 '협력사' 추가선택
     // '협력사' 텍스트를 포함하고 있는 리스트 항목(.v-list__tile)을 찾아서 클릭
-    cy.contains('.v-list__tile', '협력사').filter(':visible').click({ force: true }); // 클릭 (체크박스 체크됨)
+    cy.contains('.v-list__tile', '협력사').scrollIntoView().filter(':visible').click({ force: true }); // 클릭 (체크박스 체크됨)
     cy.wait(500);
 
     // 그룹 선택 팝업창 닫기
