@@ -6,10 +6,10 @@ env:
   TZ: Asia/Seoul
 
 on:
-  push:
-    branches: [ "master" ]
-  schedule:
-    - cron: '5 2 * * *'
+  #push:
+  #  branches: [ "master" ]
+  #schedule:
+  #  - cron: '5 2 * * *'
   workflow_dispatch:
 
 jobs:
@@ -302,7 +302,11 @@ jobs:
           }
           
           # 2. HTML 생성
-          cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
+          $jsonFiles = (Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" |
+          Select-Object -ExpandProperty FullName |
+          ForEach-Object { "`"$_`"" }) -join " "
+
+          cmd /c "npx mochawesome-merge $jsonFiles > merged_report.json"
           npx marge merged_report.json --reportDir ./final_report_UI --inline --charts --reportTitle "UI Check Report" --reportFilename "LogCatch_UI_Report" --saveJson=false
 
       - name: Send Google Chat (UI)

@@ -7,10 +7,10 @@ env:
   TZ: Asia/Seoul
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '45 2 * * *'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '45 2 * * *'
   workflow_dispatch:
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3, 4, 5] # 5병렬 runner추가
+        containers: [1] # 5병렬 runner추가
 
     defaults:
       run:
@@ -244,6 +244,11 @@ jobs:
       run:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
     steps:
+      - name: Clean Previous Reports
+        run: |
+         Remove-Item -Path "cypress/reports" -Recurse -Force -ErrorAction SilentlyContinue
+         Remove-Item -Path "cypress/screenshots" -Recurse -Force -ErrorAction SilentlyContinue
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -301,6 +306,8 @@ jobs:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
 
     steps:
+      - name: Checkout   # ← 추가 필요
+        uses: actions/checkout@v4
       # 👇 [필수 추가] 이 단계가 없으면 이전 테스트 결과(Basic)와 현재 결과(UI)가 뒤섞입니다!
       - name: 🧹 기존 데이터 청소 (Clean Workspace)
         run: |
@@ -342,12 +349,35 @@ jobs:
 
           npm install mochawesome-merge mochawesome-report-generator --no-save
 
-          # 1. JSON 파일 병합 (가장 넓은 범위로 탐색)
-          cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
+          # 💡 [추가] 스크린샷 경로 복원 - JSON이 참조하는 경로와 일치시키기
+          # JSON 파일은 'cypress/screenshots/...' 경로를 참조하는데
+          # 다운로드된 파일은 'all_raw_data/screenshots/...'에 있어서 불일치 발생
+          if (Test-Path "all_raw_data/screenshots") {
+          New-Item -ItemType Directory -Force -Path "cypress/screenshots" | Out-Null
+          Copy-Item -Path "all_raw_data/screenshots/*" -Destination "cypress/screenshots/" -Recurse -Force
+          Write-Host "✅ 스크린샷 경로 복원 완료 (cypress/screenshots/)"
+          } else {
+            Write-Host "⚠️ 스크린샷 없음 - 건너뜀"
+          }
+
+          # 💡 1. dummy.json을 제외한 진짜 결과 JSON 파일이 있는지 체크합니다.
+          $realJsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" | Where-Object { $_.Name -ne "dummy.json" }  
+          if ($realJsonFiles.Count -gt 0) {
+              # 💡 2. 실제 결과가 존재한다면 병합 리포트가 오염되지 않게 dummy.json을 삭제합니다.
+              Get-ChildItem -Path "all_raw_data" -Recurse -Filter "dummy.json" | Remove-Item -Force
+              Write-Host "✅ 실제 테스트 결과 JSON이 존재하여 dummy.json을 제거했습니다."
+          } else {
+              Write-Host "⚠️ 실제 결과 JSON이 없어 dummy.json으로 병합을 진행합니다 (시스템 에러/취소 대비)."
+          }
           
           # 2. HTML 생성
-          # 여기에 --reportFilename "LogCatch_Basic_fun_Report" 추가
-          npx marge merged_report.json --reportDir ./final_report_Basic --inline --charts --reportTitle "Basic Function Report" --reportFilename "LogCatch_Basic_fun_Report" --saveJson=false
+          $jsonFiles = (Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" |
+          Select-Object -ExpandProperty FullName |
+          ForEach-Object { "`"$_`"" }) -join " "
+
+          cmd /c "npx mochawesome-merge $jsonFiles > merged_report.json"
+          npx marge merged_report.json --reportDir ./final_report_Basic --inline --charts --reportTitle "Basic Check Report" --reportFilename "LogCatch_Basic_Report" --saveJson=false
+
 
       - name: Send Google Chat (Basic)
         if: always() 
@@ -487,7 +517,7 @@ jobs:
           from: Cypress 알림 봇 <noreply@warevalley.com>
           
          # 👇 [수정 2] 첨부 파일 경로를 Basic_Report.html로 변경
-          attachments: final_report_Basic/LogCatch_Basic_fun_Report.html
+          attachments: final_report_Basic/LogCatch_Basic_Report.html
 
           body: |
             [긴급] Auto-PC에서 수행된 로그캐치 [Basic 기능] 자동화 테스트가 실패했습니다.
