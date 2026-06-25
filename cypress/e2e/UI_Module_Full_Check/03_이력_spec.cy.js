@@ -27,7 +27,7 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('로그캐치 UI기본체크', () => {
+  it('DEV_Release 로그캐치 UI기본체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -101,63 +101,6 @@ describe('로그캐치 사이트 테스트', () => {
     
     //로그인 성공
 
-/*
-    // ==========================================
-    // STEP 2: 왼쪽 사이드 메뉴뉴탭 클릭
-    // ==========================================
-    // button 태그 중에서 '이력'이라는 글자를 가진 녀석을 클릭
-    cy.contains('button', '이력').click({ force: true });
-    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    // 컨텍스트 메뉴 제거거
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-    
-    // button 태그이면서 '현황'이라는 글자를 포함한 요소를 클릭
-    cy.contains('button', '현황').click({ force: true });
-    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    cy.contains('button', '소명').click({ force: true });
-    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-    
-    cy.contains('button', '자산').click({ force: true });
-    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    cy.contains('button', '보고').click({ force: true });
-    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    cy.contains('button', '보관').click({ force: true });
-    cy.wait(3000);
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    cy.contains('button', '분석').click({ force: true });
-    cy.wait(3000); 
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    cy.contains('button', '검출').click({ force: true });
-    cy.wait(3000); 
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    cy.contains('button', '운영').click({ force: true });
-    cy.wait(3000); 
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-
-    cy.contains('button', '점검').click({ force: true });
-    cy.wait(3000); 
-    cy.get('body').type('{esc}');
-    cy.wait(500);
-  */
   
   
     // ==========================================
@@ -237,22 +180,28 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="종료 IP"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="파일명"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="파일 경로"]').filter(':visible').should('be.visible');
-     //v3.0.5.0_r34908 사용자 상태 콤보박스 추가됨 
-     cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');
-     //토글 개인정보 문구 확인
+     
+     //v3.0.5.1191_R35135 like ->  파일 경로 제거됨. 
+     //cy.get('input[aria-label="파일 경로"]').filter(':visible').should('be.visible');
+     //토글
      cy.get('.v-label').filter(':visible').contains('개인정보').should('be.visible');
-     // v3.0.5.0_r34908에서  미등록사용자 제외 토글버튼  제외됨 .
+     // v3.0.5.0_r34908 -> 제외됨.
      //cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
-     // 
+     
      // v3.0.4.0_R34865 like ->  포함 문구로 버튼문구 변경됨.
      //cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
      cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      cy.get('input[aria-label="파일명"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
-     cy.get('input[aria-label="파일 경로"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
+     //v3.0.5.1191_R35135 like ->  파일 경로 제거됨. 
+     //cy.get('input[aria-label="파일 경로"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      
+    
      //검색 버튼 존재확인 
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+    //개인정보 문구 확인
+    cy.get('label').filter(':visible').contains('개인정보').should('be.visible');
+    // (v3.0.5.0_r34908) 제외됨.
+    //cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
     //표열 문구확인
     cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
     cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
@@ -280,13 +229,14 @@ describe('로그캐치 사이트 테스트', () => {
     // 검색 조건 이름 입력란 확인
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="경보 등급"]').filter(':visible').should('be.visible');
-     //v3.0.5.0_r34908 사용자 상태 콤보박스 추가됨 
-     cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');
     //토글문구확인
-    // v3.0.5.0_r34908에서  미등록사용자 제외 토글버튼  제외됨 . 
+    //v3.0.5.0_r34908 -> 제외됨. 
     //cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
     //검색버튼 존재확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+    // 문구확인
+    //v3.0.5.0_r34908 -> 제외됨.
+    //cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
     //표열 문구확인
     cy.get('th').filter(':visible').contains('접근이력 일시').should('be.visible');
     cy.get('th').filter(':visible').contains('사용자').should('be.visible');
@@ -294,7 +244,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('이상행위 정책').should('be.visible');
     cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유무').should('be.visible'); 
-    cy.get('th').filter(':visible').contains('소명 대상 여부').should('be.visible');
+    //v3.0.5.1191_R35135 문구변경됨 소명 대상 여부 -> 소명대상  
+    cy.get('th').filter(':visible').contains('소명 대상').should('be.visible');
     cy.get('th').filter(':visible').contains('조회').should('be.visible'); 
     cy.log('✅ 이력 - 이상행위 탭 진입 및 데이터 출력 확인 완료!');
 
@@ -319,21 +270,21 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
      //3.0.3.0_R34785에서 해당항목 사라짐 
      //cy.get('input[aria-label="개인정보 건수"]').filter(':visible').should('be.visible');
-     //v3.0.5.0_r34908 사용자 상태 콤보박스 추가됨 
-     cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');
-     //토글문구확인
-     //v3.0.5.0_r34908에서  미등록사용자 제외 토글버튼  제외됨 . 
+     //토글문구 확인
+     //v3.0.5.0_r34908 -> 제외됨. 
      //cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
      // like버튼 확인
      // v3.0.4.0_R34865 like ->  포함 문구로 버튼문구 변경됨.
-     // 사용자 계정은 변경되지않음 맨티스 이슈등록필요  
-     cy.get('input[aria-label="사용자 계정"]').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
+     cy.get('input[aria-label="사용자 계정"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      //3.0.3.0_R34785에서 해당항목 사라짐 
      //cy.get('input[aria-label="개인정보 건수"]').parents('.v-input').find('.v-chip__content').contains('≥').should('be.visible');
      
     //검색버튼 존재확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+    // 문구확인
+    //v3.0.5.0_r34908 -> 제외됨. 
+    //cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
     //표열 문구확인
     cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
     cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
@@ -360,8 +311,11 @@ describe('로그캐치 사이트 테스트', () => {
      // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
-     //왜 2개 정보사용자? v3.0.5.0_r34908  하나 제거됨. 
+     //왜 2개 정보사용자?? 
+     //v3.0.5_r34908  버전에서 정보 사용자 중복 없어짐 
      cy.get('input[aria-label="정보 사용자"][role="combobox"]').filter(':visible').should('be.visible');
+     //cy.get('input[aria-label="정보 사용자"]:not([role="combobox"])').filter(':visible').should('be.visible');
+     //cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="접속 메뉴"]').filter(':visible').should('be.visible');
@@ -370,10 +324,6 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="개인정보 건수"]').filter(':visible').should('be.visible');
      // v3.0.4.0_R34865d에서 ≥  -> 이상 한글문구로 표기확인  
      cy.get('input[aria-label="개인정보 건수"]').parents('.v-input').find('.v-chip__content').contains('이상').should('be.visible');
-     // '이상' 텍스트를 포함한 칩 내용 확인
-     cy.contains('.v-chip__content', '이상').should('be.visible');
-      //v3.0.5.0_r34908 사용자 상태 콤보박스 추가됨 
-     cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');
      //3.0.3.0_R34785에서 해당목 추가됨 
      //엑셀다운로드 버튼 존재 확인
      cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').should('be.visible');
@@ -383,7 +333,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('전체 건수').should('be.visible');
      //토글 문구 확인
      cy.get('label').filter(':visible').contains('개인정보').should('be.visible');
-     // v3.0.5.0_r34908에서  미등록사용자 제외 토글버튼  제외됨 . 
+     //v3.0.5.0_r34908 -> 제외됨.
      //cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
      //표열 문구확인
      cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');

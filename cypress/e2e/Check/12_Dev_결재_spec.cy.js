@@ -303,14 +303,11 @@ cy.log('✅ 결재함 - [참조 결재] 탭 화면 확인 완료!');
 // ==========================================
 // STEP : 결재 서브메뉴 - 신청 > 이상행위 경보
 // ==========================================
-cy.get('button.side-menu').filter(':visible')
-    .contains('span.font-weight-bold', '결재')
-    .click({ force: true });
+cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', '결재').click({ force: true });
 cy.wait(1000);
 
-cy.get('div[role="listitem"]').filter(':visible')
-    .contains('.v-list__tile__title', '신청')
-    .click({ force: true });
+// 결재 - 신청 서브메뉴 선택
+cy.get('div[role="listitem"]').filter(':visible').contains('.v-list__tile__title', '신청').click({ force: true });
 cy.wait(2000);
 
 cy.log('--- 신청 > 이상행위 경보 화면 검증 시작 ---');
