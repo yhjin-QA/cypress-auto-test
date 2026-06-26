@@ -131,31 +131,31 @@ Cypress.Commands.add('changePageRow', (targetCount = '10') => {
 // 3. WAS 접속 실패시 재시도 3회 
 // ==========================================================
 Cypress.Commands.add('visitWithRetry', (url, options = {}, retries = 3) => {
-  
-  // 1. 실패 핸들러 등록 (네트워크 에러 발생 시 호출됨)
-  const onFail = (err, runnable) => {
-    // 네트워크 레벨 에러인지 확인
-    if (err.message.includes('ESOCKETTIMEDOUT') || err.message.includes('failed')) {
-      if (retries > 0) {
-        retries--;
-        cy.log(`⚠️ 네트워크 에러 감지! 3초 후 재시도... (남은 횟수: ${retries})`);
-        cy.wait(3000);
-        
-        // 중요: 에러를 무시하고 재시도 로직으로 복구
-        return false; 
+  const attempt = (remaining) => {
+    let failed = false;
+
+    const onFail = (err) => {
+      if (
+        (err.message.includes('ESOCKETTIMEDOUT') || err.message.includes('failed')) &&
+        remaining > 0
+      ) {
+        failed = true;
+        Cypress.off('fail', onFail);
+        cy.log(`⚠️ 접속 실패. 3초 후 재시도... (남은 횟수: ${remaining - 1})`);
+        cy.wait(3000).then(() => attempt(remaining - 1));
+        return false; // 에러 삼키기
       }
-    }
+    };
+
+    Cypress.on('fail', onFail);
+
+    cy.visit(url, { ...options, timeout: 60000, failOnStatusCode: false }).then(() => {
+      if (!failed) {
+        Cypress.off('fail', onFail);
+        cy.log('✅ 페이지 접속 성공');
+      }
+    });
   };
 
-  // 핸들러 등록
-  Cypress.on('fail', onFail);
-
-  // 2. 방문 수행
-  cy.visit(url, { ...options, failOnStatusCode: false }).then(() => {
-    // 성공 시 핸들러 제거
-    Cypress.off('fail', onFail);
-  });
-  
-  // 3. 만약 실패했다면 재귀적으로 다시 호출
-  // (실패 시 테스트가 중단되지 않도록 위 핸들러가 처리함)
+  attempt(retries);
 });
