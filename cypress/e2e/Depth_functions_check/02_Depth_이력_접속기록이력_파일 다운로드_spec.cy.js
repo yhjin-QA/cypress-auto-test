@@ -193,7 +193,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      cy.get('input[aria-label="종료 IP"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="파일명"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="파일 경로"]').filter(':visible').should('be.visible');
+     //3.0.5.1191_r35135 제거됨.
+     //cy.get('input[aria-label="파일 경로"]').filter(':visible').should('be.visible');
      
      //토글
      cy.get('.v-label').filter(':visible').contains('개인정보').should('be.visible');
@@ -201,7 +202,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      // 포함 버튼 확인 
      cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      cy.get('input[aria-label="파일명"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
-     cy.get('input[aria-label="파일 경로"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
+     //3.0.5.1191_r35135 제거됨.
+     //cy.get('input[aria-label="파일 경로"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      
     
      //검색 버튼 존재확인 
@@ -477,36 +479,37 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
       cy.get('input[aria-label="파일명"]').filter(':visible').clear();
       cy.wait(500);
 
+    //3.0.5.1191_r35135 파일 경로 제거됨.
+    // // ==========================================
+    // // 파일경로 검색 - 타겟 :  /home/logcatch/data/explanationFiles/data
+    // // ==========================================
+    // // 파일경로 검색에 tester3 입력 
+    // cy.get('input[aria-label="파일 경로"]').filter(':visible').clear().type('/home/logcatch/data/explanationFiles/data');
+    // cy.wait(500);
 
-    // ==========================================
-    // 파일경로 검색 - 타겟 :  /home/logcatch/data/explanationFiles/data
-    // ==========================================
-    // 파일경로 검색에 tester3 입력 
-    cy.get('input[aria-label="파일 경로"]').filter(':visible').clear().type('/home/logcatch/data/explanationFiles/data');
-    cy.wait(500);
+    // //검색버튼 클릭
+    // cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    // cy.wait(1000);
 
-    //검색버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    cy.wait(1000);
-
-    //검증코드
-    // 'tester3-'로 시작하고 중간에 숫자들이 있으며 '.pdf', 'xlsx'로 끝나는 패턴 검증
-    // xlsx 또는 pdf 중 하나를 포함하는 요소를 찾아 가시성 검증
-    cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.(xlsx|pdf)/).should('be.visible');
-    cy.get('span.ellipsis.text-xs-left').contains('tester3/api/file-download') .should('be.visible');
-    cy.wait(500);
+    // //검증코드
+    // // 'tester3-'로 시작하고 중간에 숫자들이 있으며 '.pdf', 'xlsx'로 끝나는 패턴 검증
+    // // xlsx 또는 pdf 중 하나를 포함하는 요소를 찾아 가시성 검증
+    // cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.(xlsx|pdf)/).should('be.visible');
+    // cy.get('span.ellipsis.text-xs-left').contains('tester3/api/file-download') .should('be.visible');
+    // cy.wait(500);
 
     
-    // 입력한 URI 주소 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="파일 경로"]').filter(':visible').clear();
-    cy.wait(500);
+    // // 입력한 URI 주소 x버튼 클릭하여 초기화 
+    // cy.get('input[aria-label="파일 경로"]').filter(':visible').clear();
+    // cy.wait(500);
 
 
     //////////////////////////////////////////////////////
     // 개인정보 토글 OFF -> ON확인 
     /////////////////////////////////////////////////////
-    cy.get('input[aria-label="개인정보"]').click({ force: true });
-    cy.wait(500);
+    //3.0.5.1191_r35135 에서 개인정보 ON상태가 디폴트값
+    //cy.get('input[aria-label="개인정보"]').click({ force: true });
+    //cy.wait(500);
 
     // [검증] 개인정보 제외 OFF -> ON 체크확인 
     cy.get('input[aria-label="개인정보"]').should('be.checked');
@@ -577,10 +580,8 @@ cy.log('✅ 검색 결과 정상 확인 완벽 통과! (정보 사용자 열 기
      cy.wait(1000);
 
      // [검증] 검색 결과 검증
-     // '(미등록 사용자)' 또는 '(호준)', '(logcatch) 중 하나를 포함하는 a 태그 검증
-     cy.get('a').contains(/\((미등록 사용자|logcatch|호준)\)/) .should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
-    //  cy.get('a').contains('(미등록 사용자)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
-    //  cy.get('a').contains('(호준)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+     // '비로그인' 또는 '(호준)', '(logcatch) 중 하나를 포함하는 a 태그 검증
+     cy.get('tbody a').filter(':visible').filter((i, el) => /(비로그인|logcatch|호준)/.test(el.innerText.trim())).first().should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
     
 
       // 사용자 상태 - 전체 선택----------------------------------------------- 
@@ -601,18 +602,20 @@ cy.log('✅ 검색 결과 정상 확인 완벽 통과! (정보 사용자 열 기
     cy.log('🧐 동적으로 변하는 정보사용자 데이터를 검증합니다.');
 
     // 1. 허용할 사용자 목록을 정규식으로 정의합니다. (| 기호가 '또는' 역할을 합니다)
-    // 해석: \(호준\) 또는 \(미등록 사용자\) 또는 진윤호\(yunho\) 또는 \(logcatch\)
-    const allowedUsersRegex = /\(호준\)|\(미등록 사용자\)|진윤호\(yunho\)|\(logcatch\)/;
+    //const allowedUsersRegex = /\(호준\)|\(비로그인\)|진윤호\(yunho\)|\(logcatch\)/;
+    const allowedUsersRegex = /호준|비로그인|진윤호|yunho|logcatch/;
 
     // 2. 화면에 보이는 표의 데이터 행(tr) 안에서 찾습니다.
-    cy.get('tbody tr').filter(':visible').find('a.ellipsis.text-xs-center').contains(allowedUsersRegex).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    //cy.get('tbody tr').filter(':visible').find('a.ellipsis.text-xs-center').contains(allowedUsersRegex).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('tbody tr').filter(':visible').find('a.ellipsis.text-xs-center').filter((i, el) => allowedUsersRegex.test(el.innerText.trim())).first().should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+
     cy.log('✅ 허용된 정보사용자 데이터 정상 출력 확인 완료!');
     
     //----------------------------------------------------------------------------------------------
     
     // // 검색 결과 첫 번째 행의 정보사용자가 4명 중 한 명인지 정밀 검증
     // cy.get('tbody tr').filter(':visible').first().within(() => {
-    //   cy.get('a.ellipsis.text-xs-center').contains(/\(호준\)|\(미등록 사용자\)|진윤호\(yunho\)|\(logcatch\)/).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    //   cy.get('a.ellipsis.text-xs-center').contains(/\(호준\)|\(비로그인\)|진윤호\(yunho\)|\(logcatch\)/).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
     //  });
 
      
@@ -706,9 +709,10 @@ cy.log('✅ 검색 결과 정상 확인 완벽 통과! (정보 사용자 열 기
     cy.get('input[aria-label="파일명"]').filter(':visible').clear().type('tester3-20260318160556.pdf');
     cy.wait(500);
 
+    //3.0.5.1191_r35135 제거됨.
     // 파일경로 검색에 /home/logcatch/data/explanationFiles/data 입력 
-    cy.get('input[aria-label="파일 경로"]').filter(':visible').clear().type('/home/logcatch/data/explanationFiles/data');
-    cy.wait(500);
+    //cy.get('input[aria-label="파일 경로"]').filter(':visible').clear().type('/home/logcatch/data/explanationFiles/data');
+    //cy.wait(500);
 
     //검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -728,8 +732,6 @@ cy.log('✅ 검색 결과 정상 확인 완벽 통과! (정보 사용자 열 기
     cy.wait(500);
 
     
-
-
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================

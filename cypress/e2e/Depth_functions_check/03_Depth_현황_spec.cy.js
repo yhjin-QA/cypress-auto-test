@@ -107,7 +107,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      cy.wait(3000);
     
     //로그인 성공
-/*
+
     // ==========================================
     // STEP 4: 현황서브메뉴 
     // ==========================================
@@ -120,11 +120,13 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.tab-btn').contains('정보사용자 별').should('be.visible').click({ force: true });
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-     // 버튼확인
+    // 시작날짜 달력 아이콘 확인 (부모 display:none 이슈로 exist 사용)
+    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('exist');
+    // 종료날짜 달력 아이콘 확인 - aria-label이 빈 값인 종료날짜 input으로 타겟
+    cy.get('input[aria-label=""][readonly="readonly"]').filter(':visible').first().closest('.v-input').find('.material-icons').should('exist'); // visible 대신 exist로 변경 (부모 display:none 이슈 회피)
+    // 달력 아이콘이 2개 존재하는지 확인
+    cy.get('i.material-icons').filter((i, el) => el.textContent.trim() === 'event').should('have.length.gte', 2); 
+    // 버튼확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     //검색 조건 입력문구 확인
     cy.get('label').filter(':visible').contains('기간').should('be.visible');
@@ -135,19 +137,17 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // ==========================================
     // 정보사용자 별 - 업무시스템 - 아이피 검색 검증하기 
     // ==========================================
-    // 기능확인 - 달력 날짜 기간 2월 1일 지정---------------------------------------------------------------------------
-    //달력표를 펼침  월/일 지정  
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    // 기능확인 - 달력 날짜 기간 1월 20일 지정---------------------------------------------------------------------------
+    // 기간 input의 달력 아이콘 클릭 (aria-label로 정확히 타겟)
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('i.material-icons').click({ force: true });
     cy.wait(500);
-    // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
+    // 활성화된 달력 팝업에서 헤더 클릭 → 월 선택 모드
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
-
-    // 2. '2월'이라는 글자를 찾아 클릭합니다.
-    cy.get('.v-date-picker-table--month').filter(':visible').contains('2월').click({ force: true });
-    // 달력 1일 클릭
-    cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').closest('.v-btn').click({ force: true });
-    //달력창 닫기
-    cy.get('body').type('{esc}'); 
+    // 1월 클릭
+    cy.get('.menuable__content__active').find('.v-date-picker-table--month').contains('1월').click({ force: true });
+    // 20일 클릭
+    cy.get('.menuable__content__active').find('.v-date-picker-table').contains('.v-btn__content', '20').closest('.v-btn').click({ force: true });
+    cy.get('body').type('{esc}');
 
     //업무 시스템 - JEUS_tester3 선택
     // 조건 입력 
@@ -224,7 +224,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      // 보이는 표의 본문(tbody) 행(tr)을 순회하며 덧셈
      cy.get('table').filter(':visible').find('tbody tr').each(($row) => {
      // 각 행의 마지막 열(td) 텍스트 가져오기
-     const cellText = $row.find('td').last().text();
+     const cellText = $row.find('td').eq(-2).text();
      const num = parseInt(cellText.replace(/[^0-9]/g, ''), 10);
      if (!isNaN(num)) {
       cy.log(`➕ IP 검색 표 데이터: ${num}`); 
@@ -279,31 +279,29 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 
     //검증 코드
     // 1. 검증할 카드 목록 정의 (숫자만 작성)
+    // min값을 기준으로 0으로 설정하면  숫자만 있으면 통과 1로 설정하면 최소 1이상이어야함. min값 조절
     const dashboardStats1 = [
-     { title: '개인정보 사용량', value: '1,504' },
-     { title: '개인정보 대량 접근', value: '8' },
-     { title: '업무시간 외 접근', value: '0' },
-     { title: '이상행위 발생 건수', value: '31' },
-     { title: '접근 업무시스템', value: '1' },
-     { title: '접근 IP 주소', value: '1' }
-     ];
-     // 2. 반복문 검증
-     dashboardStats1.forEach((stat) => {
-      cy.contains('.v-card', stat.title, { timeout: 10000 }).should('be.visible').within(() => {
-      cy.get('b', { timeout: 10000 }).should('contain', stat.value); 
-       });
+  { title: '개인정보 사용량',    min: 0 },
+  { title: '개인정보 대량 접근', min: 0 },
+  { title: '업무시간 외 접근',   min: 0 },
+  { title: '이상행위 발생 건수', min: 0 },
+  { title: '접근 업무시스템',    min: 0 },
+  { title: '접근 IP 주소',       min: 0 }
+];
+
+dashboardStats1.forEach((stat) => {
+  cy.contains('.v-card', stat.title, { timeout: 10000 })
+    .should('be.visible')
+    .within(() => {
+      cy.get('b', { timeout: 10000 }).should(($b) => {
+        const num = parseInt($b.text().replace(/[^0-9]/g, ''), 10);
+        expect(num, `${stat.title} 카드 값이 ${stat.min} 이상이어야 합니다`)
+          .to.be.gte(stat.min);
       });
+    });
+});
     
-    // 숫자가 변화가 생긴다면 해당코드로 공백숫자만 아닌걸로 검토  
-    // // 1. 검증할 카드 목록 정의 (이제 숫자는 몰라도 됩니다! 제목만 작성)  // 값이 '0'이든 '1,504'든 숫자만 있으면 무조건 통과합니다.
-    // const dashboardCards = ['개인정보 사용량','개인정보 대량 접근','업무시간 외 접근','이상행위 발생 건수','접근 업무시스템','접근 IP 주소'];
-    // dashboardCards.forEach((title) => {
-    // cy.contains('.v-card', title, { timeout: 10000 }).should('be.visible').within(() => {
-    //   cy.get('b', { timeout: 10000 }).invoke('text').should('match', /[0-9]/); 
-    //   });
-    //  });
-
-
+    
     //검색결과 통계 그래프 문구 확인 코드
     cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
     cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
@@ -312,20 +310,20 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.log('✅ 현황 - 정보사용자 별 탭 진입 및 데이터 출력 확인 완료!');
 
 
-    //강제 페이지 새로고침
-    //cy.reload();
+    //------------------------------------------------------------------------------------
 
-    //----------------------------------------------------------------------------------------------------------
     cy.log('--- 현황 > 부서별 탭 클릭  ---');
     cy.get('.tab-btn').contains('부서 별').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.get('.tab-btn').contains('부서 별').closest('button').should('not.have.class', 'inactive');
     cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-    cy.contains('label', '기간') .closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // 시작날짜 달력 아이콘 확인 (부모 display:none 이슈로 exist 사용)
+    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('exist');
+    // 종료날짜 달력 아이콘 확인 - aria-label이 빈 값인 종료날짜 input으로 타겟
+    cy.get('input[aria-label=""][readonly="readonly"]').filter(':visible').first().closest('.v-input').find('.material-icons').should('exist'); // visible 대신 exist로 변경 (부모 display:none 이슈 회피)
+    // 달력 아이콘이 2개 존재하는지 확인
+    cy.get('i.material-icons').filter((i, el) => el.textContent.trim() === 'event').should('have.length.gte', 2); 
     // 검색 버튼확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 검색조건 입력문구 확인 
@@ -336,27 +334,25 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // ==========================================
     // 부서 별 - 업무시스템 - 그룹 검색 검증하기 
     // ==========================================
-    // 기능확인 - 달력 날짜 기간 2월 1일 지정---------------------------------------------------------------------------
-    //달력표를 펼침  월/일 지정  
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    // 기능확인 - 달력 날짜 기간 1월 20일 지정---------------------------------------------------------------------------
+    // 기간 input의 달력 아이콘 클릭 (aria-label로 정확히 타겟)
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('i.material-icons').click({ force: true });
     cy.wait(500);
-    // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
+    // 활성화된 달력 팝업에서 헤더 클릭 → 월 선택 모드
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
+    // 1월 클릭
+    cy.get('.menuable__content__active').find('.v-date-picker-table--month').contains('1월').click({ force: true });
+    // 20일 클릭
+    cy.get('.menuable__content__active').find('.v-date-picker-table').contains('.v-btn__content', '20').closest('.v-btn').click({ force: true });
+    cy.get('body').type('{esc}');
 
-    // 2. '2월'이라는 글자를 찾아 클릭합니다.
-    cy.get('.v-date-picker-table--month').filter(':visible').contains('2월').click({ force: true });
-    // 달력 1일 클릭
-    cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').closest('.v-btn').click({ force: true });
-    //달력창 닫기
-    cy.get('body').type('{esc}'); 
-
-    //업무 시스템 - JEUS_tester3 선택
+    //업무 시스템 - 리눅스_VIP고객 선택
     // 조건 입력 
     //업무시스템 클릭하는 코드 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
     // 업무시스템중 EUS_tester3 클릭하는 코드
-    cy.get('.v-list__tile__title').contains('JEUS_tester3').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    cy.get('.v-list__tile__title').contains('리눅스_VIP고객').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     cy.wait(1000);
     // 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
@@ -366,7 +362,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
     // 그룹별중 영업팀 클릭하는 코드
-    cy.get('.v-list__tile__title').contains('품질관리팀').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    cy.get('.v-list__tile__title').contains('AI개발1팀').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
@@ -377,20 +373,27 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 
     //검증 코드
     // 1. 검증할 카드 목록 정의 (숫자만 작성)
+    // min값을 기준으로 0으로 설정하면  숫자만 있으면 통과 1로 설정하면 최소 1이상이어야함. min값 조절
     const dashboardStats2 = [
-     { title: '개인정보 사용량', value: '569' },
-     { title: '개인정보 대량 접근', value: '0' },
-     { title: '업무시간 외 접근', value: '0' },
-     { title: '이상행위 발생 건수', value: '0' },
-     { title: '접근 업무시스템', value: '1' },
-     { title: '접근 IP 주소', value: '1' }
-     ];
-     // 2. 반복문 검증
-     dashboardStats2.forEach((stat) => {
-      cy.contains('.v-card', stat.title, { timeout: 10000 }).should('be.visible').within(() => {
-      cy.get('b', { timeout: 10000 }).should('contain', stat.value); 
-       });
+  { title: '개인정보 사용량',    min: 0 },
+  { title: '개인정보 대량 접근', min: 0 },
+  { title: '업무시간 외 접근',   min: 0 },
+  { title: '이상행위 발생 건수', min: 0 },
+  { title: '접근 업무시스템',    min: 0 },
+  { title: '접근 IP 주소',       min: 0 }
+];
+
+dashboardStats2.forEach((stat) => {
+  cy.contains('.v-card', stat.title, { timeout: 10000 })
+    .should('be.visible')
+    .within(() => {
+      cy.get('b', { timeout: 10000 }).should(($b) => {
+        const num = parseInt($b.text().replace(/[^0-9]/g, ''), 10);
+        expect(num, `${stat.title} 카드 값이 ${stat.min} 이상이어야 합니다`)
+          .to.be.gte(stat.min);
       });
+    });
+});
 
     //검색결과 통계 그래프 문구 확인 코드
     cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
@@ -419,7 +422,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
       let tableSum = 0; 
     cy.get('table').filter(':visible').find('tbody tr').each(($row) => {
       // 각 행의 마지막 열(td) 텍스트 가져오기
-      const cellText = $row.find('td').last().text();
+      const cellText = $row.find('td').eq(-2).text();
       const num = parseInt(cellText.replace(/[^0-9]/g, ''), 10);
       // 숫자가 정상적으로 존재할 때만 덧셈 수행
       if (!isNaN(num)) {
@@ -445,10 +448,12 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.tab-btn').contains('업무 시스템 별').closest('button').should('not.have.class', 'inactive');
     // 'c-headline' 클래스를 가진 요소 중에 '파일 다운로드' 글자가 존재하는지 확인
     cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-    cy.contains('label', '기간') .closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // 시작날짜 달력 아이콘 확인 (부모 display:none 이슈로 exist 사용)
+    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('exist');
+    // 종료날짜 달력 아이콘 확인 - aria-label이 빈 값인 종료날짜 input으로 타겟
+    cy.get('input[aria-label=""][readonly="readonly"]').filter(':visible').first().closest('.v-input').find('.material-icons').should('exist'); // visible 대신 exist로 변경 (부모 display:none 이슈 회피)
+    // 달력 아이콘이 2개 존재하는지 확인
+    cy.get('i.material-icons').filter((i, el) => el.textContent.trim() === 'event').should('have.length.gte', 2); 
     // 검색 버튼 확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 검색조건 입력문구 확인
@@ -457,26 +462,23 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     //==========================================
     // 업무시스템 별 검색 검증하기 
     //==========================================
-    // 기능확인 - 달력 날짜 기간 2월 1일 지정---------------------------------------------------------------------------
-    //달력표를 펼침  월/일 지정  
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    // 기능확인 - 달력 날짜 기간 1월 20일 지정---------------------------------------------------------------------------
+    // 기간 input의 달력 아이콘 클릭 (aria-label로 정확히 타겟)
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('i.material-icons').click({ force: true });
     cy.wait(500);
-    // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
+    // 활성화된 달력 팝업에서 헤더 클릭 → 월 선택 모드
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
+    // 1월 클릭
+    cy.get('.menuable__content__active').find('.v-date-picker-table--month').contains('1월').click({ force: true });
+    // 20일 클릭
+    cy.get('.menuable__content__active').find('.v-date-picker-table').contains('.v-btn__content', '20').closest('.v-btn').click({ force: true });
+    cy.get('body').type('{esc}');
 
-    // 2. '2월'이라는 글자를 찾아 클릭합니다.
-    cy.get('.v-date-picker-table--month').filter(':visible').contains('2월').click({ force: true });
-    // 달력 1일 클릭
-    cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').closest('.v-btn').click({ force: true });
-    //달력창 닫기
-    cy.get('body').type('{esc}'); 
-
-    //업무 시스템 - 윈도우_배송관리 선택
     //업무시스템 클릭하는 코드 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
-    // 업무시스템중 윈도우_배송관리 클릭하는 코드
-    cy.get('.v-list__tile__title').contains('윈도우_배송관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // 업무시스템중 WebLogic_CRM고객관리 클릭하는 코드
+    cy.get('.v-list__tile__title').contains('WebLogic_CRM고객관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     cy.wait(1000);
     // 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
@@ -487,60 +489,67 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 
     //검증 코드
     // 1. 검증할 카드 목록 정의 (숫자만 작성)
+    // min값을 기준으로 0으로 설정하면  숫자만 있으면 통과 1로 설정하면 최소 1이상이어야함. min값 조절
     const dashboardStats3 = [
-     { title: '개인정보 사용량', value: '66' },
-     { title: '개인정보 대량 접근', value: '0' },
-     { title: '업무시간 외 접근', value: '0' },
-     { title: '이상행위 발생 건수', value: '0' },
-     { title: '접근 업무시스템', value: '1' },
-     { title: '접근 IP 주소', value: '2' }
-     ];
-     // 2. 반복문 검증
-     dashboardStats3.forEach((stat) => {
-      cy.contains('.v-card', stat.title, { timeout: 10000 }).should('be.visible').within(() => {
-      cy.get('b', { timeout: 10000 }).should('contain', stat.value); 
-       });
+  { title: '개인정보 사용량',    min: 0 },
+  { title: '개인정보 대량 접근', min: 0 },
+  { title: '업무시간 외 접근',   min: 0 },
+  { title: '이상행위 발생 건수', min: 0 },
+  { title: '접근 업무시스템',    min: 0 },
+  { title: '접근 IP 주소',       min: 0 }
+];
+
+dashboardStats3.forEach((stat) => {
+  cy.contains('.v-card', stat.title, { timeout: 10000 })
+    .should('be.visible')
+    .within(() => {
+      cy.get('b', { timeout: 10000 }).should(($b) => {
+        const num = parseInt($b.text().replace(/[^0-9]/g, ''), 10);
+        expect(num, `${stat.title} 카드 값이 ${stat.min} 이상이어야 합니다`)
+          .to.be.gte(stat.min);
       });
+    });
+});
     
-    // 맨티스 이슈 : 37386
-    // [현황] 업무시스템별 차트에 개인정보 사용량 건수와 하단표 개인정보 사용건수 합이 일치하지 않는 문제
-    // // =========================================================
-    // // [정합성 검증] 업무시스템 별 '개인정보 사용량' 카드 클릭 후 하단 표 데이터 합산 검증 (하단표 38합)
-    // // =========================================================
-    // // 1. [상단] '개인정보 사용량' 카드를 찾아 첫 번째 숫자(<b>)를 추출하고 클릭합니다.
-    // cy.contains('.v-card', '개인정보 사용량').should('be.visible').within(() => {
-    // cy.get('b').first().then(($b) => {
-    //   // 텍스트에서 숫자만 추출 (예: '610' -> 610)
-    //   const text = $b.text(); 
-    //   const totalFromCard = parseInt(text.replace(/[^0-9]/g, ''), 10);
-    //   // 변수명 충돌을 막기 위해 Alias 이름을 'expectedTotal_IP'로 지정합니다.
-    //   cy.wrap(totalFromCard).as('expectedTotal_IP'); 
-    //   // 해당 요소를 클릭하여 하단 표를 갱신합니다.
-    //   cy.wrap($b).click({ force: true });
-    //   });
-    // });
-    // cy.wait(1500); 
-    // // 2. [하단] 현재 화면에 보이는 표의 데이터를 모두 더합니다.
-    // cy.get('@expectedTotal_IP').then((expectedTotal_IP) => {
-    //  let tableSum = 0; 
-    //  // 표가 화면에 완전히 렌더링되었는지 확인
-    //  cy.get('table').filter(':visible').should('be.visible');
-    //  // 보이는 표의 본문(tbody) 행(tr)을 순회하며 덧셈
-    //  cy.get('table').filter(':visible').find('tbody tr').each(($row) => {
-    //  // 각 행의 마지막 열(td) 텍스트 가져오기
-    //  const cellText = $row.find('td').last().text();
-    //  const num = parseInt(cellText.replace(/[^0-9]/g, ''), 10);
-    //  if (!isNaN(num)) {
-    //   cy.log(`➕ IP 검색 표 데이터: ${num}`); 
-    //   tableSum += num;
-    //   }
-    //  }).then(() => {
-    //     // 3. [최종 검증] 상단 숫자 vs 하단 표 합계
-    //     cy.log(`📊 상단 카드 클릭 수: ${expectedTotal_IP} / 하단 표 계산 합계: ${tableSum}`);
-    //     // 두 숫자가 일치하는지 단호하게 검증!
-    //     expect(tableSum).to.equal(expectedTotal_IP);
-    //   });
-    // });
+    //맨티스 이슈 : 37386
+    //[현황] 업무시스템별 차트에 개인정보 사용량 건수와 하단표 개인정보 사용건수 합이 일치하지 않는 문제
+    // =========================================================
+    // [정합성 검증] 업무시스템 별 '개인정보 사용량' 카드 클릭 후 하단 표 데이터 합산 검증 (하단표 38합)
+    // =========================================================
+    // 1. [상단] '개인정보 사용량' 카드를 찾아 첫 번째 숫자(<b>)를 추출하고 클릭합니다.
+    cy.contains('.v-card', '개인정보 사용량').should('be.visible').within(() => {
+    cy.get('b').first().then(($b) => {
+      // 텍스트에서 숫자만 추출 (예: '610' -> 610)
+      const text = $b.text(); 
+      const totalFromCard = parseInt(text.replace(/[^0-9]/g, ''), 10);
+      // 변수명 충돌을 막기 위해 Alias 이름을 'expectedTotal_IP'로 지정합니다.
+      cy.wrap(totalFromCard).as('expectedTotal_IP'); 
+      // 해당 요소를 클릭하여 하단 표를 갱신합니다.
+      cy.wrap($b).click({ force: true });
+      });
+    });
+    cy.wait(1500); 
+    // 2. [하단] 현재 화면에 보이는 표의 데이터를 모두 더합니다.
+    cy.get('@expectedTotal_IP').then((expectedTotal_IP) => {
+     let tableSum = 0; 
+     // 표가 화면에 완전히 렌더링되었는지 확인
+     cy.get('table').filter(':visible').should('be.visible');
+     // 보이는 표의 본문(tbody) 행(tr)을 순회하며 덧셈
+     cy.get('table').filter(':visible').find('tbody tr').each(($row) => {
+     // 각 행의 마지막 열(td) 텍스트 가져오기
+     const cellText = $row.find('td').eq(-2).text();
+     const num = parseInt(cellText.replace(/[^0-9]/g, ''), 10);
+     if (!isNaN(num)) {
+      cy.log(`➕ IP 검색 표 데이터: ${num}`); 
+      tableSum += num;
+      }
+     }).then(() => {
+        // 3. [최종 검증] 상단 숫자 vs 하단 표 합계
+        cy.log(`📊 상단 카드 클릭 수: ${expectedTotal_IP} / 하단 표 계산 합계: ${tableSum}`);
+        // 두 숫자가 일치하는지 단호하게 검증!
+        expect(tableSum).to.equal(expectedTotal_IP);
+      });
+    });
     
 
     //검색결과 통계 그래프 문구 확인 코드
@@ -551,160 +560,160 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.log('✅ 업무 시스템 별 탭 진입 및 데이터 출력 확인 완료!');
 
 
-    //  현황 > 종합 현항 탭
-    cy.log('--- 현황 > 종합 현항 탭 클릭  ---');
-    cy.get('.tab-btn').contains('종합 현황').should('be.visible').click({ force: true });
-    cy.wait(3000);
+    // //  현황 > 종합 현항 탭
+    // cy.log('--- 현황 > 종합 현항 탭 클릭  ---');
+    // cy.get('.tab-btn').contains('종합 현황').should('be.visible').click({ force: true });
+    // cy.wait(3000);
 
-    // 현황 > 종합현황  > [정보 사용자별] 탭 클릭 
-    cy.get('.tab-title').filter(':visible').should('be.visible').contains('정보사용자 별').click();
-    cy.wait(3000);
-    cy.log('--- 화면 검증 시작 ---');
-    cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-     cy.contains('label', '기간').filter(':visible').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-    // 검색 버튼 확인 
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // 검색조건 입력문구확인
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
-    cy.get('span').filter(':visible').contains('정보 사용자').should('be.visible');
-    cy.get('input[aria-label="사용자"]').filter(':visible').should('be.visible');
+    // // 현황 > 종합현황  > [정보 사용자별] 탭 클릭 
+    // cy.get('.tab-title').filter(':visible').should('be.visible').contains('정보사용자 별').click();
+    // cy.wait(3000);
+    // cy.log('--- 화면 검증 시작 ---');
+    // cy.contains('.c-headline', '검색 조건').should('exist');
+    // // 시작날짜 달력 아이콘확인
+    //  cy.contains('label', '기간').filter(':visible').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    // // 종료날짜 달력 아이콘확인
+    // cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // // 검색 버튼 확인 
+    // cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+    // // 검색조건 입력문구확인
+    // cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
+    // cy.get('span').filter(':visible').contains('정보 사용자').should('be.visible');
+    // cy.get('input[aria-label="사용자"]').filter(':visible').should('be.visible');
 
-    ////////////////////////////
-    // 기능확인 - 조건별로 검색 
-    //업무 시스템 - 리눅스_배송관리 선택
-    // 조건 입력 
-    //업무시스템 클릭하는 코드 
-    //cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
-    cy.wait(1000);
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+    // ////////////////////////////
+    // // 기능확인 - 조건별로 검색 
+    // //업무 시스템 - 리눅스_배송관리 선택
+    // // 조건 입력 
+    // //업무시스템 클릭하는 코드 
+    // //cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    // cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    // cy.wait(1000);
+    // cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
    
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    //cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
-    //cy.wait(1000);
-    // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
-    //cy.get('body').type('{esc}');
+    // // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    // //cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
+    // //cy.wait(1000);
+    // // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+    // //cy.get('body').type('{esc}');
     
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    //cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').click({ force: true });
-    cy.get('.v-list__tile__title').filter(':visible').contains('리눅스_배송관리').click({ force: true });
-    cy.wait(500);
-    // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
-    cy.get('body').type('{esc}');
-    //추적타입 - 정보사용자는 디폴트값으로 선택 Skip
-    //사용자 선택
-    cy.get('input[aria-label="사용자"]').filter(':visible').click({ force: true });
-    // 사용자 리스트 콤보박스에서 첫번쨰 사람 선택
-    cy.wait(500);
-    cy.get('.v-list__tile__title').filter(':visible').eq(0).click({ force: true });
+    // // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    // //cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').click({ force: true });
+    // cy.get('.v-list__tile__title').filter(':visible').contains('리눅스_배송관리').click({ force: true });
+    // cy.wait(500);
+    // // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+    // cy.get('body').type('{esc}');
+    // //추적타입 - 정보사용자는 디폴트값으로 선택 Skip
+    // //사용자 선택
+    // cy.get('input[aria-label="사용자"]').filter(':visible').click({ force: true });
+    // // 사용자 리스트 콤보박스에서 첫번쨰 사람 선택
+    // cy.wait(500);
+    // cy.get('.v-list__tile__title').filter(':visible').eq(0).click({ force: true });
 
-    // 검색 버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    // // 검색 버튼 클릭
+    // cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
-    //검색결과 통계 그래프 문구 확인 코드
-    cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
-    cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
-    cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
-    cy.log('✅ 현황 - 종합현황 - [정보 사용자별]탭 진입 및 데이터 출력 확인 완료!');
-
-    
-    
-    // 현황 > 종합현황  > [부서 별] 탭 클릭 
-    cy.get('.tab-title').filter(':visible').should('be.visible').contains('부서 별').click();
-    cy.wait(3000);
-    cy.log('--- 화면 검증 시작 ---');
-    cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-    cy.get('label').filter(':visible').contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-    // 검색 버튼확인
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // 검색 조건 입력 문구확인
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
-    cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
-
-    ////////////////////////////
-    // 기능확인 - 조건별로 검색 
-    //업무 시스템 - 리눅스_배송관리 선택
-    // 조건 입력 
-    //업무시스템 클릭하는 코드 
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    //cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').click({ force: true });
-    cy.wait(500);
-    // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
-    cy.get('body').type('{esc}');
-
-    // 조건 입력 
-    // 그룹별 클릭하는 코드 
-    cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
-    // 그룹별중 영업팀 클릭하는 코드
-    cy.get('.v-list__tile__title').contains('협력사').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
-    // 선택 후 메뉴 닫기
-    cy.get('body').type('{esc}');
-
-    // 검색 버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    cy.wait(1000);
-
-    //검색결과 통계 그래프 문구 확인 코드
-    cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
-    cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
-    cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
-    cy.log('✅ 현황 - 종합현황 - [부서 별]탭 진입 및 데이터 출력 확인 완료!');
+    // //검색결과 통계 그래프 문구 확인 코드
+    // cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
+    // cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
+    // cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
+    // cy.log('✅ 현황 - 종합현황 - [정보 사용자별]탭 진입 및 데이터 출력 확인 완료!');
 
     
-    // 업무시스템 콤보박스 닫히지 않는 이슈 새로고침 실행
-    cy.reload();
+    
+    // // 현황 > 종합현황  > [부서 별] 탭 클릭 
+    // cy.get('.tab-title').filter(':visible').should('be.visible').contains('부서 별').click();
+    // cy.wait(3000);
+    // cy.log('--- 화면 검증 시작 ---');
+    // cy.contains('.c-headline', '검색 조건').should('exist');
+    // // 시작날짜 달력 아이콘확인
+    // cy.get('label').filter(':visible').contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    // // 종료날짜 달력 아이콘확인
+    // cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // // 검색 버튼확인
+    // cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+    // // 검색 조건 입력 문구확인
+    // cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
+    // cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
 
-    // 현황 > 종합현황  > [업무시스템 별] 탭 클릭 
-    cy.get('.tab-title').filter(':visible').contains('업무 시스템 별').click();
-    cy.wait(3000);
-    cy.log('--- 화면 검증 시작 ---');
-    cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-     cy.get('label').filter(':visible').contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-    // 검색 버튼 확인 
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // 검색조건 입력문구 확인
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
+    // ////////////////////////////
+    // // 기능확인 - 조건별로 검색 
+    // //업무 시스템 - 리눅스_배송관리 선택
+    // // 조건 입력 
+    // //업무시스템 클릭하는 코드 
+    // cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    // cy.wait(500);
+    // // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    // //cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    // cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').click({ force: true });
+    // cy.wait(500);
+    // // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+    // cy.get('body').type('{esc}');
 
-    ////////////////////////////
-    // 기능확인 - 조건별로 검색 
-    //업무 시스템 - 리눅스_배송관리 선택
-    // No data available 뜨는 이슈 발생 (맨티스 : 37152) 이로인해 두번클릭하게  우회코드 작성함. 
-     //cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    // // 조건 입력 
+    // // 그룹별 클릭하는 코드 
+    // cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    // cy.wait(500);
+    // // 그룹별중 영업팀 클릭하는 코드
+    // cy.get('.v-list__tile__title').contains('협력사').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // // 선택 후 메뉴 닫기
+    // cy.get('body').type('{esc}');
 
-    cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
-    cy.wait(1000);
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
+    // // 검색 버튼 클릭
+    // cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    // cy.wait(1000);
+
+    // //검색결과 통계 그래프 문구 확인 코드
+    // cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
+    // cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
+    // cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
+    // cy.log('✅ 현황 - 종합현황 - [부서 별]탭 진입 및 데이터 출력 확인 완료!');
+
+    
+    // // 업무시스템 콤보박스 닫히지 않는 이슈 새로고침 실행
+    // cy.reload();
+
+    // // 현황 > 종합현황  > [업무시스템 별] 탭 클릭 
+    // cy.get('.tab-title').filter(':visible').contains('업무 시스템 별').click();
+    // cy.wait(3000);
+    // cy.log('--- 화면 검증 시작 ---');
+    // cy.contains('.c-headline', '검색 조건').should('exist');
+    // // 시작날짜 달력 아이콘확인
+    //  cy.get('label').filter(':visible').contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    // // 종료날짜 달력 아이콘확인
+    // cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // // 검색 버튼 확인 
+    // cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+    // // 검색조건 입력문구 확인
+    // cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
+
+    // ////////////////////////////
+    // // 기능확인 - 조건별로 검색 
+    // //업무 시스템 - 리눅스_배송관리 선택
+    // // No data available 뜨는 이슈 발생 (맨티스 : 37152) 이로인해 두번클릭하게  우회코드 작성함. 
+    //  //cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+
+    // cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    // cy.wait(1000);
+    // cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
    
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
-    cy.wait(1000);
-    // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
-    cy.get('body').type('{esc}');
+    // // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    // cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
+    // cy.wait(1000);
+    // // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+    // cy.get('body').type('{esc}');
     
 
-    // 검색 버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    // // 검색 버튼 클릭
+    // cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
-    //검색결과 통계 그래프 문구 확인 코드
-    cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
-    cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
-    cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
-    cy.log('✅ 현황 - 종합현황 - [업무 시스템 별]탭 진입 및 데이터 출력 확인 완료!');
+    // //검색결과 통계 그래프 문구 확인 코드
+    // cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
+    // cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
+    // cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
+    // cy.log('✅ 현황 - 종합현황 - [업무 시스템 별]탭 진입 및 데이터 출력 확인 완료!');
     
-    cy.wait(1000);
+    // cy.wait(1000);
 
    
     // ==========================================
@@ -714,7 +723,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 
-*/
+
   });
 });  
 

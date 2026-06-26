@@ -215,8 +215,9 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('건수').should('be.visible');
     cy.get('th').filter(':visible').contains('상세 접속기록 정보').should('be.visible');
-    cy.get('th').filter(':visible').contains('처리').should('be.visible');
-
+    //cy.get('th').filter(':visible').contains('처리').should('be.visible');
+    // 3.0.5.1191_r35135 가로 스크롤 문제로 DOM 존재 확인으로 처리 
+    cy.get('th').contains('처리').should('exist');
     //달력표를 펼침 
     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
     cy.wait(500);
@@ -244,7 +245,6 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
 
-    //맨티스 이슈 등록해둠 - v3.0.4_r34865 (37313) 
     // 엑셀 다운로드 클릭하는 코드 
     cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
     cy.wait(500);
@@ -268,7 +268,6 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // 3. 사라지는 것 확인
     cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
     
-    // 맨티스  이슈 등록해둠 (37313) 
     // 서버에서 zip 파일을 생성하고 다운로드가 100% 완료될 때까지 충분히 기다립니다. (7초 -> 15초로 연장)
     cy.wait(15000);
     
@@ -362,25 +361,30 @@ cy.wait(2000);
 
 // 🌟 [수정 1] 아코디언 열림 여부 판단 로직 업그레이드 (라벨 OR 입력창)
 const ensureMenuOpen = () => {
-    cy.get('.v-dialog--active').then(($dialog) => {
-        // 라벨이 있거나, 입력창이 있으면 "열린 것"으로 판단합니다.
-        const hasLabel = $dialog.find('label:contains("메뉴명 자동 등록"):visible').length > 0;
-        const hasInput = $dialog.find('input[aria-label="메뉴명"]:visible').length > 0;
+  cy.get('.v-dialog--active').then(($dialog) => {
+    const hasLabel = $dialog.find('label:contains("메뉴명 자동 등록"):visible').length > 0;
+    const hasInput = $dialog.find('input[aria-label="메뉴명"]:visible').length > 0;
 
-        if (!hasLabel && !hasInput) {
-            cy.log('📁 메뉴 설정이 닫혀 있습니다. 클릭을 시도합니다.');
-            cy.wrap($dialog).contains('메뉴 설정').parent().click({ force: true });
-            
-            // 클릭 후, 라벨이나 입력창 중 하나라도 화면에 나타날 때까지 스마트하게 대기
-            cy.get('.v-dialog--active', { timeout: 5000 }).should(($el) => {
-                const l = $el.find('label:contains("메뉴명 자동 등록"):visible').length > 0;
-                const i = $el.find('input[aria-label="메뉴명"]:visible').length > 0;
-                expect(l || i, '라벨이나 입력창 중 하나가 보여야 합니다.').to.be.true;
-            });
-        } else {
-            cy.log('🟢 메뉴 설정이 이미 짠! 하고 펼쳐져 있습니다. (클릭 안 함)');
-        }
-    });
+    if (!hasLabel && !hasInput) {
+      cy.log('📁 메뉴 설정이 닫혀 있습니다. 클릭을 시도합니다.');
+
+      // parent() 대신 아코디언 헤더(v-expansion-panel-header) 직접 클릭
+      cy.get('.v-dialog--active')
+        .contains('.v-expansion-panel-header, .v-list__tile, [role="button"]', '메뉴 설정')
+        .click({ force: true });
+
+      cy.wait(500);
+
+      // 클릭 후 열림 확인
+      cy.get('.v-dialog--active', { timeout: 5000 }).should(($el) => {
+        const l = $el.find('label').filter((i, el) => el.textContent.includes('메뉴명 자동 등록')).filter(':visible').length > 0;
+        const inp = $el.find('input[aria-label="메뉴명"]:visible').length > 0;
+        expect(l || inp, '라벨이나 입력창 중 하나가 보여야 합니다.').to.be.true;
+      });
+    } else {
+      cy.log('🟢 메뉴 설정이 이미 펼쳐져 있습니다.');
+    }
+  });
 };
 
 ensureMenuOpen();

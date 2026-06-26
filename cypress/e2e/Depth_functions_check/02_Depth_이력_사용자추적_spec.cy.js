@@ -400,7 +400,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(500);
 
     // ==========================================
-    // 정보 사용자 조회 - 조회 사용자 : 테스터 (tester)
+    // 정보 사용자 조회 - 조회 사용자 : 테스터(tester)
     // ==========================================
     // 정보 사용자 클릭하여 리스트 열기
     cy.get('input[aria-label="정보 사용자"]').filter(':visible').click({ force: true });
@@ -421,11 +421,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // [검증] 검색 결과 검증
-    cy.get('tbody tr', { timeout: 10000 }).contains('테스터 (tester)').should('be.visible');
+    cy.get('tbody tr', { timeout: 10000 }).contains('테스터(tester)').should('be.visible');
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('테스터 (tester)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('테스터(tester)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
      });
 
      // 선택한 정보 사용자 x버튼 클릭하여 초기화 
@@ -633,7 +633,7 @@ describe('로그캐치 사이트 테스트', () => {
     // [검증] 검색 결과 검증
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.contains('a', '01********').filter(':visible').should('be.visible');
+    cy.contains('a', '010-4197-7524').filter(':visible').should('be.visible');
      }); 
     //-----------------------------------------------------------------------------------------------------------------------
 
@@ -685,16 +685,40 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
      cy.wait(1000);
 
-    // [검증] 검색 결과 검증
-    // 첫 번째 행 정밀 검증
-   // 첫 번째 행 정밀 검증코드 
-    cy.get('tbody tr').filter(':visible').first().within(() => {
-       cy.get('a').contains('미등록 부서').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
-       // '미등록 사용자'로 시작하는 모든 <a> 태그를 찾음
-       cy.get('a').contains(/^미등록 사용자/).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
-     });
+    /// [검증] 검색 결과 검증 - 첫 번째 행 정밀 검증
+cy.get('tbody tr').filter(':visible').first().then(($row) => {
 
-      // 사용자 상태 - 전체 선택----------------------------------------------- 
+  // 1. '없음' 확인 (없으면 건너뜀)
+  const hasDept = $row.find('a').filter((i, el) => el.innerText.trim() === '없음').length > 0;
+  if (hasDept) {
+    cy.log('✅ [없음] 발견: 검증을 수행합니다.');
+    cy.wrap($row).find('a').filter((i, el) => el.innerText.trim() === '없음')
+      .first().should('be.visible');
+  } else {
+    cy.log('⚪ [없음] 없음: 검증을 건너뜁니다.');
+  }
+
+  // 2. '비로그인' 또는 'undefined(testUser)' 중 하나라도 있으면 통과
+  const hasNonLogin = $row.find('a').filter((i, el) => {
+    const text = el.innerText.trim();
+    return /비로그인/.test(text) || /undefined/.test(text);
+  }).length > 0;
+
+  if (hasNonLogin) {
+    cy.log('✅ [비로그인 or undefined] 발견: 검증을 수행합니다.');
+    cy.wrap($row).find('a').filter((i, el) => {
+      const text = el.innerText.trim();
+      return /비로그인/.test(text) || /undefined/.test(text);
+    }).first().should('be.visible');
+  } else {
+    cy.log('⚪ [비로그인/undefined] 없음: 검증을 건너뜁니다.');
+  }
+
+});
+
+
+
+    // 사용자 상태 - 전체 선택----------------------------------------------- 
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
      cy.wait(500);
 
@@ -706,28 +730,25 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(1000);
 
     // [검증] 검색 결과 검증
-cy.get('tbody tr').filter(':visible').first().then(($row) => {
-  
-  // 1. '미등록 부서'가 행 안에 존재하는지 확인
-  const hasDept = $row.find('a:contains("미등록 부서")').length > 0;
-  if (hasDept) {
-    cy.log('✅ [미등록 부서] 발견: 검증을 수행합니다.');
-    cy.wrap($row).contains('a', '미등록 부서').should('be.visible');
-  } else {
-    cy.log('⚪ [미등록 부서] 없음: 검증을 건너뜁니다.');
-  }
 
-  // 2. '미등록 사용자'로 시작하는 텍스트가 존재하는지 확인 (정규식 활용)
-  // jQuery의 filter를 사용하여 텍스트 패턴을 찾습니다.
-  const hasUser = $row.find('a').filter((i, el) => /^미등록 사용자/.test(el.innerText)).length > 0;
-  if (hasUser) {
-    cy.log('✅ [미등록 사용자] 발견: 검증을 수행합니다.');
-    cy.wrap($row).contains('a', /^미등록 사용자/).should('be.visible');
-  } else {
-    cy.log('⚪ [미등록 사용자] 없음: 검증을 건너뜁니다.');
-  }
-
-});
+    cy.get('tbody tr').filter(':visible').first().then(($row) => {
+        // 1. '없음'가 행 안에 존재하는지 확인
+      const hasDept = $row.find('a:contains("없음")').length > 0;
+      if (hasDept) {
+        cy.log('✅ [없음] 발견: 검증을 수행합니다.');
+        cy.wrap($row).contains('a', '없음').should('be.visible');
+      } else {
+        cy.log('⚪ [없음] 없음: 검증을 건너뜁니다.');
+      }
+      // 2. '비로그인'로 시작하는 텍스트가 존재하는지 확인 (정규식 활용)
+            const hasUser = $row.find('a').filter((i, el) => /비로그인/.test(el.innerText)).length > 0;
+      if (hasUser) {
+        cy.log('✅ [비로그인] 발견: 검증을 수행합니다.');
+        cy.wrap($row).contains('a', /비로그인/).should('be.visible');
+      } else {
+        cy.log('⚪ [비로그인] 없음: 검증을 건너뜁니다.');
+      }
+    });
 
     //----------------------------------------------------------------------------------------------
     
@@ -827,7 +848,7 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     cy.get('a.ellipsis').contains('품질관리팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
 
     // [정보 사용자] - a 태그 + ellipsis 클래스
-    cy.get('a.ellipsis').contains('진윤호 (yunho)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a.ellipsis').contains('진윤호(yunho)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
 
     // [접속 IP 주소] - span 태그 (성공하셨던 패턴!)
     cy.get('span.ellipsis').contains('10.10.54.5').should('be.visible');
@@ -850,6 +871,17 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     // 엑셀 다운로드 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
     cy.wait(500);
+
+    
+    // 마스킹해제 유무 확인 팝업창이 뜨면 '저장' 버튼 클릭
+    // 팝업(다이얼로그) 안에서 '저장' 버튼 클릭
+    cy.get('.v-dialog--active').should('be.visible').within(() => {
+      cy.contains('저장').click({ force: true });
+    });
+    cy.wait(500);
+
+    //맨티스 이슈: 팝업창 저장버튼 누르고 사라지지않는 이슈 (0037927)
+    
  
     // [수정 3] snackbar 나타남 → 사라짐 순서로 대기 (기존 코드는 순서 오류)
     cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible');

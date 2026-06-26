@@ -345,7 +345,6 @@ cy.log(`⏱️ WAS 타격 시각 기록: ${hitTimeStr}`);
 // STEP : WAS Jeus접속
 // ===============================================
 cy.log('🚀 다른 도메인(tester3 서버)으로 크로스 오리진 점프를 시도합니다.');
-
 cy.clearCookies();
 cy.clearLocalStorage();
 
@@ -357,29 +356,34 @@ cy.origin('http://10.10.54.31:8088', () => {
   cy.visit('/tester3', { timeout: 60000 });
   cy.wait(3000);
 
-   cy.window().then((win) => {
-    win.prompt = () => '1'; // cy.stub 대신 직접 override
-  });
-
-  // // 팝업 처리 로직을 버튼 클릭 직전에 확실하게 적용
-  // cy.window().then((win) => {
-  //   // 기존 prompt를 stub으로 덮어씁니다.
-  //   cy.stub(win, 'prompt').callsFake((message) => {
-  //    // cy.log 대신 console.log 사용 (에러 방지)
-  //     console.log('📢 감지된 팝업 문구:', message);
-  //     return '1'; // 1을 반환하고 확인을 누름
-  //   }).as('promptStub'); // 나중에 호출 여부 확인을 위해 별칭 지정
+  //  cy.window().then((win) => {
+  //   win.prompt = () => '1'; // cy.stub 대신 직접 override
   // });
 
+ cy.window().then((win) => {
+  // 호출 횟수를 추적하는 카운터 추가
+  let promptCallCount = 0;
+  win.prompt = (message) => {
+    promptCallCount++;
+    console.log(`✅ prompt 가로챔! (${promptCallCount}회) 메시지: ${message}`);
+    return '1';
+  };
+  // 카운터를 window에 저장해서 나중에 확인 가능
+  win._promptCallCount = () => promptCallCount;
+});
+
   cy.log('3️⃣ Excel 버튼을 클릭합니다.');
-  cy.get('#excel_btn')
-    .should('be.visible')
-    .invoke('removeAttr', 'target')
-    .click({ force: true });
-    
-  cy.wait(5000); // 다운로드 시작 대기 (promptStub 검증 제거)
-  // 2. 팝업 호출 검증
-  // cy.get('@promptStub', { timeout: 50000 }).should('have.been.called');
+  cy.get('#excel_btn').should('be.visible').invoke('removeAttr', 'target').click({ force: true });
+  cy.wait(5000); 
+ 
+  // prompt가 실제로 호출됐는지 확인
+cy.window().then((win) => {
+  const count = win._promptCallCount();
+  cy.log(`📊 prompt 호출 횟수: ${count}회`);
+  expect(count, 'prompt가 최소 1회 호출되어야 합니다').to.be.gte(1);
+});
+
+
 });
 
 // 4. 다운로드 완료 대기

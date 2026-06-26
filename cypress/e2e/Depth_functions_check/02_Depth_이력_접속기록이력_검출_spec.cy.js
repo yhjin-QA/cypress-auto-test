@@ -139,8 +139,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 전체선택 확인
      cy.get('span[title="전체 선택"]').should('be.visible');
-     // like버튼 확인 
-     //cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
+    
     
     //검색 버튼 존재 확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
@@ -197,7 +196,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      //cy.get('input[aria-label="개인정보 건수"]').filter(':visible').should('be.visible');
     
      // like버튼 확인 
-     cy.get('input[aria-label="사용자 계정"]').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
+     cy.get('input[aria-label="사용자 계정"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      // v3.0.5.0_r34908에서 추가됨.
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');

@@ -200,7 +200,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('th').filter(':visible').contains('이상행위 정책').should('be.visible');
     cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유무').should('be.visible'); 
-    cy.get('th').filter(':visible').contains('소명 대상 여부').should('be.visible');
+    cy.get('th').filter(':visible').contains('소명 대상').should('be.visible');
     cy.get('th').filter(':visible').contains('조회').should('be.visible'); 
 
 
@@ -352,8 +352,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
  
-    cy.log('--- [핵심 검증] 미등록 사용자 & 업무 시간 외 접속 행 확인 ---');
-    cy.contains('tbody tr', '(미등록 사용자)').filter(':contains("업무 시간 외 접속")').filter(':contains("소명 불필요")').within(() => {
+    cy.log('--- [핵심 검증] 비로그인 & 업무 시간 외 접속 행 확인 ---');
+    cy.contains('tbody tr', '비로그인').filter(':contains("업무 시간 외 접속")').filter(':contains("소명 불필요")').within(() => {
     // 1. 아이콘 확인
     cy.get('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
 
@@ -381,8 +381,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.wait(1000);
  
      //검증코드
-     // (미등록 사용자)와 '업무 시간 외 접속'이 포함된 tr이 아예 존재하지 않아야 함
-     cy.contains('tbody tr', /(미등록 사용자).*업무 시간 외 접속/).should('not.exist');
+     // '비로그인'와 '업무 시간 외 접속'이 포함된 tr이 아예 존재하지 않아야 함
+     cy.contains('tbody tr', /비로그인.*업무 시간 외 접속/).should('not.exist');
      // 특정 사용자(제흔휴) 검증
      cy.contains('tr', '업무 시간 외 접속').find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
 
@@ -399,7 +399,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.wait(1000);
  
      //검증코드
-     cy.contains('tr', /(미등록 사용자).*업무 시간 외 접속/).find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+     cy.contains('tr', /비로그인.*업무 시간 외 접속/).find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
     
      //사용자 상태 초기화 -  전체 선택
     //사용자 상태 클릭 --------------------------------------------------------------------------

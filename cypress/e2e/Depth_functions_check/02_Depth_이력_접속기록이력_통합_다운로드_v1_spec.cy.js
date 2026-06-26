@@ -217,7 +217,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('건수').should('be.visible');
     cy.get('th').filter(':visible').contains('상세 접속기록 정보').should('be.visible');
-    cy.get('th').filter(':visible').contains('처리').should('be.visible');
+    //cy.get('th').filter(':visible').contains('처리').should('be.visible');
+    // 3.0.5.1191_r35135 가로 스크롤 문제로 DOM 존재 확인으로 처리 
+    cy.get('th').contains('처리').should('exist');
 
     //달력표를 펼침 
     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
@@ -243,11 +245,10 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('body').type('{esc}');
 
 
-    // 맨티스 이슈 : 37680
-    // 개인정보 건수 입력하고 검색하여 엑셀다운로드시 엑셀파일없이 zip파일 비어있는 문제
-    // 개인정보 건수 입력하는 코드
+  
+    // 개인정보 건수 입력하여 다운로드 하는 경우
     // '개인정보 건수' 입력창에 100을 입력합니다.
-    //cy.get('input[aria-label="개인정보 건수"]').filter(':visible').clear().type('100');        // 10 입력
+    cy.get('input[aria-label="개인정보 건수"]').filter(':visible').clear().type('100');    
 
     // 검색버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
