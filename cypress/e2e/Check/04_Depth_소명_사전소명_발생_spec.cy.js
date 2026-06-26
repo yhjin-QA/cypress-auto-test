@@ -258,7 +258,8 @@ cy.log('✅ 사전 소명 이벤트 삭제 절차 종료');
 // ===============================================
 cy.wait(1000); // 스크롤 애니메이션이 끝날 때까지 대기
 
-cy.contains('.c-headline', '사전 소명 이벤트 목록')
+//3.0.5.1191_r35135 사전 소명 이벤트 목록 -> 사전 소명 목록 문구 변경됨.
+cy.contains('.c-headline', '사전 소명 목록')
   .closest('.v-card') // 헤드라인을 포함하는 카드(또는 컨테이너)
   .then(($section) => {
     // 1. 해당 섹션으로 부드럽게 스크롤합니다.
@@ -268,7 +269,7 @@ cy.contains('.c-headline', '사전 소명 이벤트 목록')
 cy.wait(1000); // 스크롤 애니메이션이 끝날 때까지 대기
 
 // 2. 섹션 내부에서 '+' 아이콘을 찾습니다.
-cy.contains('.c-headline', '사전 소명 이벤트 목록')
+cy.contains('.c-headline', '사전 소명 목록')
   .closest('.v-card')
   .within(() => {
     // i.v-icon만 찾는 것보다, 그 상위의 버튼(button)을 클릭하는 것이 훨씬 확실합니다.
@@ -286,8 +287,9 @@ cy.wait(1000);
 // STEP : 사전 소명 이벤트 추가 팝업 입력
 // ===============================================
 
+//3.0.5.1191_r35135 사전 소명 이벤트 추가 -> 사전 설정 추가 문구 변경됨.
 // 1. 팝업 카드 영역을 먼저 특정합니다.
-cy.contains('.v-card', '사전 소명 이벤트 추가').within(() => {
+cy.contains('.v-card', '사전 설정 추가').within(() => {
   
   // 1-1. 메뉴 명 선택
   cy.get('input[aria-label="메뉴 명"]').click({ force: true });
@@ -297,7 +299,7 @@ cy.contains('.v-card', '사전 소명 이벤트 추가').within(() => {
 cy.contains('.v-list__tile__title', '사전소명페이지(Jeus)').click({ force: true });
 
 // 3. 이벤트 대상 값 입력 - 개발자도구 (F12) - copy selector 로 값 복사 붙여넣기
-cy.contains('.v-card', '사전 소명 이벤트 추가').within(() => {
+cy.contains('.v-card', '사전 설정 추가').within(() => {
   cy.get('input[aria-label="이벤트 대상 값"]').clear().type('#excel_btn', { force: true });
 
   // 4. 소명 사유 그룹 선택
@@ -308,7 +310,7 @@ cy.contains('.v-card', '사전 소명 이벤트 추가').within(() => {
 cy.contains('.v-list__tile__title', 'auto_사전소명설정').click({ force: true });
 
 // 5. 저장 버튼 클릭
-cy.contains('.v-card', '사전 소명 이벤트 추가').within(() => {
+cy.contains('.v-card', '사전 설정 추가').within(() => {
   cy.contains('button', '저장').click({ force: true });
 });
 
@@ -527,7 +529,7 @@ cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
 cy.get('tbody tr').filter(':visible').first().within(() => {
   
   // 2. 텍스트 검증
-  cy.contains('(미등록 사용자)').should('be.visible');
+  cy.contains('비로그인').should('be.visible');
   cy.contains('사전 소명 메뉴 접근').should('be.visible');
   cy.contains('DEFAULT').should('be.visible');
   cy.contains('존재').should('be.visible');
