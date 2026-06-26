@@ -528,7 +528,8 @@ cy.wait(1000);
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('건수').should('be.visible');
     cy.get('th').filter(':visible').contains('상세 접속기록 정보').should('be.visible');
-    cy.get('th').filter(':visible').contains('처리').should('be.visible');
+    // 3.0.5.1191_r35135 가로 스크롤 문제로 DOM 존재 확인으로 처리 
+    cy.get('th').contains('처리').should('exist');
 
     //달력표를 펼침 
     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
