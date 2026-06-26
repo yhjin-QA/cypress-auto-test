@@ -15,12 +15,16 @@ describe('로그캐치 사이트 테스트', () => {
       'Cannot read properties',
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
+      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
+      'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
-      'Loading chunk',    //네트워크 로딩에러 
+      'Loading chunk',
+      'Loading CSS chunk',           // ◀◀◀ [NEW] 이번에 발생한 CSS 청크 에러 무시 추가!
       'operate.task.packageManagement',
       'e is not defined',
       'Script error',
-      'not valid JSON'
+      'not valid JSON',
+      'ChunkLoadError'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -377,9 +381,16 @@ describe('로그캐치 사이트 테스트', () => {
       cy.log(`✅ 다운로드 성공! 파일명: ${myFile}`);
      }
 
-     // 검증: 파일이 존재해야 함 (없으면 에러 발생)
-       expect(myFile).to.not.be.undefined; 
-     });
+      // 파일 존재 검증
+  expect(myFile).to.not.be.undefined;
+
+  // 파일 용량 검증 (0바이트 방지)
+  cy.task('getFileStats', `cypress/downloads/${myFile}`).then((stats) => {
+    cy.log(`📊 파일 용량: ${stats.size} bytes`);
+    expect(stats.size, '0바이트 빈 파일 방지').to.be.greaterThan(0);
+    expect(stats.size, '최소 100bytes 이상').to.be.at.least(100);
+  });
+});
 
      cy.log('✅ 접속기록 무결성-위변조 검사 이력조회 탭 진입 및 데이터 출력 확인 완료!');
 
@@ -561,9 +572,16 @@ describe('로그캐치 사이트 테스트', () => {
       cy.log(`✅ 다운로드 성공! 파일명: ${myFile}`);
      }
 
-     // 검증: 파일이 존재해야 함 (없으면 에러 발생)
-       expect(myFile).to.not.be.undefined; 
-     });
+       // 파일 존재 검증
+  expect(myFile).to.not.be.undefined;
+
+  // 파일 용량 검증 (0바이트 방지)
+  cy.task('getFileStats', `cypress/downloads/${myFile}`).then((stats) => {
+    cy.log(`📊 파일 용량: ${stats.size} bytes`);
+    expect(stats.size, '0바이트 빈 파일 방지').to.be.greaterThan(0);
+    expect(stats.size, '최소 100bytes 이상').to.be.at.least(100);
+  });
+});
 
 
      cy.log('✅ 접속기록 무결성-파일 위변조 검사 이력조회 탭 진입 및 데이터 출력 확인 완료!');

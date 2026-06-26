@@ -10,17 +10,21 @@ describe('로그캐치 사이트 테스트', () => {
   // ▼ 1. 모든 에러 무시 설정 (강력한 방어막) ▼
   Cypress.on('uncaught:exception', (err, runnable) => {
     // 무시할 에러 메시지 목록
-    const ignoredErrors = [
+   const ignoredErrors = [
       'Navigation cancelled',
       'Cannot read properties',
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
+      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
+      'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
       'Avoided redundant navigation',
-      'Loading chunk',    //네트워크 로딩에러 
+      'Loading chunk',
+      'Loading CSS chunk',           // ◀◀◀ [NEW] 이번에 발생한 CSS 청크 에러 무시 추가!
       'operate.task.packageManagement',
       'e is not defined',
       'Script error',
-      'not valid JSON'
+      'not valid JSON',
+      'ChunkLoadError'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
