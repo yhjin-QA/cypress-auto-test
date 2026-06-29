@@ -32,9 +32,9 @@
 /**코드 시작  */
 describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
   
-  it('04_Depth_소명_사후소명_승인 자동화 시나리오', () => {
+  it('04_Depth_소명_사후소명_반려 자동화 시나리오', () => {
 
-// ==========================================
+    // ==========================================
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
@@ -105,20 +105,18 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      cy.wait(5000);
     
     //로그인 성공
-  
-
+   
+// 3.0.5.1191_r35135 버전에서 변경
 // // ==========================================
 // // STEP : 소명 서브메뉴 - 결재라인 확인
 // // ==========================================
 // cy.log('🧹 소명메뉴 클릭 ');
 // cy.contains('button', '소명').click({ force: true });
 // cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기 
-
 // cy.log('--- 소명 > 나의 소명 서브메뉴 ---');
 // cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('결재').click({ force: true });
 // //cy.get('.v-list__tile__title').filter(':contains("결재")').filter(':visible').click({ force: true });
 // cy.wait(2000);
-
 
 // 3.0.5.1191_r35135 버전에서 변경
 // ==========================================
@@ -131,6 +129,8 @@ cy.wait(1000);
 // 서브메뉴 정책 클릭
 cy.get('div[role="listitem"]').filter(':visible').contains('.v-list__tile__title', '정책').click({ force: true });
 cy.wait(2000);
+
+
 
 
 // 만약 전환이 안 된다면, 다시 한 번 클릭 시도 (안정성 강화)
@@ -197,8 +197,8 @@ cy.log('--- 소명 - 결재라인 UI화면 진입완료 ---');
             cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '일반').click({ force: true });
             cy.wait(300); // 팝업 닫힘 대기
             
-            // 7. 결재 적용 대상 선택 [소명] 
-            cy.get('input[aria-label="결재 적용 대상"]').filter(':visible').click({ force: true });
+            // 7. 결재 라인 선택 [소명] 
+            cy.get('input[aria-label="결재 라인"]').filter(':visible').click({ force: true });
             cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '소명').click({ force: true });
             cy.wait(300);
             
@@ -237,24 +237,7 @@ cy.log('🚀 사후 소명을 위한 이상행위 발생 시작 ');
 cy.log('🚀 WAS 사이트로 이동하여 새 세션을 발급받습니다.');
 
 // 🚨 [핵심 방어 1] Cypress 프록시가 도메인 전환을 준비할 수 있도록 2초간 숨을 고릅니다.
-cy.wait(2000);
-
-// 🌟 [추가] 서버 접속 상태를 기억할 변수(플래그)를 선언합니다.
-let isWasSiteDown = false;
-
-// 🌟 [핵심 예외 처리] 페이지 로드 실패 시 에러를 낚아채서 테스트 중단(Fail)을 막습니다.
-Cypress.once('fail', (error) => {
-  // 에러 메시지에 'could not load' 또는 타겟 서버 IP가 포함되어 있는지 확인
-  if (error.message.includes('could not load') || error.message.includes('10.10.54.22')) {
-    cy.log('⚠️ [경고] WAS 서버(10.10.54.22)에 접속할 수 없거나 응답이 지연되었습니다!');
-    isWasSiteDown = true; // 플래그를 true로 변경하여 접속 실패를 기록합니다.
-    
-    // 💡 핵심: false를 반환하면 Cypress가 에러를 뱉지 않고(초록불 유지) 다음 코드로 넘어갑니다.
-    return false; 
-  }
-  // 우리가 예상한 에러가 아니면 원래대로 빨간불을 띄우고 테스트를 실패시킵니다.
-  throw error; 
-});
+    cy.wait(2000);
 
 // 🚨 1. 커스텀(command) 명령어 적용 (타임아웃 및 재시도 포함)
 cy.visitWithRetry('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', {
@@ -265,78 +248,69 @@ cy.visitWithRetry('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', {
 });
 
 // 🚨 [핵심 방어 2] 페이지 진입 직후 DOM 렌더링이 안정화될 때까지 잠시 대기합니다.
-cy.wait(2000);
+    cy.wait(2000);
 
-// 🌟 [분기 처리] 접속에 성공했을 때만 cy.origin(로그인 및 API 타격) 로직을 실행합니다.
-// cy.then()으로 감싸주어야 변수(isWasSiteDown) 상태를 올바르게 평가할 수 있습니다.
-cy.then(() => {
-  if (isWasSiteDown) {
-    // ❌ 접속 실패 시
-    cy.log('⏩ [Skip] WAS 서버 접속 실패로 인해 이상행위 발생 스텝을 안전하게 건너뜁니다.');
-  } else {
-    // ✅ 접속 성공 시 (기존 로직 그대로 실행)
-    cy.origin('http://10.10.54.22:8080', () => {
-      Cypress.on('uncaught:exception', () => false);
+cy.origin('http://10.10.54.22:8080', () => {
+  Cypress.on('uncaught:exception', () => false);
 
-      // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
-      cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
-      cy.visit('/uat/uia/egovLoginUsr.do');
-      cy.get('#id').should('be.visible').clear().type('loginid445');
-      cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
+  // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
+  cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
+  cy.visit('/uat/uia/egovLoginUsr.do');
+  cy.get('#id').should('be.visible').clear().type('loginid445');
+  cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
 
-      // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
-      cy.contains('a', '로그아웃', { timeout: 15000 }).should('be.visible');
-      cy.log('✅ 로그인 성공! 방금 생성된 싱싱한 세션 확보 완료!');
+  // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
+  cy.contains('a', '로그아웃', { timeout: 15000 }).should('be.visible');
+  cy.log('✅ 로그인 성공! 방금 생성된 싱싱한 세션 확보 완료!');
 
-      // 4. ✨ 핵심 로직: 쿠키 또는 URL에서 JSESSIONID를 안전하게 추출합니다.
-      cy.url().then((currentUrl) => {
-        cy.getCookie('JSESSIONID').then((cookie) => {
-          let freshSessionId = '';
+  // 4. ✨ 핵심 로직: 쿠키 또는 URL에서 JSESSIONID를 안전하게 추출합니다.
+  cy.url().then((currentUrl) => {
+    cy.getCookie('JSESSIONID').then((cookie) => {
+      let freshSessionId = '';
 
-          // ① 먼저 쿠키에 JSESSIONID가 있는지 확인
-          if (cookie && cookie.value) {
-            freshSessionId = cookie.value;
-            cy.log(`🔑 쿠키에서 세션 ID 추출 완료`);
-          } 
-          // ② 쿠키가 없다면, URL에 jsessionid가 붙어있는지 확인 (URL Rewriting 대응)
-          else if (currentUrl.toLowerCase().includes('jsessionid=')) {
-            const match = currentUrl.match(/jsessionid=([^?&#]+)/i);
-            if (match && match[1]) {
-              freshSessionId = match[1];
-              cy.log(`🔑 URL에서 세션 ID 추출 완료`);
-            }
-          }
+      // ① 먼저 쿠키에 JSESSIONID가 있는지 확인
+      if (cookie && cookie.value) {
+        freshSessionId = cookie.value;
+        cy.log(`🔑 쿠키에서 세션 ID 추출 완료`);
+      } 
+      // ② 쿠키가 없다면, URL에 jsessionid가 붙어있는지 확인 (URL Rewriting 대응)
+      else if (currentUrl.toLowerCase().includes('jsessionid=')) {
+        // 정규식을 사용해 URL에서 jsessionid 값만 쏙 뽑아냅니다.
+        const match = currentUrl.match(/jsessionid=([^?&#]+)/i);
+        if (match && match[1]) {
+          freshSessionId = match[1];
+          cy.log(`🔑 URL에서 세션 ID 추출 완료`);
+        }
+      }
 
-          // 방어 코드: 둘 다 실패했을 경우
-          if (!freshSessionId) {
-            throw new Error('❌ JSESSIONID를 쿠키와 URL 모두에서 찾을 수 없습니다.');
-          }
+      // 방어 코드: 둘 다 실패했을 경우
+      if (!freshSessionId) {
+        throw new Error('❌ JSESSIONID를 쿠키와 URL 모두에서 찾을 수 없습니다.');
+      }
 
-          cy.log(`✅ 최종 사용될 세션 ID: ${freshSessionId}`);
+      cy.log(`✅ 최종 사용될 세션 ID: ${freshSessionId}`);
 
-          // 5. 추출한 새 세션 ID를 헤더에 꽂아서 API 타격!
-          cy.request({
-            method: 'POST',
-            url: '/cop/logcatch/btnExcessCheck.do',
-            form: true,
-            headers: {
-              'Cookie': `JSESSIONID=${freshSessionId}`, 
-              'X-Requested-With': 'XMLHttpRequest',
-              'Referer': 'http://10.10.54.22:8080/uat/uia/actionMain.do'
-            },
-            body: { 
-              menuNo: '41' 
-            }
-          }).then((response) => {
-            // 6. 정상 응답 검증 (200 OK)
-            expect(response.status).to.eq(200);
-            cy.log('🎉 매번 새로운 세션으로 과다조회 자동 타격 성공!');
-          });
-        });
+      // 5. 추출한 새 세션 ID를 헤더에 꽂아서 API 타격!
+      cy.request({
+        method: 'POST',
+        url: '/cop/logcatch/btnExcessCheck.do',
+        form: true,
+        headers: {
+          'Cookie': `JSESSIONID=${freshSessionId}`, 
+          'X-Requested-With': 'XMLHttpRequest',
+          'Referer': 'http://10.10.54.22:8080/uat/uia/actionMain.do'
+        },
+        body: { 
+          menuNo: '41' 
+        }
+      }).then((response) => {
+        // 6. 정상 응답 검증 (200 OK)
+        expect(response.status).to.eq(200);
+        cy.log('🎉 매번 새로운 세션으로 과다조회 자동 타격 성공!');
       });
-    }); // origin 종료
-  } // else 종료
-}); // then 종료
+    });
+  });
+});
 
 
 // =============================================
@@ -356,46 +330,36 @@ cy.log('🧹 소명메뉴 클릭 ');
 
 // cy.contains('.v-btn__content', '소명하기').should('be.visible').click({ force: true });
 // cy.wait(2000);
-
 cy.log('--- 소명 > 소명하기 탭 진입완료---');
+
 const navigateToSomyungManagement_1 = () => {
     cy.contains('button', '소명').click({ force: true });
     cy.wait(1000);
-
-    // 소명 버튼 클릭 후 로딩 감지
-    cy.get('body').then(($body) => {
-        if ($body.find('.v-progress-circular:visible').length > 0) {
-            cy.log('🔄 소명 클릭 후 로딩 감지! 새로고침합니다.');
-            cy.reload();
-            cy.wait(3000);
-            cy.contains('button', '소명').click({ force: true });
-            cy.wait(1000);
-        }
-    });
-
-    cy.log('--- 소명 > 소명하기 서브메뉴 클릭 ---');
+    cy.log('--- 소명 > 관리 서브메뉴 클릭 ---');
     cy.contains('.v-btn__content', '소명하기').should('be.visible').click({ force: true });
     cy.wait(3000);
-
-    // 소명하기 클릭 후 로딩 감지
-    cy.get('body').then(($body) => {
-        if ($body.find('.v-progress-circular:visible').length > 0) {
-            cy.log('🔄 소명하기 클릭 후 로딩 감지! 새로고침합니다.');
-            cy.reload();
-            cy.wait(3000);
-
-            cy.get('body').then(($reloadedBody) => {
-                if ($reloadedBody.find('.v-btn__content:contains("소명하기")').length > 0) {
-                    cy.log('✅ 소명하기 탭 확인! 재진입 생략합니다.');
-                } else {
-                    navigateToSomyungManagement_1();
-                }
-            });
-        }
-    });
 };
 
 navigateToSomyungManagement_1();
+
+// 로딩이 지속되면 새로고침
+cy.get('body').then(($body) => {
+    if ($body.find('.v-progress-circular:visible').length > 0) {
+        cy.log('🔄 로딩 아이콘 감지! 새로고침합니다.');
+        cy.reload();
+        cy.wait(3000);
+
+        // 새로고침 후 종합 현황 탭이 보이면 이미 올바른 화면 → 재진입 생략
+        cy.get('body').then(($reloadedBody) => {
+            if ($reloadedBody.find('.v-btn__content:contains("소명하기")').length > 0) {
+                cy.log('✅ 소명하기 탭 확인! 재진입 생략합니다.');
+            } else {
+                cy.log('🔄 재진입을 시도합니다.');
+                navigateToSomyungManagement_1();
+            }
+        });
+    }
+});
 
 //3.0.5.1191_r35135  버전부터 소명건이 디폴트값으로 바로 보이지않음. 해당하는 유형 선택해서검색해야함.
 // ==========================================================
@@ -493,7 +457,9 @@ cy.get('.v-list__tile__title').contains('요청').click({ force: true });
 cy.wait(1000);
 
 cy.contains('.v-btn__content', '검색').click({ force: true });
-cy.wait(1000);       
+cy.wait(1000);   
+
+
 
 
 
@@ -501,7 +467,6 @@ cy.wait(1000);
    cy.get('table').filter(':visible').find('tbody tr').filter(':visible').not('.v-datatable__progress').first().within(() => {
         
         cy.contains('이노회(loginid445)').should('be.visible');
-        //cy.contains('신청').should('be.visible');
         
         // 2. 시간 오차 허용 수학적 검증 로직
         cy.root().invoke('text').then((rowText) => {
@@ -523,7 +488,7 @@ cy.wait(1000);
 // ========================================================
 // STEP : 인사팀 부서장 로그인 (기존 세션/쿠키 자동 초기화)
 // ========================================================
-cy.log('📋 인사팀 부서장으로 로그인 진행 ');
+cy.log('📋 부서장 ( 인사팀 부서장 )으로 로그인 진행 ');
 cy.login('loginid194', 'Manager1!');
 
 // =============================================
@@ -543,7 +508,7 @@ cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
 
 
 //부서장 권한있는 유저가 로그인시
-cy.log('🧹 부서장 유저 소명 - 나의 소명 클릭 '); 
+cy.log('🧹 부서장 소명 - 나의 소명 클릭 '); 
 cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('나의 소명').click({ force: true });
 cy.wait(2000);
 
@@ -563,7 +528,7 @@ cy.get('body').then(($body) => {
  
 cy.log('🔄 승인하기 탭으로 이동합니다.');
 cy.contains('.v-btn__content', '승인하기').click({ force: true });
-cy.wait(1500); // 승인 대상 리스트 로딩 대기
+cy.wait(1500); // 반려 대상 리스트 로딩 대기
 
 //3.0.5.1191_r35135  버전부터 소명건이 디폴트값으로 바로 보이지않음. 해당하는 유형 선택해서검색해야함.
 // ==========================================================
@@ -589,9 +554,9 @@ cy.wait(1000);
 
 
 // =================================================================
-// STEP : 신청건 첫번째 클릭 -> 승인 버튼 클릭 -> 코멘트 입력 -> 승인하기 -> 최종 검증
+// STEP : 신청건 첫번째 클릭 -> 반려 버튼 클릭 -> 코멘트 입력 -> 반려하기 -> 최종 검증
 // ==================================================================
-cy.log('🔍 신청 내역을 찾아 상세 클릭 및 승인 처리를 시작합니다.');
+cy.log('🔍 신청 내역을 찾아 상세 클릭 및 반려 처리를 시작합니다.');
 
 cy.get('table tbody tr')
   .filter(':visible')
@@ -619,20 +584,20 @@ cy.get('table tbody tr')
                       cy.contains('span', '요청됨', { timeout: 15000 }).should('exist');
 
                       
-                      // 2. 소명 승인 팝업 내부 작업 (승인 -> 코멘트 -> 확인)
-                      // [승인] 버튼 클릭하기
+                      // 2. 소명 반려 팝업 내부 작업 (반려 -> 코멘트 -> 확인)
+                      // [반려] 버튼 클릭하기
                       cy.get('.v-dialog').filter(':visible').within(() => {
-                          cy.contains('button', '승인').click({ force: true });
+                          cy.contains('button', '반려').click({ force: true });
                           cy.wait(1000); 
 
                           const now = new Date();
                           const approvalTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
                           
                           // 싸인 서명 코멘트 남기기
-                          cy.get('input[type="text"]').should('be.visible').clear().type(`${approvalTime}에 승인합니다.`, { force: true });
+                          cy.get('input[type="text"]').should('be.visible').clear().type(`${approvalTime}에 반려합니다.`, { force: true });
                           cy.wait(500);
 
-                          cy.contains('button', '확인').click({ force: true });
+                          cy.contains('button', '확인').scrollIntoView().click({ force: true });
                       });
                       
                       found = true;
@@ -648,14 +613,14 @@ cy.get('table tbody tr')
   })
   .then(() => {
 
-       cy.log('🔍 승인 상태를 검증합니다 (오차 1분 허용).');
+       cy.log('🔍 반려 상태를 검증합니다 (오차 1분 허용).');
 
        //--------------------------------------------------
-       // 검증코드 :  요청됨 문구에서 승인(시간) 으로 문구 변경되어있는지 검증
+       // 검증코드 :  요청됨 문구에서 반려(시간) 으로 문구 변경되어있는지 검증
        //--------------------------------------------------
 
-        cy.contains('span', '승인 (').should('be.visible').then(($span) => {
-        const uiText = $span.text(); // 예: "승인 ( 2026-04-23 17:08 )"
+        cy.contains('span', '반려 (').should('be.visible').then(($span) => {
+        const uiText = $span.text(); // 예: "반려 ( 2026-04-23 17:08 )"
         
         // 텍스트에서 날짜/시간 추출
         const match = uiText.match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}/);
@@ -667,26 +632,21 @@ cy.get('table tbody tr')
         // 시간 차이 계산 (밀리초 -> 분)
         const diffMinutes = Math.abs(now - uiTime) / (1000 * 60);
         
-        // 🌟 [수정된 부분] UI에 초(second)가 없으므로 오차 범위를 2분(또는 3분)으로 넉넉하게 줍니다.
-    cy.log(`🎯 화면 시간: ${match[0]}, 실제 현재 시간과의 오차: ${diffMinutes.toFixed(1)}분`);
-    
-    expect(
-        diffMinutes, 
-        '✅ UI 시간(초 버림)과 테스트 실행 지연을 고려하여 오차 범위 2분 이내인지 검증'
-    ).to.be.lessThan(2); 
-    
+        // 1분 이내인지 검증
+        cy.log(`🎯 화면 시간: ${match[0]}, 오차: ${diffMinutes.toFixed(1)}분`);
+        expect(diffMinutes).to.be.lessThan(1); 
 
        //--------------------------------------------------
        // 검증코드 :  신청시 사유 vs 승인시 사유 비교  일치하는지 확인 
        //--------------------------------------------------
 
-       cy.log('🔍 승인 팝업에서 이상행위 사유 검증을 시작합니다.'); 
+       cy.log('🔍 반려 팝업에서 이상행위 사유 검증을 시작합니다.'); 
        // 1. 저장해두었던 'capturedReasons'를 불러옵니다.
        cy.get('@capturedReasons').then((storedReasons) => {
         cy.log(`🎯 이전에 저장한 사유: ${storedReasons}`);
         // 2. 쉼표로 분리하여 배열로 만듭니다.
         const expectedReasons = storedReasons.split(', ').map(r => r.trim());
-        // 3. 현재 승인 팝업 내에서 각각의 사유가 보이는지 검증
+        // 3. 현재 반려 팝업 내에서 각각의 사유가 보이는지 검증
         cy.get('.v-dialog').filter(':visible').within(() => {
           expectedReasons.forEach((reason) => {
             if (reason.length > 0) {
@@ -696,10 +656,10 @@ cy.get('table tbody tr')
               }
             });
           });
-        cy.log('✅ 승인 팝업 사유와 신청 사유가 완벽히 일치합니다!');
+        cy.log('✅ 반려 팝업 사유와 신청 사유가 완벽히 일치합니다!');
        });
       //---------------------------------------------------
-      cy.log('✅ 부서장 승인 하기 검증 완료!');
+      cy.log('✅ 부서장 반려 하기 검증 완료!');
     });
 });
 
@@ -780,7 +740,7 @@ cy.get('body').then(($body) => {
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
     // 소명상태중 '취소' 클릭하는 코드
-    cy.get('.v-list__tile__title').filter(':visible').contains('승인').click({ force: true });
+    cy.get('.v-list__tile__title').filter(':visible').contains('반려').click({ force: true });
     cy.wait(500);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
@@ -804,7 +764,7 @@ cy.get('body').then(($body) => {
 // =============================================
 cy.log('📋 종합현황 데이터 검증을 시작합니다.');
 
-// 1. 테이블의 행들 중 '이노회(loginid445)'가 포함된 '진짜 데이터 행'을 정확히 찾습니다.
+// 1. 테이블의 행들 중 '이노회 (loginid445)'가 포함된 '진짜 데이터 행'을 정확히 찾습니다.
 cy.get('table tbody tr')
   .filter(':visible')
   .contains('tr', '이노회(loginid445)') // 해당 텍스트를 가진 tr을 찾음
@@ -824,13 +784,14 @@ cy.get('@targetRow').then(($row) => {
         const diffMinutes = Math.abs(now - uiTime) / (1000 * 60);
         
         cy.log(`🎯 시간 오차: ${diffMinutes.toFixed(2)}분`);
-        expect(diffMinutes).to.be.lessThan(20); 
+        // 3분 이내로 엄격하게 검증
+        expect(diffMinutes).to.be.lessThan(3); 
     });
 
     // [2] 필수 정보 검증 (행 전체 텍스트에서 포함 여부 확인)
     cy.wrap($row).should('contain', '인사팀')
                   .and('contain', '이노회(loginid445)')
-                  .and('contain', '승인')
+                  .and('contain', '반려')
                   .and('contain', '사후 소명');
 
     // [3] 소명내용 검증 (capturedReasons 활용)
@@ -840,7 +801,7 @@ cy.get('@targetRow').then(($row) => {
     });
 });
 
-cy.log('✅ 종합현황 사후소명 - 승인 데이터 검증 완료!');
+cy.log('✅ 종합현황 사후소명 - 반려 데이터 검증 완료!');
 
 
 // ==========================================

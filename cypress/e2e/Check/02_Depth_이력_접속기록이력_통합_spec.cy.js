@@ -361,30 +361,22 @@ cy.wait(2000);
 
 // 🌟 [수정 1] 아코디언 열림 여부 판단 로직 업그레이드 (라벨 OR 입력창)
 const ensureMenuOpen = () => {
-  cy.get('.v-dialog--active').then(($dialog) => {
-    const hasLabel = $dialog.find('label:contains("메뉴명 자동 등록"):visible').length > 0;
-    const hasInput = $dialog.find('input[aria-label="메뉴명"]:visible').length > 0;
+    cy.get('.v-dialog--active').then(($dialog) => {
+        // fa-angle-right = 닫힘
+        const isClosed = $dialog.find('i.fa-angle-right').filter((i, el) => {
+            return Cypress.$(el).siblings('span.sub-title-title').text().includes('메뉴 설정');
+        }).length > 0;
 
-    if (!hasLabel && !hasInput) {
-      cy.log('📁 메뉴 설정이 닫혀 있습니다. 클릭을 시도합니다.');
-
-      // parent() 대신 아코디언 헤더(v-expansion-panel-header) 직접 클릭
-      cy.get('.v-dialog--active')
-        .contains('.v-expansion-panel-header, .v-list__tile, [role="button"]', '메뉴 설정')
-        .click({ force: true });
-
-      cy.wait(500);
-
-      // 클릭 후 열림 확인
-      cy.get('.v-dialog--active', { timeout: 5000 }).should(($el) => {
-        const l = $el.find('label').filter((i, el) => el.textContent.includes('메뉴명 자동 등록')).filter(':visible').length > 0;
-        const inp = $el.find('input[aria-label="메뉴명"]:visible').length > 0;
-        expect(l || inp, '라벨이나 입력창 중 하나가 보여야 합니다.').to.be.true;
-      });
-    } else {
-      cy.log('🟢 메뉴 설정이 이미 펼쳐져 있습니다.');
-    }
-  });
+        if (isClosed) {
+            cy.log('📁 메뉴 설정이 닫혀 있습니다. 클릭합니다.');
+            cy.get('.v-dialog--active')
+                .contains('span.sub-title-title', '메뉴 설정')
+                .click({ force: true });
+            cy.wait(800);
+        } else {
+            cy.log('🟢 메뉴 설정이 이미 열려 있습니다.');
+        }
+    });
 };
 
 ensureMenuOpen();

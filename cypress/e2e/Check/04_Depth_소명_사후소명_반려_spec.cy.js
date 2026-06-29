@@ -106,21 +106,32 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     
     //로그인 성공
    
+// 3.0.5.1191_r35135 버전에서 변경
+// // ==========================================
+// // STEP : 소명 서브메뉴 - 결재라인 확인
+// // ==========================================
+// cy.log('🧹 소명메뉴 클릭 ');
+// cy.contains('button', '소명').click({ force: true });
+// cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기 
+// cy.log('--- 소명 > 나의 소명 서브메뉴 ---');
+// cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('결재').click({ force: true });
+// //cy.get('.v-list__tile__title').filter(':contains("결재")').filter(':visible').click({ force: true });
+// cy.wait(2000);
 
+// 3.0.5.1191_r35135 버전에서 변경
 // ==========================================
-// STEP : 소명 서브메뉴 - 결재라인 확인
+// STEP : 결재 서브메뉴 - 정책
 // ==========================================
+// 수정: side-menu 클래스로 정확히 타겟팅
+cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', '결재').click({ force: true });
+cy.wait(1000);
 
-
-cy.log('🧹 소명메뉴 클릭 ');
-cy.contains('button', '소명').click({ force: true });
-cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기 
-
-
-cy.log('--- 소명 > 나의 소명 서브메뉴 ---');
-cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('결재').click({ force: true });
-//cy.get('.v-list__tile__title').filter(':contains("결재")').filter(':visible').click({ force: true });
+// 서브메뉴 정책 클릭
+cy.get('div[role="listitem"]').filter(':visible').contains('.v-list__tile__title', '정책').click({ force: true });
 cy.wait(2000);
+
+
+
 
 // 만약 전환이 안 된다면, 다시 한 번 클릭 시도 (안정성 강화)
 cy.get('body').then(($body) => {
@@ -314,11 +325,65 @@ cy.log('🚀 원래 사이트(LogCatch) 진입 및 인사팀사원 로그인 무
 // STEP : 소명 서브메뉴 
 // ==========================================
 cy.log('🧹 소명메뉴 클릭 ');
-cy.contains('button', '소명').click({ force: true });
-cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기 
+// cy.contains('button', '소명').click({ force: true });
+// cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기 
 
-cy.contains('.v-btn__content', '소명하기').should('be.visible').click({ force: true });
+// cy.contains('.v-btn__content', '소명하기').should('be.visible').click({ force: true });
+// cy.wait(2000);
 cy.log('--- 소명 > 소명하기 탭 진입완료---');
+const navigateToSomyungManagement_1 = () => {
+    cy.contains('button', '소명').click({ force: true });
+    cy.wait(1000);
+
+    // 소명 버튼 클릭 후 로딩 감지
+    cy.get('body').then(($body) => {
+        if ($body.find('.v-progress-circular:visible').length > 0) {
+            cy.log('🔄 소명 클릭 후 로딩 감지! 새로고침합니다.');
+            cy.reload();
+            cy.wait(3000);
+            cy.contains('button', '소명').click({ force: true });
+            cy.wait(1000);
+        }
+    });
+
+    cy.log('--- 소명 > 소명하기 서브메뉴 클릭 ---');
+    cy.contains('.v-btn__content', '소명하기').should('be.visible').click({ force: true });
+    cy.wait(3000);
+
+    // 소명하기 클릭 후 로딩 감지
+    cy.get('body').then(($body) => {
+        if ($body.find('.v-progress-circular:visible').length > 0) {
+            cy.log('🔄 소명하기 클릭 후 로딩 감지! 새로고침합니다.');
+            cy.reload();
+            cy.wait(3000);
+
+            cy.get('body').then(($reloadedBody) => {
+                if ($reloadedBody.find('.v-btn__content:contains("소명하기")').length > 0) {
+                    cy.log('✅ 소명하기 탭 확인! 재진입 생략합니다.');
+                } else {
+                    navigateToSomyungManagement_1();
+                }
+            });
+        }
+    });
+};
+
+navigateToSomyungManagement_1();
+
+//3.0.5.1191_r35135  버전부터 소명건이 디폴트값으로 바로 보이지않음. 해당하는 유형 선택해서검색해야함.
+// ==========================================================
+// STEP: 이상행위 유형 선택하기 - 개인정보 과다조회
+// ==========================================================
+// 이상행위 유형 드롭다운 클릭
+cy.get('input[aria-label="이상행위 유형"]').first().click({ force: true });
+cy.wait(1000);
+
+// 개인정보 과다조회 선택
+cy.get('.v-list__tile__title').contains('개인정보 과다조회').click({ force: true });
+cy.wait(1000);
+
+cy.contains('.v-btn__content', '검색').click({ force: true });
+cy.wait(1000);
 
 // ==========================================================
 // STEP: 첫 번째 데이터 체크 및 소명 처리 진행
@@ -389,11 +454,28 @@ cy.contains('button', '소명 처리').click({ force: true });
     cy.contains('.v-btn__content', '나의 소명 내역').click({ force: true });
     cy.wait(1500); 
 
+//3.0.5.1191_r35135  버전부터 소명건이 디폴트값으로 바로 보이지않음. 해당하는 유형 선택해서검색해야함.
+// ==========================================================
+// STEP: 소명상태 유형 선택하기 - 요청
+// ==========================================================
+// 이상행위 유형 드롭다운 클릭
+cy.get('input[aria-label="소명 상태"]').first().click({ force: true });
+cy.wait(1000);
+
+cy.get('.v-list__tile__title').contains('요청').click({ force: true });
+cy.wait(1000);
+
+cy.contains('.v-btn__content', '검색').click({ force: true });
+cy.wait(1000);   
+
+
+
+
+
     // 테이블 첫 번째 행(가장 최신 데이터) 검증
    cy.get('table').filter(':visible').find('tbody tr').filter(':visible').not('.v-datatable__progress').first().within(() => {
         
-        cy.contains('이노회 (loginid445)').should('be.visible');
-        cy.contains('신청').should('be.visible');
+        cy.contains('이노회(loginid445)').should('be.visible');
         
         // 2. 시간 오차 허용 수학적 검증 로직
         cy.root().invoke('text').then((rowText) => {
@@ -457,6 +539,29 @@ cy.log('🔄 승인하기 탭으로 이동합니다.');
 cy.contains('.v-btn__content', '승인하기').click({ force: true });
 cy.wait(1500); // 반려 대상 리스트 로딩 대기
 
+//3.0.5.1191_r35135  버전부터 소명건이 디폴트값으로 바로 보이지않음. 해당하는 유형 선택해서검색해야함.
+// ==========================================================
+// STEP: 소명상태  선택하기 - 요청
+// ==========================================================
+cy.get('input[aria-label="소명 상태"]').first().click({ force: true });
+cy.wait(1000);
+
+// 개인정보 과다조회 선택
+cy.get('.v-list__tile__title').contains('요청').click({ force: true });
+cy.wait(1000);
+
+cy.get('input[aria-label="소명 유형"]').first().click({ force: true });
+cy.wait(1000);
+
+// 개인정보 과다조회 선택
+cy.get('.v-list__tile__title').contains('사후 소명').click({ force: true });
+cy.wait(1000);
+
+
+cy.contains('.v-btn__content', '검색').click({ force: true });
+cy.wait(1000);
+
+
 // =================================================================
 // STEP : 신청건 첫번째 클릭 -> 반려 버튼 클릭 -> 코멘트 입력 -> 반려하기 -> 최종 검증
 // ==================================================================
@@ -472,7 +577,7 @@ cy.get('table tbody tr')
           const $row = Cypress.$(row);
           const rowText = $row.text();
           
-          if (rowText.includes('사후 소명')) {
+          if (rowText.includes('이노회(loginid445)')) {
               const dateMatch = rowText.match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/);
               if (dateMatch) {
                   const uiTime = new Date(dateMatch[0]).getTime();
@@ -501,7 +606,7 @@ cy.get('table tbody tr')
                           cy.get('input[type="text"]').should('be.visible').clear().type(`${approvalTime}에 반려합니다.`, { force: true });
                           cy.wait(500);
 
-                          cy.contains('button', '확인').click({ force: true });
+                          cy.contains('button', '확인').scrollIntoView().click({ force: true });
                       });
                       
                       found = true;
@@ -584,22 +689,34 @@ Cypress.on('uncaught:exception', (err, runnable) => {
     return true; // 다른 중요한 에러는 정상적으로 잡음
 });
 
-cy.contains('button', '소명').click({ force: true });
-    cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
+const navigateToSomyungManagement = () => {
+    cy.contains('button', '소명').click({ force: true });
+    cy.wait(1000);
     cy.log('--- 소명 > 관리 서브메뉴 클릭 ---');
-    //서브메뉴 관리 클릭 (정교하게)
-    cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('관리').click({ force: true });
+    cy.get('.v-menu__content').filter(':visible').last()
+        .find('.v-list__tile__title').contains('관리')
+        .click({ force: true });
     cy.wait(3000);
-  
-// '관리' 클릭 후 화면이 멈췄는지 확인하고, 멈췄다면 새로고침 후 재진입
+};
+
+navigateToSomyungManagement();
+
+// 로딩이 지속되면 새로고침
 cy.get('body').then(($body) => {
-    // 로딩 아이콘(.v-progress-circular 등)이 계속 떠 있다면 새로고침 수행
-    if ($body.find('.v-progress-circular').length > 0) {
-        cy.log('🔄 로딩 아이콘 감지! 새로고침 후 재진입합니다.');
+    if ($body.find('.v-progress-circular:visible').length > 0) {
+        cy.log('🔄 로딩 아이콘 감지! 새로고침합니다.');
         cy.reload();
         cy.wait(3000);
-        
-        cy.log('✅ 재진입 성공!');
+
+        // 새로고침 후 종합 현황 탭이 보이면 이미 올바른 화면 → 재진입 생략
+        cy.get('body').then(($reloadedBody) => {
+            if ($reloadedBody.find('.v-btn__content:contains("종합 현황")').length > 0) {
+                cy.log('✅ 종합 현황 탭 확인! 재진입 생략합니다.');
+            } else {
+                cy.log('🔄 재진입을 시도합니다.');
+                navigateToSomyungManagement();
+            }
+        });
     }
 });
 
@@ -659,7 +776,7 @@ cy.log('📋 종합현황 데이터 검증을 시작합니다.');
 // 1. 테이블의 행들 중 '이노회 (loginid445)'가 포함된 '진짜 데이터 행'을 정확히 찾습니다.
 cy.get('table tbody tr')
   .filter(':visible')
-  .contains('tr', '이노회 (loginid445)') // 해당 텍스트를 가진 tr을 찾음
+  .contains('tr', '이노회(loginid445)') // 해당 텍스트를 가진 tr을 찾음
   .first() // 혹시 결과가 여러 개라면 가장 첫 번째 행 선택
   .as('targetRow'); // 별칭 저장
 
@@ -682,7 +799,7 @@ cy.get('@targetRow').then(($row) => {
 
     // [2] 필수 정보 검증 (행 전체 텍스트에서 포함 여부 확인)
     cy.wrap($row).should('contain', '인사팀')
-                  .and('contain', '이노회 (loginid445)')
+                  .and('contain', '이노회(loginid445)')
                   .and('contain', '반려')
                   .and('contain', '사후 소명');
 

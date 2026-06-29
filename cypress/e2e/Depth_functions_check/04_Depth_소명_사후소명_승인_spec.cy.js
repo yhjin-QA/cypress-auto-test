@@ -356,46 +356,36 @@ cy.log('🧹 소명메뉴 클릭 ');
 
 // cy.contains('.v-btn__content', '소명하기').should('be.visible').click({ force: true });
 // cy.wait(2000);
-
 cy.log('--- 소명 > 소명하기 탭 진입완료---');
+
 const navigateToSomyungManagement_1 = () => {
     cy.contains('button', '소명').click({ force: true });
     cy.wait(1000);
-
-    // 소명 버튼 클릭 후 로딩 감지
-    cy.get('body').then(($body) => {
-        if ($body.find('.v-progress-circular:visible').length > 0) {
-            cy.log('🔄 소명 클릭 후 로딩 감지! 새로고침합니다.');
-            cy.reload();
-            cy.wait(3000);
-            cy.contains('button', '소명').click({ force: true });
-            cy.wait(1000);
-        }
-    });
-
-    cy.log('--- 소명 > 소명하기 서브메뉴 클릭 ---');
+    cy.log('--- 소명 > 관리 서브메뉴 클릭 ---');
     cy.contains('.v-btn__content', '소명하기').should('be.visible').click({ force: true });
     cy.wait(3000);
-
-    // 소명하기 클릭 후 로딩 감지
-    cy.get('body').then(($body) => {
-        if ($body.find('.v-progress-circular:visible').length > 0) {
-            cy.log('🔄 소명하기 클릭 후 로딩 감지! 새로고침합니다.');
-            cy.reload();
-            cy.wait(3000);
-
-            cy.get('body').then(($reloadedBody) => {
-                if ($reloadedBody.find('.v-btn__content:contains("소명하기")').length > 0) {
-                    cy.log('✅ 소명하기 탭 확인! 재진입 생략합니다.');
-                } else {
-                    navigateToSomyungManagement_1();
-                }
-            });
-        }
-    });
 };
 
 navigateToSomyungManagement_1();
+
+// 로딩이 지속되면 새로고침
+cy.get('body').then(($body) => {
+    if ($body.find('.v-progress-circular:visible').length > 0) {
+        cy.log('🔄 로딩 아이콘 감지! 새로고침합니다.');
+        cy.reload();
+        cy.wait(3000);
+
+        // 새로고침 후 종합 현황 탭이 보이면 이미 올바른 화면 → 재진입 생략
+        cy.get('body').then(($reloadedBody) => {
+            if ($reloadedBody.find('.v-btn__content:contains("소명하기")').length > 0) {
+                cy.log('✅ 소명하기 탭 확인! 재진입 생략합니다.');
+            } else {
+                cy.log('🔄 재진입을 시도합니다.');
+                navigateToSomyungManagement_1();
+            }
+        });
+    }
+});
 
 //3.0.5.1191_r35135  버전부터 소명건이 디폴트값으로 바로 보이지않음. 해당하는 유형 선택해서검색해야함.
 // ==========================================================
