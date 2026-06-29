@@ -316,6 +316,8 @@ cy.contains('.v-card', '사전 설정 추가').within(() => {
 
 cy.wait(10000);
 
+cy.contains('.v-btn__content', '저장').scrollIntoView().click({ force: true });
+
 
 // ===============================================
 // STEP : 사전 소명 이벤트 추가 데이터 존재 확인
@@ -351,46 +353,30 @@ cy.clearLocalStorage();
 cy.intercept('GET', '/tester3/api/file-download*').as('excelDownload');
 
 cy.origin('http://10.10.54.31:8088', () => {
-  Cypress.on('uncaught:exception', () => false);
+    Cypress.on('uncaught:exception', () => false);
 
-  cy.visit('/tester3', { timeout: 60000 });
-  cy.wait(3000);
+    cy.visit('/tester3', {
+        timeout: 60000,
+        onBeforeLoad(win) {
+            // 페이지 로드 전에 prompt 미리 override
+            win.prompt = () => '1';
+        }
+    });
 
-  //  cy.window().then((win) => {
-  //   win.prompt = () => '1'; // cy.stub 대신 직접 override
-  // });
+    cy.wait(3000);
 
- cy.window().then((win) => {
-  // 호출 횟수를 추적하는 카운터 추가
-  let promptCallCount = 0;
-  win.prompt = (message) => {
-    promptCallCount++;
-    console.log(`✅ prompt 가로챔! (${promptCallCount}회) 메시지: ${message}`);
-    return '1';
-  };
-  // 카운터를 window에 저장해서 나중에 확인 가능
-  win._promptCallCount = () => promptCallCount;
+    cy.log('3️⃣ Excel 버튼을 클릭합니다.');
+    cy.get('#excel_btn').should('be.visible').invoke('removeAttr', 'target').click({ force: true });
+    cy.wait(5000);
 });
 
-  cy.log('3️⃣ Excel 버튼을 클릭합니다.');
-  cy.get('#excel_btn').should('be.visible').invoke('removeAttr', 'target').click({ force: true });
-  cy.wait(5000); 
- 
-  // prompt가 실제로 호출됐는지 확인
-cy.window().then((win) => {
-  const count = win._promptCallCount();
-  cy.log(`📊 prompt 호출 횟수: ${count}회`);
-  expect(count, 'prompt가 최소 1회 호출되어야 합니다').to.be.gte(1);
+// prompt 카운트 검증 대신 다운로드 완료로 검증
+cy.wait('@excelDownload').then((interception) => {
+    expect(interception.response.statusCode).to.eq(200);
+    cy.log('✅ Excel 다운로드 완료 확인!');
 });
 
 
-});
-
-// 4. 다운로드 완료 대기
-cy.log('⏳ 엑셀 다운로드가 완료될 때까지 기다립니다...');
-cy.wait('@excelDownload', { timeout: 80000 }); 
-cy.log('✅ Excel 다운로드 API 응답 완료!');
-cy.wait(2000);
 
 
 // =============================================
