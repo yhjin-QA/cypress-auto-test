@@ -303,7 +303,7 @@ cy.origin('http://10.10.54.22:8080', () => {
   // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
   cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
   cy.visit('/uat/uia/egovLoginUsr.do');
-  cy.get('#id').should('be.visible').clear().type('loginid3');
+  cy.get('#id').should('be.visible').clear().type('uugong');
   cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
 
   // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)

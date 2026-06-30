@@ -212,45 +212,64 @@ cy.contains('.pl-1', 'Log Tracer_10.10.54.31_8088').should('be.visible').click({
 // cy.log('✅ 사전 소명 이벤트 삭제 완료');
 
 //임시 조치로 UI & DB삭제 병행코드 
-// ======================================================
-// STEP : 사전 소명 이벤트 삭제 처리
-// ======================================================
-cy.log('🗑️ 사전 소명 이벤트 삭제 시작');
+// // ======================================================
+// // STEP : 사전 소명 이벤트 삭제 처리
+// // ======================================================
+// cy.log('🗑️ 사전 소명 이벤트 삭제 시작');
 
-// [핵심] DB 우선 삭제
-const targetValue = '#excel_btn';
-const deleteQuery = `DELETE FROM tbi_log_trace_bef WHERE event_target_value = '${targetValue}'`;
-cy.task('queryPostgresDB', deleteQuery);
-cy.wait(1000); 
+// // [핵심] DB 우선 삭제
+// const targetValue = '#excel_btn';
+// const deleteQuery = `DELETE FROM tbi_log_trace_bef WHERE event_target_value = '${targetValue}'`;
+// cy.task('queryPostgresDB', deleteQuery);
+// cy.wait(1000); 
 
-// [수정된 UI 삭제 로직]
-// 'contains'를 바로 쓰지 않고, 먼저 body를 검색하여 요소가 존재하는지 확인합니다.
-cy.get('body').then(($body) => {
-    // 테이블 내에 '사전소명페이지(Jeus)'라는 텍스트가 있는지 확인
-    if ($body.find('td:contains("사전소명페이지(Jeus)")').length > 0) {
-        cy.log('⚠️ UI에 잔여 데이터 발견! 삭제 시도...');
+// // [수정된 UI 삭제 로직]
+// // 'contains'를 바로 쓰지 않고, 먼저 body를 검색하여 요소가 존재하는지 확인합니다.
+// cy.get('body').then(($body) => {
+//     // 테이블 내에 '사전소명페이지(Jeus)'라는 텍스트가 있는지 확인
+//     if ($body.find('td:contains("사전소명페이지(Jeus)")').length > 0) {
+//         cy.log('⚠️ UI에 잔여 데이터 발견! 삭제 시도...');
         
-        cy.contains('td', '사전소명페이지(Jeus)')
-          .closest('tr')
-          .find('i.fa-trash')
-          .click({ force: true });
+//         cy.contains('td', '사전소명페이지(Jeus)')
+//           .closest('tr')
+//           .find('i.fa-trash')
+//           .click({ force: true });
         
-        // 삭제 확인 팝업 처리
-        cy.contains('button', '확인').click({ force: true });
+//         // 삭제 확인 팝업 처리
+//         cy.contains('button', '확인').click({ force: true });
         
-        // 데이터가 사라질 때까지 대기
-        cy.contains('td', '사전소명페이지(Jeus)').should('not.exist');
-    } else {
-        cy.log('✅ UI 데이터가 이미 삭제된 상태입니다. 건너뜁니다.');
-    }
-});
+//         // 데이터가 사라질 때까지 대기
+//         cy.contains('td', '사전소명페이지(Jeus)').should('not.exist');
+//     } else {
+//         cy.log('✅ UI 데이터가 이미 삭제된 상태입니다. 건너뜁니다.');
+//     }
+// });
 
-cy.wait(1000);
-cy.log('✅ 사전 소명 이벤트 삭제 절차 종료');
+// cy.wait(1000);
+// cy.log('✅ 사전 소명 이벤트 삭제 절차 종료');
 
 
 
 //-------------------------------------------------------------------------------------------
+cy.log('🔍 사전 소명 이벤트 존재 여부 확인');
+
+// 먼저 섹션으로 스크롤하여 데이터가 렌더링되도록 대기
+cy.contains('.c-headline', '사전 소명 목록')
+  .closest('.v-card')
+  .then(($section) => {
+    $section[0].scrollIntoView({ behavior: 'smooth' });
+  });
+
+cy.wait(2000); // 렌더링 대기
+
+cy.get('body').then(($body) => {
+    const alreadyExists = $body.find('td:contains("사전소명페이지(Jeus)")').length > 0;
+
+    if (alreadyExists) {
+        cy.log('✅ 이미 등록된 정책이 존재합니다. 삭제/추가 과정을 SKIP합니다.');
+    } else {
+        cy.log('➕ 등록된 정책 없음. 사전 소명 이벤트 추가 진행');
+
 
 // ===============================================
 // STEP : 접속기록 수집기 클릭한 상태에서 
@@ -318,7 +337,7 @@ cy.wait(10000);
 
 cy.contains('.v-btn__content', '저장').scrollIntoView().click({ force: true });
 
-
+  
 // ===============================================
 // STEP : 사전 소명 이벤트 추가 데이터 존재 확인
 // ===============================================
@@ -336,6 +355,9 @@ cy.contains('td', '사전소명페이지(Jeus)')
 
 cy.log('✅ 접속기록 수집기 에서 사전소명 정상적으로 이벤트 목록 추가됨.');
 cy.wait(10000);
+
+ }
+});
 
 // ==================== [여기] WAS 타격 직전 ====================
 // ① 타격 시각 기록
