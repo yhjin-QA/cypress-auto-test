@@ -194,9 +194,9 @@ cy.log('--- 소명 - 결재라인 UI화면 진입완료 ---');
             cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '일반').click({ force: true });
             cy.wait(300); // 팝업 닫힘 대기
             
-            // 7. 결재 적용 대상 선택 [소명] 
+            // 7. 결재 적용 대상 선택 [소명]
             cy.get('input[aria-label="결재 적용 대상"]').filter(':visible').click({ force: true });
-            cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '소명').click({ force: true });
+            cy.get('.v-menu__content').filter(':visible').find('.v-list__tile__title').filter((_, el) => el.innerText.trim() === '소명').click({ force: true });
             cy.wait(300);
             
             // 8. 결재자 유형 선택 [부서장]

@@ -429,14 +429,26 @@ cy.get('tbody').find('a').then(($links) => {
       cy.log('✅ 소명 - 나의 소명 - [승인하기]탭 진입 및 데이터 출력 확인 완료!');
 
       
-      // 소명 > 결재 서브메뉴 클릭
-      cy.contains('.side-menu', '소명').should('be.visible').click({ force: true });
-      cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-      cy.log('--- 소명 > 결재 서브메뉴 클릭 ---');
-      cy.get('.v-list__tile__title').filter(':contains("결재")').filter(':visible').click({ force: true });
-      cy.wait(3000);
-      // 소명 > 결재 > 결재라인 탭 클릭
-      cy.get('.v-btn__content').filter(':visible').contains('결재 라인').click();
+      // // 소명 > 결재 서브메뉴 클릭
+      // cy.contains('.side-menu', '소명').should('be.visible').click({ force: true });
+      // cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
+      // cy.log('--- 소명 > 결재 서브메뉴 클릭 ---');
+      // cy.get('.v-list__tile__title').filter(':contains("결재")').filter(':visible').click({ force: true });
+      // cy.wait(3000);
+      //   // 소명 > 결재 > 결재라인 탭 클릭
+      // cy.get('.v-btn__content').filter(':visible').contains('결재 라인').click();
+
+      // 3.0.5.1191_r35135 버전에서 변경
+      // ==========================================
+      // STEP : 결재 서브메뉴 - 정책
+      // ==========================================
+      cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', '결재').click({ force: true });
+      cy.wait(1000);
+
+      // 서브메뉴 정책 클릭
+      cy.get('div[role="listitem"]').filter(':visible').contains('.v-list__tile__title', '정책').click({ force: true });
+      cy.wait(2000);
+          
       cy.log('--- 화면 검증 시작 ---');
       cy.contains('.c-headline', '결재 정책 목록').should('exist');
       //토글 문구 확인인
@@ -478,12 +490,12 @@ cy.get('tbody').find('a').then(($links) => {
        
        //3.0.5.1191_r35135 결재 적용 대상 ->  결재 라인으로 문구 변경됨.
        // 결재 적용대상 클릭하여 콤보박스 열기 
-       cy.get('input[aria-label="결재 라인"]').filter(':visible').click({ force: true });
+       cy.get('input[aria-label="결재 적용 대상"]').filter(':visible').click({ force: true });
        // 결재 적용대상 클릭하여 소명 선택 
        cy.get('.v-list__tile__title').filter(':visible').contains('소명').click();
 
        // 결재 적용대상 클릭하여 콤보박스 열기 
-       cy.get('input[aria-label="결재 라인"]').filter(':visible').click({ force: true });
+       cy.get('input[aria-label="결재 적용 대상"]').filter(':visible').click({ force: true });
        // 결재 적용대상 클릭하여 소명 선택 
        cy.get('.v-list__tile__title').filter(':visible').contains('소명').click();
 
