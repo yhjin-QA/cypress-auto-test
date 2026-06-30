@@ -30,9 +30,9 @@
   });
 
 /**코드 시작  */
-describe('로그캐치 사이트 테스트', () => {
+describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
   
-  it('로그캐치 배포점검목록 동작 체크', () => {
+  it('08_Depth_분석_접근제한 업무 시스템 접근 자동화 시나리오', () => {
 
 
     // ==========================================
@@ -137,11 +137,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
 
 
-     ///////////////////////////////////////////////
-    // 이상행위 정책 - 파일 다운로드
     ///////////////////////////////////////////////
-    cy.contains('.v-chip__content', '파일다운로드').should('be.visible').click({ force: true });
-    cy.contains('.c-headline', '파일다운로드 정책 목록').should('exist');
+    // 이상행위 정책 - 접근제한 업무 시스템 접근
+    ///////////////////////////////////////////////
+    cy.contains('.v-chip__content', '접근제한 업무 시스템 접근').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '접근제한 업무 시스템 접근 정책 목록').should('exist');
     // 표 문구열 확인
     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
@@ -151,17 +151,17 @@ describe('로그캐치 사이트 테스트', () => {
     // 기능 확인 -------------------------------------------------
     cy.log('🔍 기존 정책 존재 여부를 확인합니다.');
     
-    //예외처리  test_auto_파일다운로드 삭제 --------------------------
-    // 1. [조건부 삭제] test_auto_파일다운로드 정책이 있으면 삭제, 없으면 패스
+    //예외처리  test_auto_접근제한 업무 시스템 접근 삭제 --------------------------
+    // 1. [조건부 삭제] test_auto_접근제한 업무 시스템 접근 정책이 있으면 삭제, 없으면 패스
     cy.get('body').then(($body) => {
     // jQuery의 :contains 선택자를 이용해 해당 텍스트가 있는 <tr>을 찾습니다.
-    const hasPolicy = $body.find('tr:contains("test_auto_파일다운로드")').length > 0;
+    const hasPolicy = $body.find('tr:contains("test_auto_접근제한 업무 시스템 접근")').length > 0;
 
     if (hasPolicy) {
       cy.log('🗑️ 기존 정책이 발견되었습니다. 삭제를 진행합니다.');
     
       // 삭제 버튼(휴지통) 클릭
-      cy.contains('tr', 'test_auto_파일다운로드').find('.fa-trash').click({ force: true });
+      cy.contains('tr', 'test_auto_접근제한 업무 시스템 접근').find('.fa-trash').click({ force: true });
       cy.wait(500);
     
       // 삭제 확인 팝업에서 '확인' 클릭
@@ -169,7 +169,7 @@ describe('로그캐치 사이트 테스트', () => {
       cy.wait(1000); // 삭제 처리가 서버에 반영될 시간 대기
 
       // 추가한 정책 삭제 검증코드 
-      cy.contains('tr', 'test_auto_파일다운로드').should('not.exist'); 
+      cy.contains('tr', 'test_auto_접근제한 업무 시스템 접근').should('not.exist'); 
       cy.log('✅ 기존 정책 삭제 완료!');
     
     } else {
@@ -185,10 +185,10 @@ describe('로그캐치 사이트 테스트', () => {
            });
     cy.wait(1000);
 
-    // 파일 다운로드 정책화면 진입----------------------------------------
+    // 열람 제한 개인정보 접근 정책 추가화면 진입----------------------------------------
     // 정책이름 입력 
-    cy.get('input[aria-label="정책 이름"]').filter(':visible').clear({ force: true }).type('test_auto_파일다운로드', { force: true });
-
+    cy.get('input[aria-label="정책 이름"]').filter(':visible').first().clear({ force: true }).type('test_auto_접근제한 업무 시스템 접근', { force: true });
+    
     // 정책설정 부분
     // 정책 사용여부 토글 OFF-> ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
@@ -198,33 +198,81 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="소명 여부"]').check({ force: true });
     cy.wait(500); 
 
-    // 업무시스템 - 선택
-    cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+   // 그룹별 클릭하는 코드 
+    cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(1000);
+    //그룹 전체선택
+    cy.get('.v-menu__content').filter(':visible').contains('서비스기획팀').scrollIntoView().click({ force: true });
     cy.wait(500);
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').first().parent().click({ force: true });
-    cy.wait(500);
-    // 업무시스템중 'JEUS_tester3' 클릭하는 코드
-    cy.get('.v-menu__content').filter(':visible').first().contains('JEUS_tester3').click({ force: true });
-    cy.wait(500);
-    // 선택한 컨텍스트 메뉴 닫기
+    // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
+
 
     // 경보등급 랜덤 선택하기 
     cy.log(`🎯 경보등급 [${targetAlert.label}] 항목을 선택합니다.`);
     cy.contains('label', targetAlert.label).closest('div').find('.v-input--selection-controls__ripple').click({ force: true });
     cy.wait(500);
     
-    // 랜덤 선택된 상태 확인 검증코드 
+    // 랜덤 선택된 경보등급 상태 확인 검증코드 
     cy.contains('label', targetAlert.label).closest('div').find('input').should('have.attr', 'aria-checked', 'true');
     cy.wait(500);
+
+    // 접근 제한 업무시스템 등록-----------------------------------------------------------------------------
+    // 정책이름 입력하기
+    cy.get('input[aria-label="정책 이름"]').filter(':visible').last().clear({ force: true }).type('test_리눅스_배송관리 업무시스템 제한', { force: true });
+
+    // 업무시스템 - 선택
+    //cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    cy.wait(500);
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').last().scrollIntoView({ block: 'center' }).parent().click({ force: true });
+    cy.wait(500);
+    // 업무시스템중 '리눅스_배송관리' 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').last().contains('리눅스_배송관리').click({ force: true });
+    cy.wait(500);
+
+     // 추가버튼 클릭
+    cy.contains('button', '추가').filter(':visible').scrollIntoView({ block: 'center' }).click({ force: true });
+    cy.wait(500);
+
+    //추가된 표안의 잘추가되어있는지 검증코드 
+    cy.contains('tr', 'test_리눅스_배송관리 업무시스템 제한').scrollIntoView({ block: 'center' }) 
+     .within(() => {
+      cy.contains('리눅스_배송관리').should('be.visible'); 
+    });
+     cy.wait(500); 
+     //------------------------------------------------------------------------------------------------------
+
+     // 접근 제한 업무시스템 등록-----------------------------------------------------------------------------
+    // 정책이름 입력하기
+    cy.get('input[aria-label="정책 이름"]').filter(':visible').last().clear({ force: true }).type('test_리눅스_VIP고객관리 제한', { force: true });
+    cy.wait(500);
+    
+    // 업무시스템 - 선택
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').last().scrollIntoView({ block: 'center' }).parent().click({ force: true });
+    cy.wait(500);
+    // 업무시스템중 '리눅스_VIP고객' 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').last().contains('리눅스_VIP고객').click({ force: true });
+    cy.wait(500);
+
+     // 추가버튼 클릭
+    cy.contains('button', '추가').filter(':visible').scrollIntoView({ block: 'center' }).click({ force: true });
+    cy.wait(500);
+
+    //추가된 표안의 잘추가되어있는지 검증코드 
+    cy.contains('tr', 'test_리눅스_VIP고객관리 제한').scrollIntoView({ block: 'center' }) 
+     .within(() => {
+      cy.contains('리눅스_VIP고객').should('be.visible'); 
+    });
+     cy.wait(500); 
+     //------------------------------------------------------------------------------------------------------
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
     cy.wait(500);
 
 
-    //test_auto_파일다운로드 목록에 정책이 잘 추가되었는지 검증하는 코드 
-    cy.get('tbody').contains('tr', 'test_auto_파일다운로드').should('be.visible');
+    //test_auto_접근제한 업무 시스템 접근 목록에 정책이 잘 추가되었는지 검증하는 코드 
+    cy.get('tbody').contains('tr', 'test_auto_접근제한 업무 시스템 접근').should('be.visible');
 
 // ==================== [여기] WAS 타격 직전 ====================
 // ① 타격 시각 기록
@@ -233,48 +281,38 @@ const hitTimeStr = `${hitTime.getFullYear()}-${String(hitTime.getMonth()+1).padS
 cy.log(`⏱️ WAS 타격 시각 기록: ${hitTimeStr}`);
 // ==============================================================
 
-// ----------------------------------------------------------
-// [STEP 1] WAS 시스템 로그인 및 이상행위(과다조회) 타격
-// ----------------------------------------------------------
-cy.log('🚀 다른 도메인(tester3 서버)으로 크로스 오리진 점프를 시도합니다.');
 
-// 1. 점프 전, 기존 사이트의 세션/쿠키 찌꺼기 완전 삭제 (충돌 방지)
-cy.clearCookies();
-cy.clearLocalStorage();
+// ========================================
+// WAS 타격: 10.10.54.27 (LOGCATCH SECURE PORTAL - 고객 데이터 유출)
+// ========================================
 
-// 1. API 응답을 가로채기 위해 intercept 설정 (cy.origin 바깥에서 정의 가능)
-cy.intercept('GET', '**/api/file-download-pdf*').as('pdfDownload');
+// 1단계: 로그인 (JSESSIONID 획득)
+cy.request({
+    method: 'POST',
+    url: 'http://10.10.54.27/crm/login.jsp',
+    form: true,
+    body: {
+        empId: 'user005',
+        empPw: 'Manager1!'
+    },
+    followRedirect: false,
+    failOnStatusCode: false
+}).then((loginRes) => {
+    cy.log(`✅ 로그인 응답: ${loginRes.status}`); // 302 예상
 
-// 2. 새로운 도메인(10.10.54.31)으로 점프하여 동작 수행
-cy.origin('http://10.10.54.31:8088', () => {
-  // 새 도메인 전용 에러 무시 처리
-  Cypress.on('uncaught:exception', () => false);
-
-  // 사이트 접속 (origin 블록 안이므로 도메인 제외 경로만 입력)
-  cy.log('1️⃣ tester3 사이트에 접속합니다.');
-  cy.visit('/tester3', { 
-    timeout: 60000 
-  });
-  
-  cy.wait(3000); // 페이지 로딩 대기
-  cy.log('✅ 10.10.54.31 서버 접속 완료!');
-
-  // 3. PDF 버튼 클릭 (id 값인 #pdf_btn을 타겟팅)
-  cy.log('2️⃣ PDF 버튼을 클릭합니다.');
-  cy.get('#pdf_btn').should('be.visible').click({ force: true });
-  cy.log('✅ PDF 버튼 클릭 완료!');
-  // 엑셀 다운로드 또는 내부 처리 스크립트가 돌아갈 시간을 넉넉히 줍니다.
-  cy.wait(5000); 
-
-  // 3. API 응답 완료 검증
- cy.log('⏳ PDF 다운로드 API 응답을 기다립니다...');
- cy.wait('@pdfDownload', { timeout: 30000 }).then((interception) => {
-  // 상태 코드 검증
-  expect(interception.response.statusCode).to.eq(200);
-  cy.log('✅ PDF 다운로드 API 응답 검증 완료 (200 OK)!');
-});
-
-  
+    // 2단계: 고객 데이터 유출 실행 (GET)
+    cy.request({
+        method: 'GET',
+        url: 'http://10.10.54.27/crm/soc_matrix.jsp',
+        qs: {
+            action: 'massive_inquiry',
+            _ts: Date.now()
+        },
+        failOnStatusCode: false
+    }).then((res) => {
+        expect(res.status).to.eq(200);
+        cy.log('✅ WAS 타격 완료 (10.10.54.27 고객 데이터 유출)');
+    });
 });
 
 
@@ -417,6 +455,16 @@ cy.contains('.tab-btn', '이상행위', { timeout: 15000 }).should('be.visible')
 //------------------------------------------------------------------------------------------------------
 cy.log('✅ 이상행위 탭 진입 성공');
 
+// // 사용자 검색 - 진윤호(yunho)
+// // 1. 콤보박스에 검색어 입력
+// cy.get('input[aria-label="사용자"]').filter(':visible').clear({ force: true }).type('yunho', { force: true });
+// cy.wait(1000); 
+// // 검색된 콤보박스 리스트  선택하기
+// cy.contains('.v-list__tile__title', 'yunho').should('be.visible').click({ force: true });
+// cy.wait(1000);
+// // 선택 후 메뉴 닫기
+// cy.get('body').type('{esc}');
+
 
 // 이상행위 유형 선택 
 cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -425,9 +473,9 @@ cy.wait(500);
 // 1. 현재 화면에 열려있는 '진짜' 활성 상태의 팝업창만 타겟팅합니다.
 cy.get('.menuable__content__active').filter(':visible').within(() => {
   
-  // 2. 그 활성 팝업창 안에서 '파일다운로드'를 찾습니다.
+  // 2. 그 활성 팝업창 안에서 '접근제한 업무 시스템 접근'를 찾습니다.
   // 이제 엉뚱한 숨김 처리된 팝업의 글자를 찾을 위험이 0%가 됩니다.
-  cy.contains('.v-list__tile__title', '파일다운로드').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+  cy.contains('.v-list__tile__title', '접근제한 업무 시스템 접근').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
 });
 
 cy.wait(500); // 클릭 후 메뉴가 닫힐 시간 대기
@@ -436,12 +484,13 @@ cy.get('body').type('{esc}');
     
 //검색버튼 클릭
 cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-cy.wait(1000);
+cy.wait(3000);
 
 // ==================== [여기] 검색버튼 클릭 직후 ====================
 // ⑤ 타격 시각 이후 행이 나타날 때까지 폴링
 function waitForNewLog(attempt = 0) {
-    if (attempt > 12) throw new Error('❌ 새 이력 미반영 (60초 초과)');
+    // 5초 간격 24회 폴링
+    if (attempt > 24) throw new Error('❌ 새 이력 미반영 (120초 초과)');
 
     cy.get('tbody tr').filter(':visible').then(($rows) => {
         // 첫 번째 행 타임스탬프가 타격 시각보다 최신인지 확인
@@ -466,29 +515,31 @@ waitForNewLog();
 // [검증코드] 이상행위 유형 첫 번째 행(최신 로그) 데이터 검증
 // ----------------------------------------------------------
 cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
+// [개선 코드]
+// 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
+cy.get('tbody', { timeout: 20000 }).contains('tr', '사원_5(user005)').should('be.visible');
+
 
 // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
 cy.get('tbody tr').filter(':visible').first().within(() => {
   
   // 2. 텍스트 검증
-  cy.contains('비로그인').should('be.visible');
-  cy.contains('파일다운로드').should('be.visible');
-  cy.contains('test_auto_파일다운로드').should('be.visible');
+  cy.contains('사원_5(user005)').should('be.visible');
+  cy.contains('접근제한 업무 시스템 접근').should('be.visible');
+  cy.contains('test_auto_접근제한 업무 시스템 접근').should('be.visible');
   cy.contains('존재').should('be.visible');
-  cy.contains('소명 불필요').should('be.visible');
+  cy.contains('소명 대상').should('be.visible');
 
   // 3. 아이콘 맞춤 검증 (랜덤으로 선택했던 바로 그 등급을 검증합니다)
   cy.log(`🔍 생성 시 선택했던 [${targetAlert.label}] 로그가 정상적으로 발생했는지 검증합니다.`);
   cy.get(targetAlert.iconClass).should('be.visible').and('have.css', 'color', targetAlert.color);
-});
-
-cy.log('🎉 분석 파일다운로드 확인 및 랜덤 등급 검증 완료!');
+  });
 
 
   // ==========================================
   // [FINAL] 테스트 종료 및 메뉴 닫기
   // ==========================================
-  cy.log('🎉 Depth 분석- 파일다운로드 테스트 시나리오 성공적으로 완료!');
+  cy.log('🎉 Depth 분석- 접근제한 업무 시스템 접근 테스트 시나리오 성공적으로 완료!');
   cy.get('body').type('{esc}');
   cy.get('body').click('center', { force: true });
 
