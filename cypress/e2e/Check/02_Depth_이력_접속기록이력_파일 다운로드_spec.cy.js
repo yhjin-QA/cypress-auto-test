@@ -240,7 +240,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // ==========================================
     //달력표를 펼침  월/일 지정  
     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
@@ -351,11 +351,11 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
   
     // 업무시스템 클릭하여 리스트 열기
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 리스트에서 'JEUS_tester3'가 나타날 때까지 기다리고 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'JEUS_tester3', { timeout: 10000 }).should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
@@ -370,7 +370,7 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
 
      // 선택한 업무시스템 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     
 
@@ -379,7 +379,8 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
     // ==========================================
      // 시작 IP에 10.10.1.101 입력 
     cy.get('input[aria-label="시작 IP"]').filter(':visible').clear().type('10.10.1.101');
-    cy.wait(500);
+     cy.wait(1000);
+
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -397,18 +398,21 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
 
     // '사용자 IP' 입력창을 찾아 기존에 입력된 값을 깨끗하게 지웁니다.
     cy.get('input[aria-label="시작 IP"]').filter(':visible').clear();
-    cy.wait(500);
+     cy.wait(1000);
+
 
     // ==========================================
     // 시작 IP ~ 종료IP 입력후 검색  - 타켓 IP 10.10.0.210 
     // ==========================================
      // 시작 IP 입력 
     cy.get('input[aria-label="시작 IP"]').filter(':visible').clear().type('10.10.0.200');
-    cy.wait(500);
+     cy.wait(1000);
+
 
      // 종료 IP 입력 
     cy.get('input[aria-label="종료 IP"]').filter(':visible').clear().type('10.10.0.211');
-    cy.wait(500);
+     cy.wait(1000);
+
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -426,18 +430,18 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
 
     // '시작 IP' 입력창을 찾아 기존에 입력된 값을 깨끗하게 지웁니다.
     cy.get('input[aria-label="시작 IP"]').filter(':visible').clear();
-    cy.wait(500);
+    cy.wait(1000);
 
      // '종료 IP' 입력창을 찾아 기존에 입력된 값을 깨끗하게 지웁니다.
     cy.get('input[aria-label="종료 IP"]').filter(':visible').clear();
-    cy.wait(500);
+    cy.wait(1000);
 
     // ==========================================
     // URI 조회검색 - 타겟 :  /file-download-pdf
     // ==========================================
     // URI 주소에 입력 
     cy.get('input[aria-label="URI"]').filter(':visible').clear().type('/file-download-pdf');
-    cy.wait(500);
+    cy.wait(1000);
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -451,14 +455,14 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
 
     // 입력한 URI 주소 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="URI"]').filter(':visible').clear();
-    cy.wait(500);
+    cy.wait(1000);
 
     // ==========================================
     // 파일명 검색 - 타겟 :  tester3-******.확장자
     // ==========================================
     // 파일명 검색에 tester3 입력 
     cy.get('input[aria-label="파일명"]').filter(':visible').clear().type('tester3');
-    cy.wait(500);
+    cy.wait(1000);
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -477,7 +481,7 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
 
       // 입력한 URI 주소 x버튼 클릭하여 초기화 
       cy.get('input[aria-label="파일명"]').filter(':visible').clear();
-      cy.wait(500);
+      cy.wait(1000);
 
     //3.0.5.1191_r35135 파일 경로 제거됨.
     // // ==========================================
@@ -485,7 +489,7 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
     // // ==========================================
     // // 파일경로 검색에 tester3 입력 
     // cy.get('input[aria-label="파일 경로"]').filter(':visible').clear().type('/home/logcatch/data/explanationFiles/data');
-    // cy.wait(500);
+    // cy.wait(1000);
 
     // //검색버튼 클릭
     // cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -496,12 +500,12 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
     // // xlsx 또는 pdf 중 하나를 포함하는 요소를 찾아 가시성 검증
     // cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.(xlsx|pdf)/).should('be.visible');
     // cy.get('span.ellipsis.text-xs-left').contains('tester3/api/file-download') .should('be.visible');
-    // cy.wait(500);
+    // cy.wait(1000);
 
     
     // // 입력한 URI 주소 x버튼 클릭하여 초기화 
     // cy.get('input[aria-label="파일 경로"]').filter(':visible').clear();
-    // cy.wait(500);
+    // cy.wait(1000);
 
 
     //////////////////////////////////////////////////////
@@ -509,7 +513,7 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
     /////////////////////////////////////////////////////
     //3.0.5.1191_r35135 에서 개인정보 ON상태가 디폴트값
     //cy.get('input[aria-label="개인정보"]').click({ force: true });
-    //cy.wait(500);
+    //cy.wait(1000);
 
     // [검증] 개인정보 제외 OFF -> ON 체크확인 
     cy.get('input[aria-label="개인정보"]').should('be.checked');
@@ -522,7 +526,7 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
     
      //사용자 상태 클릭
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 사용자 상태 리스트 중 '등록' 선택
     cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '등록').click({ force: true });
@@ -569,7 +573,7 @@ cy.log('✅ 검색 결과 정상 확인 완벽 통과! (정보 사용자 열 기
 
      // 사용자 상태 - 미등록  선택----------------------------------------------- 
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 사용자 상태 리스트 중 '미등록' 선택
     cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '미등록').click({ force: true });
@@ -586,7 +590,7 @@ cy.log('✅ 검색 결과 정상 확인 완벽 통과! (정보 사용자 열 기
 
       // 사용자 상태 - 전체 선택----------------------------------------------- 
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 사용자 상태 리스트 중 '전체' 선택
     cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '전체').click({ force: true });
@@ -682,41 +686,42 @@ cy.log('✅ 검색 결과 정상 확인 완벽 통과! (정보 사용자 열 기
 
     // 업무시스템 클릭하여 리스트 열기
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 리스트에서 'JEUS_tester3'가 나타날 때까지 기다리고 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'JEUS_tester3', { timeout: 10000 }).should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 리스트에서 '리눅스_배송관리'가 나타날 때까지 기다리고 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_배송관리', { timeout: 10000 }).should('be.visible').click({ force: true });
-    cy.wait(500);
+    
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
+    cy.wait(1000);
 
     // 시작 IP 입력 
     cy.get('input[aria-label="시작 IP"]').filter(':visible').clear().type('10.10.1.101');
-    cy.wait(500);
+    cy.wait(1000);
 
     // 종료 IP 입력 
     cy.get('input[aria-label="종료 IP"]').filter(':visible').clear().type('10.10.1.101');
-    cy.wait(500);
+    cy.wait(1000);
 
     // URI 주소에 입력 
     cy.get('input[aria-label="URI"]').filter(':visible').clear().type('/file-download-pdf');
-    cy.wait(500);
+    cy.wait(1000);
 
     // 파일명 검색에 tester3-20260318160556.pdf 입력 
     cy.get('input[aria-label="파일명"]').filter(':visible').clear().type('tester3-20260318160556.pdf');
-    cy.wait(500);
+    cy.wait(1000);
 
     //3.0.5.1191_r35135 제거됨.
     // 파일경로 검색에 /home/logcatch/data/explanationFiles/data 입력 
     //cy.get('input[aria-label="파일 경로"]').filter(':visible').clear().type('/home/logcatch/data/explanationFiles/data');
-    //cy.wait(500);
+    //cy.wait(1000);
 
     //검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 검색 결과 로딩대기
     cy.get('tbody tr', { timeout: 15000 }).should('be.visible');
@@ -729,7 +734,7 @@ cy.log('✅ 검색 결과 정상 확인 완벽 통과! (정보 사용자 열 기
      cy.contains('/file-download-pdf').should('be.visible');
      
     });
-    cy.wait(500);
+    cy.wait(1000);
 
     
     // ==========================================

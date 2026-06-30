@@ -214,8 +214,9 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('th').filter(':visible').contains('접속 IP 주소').should('be.visible');
     cy.get('th').filter(':visible').contains('접속 메뉴/행위').should('be.visible'); 
     cy.get('th').filter(':visible').contains('검출 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible'); 
-    cy.get('th').filter(':visible').contains('검출 건수').should('be.visible'); 
+    cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
+    //3.0.5.1191_r35135  가로스크롤 영향으로 존재로 확인 
+    cy.get('th').filter(':visible').contains('검출 건수').should('exist'); 
 
     //기능동작
     //달력표를 펼침 

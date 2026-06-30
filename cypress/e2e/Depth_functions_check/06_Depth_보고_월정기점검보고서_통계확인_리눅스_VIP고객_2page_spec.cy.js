@@ -215,7 +215,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('건수').should('be.visible');
     cy.get('th').filter(':visible').contains('상세 접속기록 정보').should('be.visible');
-    cy.get('th').filter(':visible').contains('처리').should('be.visible');
+    //3.0.5.1191_r35135  가로스크롤 영향으로 존재로 확인 
+    cy.get('th').filter(':visible').contains('처리').should('exist');
 
 
 
