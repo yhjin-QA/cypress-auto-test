@@ -106,6 +106,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     
     //로그인 성공
 
+
     // ==========================================
     // 점검(대시보드) 서브메뉴 
     // ==========================================
@@ -389,178 +390,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
    cy.contains('.item-margin', '30', { timeout: 5000 }).should('be.visible');
    cy.wait(1000);
    //----------------------------------------------------------------------------------
-
-   // ==========================================
-   // 점검 대시보트 차트 상세페이지 이동  
-   // ==========================================
-
-
-   // 맨티스 이슈 : 37330
-   // 개인정보 유형별 현황 → [이력 > 접속기록 이력 > 통합] 으로 이동되어야하지만 이상행위로 이동되는 문제
-   // 3.0.5.1191_r35135 버전에서 차트 클릭시 팝업창 형태로 뜨는걸로 변경됨.(확인필요)
-   /*
-   // 개인정보 유형별 현황 영역의 [휴대전화번호] 클릭하여 상세페이지로 이동-------------------------------------------
-   // 'apexcharts-legend-text' 클래스를 가진 span 태그 중 '휴대전화번호'를 찾아 클릭합니다.
-   cy.contains('span.apexcharts-legend-text', '휴대전화번호').should('be.visible').click({ force: true });
-   cy.wait(500);
-   //팝업창의 본문 내용('상세 페이지로 이동하시겠습니까?')이 맞는지 검증
-   cy.contains('p.mb-0:visible', '상세 페이지로 이동하시겠습니까?').should('be.visible');
-   cy.wait(500); 
-   // 3. 화면에 보이는 '확인' 버튼을 찾아 강제 클릭!
-   cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
-   cy.wait(2000);
-   // 이력 - 접속기록 이력 - 이상행위 화면 상세 페이지 이동검증
-   cy.get('.tab-btn').contains('이상행위').closest('button').should('not.have.class', 'inactive');
-   // 제목 검증 후 뒤로 가기 실행
-   cy.contains('.c-headline:visible', '이상행위').should('be.visible')
-   .then(() => {
-    // 이 블록은 위 검증이 완벽하게 성공했을 때만 실행됩니다!
-    cy.log('✅ 이력 - 접속기록 이력 - 이상행위 상세 페이지 로딩 확인 완료! 목록으로 돌아갑니다.');
-    cy.wait(2000);
-    // 브라우저 뒤로가기 이동(Back 버튼)
-    cy.go('back');
-    cy.wait(2000);
-     });
-   //------------------------------------------------------------------------------------------------------
-
-   // 부서별 개인정보 사용 Top 10영역의 인사팀의 그래프 클릭하여 상세페이지로 이동-------------------------------------------
-   // 'apexcharts-legend-text' 클래스를 가진 span 태그 중 '휴대전화번호'를 찾아 클릭합니다.
-   cy.get('path.apexcharts-bar-area').first().click({ force: true });
-   cy.wait(500);
-   //팝업창의 본문 내용('상세 페이지로 이동하시겠습니까?')이 맞는지 검증
-   cy.contains('p.mb-0:visible', '상세 페이지로 이동하시겠습니까?').should('be.visible');
-   cy.wait(500); 
-   // 3. 화면에 보이는 '확인' 버튼을 찾아 강제 클릭!
-   cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
-   cy.wait(2000);
-   // 화면 현황- 부서별 상세 페이지 이동검증
-   cy.get('.tab-btn').contains('부서 별').closest('button').should('not.have.class', 'inactive');
-   // 제목 검증 후 뒤로 가기 실행
-   cy.contains('.c-headline:visible', '검색 조건').should('be.visible')
-   .then(() => {
-    // 이 블록은 위 검증이 완벽하게 성공했을 때만 실행됩니다!
-    cy.log('✅ 현황- 부서별 상세 페이지 로딩 확인 완료! 목록으로 돌아갑니다.');
-    cy.wait(2000);
-    // 브라우저 뒤로가기 이동(Back 버튼)
-    cy.go('back');
-    cy.wait(2000);
-     });
-   //------------------------------------------------------------------------------------------------------
    
-   // IP 주소별 개인정보 사용 TOP 10 클릭하여 상세페이지로 이동-------------------------------------------
-   // 10.10.54.5 영역 클릭하기
-   // (가운데 있는 가장 큰 파란색 글씨가 클릭됩니다!)
-   cy.get('canvas[data-zr-dom-id="zr_0"]').filter(':visible').click('center', { force: true });
-   cy.wait(500);
-   //팝업창의 본문 내용('상세 페이지로 이동하시겠습니까?')이 맞는지 검증
-   cy.contains('p.mb-0:visible', '상세 페이지로 이동하시겠습니까?').should('be.visible');
-   cy.wait(500); 
-   // 3. 화면에 보이는 '확인' 버튼을 찾아 강제 클릭!
-   cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
-   cy.wait(2000);
-   // 화면 현황- 정보사용자 별 상세 페이지 이동검증
-   cy.get('.tab-btn').contains('정보사용자 별').closest('button').should('not.have.class', 'inactive');
-   // 제목 검증 후 뒤로 가기 실행
-   cy.contains('.c-headline:visible', '검색 조건').should('be.visible')
-   .then(() => {
-    // 이 블록은 위 검증이 완벽하게 성공했을 때만 실행됩니다!
-    cy.log('✅ 현황- 정보사용자 별 상세 페이지 로딩 확인 완료! 목록으로 돌아갑니다.');
-    cy.wait(2000);
-    // 브라우저 뒤로가기 이동(Back 버튼)
-    cy.go('back');
-    cy.wait(2000);
-     });
-   //------------------------------------------------------------------------------------------------------
-
-   // 업무 시스템 별 개인정보 사용현황 클릭하여 상세페이지로 이동-------------------------------------------
-   // 리눅스_배송관리 클릭하기
-   // 'apexcharts-legend-text' 클래스를 가진 span 중 첫번쨰 '리눅스_배송관리'를 클릭합니다.
-   // 1. 차트 제목을 먼저 찾고, 그 차트를 감싸고 있는 전체 카드(.v-card) 영역으로 올라갑니다.
-    cy.contains('.v-card__title', '업무시스템별 개인정보 사용 현황').closest('.v-card') // 🌟 [핵심] 해당 차트의 전체 박스로 시야를 넓힘
-     .within(() => {
-    
-     // 2. 이제 이 블록 안에서는 '해당 차트 내부'만 검색합니다! (다른 차트 간섭 X)
-     cy.get('.apexcharts-legend-text').should('be.visible').first().click({ force: true });
-   });
-
-   cy.wait(500);
-   //팝업창의 본문 내용('상세 페이지로 이동하시겠습니까?')이 맞는지 검증
-   cy.contains('p.mb-0:visible', '상세 페이지로 이동하시겠습니까?').should('be.visible');
-   cy.wait(500); 
-   // 3. 화면에 보이는 '확인' 버튼을 찾아 강제 클릭!
-   cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
-   cy.wait(2000);
-   // 화면 현황- 업무시스템 별 상세 페이지 이동검증
-   cy.get('.tab-btn').contains('업무 시스템 별').closest('button').should('not.have.class', 'inactive');
-   // 제목 검증 후 뒤로 가기 실행
-   cy.contains('.c-headline:visible', '검색 조건').should('be.visible')
-   .then(() => {
-    // 이 블록은 위 검증이 완벽하게 성공했을 때만 실행됩니다!
-    cy.log('✅ 현황- 업무 시스템 별 상세 페이지 로딩 확인 완료! 목록으로 돌아갑니다.');
-    cy.wait(2000);
-    // 브라우저 뒤로가기 이동(Back 버튼)
-    cy.go('back');
-    cy.wait(2000);
-     });
-   //------------------------------------------------------------------------------------------------------
-
-   // 개인정보 사용자 TOP 10 클릭하여 상세페이지로 이동-------------------------------------------
-   // 1. 화면에 존재하는 모든 차트(ApexCharts 도화지)를 찾은 뒤,
-   // '두 번째(아래쪽)' 차트를 선택합니다. (0=위쪽 부서별 차트, 1=아래쪽 사용자 차트)
-   // 그중 두 번째 막대(0부터 시작하므로 인덱스 1 = '이노희' 님)를 강제 클릭합니다.
-   cy.get('.apexcharts-canvas').eq(3).find('path.apexcharts-bar-area').eq(0).click({ force: true });
-   cy.wait(500);
-   //팝업창의 본문 내용('상세 페이지로 이동하시겠습니까?')이 맞는지 검증
-   cy.contains('p.mb-0:visible', '상세 페이지로 이동하시겠습니까?').should('be.visible');
-   cy.wait(500); 
-   // 3. 화면에 보이는 '확인' 버튼을 찾아 강제 클릭!
-   cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
-   cy.wait(2000);
-   // 화면 현황- 업무시스템 별 상세 페이지 이동검증
-   cy.get('.tab-btn').contains('정보사용자 별').closest('button').should('not.have.class', 'inactive');
-   // 제목 검증 후 뒤로 가기 실행
-   cy.contains('.c-headline:visible', '검색 조건').should('be.visible')
-   .then(() => {
-    // 이 블록은 위 검증이 완벽하게 성공했을 때만 실행됩니다!
-    cy.log('✅ 현황- 정보사용자 별 상세 페이지 로딩 확인 완료! 목록으로 돌아갑니다.');
-    cy.wait(2000);
-    // 브라우저 뒤로가기 이동(Back 버튼)
-    cy.go('back');
-    cy.wait(2000);
-     });
-   //------------------------------------------------------------------------------------------------------
-  */
-
-   // 맨티스 이슈 : 37330
-   /* 
-   이상행위 유형별 현황 클릭하여 상세페이지로 이동안되는 문제 
-   // 이상행위 유형별 현황 클릭하여 상세페이지로 이동-------------------------------------------
-   // 'apexcharts-legend-text' 클래스를 가진 span 태그 중 해당 텍스트를 찾아 강제 클릭합니다.
-   cy.contains('span.apexcharts-legend-text', '접근제한 업무 시스템 접근').should('be.visible').click({ force: true });
-   cy.wait(500);
-   //팝업창의 본문 내용('상세 페이지로 이동하시겠습니까?')이 맞는지 검증
-   cy.contains('p.mb-0:visible', '상세 페이지로 이동하시겠습니까?').should('be.visible');
-   cy.wait(500); 
-   // 3. 화면에 보이는 '확인' 버튼을 찾아 강제 클릭!
-   cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
-   cy.wait(2000);
-   // 화면 현황- 업무시스템 별 상세 페이지 이동검증
-   cy.get('.tab-btn').contains('정보사용자 별').closest('button').should('not.have.class', 'inactive');
-   // 제목 검증 후 뒤로 가기 실행
-   cy.contains('.c-headline:visible', '검색 조건').should('be.visible')
-   .then(() => {
-    // 이 블록은 위 검증이 완벽하게 성공했을 때만 실행됩니다!
-    cy.log('✅ 현황- 정보사용자 별 상세 페이지 로딩 확인 완료! 목록으로 돌아갑니다.');
-    cy.wait(2000);
-    // 브라우저 뒤로가기 이동(Back 버튼)
-    cy.go('back');
-    cy.wait(2000);
-     });
-   //------------------------------------------------------------------------------------------------------
-   */
-
-
-   cy.log('✅ 점검 대시보드 출력 및 차트 타이틀 확인 완료 ');
 
     //자동갱신간격 조절하기 
    // ==========================================
@@ -634,6 +464,96 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 
    cy.log('✅ 5초 간격 실제 데이터 통신 검증 완료');
 
+
+   
+// ==========================================
+// 점검 대시보드 차트 → 팝업 검증 (신규 버전) 팝업창 뜨는 호출사항만 확인
+// ==========================================
+// stub을 한 번만 설정
+cy.window().then((win) => {
+  cy.stub(win, 'open').as('windowOpen');
+});
+
+const clickChartAndVerifyPopup = (logLabel, clickAction) => {
+  cy.log(`🔍 ${logLabel} 차트 클릭 검증`);
+
+  clickAction();
+  cy.wait(500);
+
+  cy.contains('p.mb-0:visible', '상세 페이지로 이동하시겠습니까?').should('be.visible');
+  cy.wait(500);
+  cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+  cy.wait(1000);
+
+  cy.get('@windowOpen').should('have.been.called');
+  cy.get('@windowOpen').then((stub) => {
+    const popupUrl = stub.args[stub.args.length - 1][0];
+    cy.log(`📎 팝업 URL: ${popupUrl}`);
+    stub.resetHistory();
+  });
+
+  cy.log(`✅ ${logLabel} 팝업 검증 완료`);
+  cy.wait(500);
+};
+
+// ==========================================
+// 1. 개인정보 유형별 현황 → [휴대전화번호] 클릭
+// ==========================================
+clickChartAndVerifyPopup('개인정보 유형별 현황', () => {
+  cy.contains('span.apexcharts-legend-text', '휴대전화번호')
+    .should('be.visible').click({ force: true });
+});
+
+// ==========================================
+// 2. 부서별 개인정보 사용 TOP 10
+// ==========================================
+clickChartAndVerifyPopup('부서별 개인정보 사용 TOP 10', () => {
+  cy.contains('.v-card__title', '부서별 개인정보 사용 TOP 10')
+    .closest('.v-card')
+    .within(() => {
+      cy.get('path.apexcharts-bar-area').first().click({ force: true });
+    });
+}, 'department');
+
+// ==========================================
+// 3. IP 주소별 개인정보 사용 TOP 10
+// ==========================================
+clickChartAndVerifyPopup('IP 주소별 개인정보 사용 TOP 10', () => {
+  cy.get('canvas[data-zr-dom-id="zr_0"]')
+    .filter(':visible').click('center', { force: true });
+}, 'privacy');
+
+// ==========================================
+// 4. 업무시스템별 개인정보 사용 현황
+// ==========================================
+clickChartAndVerifyPopup('업무시스템별 개인정보 사용 현황', () => {
+  cy.contains('.v-card__title', '업무시스템별 개인정보 사용 현황')
+    .closest('.v-card')
+    .within(() => {
+      cy.get('.apexcharts-legend-text').first().click({ force: true });
+    });
+}, 'status');
+
+// ==========================================
+// 5. 개인정보 사용자 TOP 10
+// ==========================================
+clickChartAndVerifyPopup('개인정보 사용자 TOP 10', () => {
+  cy.get('.apexcharts-canvas').eq(3)
+    .find('path.apexcharts-bar-area').eq(0).click({ force: true });
+}, 'privacy');
+
+// ==========================================
+// 6. 이상행위 유형별 현황
+// ==========================================
+clickChartAndVerifyPopup('이상행위 유형별 현황', () => {
+  cy.contains('.v-card__title', '이상행위 유형별 현황')
+    .closest('.v-card')
+    .within(() => {
+      cy.get('span.apexcharts-legend-text').first().click({ force: true });
+    });
+}, 'anomaly');
+
+cy.log('🎉 점검 대시보드 모든 차트 팝업 검증 완료!');
   
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
