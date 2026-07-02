@@ -233,14 +233,17 @@ describe('로그캐치 사이트 테스트', () => {
       cy.log('✅ 소명 - 나의 소명 - [승인하기]탭 진입 및 데이터 출력 확인 완료!');
 
 
-      // 소명 > 결재 서브메뉴 클릭
-      cy.contains('.side-menu', '소명').should('be.visible').click({ force: true });
-      cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-      cy.log('--- 소명 > 결재 서브메뉴 클릭 ---');
-      cy.get('.v-list__tile__title').filter(':contains("결재")').filter(':visible').click({ force: true });
-      cy.wait(3000);
-      // 소명 > 결재 > 결재라인 탭 클릭
-      cy.get('.v-btn__content').filter(':visible').contains('결재 라인').click();
+      // 3.0.5.1191_r35135 버전에서 변경
+      // ==========================================
+      // STEP : 결재 서브메뉴 - 정책
+      // ==========================================
+      cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', '결재').click({ force: true });
+      cy.wait(1000);
+
+      // 서브메뉴 정책 클릭
+      cy.get('div[role="listitem"]').filter(':visible').contains('.v-list__tile__title', '정책').click({ force: true });
+      cy.wait(2000);
+      
       cy.log('--- 화면 검증 시작 ---');
       cy.contains('.c-headline', '결재 정책 목록').should('exist');
       //토글 문구 확인인

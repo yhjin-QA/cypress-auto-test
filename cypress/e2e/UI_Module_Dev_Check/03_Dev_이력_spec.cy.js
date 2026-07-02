@@ -294,7 +294,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('접속 메뉴/행위').should('be.visible'); 
     cy.get('th').filter(':visible').contains('검출 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible'); 
-    cy.get('th').filter(':visible').contains('검출 건수').should('be.visible'); 
+    //cy.get('th').filter(':visible').contains('검출 건수').should('be.visible');
+    //3.0.5.1191_r35135  가로스크롤 영향으로 존재로 확인 
+    cy.get('th').contains('검출 건수').should('exist');  
     cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
 
 
