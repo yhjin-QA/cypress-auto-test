@@ -7,10 +7,10 @@ env:
   TZ: Asia/Seoul
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '45 2 * * 1-5'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '45 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -417,9 +417,9 @@ jobs:
            return $m.Value
           })
                $html | Set-Content $htmlPath -Encoding UTF8 -NoNewline
-           Write-Host "✅ 스크린샷 base64 임베딩 완료 - 이메일 첨부 시에도 이미지 표시됩니다"
+           Write-Host "Screenshot base64 embedding complete."
            } else {
-                 Write-Host "⚠️ HTML 파일을 찾을 수 없습니다: $htmlPath"
+                 Write-Host "HTML file not found: $htmlPath"
             }
 
       - name: Send Google Chat (Basic)

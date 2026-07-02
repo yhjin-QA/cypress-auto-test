@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        containers: [1] # 5병렬 runner 추가
+        containers: [1,2,3,4,5] # 5병렬 runner 추가
 
     defaults:
       run:
@@ -141,8 +141,6 @@ jobs:
           
           $dummyContent | Out-File -FilePath "$dir/dummy.json" -Encoding UTF8
          
-          
-          
 
       - name: Cypress Run
         id: cypress
@@ -168,8 +166,6 @@ jobs:
           # 👇 [필수] 'mochawesome'을 명시적으로 설치해야 합니다.
           npm install cy2 mochawesome mochawesome-merge mochawesome-report-generator --save-dev
         
-
-          # cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Full_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI --reporter mochawesome --reporter-options `"reportDir=cypress/reports/json_logs,overwrite=false,html=false,json=true`" 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Full_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           Get-Content cypress.log
 
@@ -327,9 +323,9 @@ jobs:
            return $m.Value
           })
                $html | Set-Content $htmlPath -Encoding UTF8 -NoNewline
-           Write-Host "✅ 스크린샷 base64 임베딩 완료 - 이메일 첨부 시에도 이미지 표시됩니다"
+           Write-Host "✅ Screenshot base64 embedding complete."
            } else {
-                 Write-Host "⚠️ HTML 파일을 찾을 수 없습니다: $htmlPath"
+                 Write-Host "⚠️ HTML file not found: $htmlPath"
             }
 
 
