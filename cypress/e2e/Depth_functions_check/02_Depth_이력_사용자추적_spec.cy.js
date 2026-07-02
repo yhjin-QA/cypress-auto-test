@@ -163,7 +163,7 @@ describe('로그캐치 사이트 테스트', () => {
      //시작기간 지정후 검색
     //달력표를 펼침  월/일 지정  
     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
@@ -186,11 +186,11 @@ describe('로그캐치 사이트 테스트', () => {
   
     // 업무시스템 클릭하여 리스트 열기
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 리스트에서 '리눅스_배송관리'가 나타날 때까지 기다리고 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_배송관리', { timeout: 10000 }).should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
@@ -210,15 +210,15 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 선택한 업무시스템 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 업무시스템 클릭하여 리스트 열기
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
      // 리스트에서 '윈도우_배송관리'가 나타날 때까지 기다리고 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '윈도우_배송관리', { timeout: 10000 }).should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
@@ -238,7 +238,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 선택한 업무시스템 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
 
     // ==========================================
@@ -246,11 +246,11 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // //부서/소속 클릭하여 전체 선택 
     // cy.get('.material-icons').filter(':visible').contains('settings').click({ force: true });
-    // cy.wait(500);
+    // cy.wait(1000);
     // cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').closest('.v-list__tile').click({ force: true });
     // // 화면 본문(body)에 ESC 키 전송 (팝업창 닫는 동작 )
     // cy.get('body').type('{esc}');
-    // cy.wait(500);
+    // cy.wait(1000);
     // cy.log('✅ 팝업 닫기 성공');
     
 
@@ -258,11 +258,11 @@ describe('로그캐치 사이트 테스트', () => {
     // 부서 : 총무팀 -------------------------------------------------------------------------------------------
     // 부서/소속 클릭하여 리스트 열기
     cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 리스트에서 '총무팀'가 나타날 때까지 기다리고 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '총무팀', { timeout: 10000 }).should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
@@ -283,15 +283,15 @@ describe('로그캐치 사이트 테스트', () => {
     // 2번째부터는 선택 초기화 필요 
     // 선택한 부서/소속 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="부서/소속"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 부서/소속 클릭하여 리스트 열기
     cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 리스트에서 '인사팀'가 나타날 때까지 기다리고 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '인사팀', { timeout: 10000 }).should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
@@ -313,15 +313,15 @@ describe('로그캐치 사이트 테스트', () => {
     // 2번째부터는 선택 초기화 필요 
     // 선택한 부서/소속 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="부서/소속"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 부서/소속 클릭하여 리스트 열기
     cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 리스트에서 '영업팀'가 나타날 때까지 기다리고 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '영업팀', { timeout: 10000 }).should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
@@ -342,15 +342,15 @@ describe('로그캐치 사이트 테스트', () => {
     // 2번째부터는 선택 초기화 필요 
     // 선택한 부서/소속 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="부서/소속"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 부서/소속 클릭하여 리스트 열기
     cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 리스트에서 '기술지원팀'가 나타날 때까지 기다리고 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '기술지원팀', { timeout: 10000 }).should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
@@ -369,14 +369,14 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 선택한 부서/소속 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="부서/소속"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // ==========================================
     // 정보 사용자 조회 - 조회 사용자 : 테스터(tester)
     // ==========================================
     // 정보 사용자 클릭하여 리스트 열기
     cy.get('input[aria-label="정보 사용자"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // '테스터'라고 직접 타이핑 (필터링 유도)
     cy.get('input[aria-label="정보 사용자"]').filter(':visible').type('테스터');
@@ -384,7 +384,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 필터링되어 나타난 항목 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '테스터 (tester)').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 3. 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
@@ -402,14 +402,14 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 선택한 정보 사용자 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="정보 사용자"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // ==========================================
     // 사용자 계정 조회 - 조회사용자 : hojun
     // ==========================================
     // 사용자 계정에 hojun 입력하기 
     cy.get('input[aria-label="사용자 계정"]').filter(':visible').clear().type('hojun');
-    cy.wait(500);
+    cy.wait(1000);
 
      //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -425,14 +425,14 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 입력한 사용자 계정 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="사용자 계정"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // ==========================================
     // 사용자 IP 조회 - 조회 IP : 10.10.54.5
     // ==========================================
     // 사용자 IP에 10.10.54.5 입력 
     cy.get('input[aria-label="사용자 IP"]').filter(':visible').clear().type('10.10.54.5');
-    cy.wait(500);
+    cy.wait(1000);
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -450,14 +450,14 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 입력한 사용자 계정 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="사용자 IP"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // ==========================================
     // URI 주소 조회 - /cop/logcatch/btnExcessCheck.do
     // ==========================================
     // URI 주소에 /cop/logcatch/btnExcessCheck.do 입력 
     cy.get('input[aria-label="URI 주소"]').filter(':visible').clear().type('/cop/logcatch/btnExcessCheck.do');
-    cy.wait(500);
+    cy.wait(1000);
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -475,7 +475,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 입력한 URI 주소 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="URI 주소"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // ==========================================
     // 행위 유형 조회  
@@ -483,11 +483,11 @@ describe('로그캐치 사이트 테스트', () => {
     // 조회 -------------------------------------------------------------------------------------------
     // 행위 유형 클릭하여 리스트 열기
     cy.get('input[aria-label="행위 유형"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 리스트에서 '조회'가 나타날 때까지 기다리고 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '조회', { timeout: 10000 }).should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
@@ -508,15 +508,15 @@ describe('로그캐치 사이트 테스트', () => {
     // 2번째부터는 선택 초기화 필요 
     // 선택한 행위 유형 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 부서/소속 클릭하여 리스트 열기
     cy.get('input[aria-label="행위 유형"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 리스트에서 '수정'가 나타날 때까지 기다리고 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '수정', { timeout: 10000 }).should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
@@ -531,7 +531,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 입력한 행위 유형 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // ==========================================
     // 개인정보 유형 조회 
@@ -540,11 +540,11 @@ describe('로그캐치 사이트 테스트', () => {
     
     //개인정보유형 전체선택  클릭하여 유형 선택하는 코드
     cy.get('input[aria-label="개인정보 유형"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
     // 개인정보유형 리스트중 주민등록번호 선택
     cy.get('.v-list__tile__title').contains('주민등록번호').scrollIntoView().should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -565,11 +565,11 @@ describe('로그캐치 사이트 테스트', () => {
      
     //개인정보유형 전체선택  클릭하여 유형 선택하는 코드 
     cy.get('input[aria-label="개인정보 유형"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
     // 개인정보유형 리스트중 외국인등록번호 선택
     cy.get('.v-list__tile__title').contains('외국인등록번호').scrollIntoView().should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -584,19 +584,19 @@ describe('로그캐치 사이트 테스트', () => {
      
     //개인정보유형 전체선택  클릭하여 유형 선택하는 코드 
     cy.get('input[aria-label="개인정보 유형"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
     // 개인정보유형 리스트중 휴대전화번호 선택
     cy.get('.v-list__tile__title').contains('휴대전화번호').scrollIntoView().should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     //휴대번호 입력 수행
     cy.get('input[aria-label="010"]').filter(':visible').clear().type('010').blur();
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('input[aria-label="중간 번호 숫자 4개"]').filter(':visible').clear().type('4197').blur();
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('input[aria-label="끝 번호 숫자 4개"]').filter(':visible').clear().type('7524').blur();
-    cy.wait(500);
+    cy.wait(1000);
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -614,23 +614,23 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // 사용자 계정에 hojun 입력하기 
     cy.get('input[aria-label="사용자 계정"]').filter(':visible').clear().type('hojun');
-    cy.wait(500);
+    cy.wait(1000);
     
     ////개인정보유형 전체선택  클릭하여 유형 선택하는 코드 
     cy.get('input[aria-label="개인정보 유형"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
     // 개인정보유형 리스트 초기화
     cy.get('.v-list__tile__title').contains('전체 선택').scrollIntoView().should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
      //사용자 상태 클릭
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 사용자 상태 리스트중 - 등록  선택----------------------------------------------------------
      cy.get('.v-list__tile__title').contains('등록').should('be.visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      //검색버튼 클릭
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -644,13 +644,13 @@ describe('로그캐치 사이트 테스트', () => {
      // 사용자 상태 - 미등록  선택----------------------------------------------- 
      // 입력한 사용자 계정 x버튼 클릭하여 초기화 
      cy.get('input[aria-label="사용자 계정"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      cy.get('.v-list__tile__title').contains('미등록').should('be.visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      cy.get('body').type('{esc}');
 
      //검색버튼 클릭
@@ -692,10 +692,10 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
 
     // 사용자 상태 - 전체 선택----------------------------------------------- 
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      cy.get('.v-list__tile__title').contains('전체').should('be.visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      //검색버튼 클릭
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -728,78 +728,77 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     // ==========================================
     // 복합 조회 - 모든 검색필드 조건 다 넣고 조회
     // ==========================================
-    // 업무시스템 - 리눅스_배송관리
     // 업무시스템 클릭하여 리스트 열기
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
-    // 리스트에서 '리눅스_배송관리'가 나타날 때까지 기다리고 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_배송관리', { timeout: 10000 }).should('be.visible').click({ force: true });
-    cy.wait(500);
+    // 리스트에서 '리눅스_VIP고객'가 나타날 때까지 기다리고 클릭
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_VIP고객', { timeout: 10000 }).should('be.visible').click({ force: true });
+    cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
     // 부서/소속 - 총무팀
     // 부서/소속 클릭하여 리스트 열기
     cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 리스트에서 '총무팀'가 나타날 때까지 기다리고 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '총무팀', { timeout: 10000 }).should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '서비스기획팀', { timeout: 10000 }).scrollIntoView().should('be.visible').click({ force: true });
+    cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
     // 정보 사용자 클릭하여 리스트 열기
     cy.get('input[aria-label="정보 사용자"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
-    // '호준'라고 직접 타이핑 (필터링 유도)
-    cy.get('input[aria-label="정보 사용자"]').filter(':visible').type('윤호');
-    cy.wait(800); // 필터링된 결과가 나타날 때까지 대기
+    cy.get('input[aria-label="정보 사용자"]').filter(':visible').type('사원_5');
+    cy.wait(1000); // 필터링된 결과가 나타날 때까지 대기
 
     // 필터링되어 나타난 항목 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '진윤호 (yunho)').should('be.visible').click({ force: true });
-    cy.wait(500);
+    // 필터링되어 나타난 항목 클릭 (괄호 안 내용 무관하게 '사원_5'로 시작하는 항목 클릭)
+    cy.contains('.v-list__tile__title', /^사원_5/).should('be.visible').click({ force: true });
+    cy.wait(1000);
     // 3. 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
 
     // 사용자 계정 입력하기 
-    cy.get('input[aria-label="사용자 계정"]').filter(':visible').clear().type('yunho');
-    cy.wait(500);
+    cy.get('input[aria-label="사용자 계정"]').filter(':visible').clear().type('user005');
+    cy.wait(1000);
 
     // 사용자 IP에 10.10.54.5 입력 
     cy.get('input[aria-label="사용자 IP"]').filter(':visible').clear().type('10.10.54.5');
-    cy.wait(500);
+    cy.wait(1000);
 
     // URI 주소에 /cop/logcatch/btnExcessCheck.do 입력 
-    cy.get('input[aria-label="URI 주소"]').filter(':visible').clear().type('/cop/logcatch/btnExcessCheck.do');
-    cy.wait(500);
+    cy.get('input[aria-label="URI 주소"]').filter(':visible').clear().type('/crm/soc_matrix.jsp');
+    cy.wait(1000);
 
     // 행위 유형 클릭하여 리스트 열기
     cy.get('input[aria-label="행위 유형"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 리스트에서 '조회'가 나타날 때까지 기다리고 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '조회', { timeout: 10000 }).should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
     //개인정보유형 전체선택  클릭하여 유형 선택하는 코드 
     cy.get('input[aria-label="개인정보 유형"]').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
     // 개인정보유형 리스트중 전체 선택
     cy.get('.v-list__tile__title').contains('전체 선택').scrollIntoView().should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
  
     //사용자 상태 클릭 
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 사용자 상태 리스트중 - 등록  선택
      cy.get('.v-list__tile__title').contains('등록').should('be.visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -808,22 +807,25 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     //// [검증] 검색 결과 검증
     // 첫 번째 행 정밀 검증
     // 1. 데이터 로딩 대기 (가장 핵심적인 키워드로 대기)
-    cy.get('tbody tr', { timeout: 10000 }).contains('리눅스_배송관리').should('be.visible');
+    cy.get('tbody tr', { timeout: 10000 }).contains('리눅스_VIP고객').should('be.visible');
 
 
     // 첫 번째 행 내부의 모든 항목 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {    
     // [업무시스템] - a 태그
-    cy.get('a').contains('리눅스_배송관리').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('리눅스_VIP고객').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
 
     // [부서/소속] - a 태그 + ellipsis 클래스
-    cy.get('a.ellipsis').contains('총무팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a.ellipsis').contains('서비스기획팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
 
     // [정보 사용자] - a 태그 + ellipsis 클래스
-    cy.get('a.ellipsis').contains('진윤호(yunho)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a.ellipsis').contains('사원_5(user005)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
 
     // [접속 IP 주소] - span 태그 (성공하셨던 패턴!)
     cy.get('span.ellipsis').contains('10.10.54.5').should('be.visible');
+
+    // 접속메뉴 
+    cy.contains('a', 'VIP_대량 조회 훈련').should('be.visible');
 
     // [행위 유형] - a 태그 (조회 버튼 등)
     cy.get('a').contains('조회').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
@@ -842,7 +844,7 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
  
     // 엑셀 다운로드 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     
     // 마스킹해제 유무 확인 팝업창이 뜨면 '저장' 버튼 클릭
@@ -850,7 +852,7 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     cy.get('.v-dialog--active').should('be.visible').within(() => {
       cy.contains('저장').click({ force: true });
     });
-    cy.wait(500);
+    cy.wait(1000);
 
     //맨티스 이슈: 팝업창 저장버튼 누르고 사라지지않는 이슈 (0037927)
     
