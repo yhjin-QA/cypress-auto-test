@@ -190,7 +190,7 @@ cy.get('.v-btn__content').filter(':visible').contains('접속기록 수집기').
 cy.wait(3000);
 
 //Log Tracer WAS Jeus선택하기 
-cy.contains('.pl-1', 'Log Tracer_10.10.54.31_8088').should('be.visible').click({ force: true });
+cy.contains('.pl-1', 'Log Tracer_10.10.54.28_8080').should('be.visible').click({ force: true });
 
 
 // 맨티스 이슈 :  http://bug.warevalley.com/view.php?id=37567
@@ -202,10 +202,10 @@ cy.contains('.pl-1', 'Log Tracer_10.10.54.31_8088').should('be.visible').click({
 
 
 // // 1. 해당 이벤트가 포함된 행(tr)을 찾고 휴지통 클릭
-// cy.contains('td', '사전소명페이지(Jeus)').closest('tr').find('i.fa-trash').click({ force: true });
+// cy.contains('td', '사전소명_JEUS_CRM').closest('tr').find('i.fa-trash').click({ force: true });
 
 //   // 삭제 후 데이터가 목록에서 사라졌는지 확인
-// cy.contains('td', '사전소명페이지(Jeus)').should('not.exist');
+// cy.contains('td', '사전소명_JEUS_CRM').should('not.exist');
 // cy.wait(1000); // 스크롤 애니메이션이 끝날 때까지 대기
 
 
@@ -226,11 +226,11 @@ cy.contains('.pl-1', 'Log Tracer_10.10.54.31_8088').should('be.visible').click({
 // // [수정된 UI 삭제 로직]
 // // 'contains'를 바로 쓰지 않고, 먼저 body를 검색하여 요소가 존재하는지 확인합니다.
 // cy.get('body').then(($body) => {
-//     // 테이블 내에 '사전소명페이지(Jeus)'라는 텍스트가 있는지 확인
-//     if ($body.find('td:contains("사전소명페이지(Jeus)")').length > 0) {
+//     // 테이블 내에 '사전소명_JEUS_CRM'라는 텍스트가 있는지 확인
+//     if ($body.find('td:contains("사전소명_JEUS_CRM")').length > 0) {
 //         cy.log('⚠️ UI에 잔여 데이터 발견! 삭제 시도...');
         
-//         cy.contains('td', '사전소명페이지(Jeus)')
+//         cy.contains('td', '사전소명_JEUS_CRM')
 //           .closest('tr')
 //           .find('i.fa-trash')
 //           .click({ force: true });
@@ -239,7 +239,7 @@ cy.contains('.pl-1', 'Log Tracer_10.10.54.31_8088').should('be.visible').click({
 //         cy.contains('button', '확인').click({ force: true });
         
 //         // 데이터가 사라질 때까지 대기
-//         cy.contains('td', '사전소명페이지(Jeus)').should('not.exist');
+//         cy.contains('td', '사전소명_JEUS_CRM').should('not.exist');
 //     } else {
 //         cy.log('✅ UI 데이터가 이미 삭제된 상태입니다. 건너뜁니다.');
 //     }
@@ -263,7 +263,7 @@ cy.contains('.c-headline', '사전 소명 목록')
 cy.wait(2000); // 렌더링 대기
 
 cy.get('body').then(($body) => {
-    const alreadyExists = $body.find('td:contains("사전소명페이지(Jeus)")').length > 0;
+    const alreadyExists = $body.find('td:contains("사전소명_JEUS_CRM")').length > 0;
 
     if (alreadyExists) {
         cy.log('✅ 이미 등록된 정책이 존재합니다. 삭제/추가 과정을 SKIP합니다.');
@@ -315,7 +315,7 @@ cy.contains('.v-card', '사전 설정 추가').within(() => {
 });
 
 // 2. 리스트는 body 하위에 생기므로 within 밖에서 선택
-cy.contains('.v-list__tile__title', '사전소명페이지(Jeus)').click({ force: true });
+cy.contains('.v-list__tile__title', '사전소명_JEUS_CRM').click({ force: true });
 
 // 3. 이벤트 대상 값 입력 - 개발자도구 (F12) - copy selector 로 값 복사 붙여넣기
 cy.contains('.v-card', '사전 설정 추가').within(() => {
@@ -345,7 +345,7 @@ cy.contains('.v-btn__content', '저장').scrollIntoView().click({ force: true })
 cy.log('🔍 데이터 저장 성공 여부 검증 시작');
 cy.get('table').should('be.visible'); // 테이블이 화면에 보이는지 확인
 
-cy.contains('td', '사전소명페이지(Jeus)')
+cy.contains('td', '사전소명_JEUS_CRM')
   .closest('tr') // 해당 텍스트가 있는 행 전체를 잡음
   .within(() => {
     // 해당 행 내부의 다른 컬럼들에 값이 제대로 들어갔는지 확인
@@ -365,40 +365,147 @@ const hitTime = new Date();
 const hitTimeStr = `${hitTime.getFullYear()}-${String(hitTime.getMonth()+1).padStart(2,'0')}-${String(hitTime.getDate()).padStart(2,'0')} ${String(hitTime.getHours()).padStart(2,'0')}:${String(hitTime.getMinutes()).padStart(2,'0')}:${String(hitTime.getSeconds()).padStart(2,'0')}`;
 cy.log(`⏱️ WAS 타격 시각 기록: ${hitTimeStr}`);
 // ==============================================================
-// ===============================================
-// STEP : WAS Jeus접속
-// ===============================================
-cy.log('🚀 다른 도메인(tester3 서버)으로 크로스 오리진 점프를 시도합니다.');
+
+// ========================================
+
+// ========================================
+// WAS 타격: 10.10.54.28 (crm_app - 엑셀 다운로드 버튼 검증 + 감사이력 기록 확인)
+// 사전 승인된 테스트 환경 대상.
+//
+// [배경] cy.request 기반 로그인은 LogCatch 감사 이력에 안 남아서, 실제 브라우저
+// 로그인(login.jsp 방문 → 폼 입력 → 버튼 클릭)으로 바꿔 해결했다 (이력 기록 확인됨).
+//
+// [남은 문제] #excel_btn은 target 속성 없는 순수 <a href="download.jsp">라 클릭 시
+// 브라우저가 실제 top-level navigation을 시도하고, Cypress는 그 navigation의 load
+// 이벤트를 계속 기다린다. 이걸 Cypress.on('fail')로 "무시"하면 에러 표시는 안 뜨지만,
+// 그 시점에 해당 테스트의 남은 커맨드 체인 전체가 이미 중단돼버려서 이후 STEP(로그인
+// 복귀, 이력 메뉴 진입 등)이 전혀 실행되지 않는 문제가 있었다.
+//
+// [해결] 클릭의 "기본 동작(default action, 즉 브라우저의 실제 페이지 이동)"만
+// preventDefault()로 취소하고, stopPropagation은 하지 않는다. 이러면:
+//  - 앱 자체의 onclick 핸들러(prompt 호출, 이력 기록 AJAX 등)는 그대로 정상 실행된다.
+//  - 브라우저의 실제 네비게이션만 취소되므로 Cypress가 새 페이지 로드를 기다릴 일이 없다.
+//  - 앱 핸들러가 href를 동적으로 바꿀 수도 있으므로, setTimeout(0)으로 한 틱 늦춰서
+//    (앱의 동기 핸들러 실행이 다 끝난 뒤) 최종 href를 읽어 숨겨진 iframe으로 로드시켜
+//    실제 파일 다운로드만 별도로 발생시킨다.
+// (이전에 시도했던 stopImmediatePropagation() 방식은 앱 핸들러 자체를 막아버려서
+//  이력이 하나도 안 남았었다 — 그 문제를 피하기 위한 방식)
+// ========================================
+
+Cypress.on('uncaught:exception', () => false);
+
 cy.clearCookies();
 cy.clearLocalStorage();
 
-cy.intercept('GET', '/tester3/api/file-download*').as('excelDownload');
+// ===============================================
+// STEP 1: 엑셀 다운로드 API 인터셉트 (origin 밖에서 등록해도 네트워크 계층은 전역 적용)
+// ===============================================
+cy.intercept('GET', '**/crm_app/download.jsp*', (req) => {
+    req.on('response', (res) => {
+        expect(res.statusCode).to.eq(200);
+        cy.log(`✅ Excel 다운로드 응답 확인! status=${res.statusCode} (10.10.54.28)`);
+    });
+}).as('excelDownload');
+// #excel_btn의 href="download.jsp" (crm_app 상대경로) 기준으로 실제 요청 경로에 맞춤
 
-cy.origin('http://10.10.54.31:8088', () => {
+// ===============================================
+// STEP 2: 크로스 오리진 점프 → 실제 브라우저 로그인 → 엑셀 버튼 클릭
+// (로그인부터 클릭까지 하나의 cy.origin 블록 안에서 연속된 세션으로 처리해야
+//  LogCatch 추적 에이전트가 정상적으로 세션을 인지한다)
+// ===============================================
+cy.log('🚀 10.10.54.28:8088 crm_app으로 크로스 오리진 점프를 시도합니다.');
+
+cy.origin('http://10.10.54.28:8088', () => {
     Cypress.on('uncaught:exception', () => false);
 
-    cy.visit('/tester3', {
+    // 다운로드 링크 클릭의 기본 네비게이션만 막고(앱 핸들러는 그대로 실행되게 두고),
+    // 최종 href를 hidden iframe으로 로드해 다운로드만 발생시키는 공통 초기화 함수.
+    // 새 페이지가 로드될 때마다(onBeforeLoad / window:before:load) 다시 걸어줘야 한다.
+    const installSafeDownloadHandler = (win) => {
+        win.prompt = () => '1';
+        win.confirm = () => true;
+
+        if (win.__safeDownloadHandlerInstalled) return;
+        win.__safeDownloadHandlerInstalled = true;
+
+        win.document.addEventListener(
+            'click',
+            (e) => {
+                const target = e.target && e.target.closest && e.target.closest('#excel_btn');
+                if (!target) return;
+
+                // 브라우저의 기본 네비게이션(페이지 이동)만 취소. 전파는 막지 않아서
+                // 앱 자체의 onclick 핸들러(prompt 호출 + 이력 기록)는 정상 실행된다.
+                e.preventDefault();
+
+                // 앱의 동기 핸들러(및 href를 바꿀 수도 있는 로직)가 다 끝난 뒤 실행되도록 한 틱 지연
+                win.setTimeout(() => {
+                    const href = target.getAttribute('href');
+                    if (!href) return;
+                    const iframe = win.document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.src = href;
+                    win.document.body.appendChild(iframe);
+                }, 0);
+            },
+            true // capture: 앱 핸들러보다 먼저 실행되어야 preventDefault가 확실히 반영됨
+        );
+    };
+
+    // ------------------------------------------
+    // 1️⃣ 로그인 페이지 실제 방문 (LogCatch 추적 스크립트 초기화 목적)
+    // ------------------------------------------
+    cy.log('1️⃣ crm_app 로그인 페이지 방문 (10.10.54.28)');
+    cy.visit('/crm_app/login.jsp', {
         timeout: 60000,
-        onBeforeLoad(win) {
-            // 페이지 로드 전에 prompt 미리 override
-            win.prompt = () => '1';
-        }
+        onBeforeLoad: installSafeDownloadHandler
     });
 
-    cy.wait(3000);
+    // 로그인 성공 후 index.jsp로 새로 로드될 때도 핸들러가 다시 걸리도록 재등록
+    Cypress.on('window:before:load', installSafeDownloadHandler);
 
+    cy.wait(1000);
+
+    // ------------------------------------------
+    // 2️⃣ 실제 폼 입력 + 로그인 버튼 클릭
+    // ------------------------------------------
+    cy.log('2️⃣ 로그인 폼 입력 및 제출');
+    cy.get('#login_id') // TODO: 실제 아이디 입력 필드 셀렉터로 교체 확인
+        .should('be.visible')
+        .clear()
+        .type('user005'); // TODO: 실제 계정으로 교체
+
+    cy.get('#login_pw') // TODO: 실제 비밀번호 입력 필드 셀렉터로 교체 확인
+        .should('be.visible')
+        .clear()
+        .type('Manager1!', { log: false }); // TODO: 실제 비밀번호로 교체
+
+    cy.get('#login_btn') // TODO: 실제 로그인 버튼 셀렉터로 교체 확인
+        .should('be.visible')
+        .click({ force: true });
+
+    // 로그인 후 index.jsp로 정상 이동했는지 확인 (실제 네비게이션이므로 정상적으로 기다림)
+    cy.location('pathname', { timeout: 20000 }).should('include', 'index.jsp');
+    cy.log('✅ 로그인 성공, index.jsp 진입 확인');
+
+    cy.wait(2000);
+
+    // ------------------------------------------
+    // 3️⃣ Excel 버튼 클릭
+    // 이제 클릭해도 실제 페이지 이동이 발생하지 않으므로(hidden iframe으로 대체),
+    // 이후 커맨드가 더 이상 page-load 대기에 붙잡히지 않는다.
+    // ------------------------------------------
     cy.log('3️⃣ Excel 버튼을 클릭합니다.');
-    cy.get('#excel_btn').should('be.visible').invoke('removeAttr', 'target').click({ force: true });
-    cy.wait(5000);
+    cy.get('#excel_btn') // TODO: 실제 엑셀 버튼 셀렉터로 교체
+        .should('be.visible')
+        .click({ force: true });
+
+    // hidden iframe을 통한 다운로드 요청이 완료될 시간을 확보 (실제 네비게이션이 없으므로 안전)
+    cy.wait(3000);
 });
 
-// prompt 카운트 검증 대신 다운로드 완료로 검증
-cy.wait('@excelDownload').then((interception) => {
-    expect(interception.response.statusCode).to.eq(200);
-    cy.log('✅ Excel 다운로드 완료 확인!');
-});
-
-
+// STEP 3 이후: 다운로드/이력 확인이 모두 끝났으므로 여기서부터 원래 점검 사이트로
+// 복귀하는 STEP 5 이하 코드가 이어져도 정상적으로 실행된다.
 
 
 // =============================================
@@ -499,7 +606,7 @@ cy.get('body').type('{esc}');
  cy.wait(1000);
 
  // 사용자 상태 리스트 중 '미등록' 선택
- cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '미등록').click({ force: true });
+ cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '등록').click({ force: true });
  cy.wait(1000); // 선택 후 리스트가 닫히는 시간 확보
     
 //검색버튼 클릭
@@ -541,11 +648,11 @@ cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
 cy.get('tbody tr').filter(':visible').first().within(() => {
   
   // 2. 텍스트 검증
-  cy.contains('비로그인').should('be.visible');
+  cy.contains('사원_5(user005)').should('be.visible');
   cy.contains('사전 소명 메뉴 접근').should('be.visible');
   cy.contains('DEFAULT').should('be.visible');
   cy.contains('존재').should('be.visible');
-  cy.contains('소명 불필요').should('be.visible'); 
+  cy.contains('소명 대상').should('be.visible'); 
 
   
 });

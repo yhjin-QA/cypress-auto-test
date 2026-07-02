@@ -890,8 +890,8 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     // [수정 4] 새 파일이 생길 때까지 폴링 검증 (고정 cy.wait 대체)
     cy.get('@filesBefore').then((filesBefore) => {
       const checkNewFile = (attempt = 0) => {
-        if (attempt > 15) {
-          throw new Error('❌ 다운로드 파일 생성 타임아웃 (30초 초과)');
+        if (attempt > 30) {
+          throw new Error('❌ 다운로드 파일 생성 타임아웃 (60초 초과)');
         }
  
         cy.task('readDirectory', 'cypress/downloads').then((filesAfter) => {

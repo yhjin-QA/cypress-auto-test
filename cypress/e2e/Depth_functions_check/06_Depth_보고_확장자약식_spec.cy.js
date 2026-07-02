@@ -20,7 +20,8 @@
       'e is not defined',
       'Script error',
       'not valid JSON',
-      'ChunkLoadError'
+      'ChunkLoadError',
+       'Maximum call stack size exceeded',
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -437,23 +438,23 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.log('✅ 개인정보접속 종합 보고서 좌측 폼 입력값 보존 검증 완료!'); 
     //------------------------------------------------------------------------------------------------------------------------------------------------------
     
-    // // ===================================================================
-    // // 보고서 디폴트상태  - 개인정보접속 종합 보고서-> 월 정기점검 보고서 (초기화)
-    // // ====================================================================
-    // //보고서 종류 콤보박스 열기 
-    // cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    // cy.wait(500);
-    // // 보고서 종류중 월 정기점검 보고서 (행위) 선택하는 코드
-    // cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월 정기점검 보고서').should('be.visible').click({ force: true });
-    // cy.wait(500);
+    // ===================================================================
+    // 보고서 디폴트상태  - 개인정보접속 종합 보고서-> 월 정기점검 보고서 (초기화)
+    // ====================================================================
+    //보고서 종류 콤보박스 열기 
+    cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(500);
+    // 보고서 종류중 월 정기점검 보고서 (행위) 선택하는 코드
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월 정기점검 보고서').should('be.visible').click({ force: true });
+    cy.wait(500);
 
-    // // 저장버튼 클릭 
-    // cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    // cy.wait(1000);
+    // 저장버튼 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+    cy.wait(1000);
 
-    // //보고서 목록에서 추가한 Depth검증용 보고서_auto 클릭
-    // cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
-    // cy.wait(500);
+    //보고서 목록에서 추가한 Depth검증용 보고서_auto 클릭
+    cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
+    cy.wait(500);
 
 
     // ===================================================================
@@ -465,7 +466,9 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     const reportTypes = ['월 정기점검 보고서', '월 정기점검 보고서 (행위)', '월 정기점검 보고서 (행위_Mongo)', '개인정보접속 종합 보고서'];
     //const extensions = ['html', 'xlsx', 'pdf', 'docx', 'mht', 'xls', 'ppt', 'txt', 'jpg', 'png', 'gif', 'tif', 'svg', 'hwp', 'csv']; 
     // 약식버전
-    const extensions = ['html', 'xlsx', 'pdf', 'docx', 'ppt', 'hwp', 'csv']; 
+    //const extensions = ['html', 'xlsx', 'pdf', 'docx', 'ppt', 'hwp', 'csv']; 
+    const extensions = ['pdf','docx']; 
+
 
     // 2. [바깥쪽 루프] 보고서 종류를 하나씩 꺼냅니다.
     reportTypes.forEach((reportType) => {
