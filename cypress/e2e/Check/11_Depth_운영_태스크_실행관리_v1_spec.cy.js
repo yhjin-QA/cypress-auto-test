@@ -174,10 +174,9 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
   //   cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
   //   cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
 
-    
-// =============================================
+// =============================================================
 // 실행관리 : 개별 프로세스 UI 제어 및 서버 터미널 교차 검증 (Hybrid)
-// =============================================
+// =============================================================
 
 // 🌟 [핵심 해결책] UI 버튼 이름과 리눅스(ps -ef)에서 찾을 실제 키워드를 짝지어 줍니다.
 const processList = [
@@ -194,11 +193,55 @@ processList.forEach((process) => {
   cy.log(`▶▶▶ [${process.uiName}] TASK 정지/시작 및 서버 상태 교차 검증 ◀◀◀`);
 
   // ==========================================
+  // [0단계: 상태 정규화] 이전 실행에서 에러 등으로 이미 '정지' 상태로
+  // 남아있는 경우, 검증 로직이 '정지 버튼'을 찾지 못해 깨지므로
+  // 먼저 '실행 중(정지 버튼 표시)' 상태로 강제 정렬해준다.
+  // ==========================================
+  cy.contains('p', process.uiName)
+    .should('be.visible')
+    .closest('.v-card')
+    .then(($card) => {
+      const isStopped = $card.find('.v-btn__content:contains("시작"):visible').length > 0;
+
+      if (!isStopped) {
+        cy.log(`✅ [${process.uiName}] 이미 실행 중 상태. 정규화 SKIP.`);
+        return;
+      }
+
+      cy.log(`⚠️ [${process.uiName}] 정지 상태로 남아있음! 먼저 시작시켜 정규화합니다.`);
+
+      cy.wrap($card).contains('.v-btn', '시작').filter(':visible').click({ force: true });
+
+      cy.get('.c-headline:visible').contains('마스터 Task 실행').should('be.visible');
+      cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
+      cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+
+      // '정지' 버튼(=실행 중)과 초록색 상태바가 나타날 때까지 대기
+      cy.contains('p', process.uiName)
+        .closest('.v-card')
+        .contains('.v-btn__content', '정지', { timeout: 20000 })
+        .should('be.visible');
+      cy.contains('p', process.uiName)
+        .closest('.v-card')
+        .find('.v-progress-linear__bar__determinate')
+        .should('have.class', 'success');
+
+      // 서버에도 실제로 떴는지 한번 더 교차 확인 (다음 [1단계]가 신뢰할 수 있는 상태에서 시작하도록)
+      cy.wait(5000);
+      cy.task('runSSH', `ps -ef | grep -i "${process.osKeyword}" | grep -v grep`).then((output) => {
+        expect(output, '🚨 SSH 접속 실패!').to.not.be.null;
+        expect(output.trim(), `${process.uiName} 정규화 후 서버 기동 확인`).to.not.be.empty;
+      });
+
+      cy.log(`✅ [${process.uiName}] 정규화 완료 (실행 중 상태로 정렬됨)`);
+    });
+
+  // ==========================================
   // [1단계: 정지 테스트]
   // ==========================================
   // 1. [UI 제어] 정지 버튼 클릭 (uiName 사용)
   cy.contains('p', process.uiName).should('be.visible')
-    .closest('.v-card').contains('.v-btn', '정지').filter(':visible').click({ force: true }); 
+    .closest('.v-card').contains('.v-btn', '정지').filter(':visible').click({ force: true });
 
   cy.get('.c-headline:visible').contains('마스터 Task 종료').should('be.visible');
   cy.contains('p', 'Task 종료하시겠습니까?').should('be.visible');
@@ -208,18 +251,18 @@ processList.forEach((process) => {
   cy.contains('p', process.uiName).closest('.v-card').contains('.v-btn__content', '시작', { timeout: 15000 }).should('be.visible');
   // [정지 상태일 때] Log Collector 카드 안의 상태바가 빨간색(error)인지 확인
   cy.contains('p', process.uiName).closest('.v-card').find('.v-progress-linear__bar__determinate').should('have.class', 'error');
-  
+
   // 🌟 3. [서버 검증] (osKeyword 사용)
-  cy.wait(15000); 
+  cy.wait(15000);
 
   // grep -i 옵션: 대소문자를 구분하지 않고 찾습니다.
   cy.task('runSSH', `ps -ef | grep -i "${process.osKeyword}" | grep -v grep`).then((output) => {
     // 💡 SSH 접속 자체가 실패했을 경우를 대비한 방어 코드
     expect(output, '🚨 SSH 접속 실패!').to.not.be.null;
-    
+
     cy.log(`🖥️ [정지 결과] 터미널 출력: ${output}`);
     // 검색된 텍스트가 비어있어야(empty) 프로세스가 완벽히 죽은 것인지 확인
-    expect(output.trim(), `${process.uiName} 프로세스가 서버에서 완전히 종료되었는지 확인`).to.be.empty; 
+    expect(output.trim(), `${process.uiName} 프로세스가 서버에서 완전히 종료되었는지 확인`).to.be.empty;
   });
 
 
@@ -249,9 +292,10 @@ processList.forEach((process) => {
     // 💡 검색을 띄어쓰기 없이 했으므로, 결과가 텅 비어있지 않다(not.empty)면 기동 성공으로 간주
     expect(output.trim(), `${process.uiName} 프로세스가 서버에서 정상 기동되었는지 확인`).to.not.be.empty;
   });
-    
-  cy.wait(1000); 
-});
+
+  cy.wait(1000);
+});  
+
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기

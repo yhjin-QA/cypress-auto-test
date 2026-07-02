@@ -56,7 +56,7 @@ jobs:
 
           $loginUrl = "https://project.warevalley.com/login"
           #RELEASE 빌드파일 경로 raw가인 show
-          $repoBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/show/logcatch/RELEASE/logcatch"
+          $repoBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/show/logcatch/QA/logcatch"
           
           $userId = "${{ secrets.REDMINE_USER_ID }}"
           $userPw = "${{ secrets.REDMINE_PW }}"

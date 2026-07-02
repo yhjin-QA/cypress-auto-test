@@ -255,13 +255,13 @@ describe('로그캐치 사이트 테스트', () => {
     
 
 
-    // 부서 : 품질관리팀 -------------------------------------------------------------------------------------------
+    // 부서 : 총무팀 -------------------------------------------------------------------------------------------
     // 부서/소속 클릭하여 리스트 열기
     cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
     cy.wait(500);
 
-    // 리스트에서 '품질관리팀'가 나타날 때까지 기다리고 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '품질관리팀', { timeout: 10000 }).should('be.visible').click({ force: true });
+    // 리스트에서 '총무팀'가 나타날 때까지 기다리고 클릭
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '총무팀', { timeout: 10000 }).should('be.visible').click({ force: true });
     cy.wait(500);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
@@ -271,11 +271,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // [검증] 검색 결과 검증
-    cy.get('tbody tr', { timeout: 10000 }).contains('품질관리팀').should('be.visible');
+    cy.get('tbody tr', { timeout: 10000 }).contains('총무팀').should('be.visible');
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('품질관리팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('총무팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
      });
      //---------------------------------------------------------------------------------------------------------------
 
@@ -308,34 +308,6 @@ describe('로그캐치 사이트 테스트', () => {
      });
      //---------------------------------------------------------------------------------------------------------------
 
-    // // 부서 : 협력사 -------------------------------------------------------------------------------------------
-    // // 2번째부터는 선택 초기화 필요 
-    // // 선택한 부서/소속 x버튼 클릭하여 초기화 
-    // cy.get('input[aria-label="부서/소속"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    // cy.wait(500);
-
-    // // 부서/소속 클릭하여 리스트 열기
-    // cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
-    // cy.wait(500);
-
-    // // 리스트에서 '협력사'가 나타날 때까지 기다리고 클릭
-    // cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '협력사', { timeout: 10000 }).should('be.visible').click({ force: true });
-    // cy.wait(500);
-    // // 3. 선택 후 메뉴 닫기 (필요시)
-    // cy.get('body').type('{esc}');
-
-    //  //검색버튼 클릭
-    // cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    // cy.wait(1000);
-
-    // // [검증] 검색 결과 검증
-    // cy.get('tbody tr', { timeout: 10000 }).contains('협력사').should('be.visible');
-
-    // // 첫 번째 행 정밀 검증
-    // cy.get('tbody tr').filter(':visible').first().within(() => {
-    // cy.get('a').contains('협력사').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
-    //  });
-     //---------------------------------------------------------------------------------------------------------------
 
      // 부서 : 영업팀  -------------------------------------------------------------------------------------------
     // 2번째부터는 선택 초기화 필요 
@@ -767,12 +739,12 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
-    // 부서/소속 - 품질관리팀
+    // 부서/소속 - 총무팀
     // 부서/소속 클릭하여 리스트 열기
     cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
     cy.wait(500);
-    // 리스트에서 '품질관리팀'가 나타날 때까지 기다리고 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '품질관리팀', { timeout: 10000 }).should('be.visible').click({ force: true });
+    // 리스트에서 '총무팀'가 나타날 때까지 기다리고 클릭
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '총무팀', { timeout: 10000 }).should('be.visible').click({ force: true });
     cy.wait(500);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
@@ -845,7 +817,7 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     cy.get('a').contains('리눅스_배송관리').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
 
     // [부서/소속] - a 태그 + ellipsis 클래스
-    cy.get('a.ellipsis').contains('품질관리팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a.ellipsis').contains('총무팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
 
     // [정보 사용자] - a 태그 + ellipsis 클래스
     cy.get('a.ellipsis').contains('진윤호(yunho)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
