@@ -27,7 +27,7 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('DEV_Release 로그캐치 UI기본체크', () => {
+  it('로그캐치 UI 기본체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -293,8 +293,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('접속 IP 주소').should('be.visible');
     cy.get('th').filter(':visible').contains('접속 메뉴/행위').should('be.visible'); 
     cy.get('th').filter(':visible').contains('검출 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible'); 
-    cy.get('th').filter(':visible').contains('검출 건수').should('be.visible'); 
+    cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
+    //cy.get('th').filter(':visible').contains('검출 건수').should('be.visible'); 
+    //3.0.5.1191_r35135  가로스크롤 영향으로 존재로 확인 
+    cy.get('th').contains('검출 건수').should('exist'); 
+    
     cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
 
 
@@ -346,7 +349,8 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
      cy.get('th').filter(':visible').contains('건수').should('be.visible');
      cy.get('th').filter(':visible').contains('상세 접속기록 정보').should('be.visible');
-     cy.get('th').filter(':visible').contains('처리').should('be.visible');
+      //3.0.5.1191_r35135  가로스크롤 영향으로 존재로 확인 
+     cy.get('th').contains('처리').should('exist'); 
      cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
 
 /*
