@@ -128,51 +128,6 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.contains('.v-btn__content', 'MASTER 태스크 전체 시작').should('be.visible');
     cy.contains('.v-btn__content', 'MASTER 태스크 전체 정지').should('be.visible');
     
-  //   // 기능확인 
-  //   // ==========================================
-  //   // 실행관리 : 전체 프로세스 정지 및 시작 확인 
-  //   // ==========================================
-
-  //   // 'MASTER 태스크 전체 정지' 버튼 클릭
-  //   cy.contains('.v-btn__content', 'MASTER 태스크 전체 정지').should('be.visible').click({ force: true });
-  //   cy.wait(1000);
-
-  //   // 'MASTER 태스크 전체 종료 확인 알림창 확인
-  //   cy.get('.c-headline:visible').contains('마스터 Task 종료').should('be.visible');
-
-  //   cy.contains('p', 'Task 종료하시겠습니까?').should('be.visible');
-  //   // 'MASTER 태스크 전체 종료 확인 알림창 확인 버튼 클릭
-  //   cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
-    
-
-  //   //프로세스 정지확인 검증(프로세스 정지상태라면 시작문구로 버튼 변경되어있는상태 ) 
-  //   cy.contains('p', 'Log Collector').should('be.visible');
-  //  // ✅ 개선: '시작' 버튼으로 바뀔 때까지 최대 90초 대기 (바뀌면 즉시 통과)
-  //   cy.contains('p', 'Log Collector').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
-  //   cy.contains('p', 'Discriminator').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
-  //   cy.contains('p', 'Rule Analyzer').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
-  //   cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
-  //   cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '시작', { timeout: 90000 }).should('be.visible');
-
-
-  //   // 'MASTER 태스크 전체 시작' 버튼 클릭
-  //   cy.contains('.v-btn__content', 'MASTER 태스크 전체 시작').should('be.visible').click({ force: true });
-  //   cy.wait(2000);
-
-  //   // 'MASTER 태스크 전체 실행 확인 알림창 확인
-  //   cy.get('.c-headline:visible').contains('마스터 Task 실행').should('be.visible');
-
-  //   cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
-  //   // 'MASTER 태스크 전체 종료 확인 알림창 확인 버튼 클릭
-  //   cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
-    
-    
-  //   //프로세스 실행확인 검증코드 (프로세스 실행상태라면  정지 문구로 버튼 변경되어있는상태 ) 
-  //   cy.contains('p', 'Log Collector').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
-  //   cy.contains('p', 'Discriminator').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
-  //   cy.contains('p', 'Rule Analyzer').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
-  //   cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
-  //   cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '정지', { timeout: 90000 }).should('be.visible');
 
 // =============================================================
 // 실행관리 : 개별 프로세스 UI 제어 및 서버 터미널 교차 검증 (Hybrid)
@@ -253,7 +208,7 @@ processList.forEach((process) => {
   cy.contains('p', process.uiName).closest('.v-card').find('.v-progress-linear__bar__determinate').should('have.class', 'error');
 
   // 🌟 3. [서버 검증] (osKeyword 사용)
-  cy.wait(15000);
+  cy.wait(60000);
 
   // grep -i 옵션: 대소문자를 구분하지 않고 찾습니다.
   cy.task('runSSH', `ps -ef | grep -i "${process.osKeyword}" | grep -v grep`).then((output) => {
@@ -297,12 +252,112 @@ processList.forEach((process) => {
 });  
 
 
-    // ==========================================
-    // [FINAL] 테스트 종료 및 메뉴 닫기
-    // ==========================================
-    cy.log('🎉 운영 - 태스크 테스트 시나리오 성공적으로 완료!');
-    cy.get('body').type('{esc}');
-    cy.get('body').click('center', { force: true });
+// ==========================================
+// 실행관리 : 전체 프로세스 정지 및 시작 확인
+// (기존 개별 프로세스 검증에서 쓴 processList를 재사용해
+//  5줄 하드코딩 검증을 루프로 정리하고, 팝업 자가치유 + 서버 교차검증을 추가)
+// ==========================================
+
+// processList는 개별 프로세스 검증 코드와 동일한 배열을 그대로 재사용 (다른 파일/블록에
+// 이미 선언돼 있다면 중복 선언하지 말고 그 변수를 그대로 쓸 것)
+// const processList = [
+//   { uiName: 'Log Collector', osKeyword: 'logcollector' },
+//   { uiName: 'Discriminator', osKeyword: 'discriminator' },
+//   { uiName: 'Rule Analyzer', osKeyword: 'ruleanalyzer' },
+//   { uiName: 'Statistics', osKeyword: 'statistics' }
+//   // Data File Cleaner는 실제 OS 프로세스가 아니라서 ps -ef로 못 잡으므로 processList엔 없음
+// ];
+
+// Data File Cleaner는 원래 코드에서 UI 버튼 상태만 검증하던 항목이라, ps -ef 교차검증 대상인
+// processList와 분리해서 "UI만 확인하는" 별도 목록으로 관리한다.
+const uiOnlyProcessList = [{ uiName: 'Data File Cleaner' }];
+
+// 팝업(확인창) 자가치유 헬퍼: 버튼 클릭 후 팝업이 특정 시간 안에 안 뜨면
+// (렌더링 지연/취소된 클릭 등으로) 한 번 더 클릭을 재시도한다.
+function clickMasterButtonWithRetry(buttonLabel, popupHeadline, popupBodyText) {
+  cy.contains('.v-btn__content', buttonLabel).should('be.visible').click({ force: true });
+
+  // 팝업 렌더링에 걸리는 짧은 시간을 감안한 대기. 이게 없으면 클릭 직후 바로 확인해서
+  // 정상적으로 뜨는 중인 팝업을 "안 떴다"고 오판해 불필요하게 재클릭(중복 트리거 위험)할 수 있다.
+  cy.wait(1000);
+
+  cy.get('body').then(($body) => {
+    const popupVisible =
+      $body.find('.c-headline:visible').filter((_, el) => el.textContent.includes(popupHeadline)).length > 0;
+
+    if (!popupVisible) {
+      cy.log(`⚠️ [${buttonLabel}] 확인 팝업이 안 떴습니다. 버튼을 한 번 더 클릭해 재시도합니다.`);
+      cy.wait(1000);
+      cy.contains('.v-btn__content', buttonLabel).should('be.visible').click({ force: true });
+    }
+  });
+
+  cy.get('.c-headline:visible', { timeout: 10000 }).contains(popupHeadline).should('be.visible');
+  cy.contains('p', popupBodyText).should('be.visible');
+  cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+}
+
+// UI 상태(버튼 문구) 검증 (모든 항목 공통)
+function verifyUiButtonState(uiName, expectedButtonLabel) {
+  cy.contains('p', uiName)
+    .closest('.v-card')
+    .contains('.v-btn__content', expectedButtonLabel, { timeout: 90000 })
+    .should('be.visible');
+}
+
+// UI 상태(버튼 문구) + 서버 프로세스(ps -ef) 교차 검증 헬퍼 (실제 OS 프로세스가 있는 항목만)
+function verifyProcessState(uiName, osKeyword, expectedButtonLabel, expectedProcessRunning) {
+  verifyUiButtonState(uiName, expectedButtonLabel);
+
+  cy.task('runSSH', `ps -ef | grep -i "${osKeyword}" | grep -v grep`).then((output) => {
+    expect(output, `🚨 [${uiName}] SSH 접속 실패!`).to.not.be.null;
+
+    if (expectedProcessRunning) {
+      expect(output.trim(), `${uiName} 프로세스가 서버에서 정상 기동되었는지 확인`).to.not.be.empty;
+    } else {
+      expect(output.trim(), `${uiName} 프로세스가 서버에서 완전히 종료되었는지 확인`).to.be.empty;
+    }
+  });
+}
+
+// ------------------------------------------
+// 1. 'MASTER 태스크 전체 정지'
+// ------------------------------------------
+clickMasterButtonWithRetry('MASTER 태스크 전체 정지', '마스터 Task 종료', 'Task 종료하시겠습니까?');
+
+cy.wait(60000); // 전체 프로세스가 죽는 데 걸리는 시간을 감안한 여유 대기 (서버 검증 전)
+
+// 프로세스 정지 확인 검증 (UI: '시작' 버튼으로 바뀜 + 서버: ps -ef 결과 비어있음)
+processList.forEach((process) => {
+  verifyProcessState(process.uiName, process.osKeyword, '시작', /* expectedProcessRunning */ false);
+});
+// Data File Cleaner는 UI 버튼 상태만 확인 (실제 OS 프로세스가 아니라 ps -ef 대상 아님)
+uiOnlyProcessList.forEach((process) => {
+  verifyUiButtonState(process.uiName, '시작');
+});
+
+// ------------------------------------------
+// 2. 'MASTER 태스크 전체 시작'
+// ------------------------------------------
+clickMasterButtonWithRetry('MASTER 태스크 전체 시작', '마스터 Task 실행', 'Task 실행하시겠습니까?');
+
+cy.wait(5000); // 기동 시간을 감안한 여유 대기
+
+// 프로세스 실행 확인 검증 (UI: '정지' 버튼으로 바뀜 + 서버: ps -ef 결과 존재함)
+processList.forEach((process) => {
+  verifyProcessState(process.uiName, process.osKeyword, '정지', /* expectedProcessRunning */ true);
+});
+uiOnlyProcessList.forEach((process) => {
+  verifyUiButtonState(process.uiName, '정지');
+});
+
+
+// ==========================================
+// [FINAL] 테스트 종료 및 메뉴 닫기
+// ==========================================
+cy.log('🎉 운영 - 태스크 테스트 시나리오 성공적으로 완료!');
+cy.get('body').type('{esc}');
+cy.get('body').click('center', { force: true });
 
 
   });
