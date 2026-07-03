@@ -172,15 +172,17 @@ jobs:
            # ↓ 추가
           $logContent = Get-Content cypress.log -Raw -Encoding UTF8
           if ($LASTEXITCODE -ne 0) {
-            if ($logContent -match "matched no report files") {
-              Write-Host "[INFO] matched no report files - normal exit"
-              exit 0
-            } else {
-              Write-Host "[FAIL] Cypress test failure"
-              exit 1
-            }
-          }
-            
+             $hasHookError   = $logContent -match "matched no report files"
+             $hasTestFailure = $logContent -match "\d+ failing"
+           if ($hasHookError -and -not $hasTestFailure) {
+               Write-Host "[INFO] Hook error only - normal exit"
+               exit 0
+             } else {
+               Write-Host "[FAIL] Test failure detected"
+             exit 1
+             }
+           }
+             
       - name: Copy JSON to visible directory
         if: always()
         run: |
@@ -189,7 +191,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path $dst | Out-Null
           if (Test-Path $src) {
             Get-ChildItem -Path $src -Force -Filter "*.json" | Copy-Item -Destination $dst
-            Write-Host "Copied: $(Get-ChildItem -Path $dst -Filter '*.json' | Measure-Object).Count files"
+            Write-Host "Copied: $((Get-ChildItem -Path $dst -Filter '*.json' | Measure-Object).Count) files"
           } else {
             Write-Host "Source not found: $src"
           }      
