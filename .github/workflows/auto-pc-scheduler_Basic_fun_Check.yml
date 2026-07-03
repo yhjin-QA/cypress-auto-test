@@ -7,10 +7,10 @@ env:
   TZ: Asia/Seoul
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '45 2 * * 1-5'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '45 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -174,7 +174,7 @@ jobs:
           cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/Basic_functions_check/**/*.cy.js' --browser chrome --parallel --group 'Main-Tests' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic --reporter mochawesome --reporter-options `"reportDir=cypress/reports/json_logs,overwrite=false,html=false,json=true`" 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           Get-Content cypress.log
 
-          $logContent = Get-Content cypress.log -Raw -Encoding UTF8  # Job2는 cypress_restart.log
+          $logContent = Get-Content cypress.log -Raw -Encoding UTF8 
           if ($LASTEXITCODE -ne 0) {
              $hasHookError   = $logContent -match "matched no report files"
              $hasTestFailure = $logContent -match "\d+ failing"
@@ -293,7 +293,7 @@ jobs:
           cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --group 'Restart-Job' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic --reporter mochawesome --reporter-options `"reportDir=cypress/reports/json_logs,overwrite=false,html=false,json=true`" 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
           Get-Content cypress_restart.log
 
-                    $logContent = Get-Content cypress.log -Raw -Encoding UTF8  # Job2는 cypress_restart.log
+          $logContent = Get-Content cypress_restart.log -Raw -Encoding UTF8
            if ($LASTEXITCODE -ne 0) {
              $hasHookError   = $logContent -match "matched no report files"
              $hasTestFailure = $logContent -match "\d+ failing"

@@ -358,28 +358,28 @@ cy.get('body').then(($body) => {
     cy.get('tbody').find('a').contains('개인정보 과다조회').should('be.visible');
     
 
-    //이상행위 유형 상태 클릭 (팝업창 다시띄우기) (이상행위 유형 다중선택 개인정보 과다조회 + 접근제한 업무 시스템 접근 )
+    //이상행위 유형 상태 클릭 (팝업창 다시띄우기) (이상행위 유형 다중선택 개인정보 과다조회 + 개인정보 유형 과다사용 )
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
-    // 이상행위 유형중 '접근제한 업무 시스템 접근 ' 클릭하는 코드
-    //cy.contains('.v-list__tile__title', '접근제한 업무 시스템 접근').scrollIntoView().click({ force: true });
+    // 이상행위 유형중 '개인정보 유형 과다사용 ' 클릭하는 코드
+    //cy.contains('.v-list__tile__title', '개인정보 유형 과다사용').scrollIntoView().click({ force: true });
     // 실제 스크롤 내리는 동작으로 클릭
-    // cy.get('.v-menu__content').filter(':visible').scrollIntoView({ block: 'end' }).contains('접근제한 업무 시스템 접근').should('be.visible').click({ force: true });
+    // cy.get('.v-menu__content').filter(':visible').scrollIntoView({ block: 'end' }).contains('개인정보 유형 과다사용').should('be.visible').click({ force: true });
     // 1. 드롭다운 컨테이너 자체를 맨 아래로 스크롤
     cy.get('.v-menu__content').filter(':visible').scrollTo('bottom', { duration: 1000 }); // 부드럽게 끝까지 내림
 
     // 2. 렌더링 시간을 잠시 준 뒤, 텍스트가 존재하는지 확인하고 클릭
     // (비가시 상태여도 클릭하도록 force: true 사용)
-    cy.contains('접근제한 업무 시스템 접근', { timeout: 10000 }).click({ force: true });
+    cy.contains('개인정보 유형 과다사용', { timeout: 10000 }).click({ force: true });
     cy.wait(500);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
-    // '개인정보 과다조회 + 접근제한 업무 시스템 접근' 선택한 검색결과 검증코드
+    // '개인정보 과다조회 + 개인정보 유형 과다사용' 선택한 검색결과 검증코드
     cy.get('tbody').find('a').contains('개인정보 과다조회').should('be.visible');
-    cy.get('tbody').find('a').contains('접근제한 업무 시스템 접근').should('be.visible');
+    cy.get('tbody').find('a').contains('개인정보 유형 과다사용').should('be.visible');
    
 
     // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
@@ -388,16 +388,16 @@ cy.get('body').then(($body) => {
     // 이상행위 유형 선택창 팝업 다시 띄우기
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
-    // 이상행위 유형중 스크롤 내려서 '권한 외 메뉴 접근' 클릭하는 코드
-    cy.get('.v-menu__content').filter(':visible').scrollTo('center').contains('권한 외 메뉴 접근').should('be.visible').click({ force: true });
+    // 이상행위 유형중 스크롤 내려서 '비인가 IP 접근' 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').scrollTo('center').contains('비인가 IP 접근').should('be.visible').click({ force: true });
     cy.wait(500);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
-    // '권한 외 메뉴 접근' 선택한 검색결과 검증코드
-    cy.get('tbody').find('a').contains('권한 외 메뉴 접근').should('be.visible');
+    // '비인가 IP 접근' 선택한 검색결과 검증코드
+    cy.get('tbody').find('a').contains('비인가 IP 접근').should('be.visible');
     cy.wait(1000);
 
     // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
