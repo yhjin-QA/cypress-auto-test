@@ -9,10 +9,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '45 5 * * 1-5'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '45 5 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -397,8 +397,11 @@ jobs:
     defaults:
       run:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
-
+    
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       # 👇 [필수 추가] 이 단계가 없으면 이전 테스트 결과(Depth)와 현재 결과(UI)가 뒤섞입니다!
       - name: 🧹 기존 데이터 청소 (Clean Workspace)
         run: |
@@ -441,11 +444,9 @@ jobs:
           npm install mochawesome-merge mochawesome-report-generator --no-save
 
           # 💡 [추가] 스크린샷 경로 복원 - JSON이 참조하는 경로와 일치시키기
-          # JSON 파일은 'cypress/screenshots/...' 경로를 참조하는데
-          # 다운로드된 파일은 'all_raw_data/screenshots/...'에 있어서 불일치 발생
-          if (Test-Path "all_raw_data/screenshots") {
+          if (Test-Path "all_raw_data/cypress/screenshots") {
           New-Item -ItemType Directory -Force -Path "cypress/screenshots" | Out-Null
-          Copy-Item -Path "all_raw_data/screenshots/*" -Destination "cypress/screenshots/" -Recurse -Force
+          Copy-Item -Path "all_raw_data/cypress/screenshots/*" -Destination "cypress/screenshots/" -Recurse -Force
           Write-Host "✅ 스크린샷 경로 복원 완료 (cypress/screenshots/)"
           } else {
             Write-Host "⚠️ 스크린샷 없음 - 건너뜀"
@@ -462,7 +463,10 @@ jobs:
           }
 
           # 3. JSON 파일 병합 및 HTML 리포트 생성
-          cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
+          $jsonFiles = (Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" |
+            Select-Object -ExpandProperty FullName |
+            ForEach-Object { "`"$_`"" }) -join " "
+          cmd /c "npx mochawesome-merge $jsonFiles > merged_report.json"
           npx marge merged_report.json --reportDir ./final_report_Depth --inline --charts --reportTitle "Depth Function Report" --reportFilename "LogCatch_Depth_fun_Report" --saveJson=false
 
           # 👇 [추가] 스크린샷 이미지를 base64로 변환하여 HTML에 직접 삽입
