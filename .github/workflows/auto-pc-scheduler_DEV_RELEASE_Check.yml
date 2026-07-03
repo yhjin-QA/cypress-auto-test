@@ -367,6 +367,7 @@ jobs:
 
        # 💡 [추가] 업로드 전 JSON 파일명에 컨테이너 번호를 붙여 중복 방지
       - name: Rename Reports for Parallel Sync
+        if: always()
         run: |
           $dir = "cypress/reports/json_logs"
           Get-ChildItem -Path "$dir/*.json" | ForEach-Object { 
@@ -471,6 +472,7 @@ jobs:
 
       # 💡 [추가] 재시작 테스트 리포트 명칭 고유화
       - name: Rename Restart Reports
+        if: always()
         run: |
           $dir = "cypress/reports/json_logs"
           Get-ChildItem -Path "$dir/*.json" -ErrorAction SilentlyContinue | ForEach-Object { 
