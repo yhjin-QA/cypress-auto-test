@@ -225,8 +225,8 @@ jobs:
         with:
           name: UI-Raw-Data-${{ matrix.containers }}
           path: |
-           **/reports/json_logs/.jsons/*.json
-           **/screenshots/**/*.png
+           cypress/reports/json_logs
+           cypress/screenshots
           retention-days: 1
           if-no-files-found: ignore
 
