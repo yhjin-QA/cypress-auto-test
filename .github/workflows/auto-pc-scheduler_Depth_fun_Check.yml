@@ -9,10 +9,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '45 5 * * 1-5'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '45 5 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -469,29 +469,29 @@ jobs:
           cmd /c "npx mochawesome-merge $jsonFiles > merged_report.json"
           npx marge merged_report.json --reportDir ./final_report_Depth --inline --charts --reportTitle "Depth Function Report" --reportFilename "LogCatch_Depth_fun_Report" --saveJson=false
 
-          # 👇 [추가] 스크린샷 이미지를 base64로 변환하여 HTML에 직접 삽입
+          # Screenshot base64 embedding
           $htmlPath = "./final_report_Depth/LogCatch_Depth_fun_Report.html"
           if (Test-Path $htmlPath) {
-          $html = Get-Content $htmlPath -Raw -Encoding UTF8
-              $html = [regex]::Replace($html, 'src="([^"]+\.png)"', {
-          param($m)
-          $rawPath = $m.Groups[1].Value
-                  # 절대경로에서 screenshots/ 이후 경로만 추출
+            $html = Get-Content $htmlPath -Raw -Encoding UTF8
+            $imgMatches = [regex]::Matches($html, 'src="([^"]+\.png)"')
+            foreach ($match in $imgMatches) {
+            $fullMatch = $match.Value
+            $rawPath   = $match.Groups[1].Value
           if ($rawPath -match 'screenshots[/\\](.+)') {
-          $relPath = "cypress/screenshots/" + ($Matches[1] -replace '\\', '/')
+            $relPath = "cypress/screenshots/" + ($Matches[1] -replace '\\', '/')
           if (Test-Path $relPath) {
-          $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path $relPath).Path)
-          $b64 = [Convert]::ToBase64String($bytes)
-          return "src=""data:image/png;base64,$b64"""
+            $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path $relPath).Path)
+            $b64   = [Convert]::ToBase64String($bytes)
+            $newSrc = 'src="data:image/png;base64,' + $b64 + '"'
+            $html   = $html.Replace($fullMatch, $newSrc)
             }
            }
-           return $m.Value
-          })
-               $html | Set-Content $htmlPath -Encoding UTF8 -NoNewline
-           Write-Host "✅ 스크린샷 base64 임베딩 완료 - 이메일 첨부 시에도 이미지 표시됩니다"
+          }
+           $html | Set-Content $htmlPath -Encoding UTF8 -NoNewline
+            Write-Host "Screenshot embedding complete"
            } else {
-                 Write-Host "⚠️ HTML 파일을 찾을 수 없습니다: $htmlPath"
-            }
+           Write-Host "HTML not found: $htmlPath"
+           }
 
       - name: Send Google Chat (Depth)
         if: always() 
