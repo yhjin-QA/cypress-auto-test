@@ -45,7 +45,7 @@ jobs:
       - name: Create Dummy Report File
         run: |
           # 👇 경로를 config와 맞춤
-          $dir = "cypress/reports/json_logs/.jsons"
+          $dir = "cypress/reports/json_logs/jsons"
           if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir }
           # $dummyContent = '{ "stats": { "tests": 0, "passes": 0, "failures": 0, "pending": 0, "duration": 0 }, "results": [], "meta": { "mocha": { "version": "7.0.0" }, "mochawesome": { "version": "7.1.3" } } }'
           # $dummyContent | Out-File -FilePath "$dir/dummy.json" -Encoding UTF8
@@ -180,6 +180,19 @@ jobs:
               exit 1
             }
           }
+            
+      - name: Copy JSON to visible directory
+        if: always()
+        run: |
+          $src = "cypress/reports/json_logs/.jsons"
+          $dst = "cypress/reports/json_logs/jsons"
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          if (Test-Path $src) {
+            Get-ChildItem -Path $src -Force -Filter "*.json" | Copy-Item -Destination $dst
+            Write-Host "Copied: $(Get-ChildItem -Path $dst -Filter '*.json' | Measure-Object).Count files"
+          } else {
+            Write-Host "Source not found: $src"
+          }      
 
       - name: Extract Dashboard URL
         if: always()
@@ -225,7 +238,7 @@ jobs:
         with:
           name: UI-Raw-Data-${{ matrix.containers }}
           path: |
-           cypress/reports/json_logs
+           cypress/reports/json_logs/jsons
            cypress/screenshots
           retention-days: 1
           if-no-files-found: ignore
