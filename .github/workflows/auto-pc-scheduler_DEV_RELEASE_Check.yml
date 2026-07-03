@@ -8,10 +8,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '5 2 * * 1-5'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '5 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -313,15 +313,18 @@ jobs:
 
           # 💡 [핵심 예외 처리] 실행이 끝난 후 로그를 분석하여 '깡통 에러'인지 진짜 에러인지 판별합니다.
           $logContent = Get-Content cypress.log -Raw -Encoding UTF8
-          
+
+
           if ($LASTEXITCODE -ne 0) {
-              if ($logContent -match "matched no report files") {
-                  Write-Host "✅ [INFO] 러너에 할당된 스펙이 없어 리포터가 빈 폴더를 병합하려다 발생한 가짜 에러입니다. (성공으로 처리합니다.)"
-                  exit 0
-              } else {
-                  Write-Host "❌ 진짜 테스트 실패 또는 시스템 에러가 발생했습니다."
-                  exit 1
-              }
+          $hasHookError   = $logContent -match "matched no report files"
+          $hasTestFailure = $logContent -match "\d+ failing"
+          if ($hasHookError -and -not $hasTestFailure) {
+          Write-Host "[INFO] Hook error only - normal exit"
+          exit 0
+            } else {
+            Write-Host "[FAIL] Test failure detected"
+           exit 1
+          }
           }
 
       - name: Extract Dashboard URL
@@ -350,6 +353,18 @@ jobs:
           retention-days: 1
           if-no-files-found: ignore
 
+      - name: Copy JSON to visible directory
+        if: always()
+        run: |
+            $src = "cypress/reports/json_logs/.jsons"
+            $dst = "cypress/reports/json_logs"
+            if (Test-Path $src) {
+            Get-ChildItem -Path $src -Force -Filter "*.json" | Copy-Item -Destination $dst
+            Write-Host "Copied: $((Get-ChildItem -Path $dst -Filter '*.json').Count) files"
+            } else {
+            Write-Host "Source not found: $src"
+            }    
+
        # 💡 [추가] 업로드 전 JSON 파일명에 컨테이너 번호를 붙여 중복 방지
       - name: Rename Reports for Parallel Sync
         run: |
@@ -373,7 +388,7 @@ jobs:
   # [Job 2-1] 태스크 재시작 테스트 (단독 실행)
   # ====================================================
   restart-task-run:
-    needs: cypress-run  # Job 2이 끝나야 시작
+    needs: [deploy-qa, cypress-run]  # Job 2이 끝나야 시작
     # 👇 새 버전이 아닐 경우 이 Job 실행 안 함
     if: needs.deploy-qa.outputs.skip_all != 'true'        
     runs-on: [self-hosted, PC-Auto]
@@ -426,9 +441,33 @@ jobs:
           Write-Host "🚀 [Job 2] 단독 실행 파일: $targetSpec"
 
           # 실행 시 변수를 따옴표로 감싸서 공백/한글 이슈 방지
-          cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --group 'Restart-Job' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-Basic 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --group 'Restart-Job' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
          
           Get-Content cypress_restart.log
+
+          $logContent = Get-Content cypress_restart.log -Raw -Encoding UTF8
+           if ($LASTEXITCODE -ne 0) {
+            $hasHookError   = $logContent -match "matched no report files"
+            $hasTestFailure = $logContent -match "\d+ failing"
+           if ($hasHookError -and -not $hasTestFailure) {
+                Write-Host "[INFO] Hook error only - normal exit"
+                exit 0
+              } else {
+                 Write-Host "[FAIL] Test failure detected"
+                exit 1
+             }
+           }
+      - name: Copy JSON to visible directory
+        if: always()
+        run: |
+             $src = "cypress/reports/json_logs/.jsons"
+             $dst = "cypress/reports/json_logs"
+             if (Test-Path $src) {
+             Get-ChildItem -Path $src -Force -Filter "*.json" | Copy-Item -Destination $dst
+             Write-Host "Copied: $((Get-ChildItem -Path $dst -Filter '*.json').Count) files"
+             } else {
+              Write-Host "Source not found: $src"
+             }
 
       # 💡 [추가] 재시작 테스트 리포트 명칭 고유화
       - name: Rename Restart Reports
@@ -469,11 +508,14 @@ jobs:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
       - name: 🧹 기존 데이터 청소 (Clean Workspace)
         run: |
           Write-Host "이전 작업의 잔여 데이터를 삭제합니다..."
           Remove-Item -Path "all_raw_data" -Recurse -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path "final_report_UI" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "final_report_Dev" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "downloaded_url" -Recurse -Force -ErrorAction SilentlyContinue
           Write-Host "Clear Finish!"
 
@@ -513,11 +555,33 @@ jobs:
           }
 
           npm install mochawesome-merge mochawesome-report-generator --no-save
-          cmd /c "npx mochawesome-merge all_raw_data/**/*.json > merged_report.json"
+    
+          $jsonFiles = (Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" |
+          Select-Object -ExpandProperty FullName |
+          ForEach-Object { "`"$_`"" }) -join " "
+          cmd /c "npx mochawesome-merge $jsonFiles > merged_report.json"
           
           if (Test-Path "merged_report.json") {
               npx marge merged_report.json --reportDir ./final_report_Dev --inline --charts --reportTitle "Dev Report" --reportFilename "LogCatch_Dev_Report"
           }
+
+              # 스크린샷 base64 임베딩
+              $htmlPath = "final_report_Dev/LogCatch_Dev_Report.html"
+               if (Test-Path $htmlPath) {
+               $html = Get-Content $htmlPath -Raw -Encoding UTF8
+               $pattern = [regex]'<img[^>]+src="([^"]*\.png)"[^>]*>'
+               $html = $pattern.Replace($html, {
+               param($m)
+               $relPath = $m.Groups[1].Value
+               $absPath = Join-Path (Get-Location) $relPath
+               if (Test-Path $absPath) {
+               $b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($absPath))
+               $m.Value -replace [regex]::Escape($relPath), "data:image/png;base64,$b64"
+               } else { $m.Value }
+               })
+               $html | Out-File -FilePath $htmlPath -Encoding UTF8
+               Write-Host "Screenshot embedding complete"
+               }
 
       - name: Send Google Chat (Depth "Flaky 차단 + 레이아웃 통일 + 버전명 동적/정적 할당 )
         if: always() 
