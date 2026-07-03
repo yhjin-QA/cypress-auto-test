@@ -472,26 +472,40 @@ jobs:
           # Screenshot base64 embedding
           $htmlPath = "./final_report_Depth/LogCatch_Depth_fun_Report.html"
           if (Test-Path $htmlPath) {
-            $html = Get-Content $htmlPath -Raw -Encoding UTF8
-            $imgMatches = [regex]::Matches($html, 'src="([^"]+\.png)"')
-            foreach ($match in $imgMatches) {
-            $fullMatch = $match.Value
-            $rawPath   = $match.Groups[1].Value
+          $html = Get-Content $htmlPath -Raw -Encoding UTF8
+          $embedCount = 0
+          # 케이스 1: <img src="...png"> 형식
+          $srcMatches = [regex]::Matches($html, 'src="([^"]+\.png)"')
+          foreach ($m in $srcMatches) {
+          $rawPath = $m.Groups[1].Value
           if ($rawPath -match 'screenshots[/\\](.+)') {
-            $relPath = "cypress/screenshots/" + ($Matches[1] -replace '\\', '/')
+          $relPath = "cypress/screenshots/" + ($Matches[1] -replace '\\', '/')
           if (Test-Path $relPath) {
-            $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path $relPath).Path)
-            $b64   = [Convert]::ToBase64String($bytes)
-            $newSrc = 'src="data:image/png;base64,' + $b64 + '"'
-            $html   = $html.Replace($fullMatch, $newSrc)
-            }
-           }
+          $b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes((Resolve-Path $relPath).Path))
+          $html = $html.Replace($m.Value, 'src="data:image/png;base64,' + $b64 + '"')
+          $embedCount++
           }
-           $html | Set-Content $htmlPath -Encoding UTF8 -NoNewline
-            Write-Host "Screenshot embedding complete"
-           } else {
-           Write-Host "HTML not found: $htmlPath"
-           }
+          }
+          }
+          # 케이스 2: <a href="...png">...</a> → 인라인 <img>로 변환
+          $aMatches = [regex]::Matches($html, '<a\s[^>]*href="([^"]+\.png)"[^>]*>[^<]*</a>')
+          foreach ($m in $aMatches) {
+          $rawPath = $m.Groups[1].Value
+          if ($rawPath -match 'screenshots[/\\](.+)') {
+          $relPath = "cypress/screenshots/" + ($Matches[1] -replace '\\', '/')
+          if (Test-Path $relPath) {
+          $b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes((Resolve-Path $relPath).Path))
+          $imgTag = '<img src="data:image/png;base64,' + $b64 + '" style="max-width:100%;display:block;margin-top:8px">'
+          $html = $html.Replace($m.Value, $imgTag)
+          $embedCount++
+          }
+          }
+          }
+          $html | Set-Content $htmlPath -Encoding UTF8 -NoNewline
+          Write-Host "Screenshot embedding complete: $embedCount images"
+          } else {
+          Write-Host "HTML not found: $htmlPath"
+          }
 
       - name: Send Google Chat (Depth)
         if: always() 
