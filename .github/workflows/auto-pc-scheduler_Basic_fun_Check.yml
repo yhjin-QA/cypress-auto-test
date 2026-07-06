@@ -551,7 +551,7 @@ jobs:
 
       - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
         if: always() && env.FINAL_STATUS == 'FAIL'
-        uses: dawidd6/action-send-mail@v3
+        uses: dawidd6/action-send-mail@v17
         with:
           server_address: smtp.gmail.com
           server_port: 465
@@ -560,7 +560,7 @@ jobs:
           password: ${{ secrets.MAIL_PASSWORD }}
           subject: 🚨 [실패][Basic] LogCatch 기능 테스트 실패 알림
           to: yhjin@warevalley.com
-          from: Cypress 알림 봇 <noreply@warevalley.com>
+          from: Cypress Bot <noreply@warevalley.com>
           
          # 👇 [수정 2] 첨부 파일 경로를 Basic_Report.html로 변경
           attachments: final_report_Basic/LogCatch_Basic_Report.html
