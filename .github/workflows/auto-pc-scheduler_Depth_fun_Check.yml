@@ -9,10 +9,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  push:
-    branches: [ "master" ]
-  schedule:
-    - cron: '45 5 * * 1-5'
+  #push:
+  #  branches: [ "master" ]
+  #schedule:
+  #  - cron: '45 5 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           clean: true       # 이전 작업 찌꺼기 강제 삭제
           fetch-depth: 1    # 최근 커밋 하나만 가져와서 속도 향상 및 네트워크 부하 감소
@@ -292,7 +292,7 @@ jobs:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           clean: true       # 이전 작업 찌꺼기 강제 삭제
           fetch-depth: 1    # 최근 커밋 하나만 가져와서 속도 향상 및 네트워크 부하 감소
@@ -400,7 +400,7 @@ jobs:
     
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # 👇 [필수 추가] 이 단계가 없으면 이전 테스트 결과(Depth)와 현재 결과(UI)가 뒤섞입니다!
       - name: 🧹 기존 데이터 청소 (Clean Workspace)

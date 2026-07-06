@@ -30,7 +30,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
         # 👇 [추가] 이전 테스트 결과 찌꺼기(HTML 등) 삭제
       - name: Clean Previous Reports
@@ -262,7 +262,7 @@ jobs:
          Remove-Item -Path "cypress/screenshots" -Recurse -Force -ErrorAction SilentlyContinue
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Cypress Run (Restart Task Spec)
         run: |
@@ -331,7 +331,7 @@ jobs:
 
     steps:
       - name: Checkout   # ← 추가 필요
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       # 👇 [필수 추가] 이 단계가 없으면 이전 테스트 결과(Basic)와 현재 결과(UI)가 뒤섞입니다!
       - name: 🧹 기존 데이터 청소 (Clean Workspace)
         run: |

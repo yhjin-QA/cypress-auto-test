@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🔍 Find Latest Build from Redmine
         id: check_version # ID 추가
@@ -253,7 +253,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Clean Previous Reports
         run: |
@@ -403,7 +403,7 @@ jobs:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Cypress Run (Restart Task Spec)
         run: |
