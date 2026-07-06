@@ -7,10 +7,10 @@ env:
   TZ: Asia/Seoul
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '45 2 * * 1-5'
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '45 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -346,7 +346,7 @@ jobs:
         run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Download Dashboard URL
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           pattern: dashboard-url-* # 1, 2, 3번 모두 찾음
@@ -355,7 +355,7 @@ jobs:
 
       # 모든 Raw 데이터 다운로드
       - name: Download All Raw Data
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: Basic-Raw-Data-*
           path: all_raw_data

@@ -481,7 +481,7 @@ jobs:
           
       - name: 📂 리포트 데이터 업로드
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           # 💡 패턴 매칭을 위해 이름을 맞춥니다.
           name: Dev-Raw-Data-Restart 
@@ -525,7 +525,7 @@ jobs:
         run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Download Dashboard URL
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           pattern: dashboard-url-*
@@ -533,7 +533,7 @@ jobs:
           path: downloaded_url
 
       - name: Download All Raw Data
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: "*-Raw-Data*" # 💡 Dev-Raw-* 와 Restart-Raw-Data를 모두 통합 다운로드
           path: all_raw_data
