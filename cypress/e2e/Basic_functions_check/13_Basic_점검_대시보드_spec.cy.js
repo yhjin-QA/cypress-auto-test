@@ -153,7 +153,7 @@ describe('로그캐치 사이트 테스트', () => {
        cy.contains('.v-btn__content', /^1일$/).click({ force: true });
      });
 
-     cy.wait(500); // 클릭 후 달력이 닫히는 시간 확보
+     cy.wait(1000); // 클릭 후 달력이 닫히는 시간 확보
      cy.get('body').type('{esc}');
      cy.log('✅ 시작 날짜 지정 성공');
 
@@ -170,7 +170,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 2. 팝업 내에서 '최근 30일' 텍스트를 가진 요소를 찾아 클릭합니다.
      cy.contains('.v-list-item__title, b', '오늘').should('be.visible').click({ force: true });
 
-     cy.wait(500); // 클릭 후 달력이 닫히는 시간 확보
+     cy.wait(1000); // 클릭 후 달력이 닫히는 시간 확보
      cy.get('body').type('{esc}');
      cy.log('✅ 오늘 지정 성공');
 
@@ -187,7 +187,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 2. 팝업 내에서 '최근 30일' 텍스트를 가진 요소를 찾아 클릭합니다.
      cy.contains('.v-list-item__title, b', '어제').should('be.visible').click({ force: true });
 
-     cy.wait(500); // 클릭 후 달력이 닫히는 시간 확보
+     cy.wait(1000); // 클릭 후 달력이 닫히는 시간 확보
      cy.get('body').type('{esc}');
      cy.log('✅ 어제 지정 성공');
 
@@ -204,7 +204,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 2. 팝업 내에서 '최근 30일' 텍스트를 가진 요소를 찾아 클릭합니다.
      cy.contains('.v-list-item__title, b', '이번 주').should('be.visible').click({ force: true });
 
-     cy.wait(500); // 클릭 후 달력이 닫히는 시간 확보
+     cy.wait(1000); // 클릭 후 달력이 닫히는 시간 확보
      cy.get('body').type('{esc}');
      cy.log('✅ 이번 주 지정 성공');
 
@@ -221,7 +221,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 2. 팝업 내에서 '최근 30일' 텍스트를 가진 요소를 찾아 클릭합니다.
      cy.contains('.v-list-item__title, b', '지난 주').should('be.visible').click({ force: true });
 
-     cy.wait(500); // 클릭 후 달력이 닫히는 시간 확보
+     cy.wait(1000); // 클릭 후 달력이 닫히는 시간 확보
      cy.get('body').type('{esc}');
      cy.log('✅ 지난 주 지정 성공');
 
@@ -238,7 +238,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 2. 팝업 내에서 '최근 30일' 텍스트를 가진 요소를 찾아 클릭합니다.
      cy.contains('.v-list-item__title, b', '최근 7일').should('be.visible').click({ force: true });
 
-     cy.wait(500); // 클릭 후 달력이 닫히는 시간 확보
+     cy.wait(1000); // 클릭 후 달력이 닫히는 시간 확보
      cy.get('body').type('{esc}');
      cy.log('✅ 최근 7일 지정 성공');
 
@@ -255,7 +255,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 2. 팝업 내에서 '최근 30일' 텍스트를 가진 요소를 찾아 클릭합니다.
      cy.contains('.v-list-item__title, b', '최근 14일').should('be.visible').click({ force: true });
 
-     cy.wait(500); // 클릭 후 달력이 닫히는 시간 확보
+     cy.wait(1000); // 클릭 후 달력이 닫히는 시간 확보
      cy.get('body').type('{esc}');
      cy.log('✅ 최근 14일 지정 성공');
 
@@ -273,7 +273,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 2. 팝업 내에서 '최근 30일' 텍스트를 가진 요소를 찾아 클릭합니다.
      cy.contains('.v-list-item__title, b', '최근 30일').should('be.visible').click({ force: true });
 
-     cy.wait(500); // 클릭 후 달력이 닫히는 시간 확보
+     cy.wait(1000); // 클릭 후 달력이 닫히는 시간 확보
      cy.get('body').type('{esc}');
      cy.log('✅ 최근 30일 지정 성공');
 

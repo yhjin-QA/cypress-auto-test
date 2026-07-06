@@ -164,7 +164,7 @@ cy.get('body').then(($body) => {
     //기능동작
     //달력표를 펼침  월/일 지정  
     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
@@ -178,10 +178,10 @@ cy.get('body').then(($body) => {
     
 
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 소명상태중 '취소' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('취소').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -200,7 +200,7 @@ cy.get('body').then(($body) => {
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '요청' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('요청').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -218,7 +218,7 @@ cy.get('body').then(($body) => {
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '요청' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('요청').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -234,7 +234,7 @@ cy.get('body').then(($body) => {
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '승인' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('승인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -250,7 +250,7 @@ cy.get('body').then(($body) => {
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '반려' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('반려').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -270,7 +270,7 @@ cy.get('body').then(($body) => {
     cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
      // 소명유형중  '사전소명' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('사전 소명').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -287,7 +287,7 @@ cy.get('body').then(($body) => {
     cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
      // 소명유형중  '사후 소명' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -303,7 +303,7 @@ cy.get('body').then(($body) => {
     cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
      // 소명유형중  '소명 필요' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('소명 필요').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -345,10 +345,10 @@ cy.get('body').then(($body) => {
     // 이상행위 유형 별로 검증 /////////////
     // 이상행위 유형 문구 클릭하는 코드 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 이상행위 유형중 '개인정보 과다조회' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('개인정보 과다조회').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -360,7 +360,7 @@ cy.get('body').then(($body) => {
 
     //이상행위 유형 상태 클릭 (팝업창 다시띄우기) (이상행위 유형 다중선택 개인정보 과다조회 + 개인정보 유형 과다사용 )
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 이상행위 유형중 '개인정보 유형 과다사용 ' 클릭하는 코드
     //cy.contains('.v-list__tile__title', '개인정보 유형 과다사용').scrollIntoView().click({ force: true });
     // 실제 스크롤 내리는 동작으로 클릭
@@ -371,7 +371,7 @@ cy.get('body').then(($body) => {
     // 2. 렌더링 시간을 잠시 준 뒤, 텍스트가 존재하는지 확인하고 클릭
     // (비가시 상태여도 클릭하도록 force: true 사용)
     cy.contains('개인정보 유형 과다사용', { timeout: 10000 }).click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -387,10 +387,10 @@ cy.get('body').then(($body) => {
     
     // 이상행위 유형 선택창 팝업 다시 띄우기
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 이상행위 유형중 스크롤 내려서 '비인가 IP 접근' 클릭하는 코드
     cy.get('.v-menu__content').filter(':visible').scrollTo('center').contains('비인가 IP 접근').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -412,7 +412,7 @@ cy.get('body').then(($body) => {
     // cy.get('.v-list__tile__title').filter(':visible').contains('2026-02-05').click({ force: true });
     // cy.get('.v-menu__content:visible, .v-autocomplete__content:visible').should('exist').scrollTo('bottom', { duration: 1000 }); // 1초 동안 천천히 아래로 이동
     // // 2. 데이터가 렌더링될 시간을 잠시 준 뒤 날짜를 클릭합니다.
-    // cy.wait(500);
+    // cy.wait(1000);
     // cy.contains('.v-list__tile__title', '2026-02-05').should('exist').click({ force: true });
     //  // 선택 후 메뉴 닫기
     // cy.get('body').type('{esc}');
@@ -422,7 +422,7 @@ cy.get('body').then(($body) => {
     // 경보등급 심각 이력이 없어서 일단 주석처리
     // // 경보 등급 유형 선택창 팝업 띄우기
     // cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    // cy.wait(500);
+    // cy.wait(1000);
     // // 경보등급 유형중 '심각' 클릭하는 코드
     // cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
     // // 선택 후 메뉴 닫기
@@ -439,7 +439,7 @@ cy.get('body').then(($body) => {
     cy.wait(1000);
     // 경보 등급 유형 선택창 팝업 띄우기 (다시 띄우기)
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 경보등급 유형중 '경계' 클릭하는 코드 (다중선택 : 심각 + 경계)
     cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
     // 선택 후 메뉴 닫기
@@ -458,7 +458,7 @@ cy.get('body').then(($body) => {
     cy.wait(1000);
     // 경보 등급 유형 선택창 팝업 띄우기
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 경보등급 유형중 '경계' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
     // 선택 후 메뉴 닫기
@@ -476,7 +476,7 @@ cy.get('body').then(($body) => {
     //cy.wait(1000);
     // 경보 등급 유형 선택창 팝업 띄우기
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 경보등급 유형중 '주의' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('주의').click({ force: true });
     // 선택 후 메뉴 닫기
@@ -554,21 +554,21 @@ cy.get('body').then(($body) => {
       
       // 소속 클릭하여 전체 선택 
       cy.get('.material-icons').filter(':visible').contains('settings').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').closest('.v-list__tile').click({ force: true });
       // 화면 본문(body)에 ESC 키 전송 (팝업창 닫는 동작 )
       cy.get('body').type('{esc}');
-      cy.wait(500);
+      cy.wait(1000);
 
       //// 사용자 계정 클릭하여 loginid2 아이디 입력
       cy.contains('.v-label', '사용자 계정').closest('.v-input').find('input').type('hojun', { force: true });
 
       // 소명상태  클릭하는 코드 
       cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 소명상태중 '취소' 클릭하는 코드
       cy.get('.v-list__tile__title').filter(':visible').contains('신청').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 선택 후 메뉴 닫기
       cy.get('body').type('{esc}');
 
@@ -577,7 +577,7 @@ cy.get('body').then(($body) => {
       cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
       // 소명유형중  '사후 소명' 클릭하는 코드
       cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 선택 후 메뉴 닫기
       cy.get('body').type('{esc}');
 

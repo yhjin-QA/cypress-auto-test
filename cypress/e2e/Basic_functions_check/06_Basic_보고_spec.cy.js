@@ -142,28 +142,28 @@ describe('로그캐치 사이트 테스트', () => {
     // 보고 기능 확인 //------------------------------
     // 월 정기점검 보고서 클릭
     cy.contains('a', '월 정기점검 보고서').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 보고서이름 월 정기점검 보고서 -> 자동화 Test 보고서 이름 고치기
     cy.get('input[aria-label="보고서 이름"]').filter(':visible').closest('.v-input').find('.v-input__slot').first().click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('input[aria-label="보고서 이름"]').filter(':visible').first().clear({ force: true }).type('자동화 Test 보고서', { force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 설명 월 정기점검 보고서 -> 자동화 Test 기록입니다. 내용 고치기
     cy.get('input[aria-label="설명"]').filter(':visible').closest('.v-input').find('.v-input__slot').first().click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('input[aria-label="설명"]').filter(':visible').first().clear({ force: true }).type('자동화 Test 기록입니다.', { force: true });
     //보고서 종류 콤보박스 열기 
     cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 보고서 종류중 월 정기점검 보고서 (행위) 선택하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월 정기점검 보고서 (행위)').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
      //확장자 종류 콤보박스 열기 
     cy.get('input[aria-label="확장자"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 확장자 종류중 docx 선택하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'docx').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
@@ -171,45 +171,45 @@ describe('로그캐치 사이트 테스트', () => {
     // 등록한 보고서 행위, 확장자 수정 & 등록한 보고서 검증 ///
     //자동화 Test 보고서 이름 클릭
     cy.contains('a', ' 자동화 Test 보고서').click({ force: true });
-    cy.wait(500); 
+    cy.wait(1000); 
     //보고서 종류 콤보박스 열기 
     cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 보고서 종류중 '개인정보접속 종합 보고서' 선택하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '개인정보접속 종합 보고서').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
      //확장자 종류 콤보박스 열기 
     cy.get('input[aria-label="확장자"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 확장자 종류중 xlsx 선택하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'xlsx').should('be.visible').click({ force: true });
-    cy.wait(500); 
+    cy.wait(1000); 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
   
 
     //자동화 Test 보고서 이름 클릭
     cy.contains('a', '자동화 Test 보고서').click({ force: true }); 
-    cy.wait(500);
+    cy.wait(1000);
     // 다시 보고서 이름 초기화 시키기
     cy.get('input[aria-label="보고서 이름"]').filter(':visible').closest('.v-input').find('.v-input__slot').first().click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('input[aria-label="보고서 이름"]').filter(':visible').first().clear({ force: true }).type('월 정기점검 보고서', { force: true });
-    cy.wait(500);
+    cy.wait(1000);
     //보고서 종류 콤보박스 열기 
     cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 보고서 종류중 '개인정보접속 종합 보고서' 선택하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월 정기점검 보고서').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
      //확장자 종류 콤보박스 열기 
     cy.get('input[aria-label="확장자"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 확장자 종류중 pdf 선택하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'pdf').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
     // 보고서 이름 변경확인 
@@ -235,12 +235,12 @@ describe('로그캐치 사이트 테스트', () => {
     // 보고서 추가화면에서 보고서 종류 선택 - 월 정기점검 보고서(행위_Mongo)
     //보고서 종류 콤보박스 열기 
     cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 보고서 종류 콤보박스에서  '월 정기점검 보고서 (행위_Mongo)' 선택하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월 정기점검 보고서 (행위_Mongo)').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('body').type('{esc}');
-    cy.wait(500);
+    cy.wait(1000);
 
     // 보고서 추가화면에서 업무시스템 - 리눅스_배송관리 선택
     //cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
@@ -257,7 +257,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     //확장자 종류 콤보박스 열기 
     cy.get('input[aria-label="확장자"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 확장자 종류중 ppt 선택하는 코드
     //cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'ppt').should('be.visible').click({ force: true });
     // 1. 드롭다운 컨테이너를 먼저 찾고, 내부를 맨 아래로 스크롤합니다.
@@ -265,7 +265,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 2. 이제 나타난 'ppt' 항목을 클릭합니다.
     cy.contains('.v-list__tile__title', 'ppt').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
@@ -321,7 +321,7 @@ describe('로그캐치 사이트 테스트', () => {
 
            // 삭제 확인 팝업 처리
            cy.contains('삭제하시겠습니까?').should('be.visible');
-           cy.wait(500); // 팝업 애니메이션 안정화 대기
+           cy.wait(1000); // 팝업 애니메이션 안정화 대기
       
            cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
            // 삭제 후 목록이 갱신될 시간을 잠깐 줍니다.

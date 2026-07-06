@@ -167,20 +167,20 @@ describe('로그캐치 사이트 테스트', () => {
        cy.wait(1000);
        // HTTP Method중 POST 클릭하는 코드
        cy.get('.v-menu__content').filter(':visible').contains('GET').click({ force: true });
-       cy.wait(500);
+       cy.wait(1000);
        cy.get('.v-menu__content').filter(':visible').contains('POST').click({ force: true });
-       cy.wait(500);
+       cy.wait(1000);
        // 선택 후 메뉴 닫기
        cy.get('body').type('{esc}');
 
 
        // URI 주소 입력하기 
        cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/cop/logcatch/privacyFileDownloadAfter.do', { force: true });
-       cy.wait(500);
+       cy.wait(1000);
 
        // 검색 버튼 클릭 
        cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-       cy.wait(500);
+       cy.wait(1000);
        
 
        // 메뉴등록 필요 검색값 결과 검증코드  
@@ -194,25 +194,25 @@ describe('로그캐치 사이트 테스트', () => {
 
        });
 
-        cy.wait(500);
+        cy.wait(1000);
 
         //기능 확인 2-------------------------------------------------------
        // 메뉴 등록 완료 URI 검색 동작 
        
        // 메뉴 등록 필요 ON(디폴트값) -> OFF 로 변경
        cy.contains('label', '메뉴 등록 필요').closest('.v-input').find('input[type="checkbox"]').uncheck({ force: true }); // 상태를 무조건 OFF로 만듭니다.
-       cy.wait(500);
+       cy.wait(1000);
 
        // 메뉴 등록 필요 상태 OFF인지 검증코드
        cy.contains('label', '메뉴 등록 필요').closest('.v-input').find('input[type="checkbox"]').should('not.be.checked'); // 꺼져 있어야 정상!
 
        //배송관리 - 상품 배송 현황  URI 주소 입력하기 
        cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/cop/logcatch/selectOrderList.do', { force: true });
-       cy.wait(500);
+       cy.wait(1000);
 
        // 검색 버튼 클릭 
        cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-       cy.wait(500);
+       cy.wait(1000);
        
 
        // 메뉴등록 필요 검색값 결과 검증코드  
@@ -232,11 +232,11 @@ describe('로그캐치 사이트 테스트', () => {
 
        // 선택한 그룹 x버튼 클릭하여 초기화 
        cy.get('input[aria-label="URI 주소"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-       cy.wait(500);
+       cy.wait(1000);
   
        // 오탐/확정 OFF(디폴트값) -> ON 상태로 변경
        cy.contains('.v-input:visible', '오탐/확정').find('.v-input--selection-controls__input').click(); // force 없이 정직하게 클릭!
-       cy.wait(500);
+       cy.wait(1000);
 
        // 오탐/확정 상태 ON 인지 검증코드
        cy.contains('.v-input', '오탐/확정').find('input[type="checkbox"]').should('be.checked'); 
@@ -256,7 +256,7 @@ describe('로그캐치 사이트 테스트', () => {
     
        // 엑셀 다운로드 클릭하는 코드 
        cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
-       cy.wait(500);
+       cy.wait(1000);
 
        // 엑셀 파일 다운로드 팝업 확인창 진행
        cy.get('input[aria-label="확장자"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -345,20 +345,20 @@ describe('로그캐치 사이트 테스트', () => {
        cy.wait(1000);
        // HTTP Method중 POST 클릭하는 코드
        cy.get('.v-menu__content').filter(':visible').contains('GET').click({ force: true });
-       cy.wait(500);
+       cy.wait(1000);
        cy.get('.v-menu__content').filter(':visible').contains('POST').click({ force: true });
-       cy.wait(500);
+       cy.wait(1000);
        // 선택 후 메뉴 닫기
        cy.get('body').type('{esc}');
 
 
        //배송관리 - 배송 담당자 조회  URI 주소 입력하기 
        cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/cop/logcatch/selectDeliveryList.do', { force: true });
-       cy.wait(500);
+       cy.wait(1000);
 
        // 검색 버튼 클릭 
        cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-       cy.wait(500);
+       cy.wait(1000);
 
        // 미등록 URI 관리 검색값 결과 검증코드  
        // 1. 테이블의 모든 행(tr)을 가져와서 필터링
@@ -381,18 +381,18 @@ describe('로그캐치 사이트 테스트', () => {
 
        // 등록된 URI 옵션 상태 OFF(디폴트)-> ON상태 변경하여 검색
        cy.contains('.v-input:visible', '등록된 URI').find('.v-input--selection-controls__input').click();
-       cy.wait(500);
+       cy.wait(1000);
 
        // 메뉴 등록 필요 상태 ON인지 검증코드
        cy.contains('.v-input', '등록된 URI').find('input[type="checkbox"]').should('be.checked'); // 켜져 있어야 정상!
 
        //배송관리 - 배송 담당자 조회  URI 주소 입력하기 
        cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/cop/logcatch/selectDeliveryList.do', { force: true });
-       cy.wait(500);
+       cy.wait(1000);
 
        // 검색 버튼 클릭 
        cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-       cy.wait(500);
+       cy.wait(1000);
 
        // 등록된 URI 검색결과가 없는경우
        // 'No data available'이라는 문구가 화면에(또는 표 내부에) 나타나는지 확인 검증코드
@@ -427,15 +427,15 @@ describe('로그캐치 사이트 테스트', () => {
 
         // 선택한 그룹 x버튼 클릭하여 초기화 
        cy.get('input[aria-label="URI 주소"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-       cy.wait(500);
+       cy.wait(1000);
 
        //배송관리 - 상품 배송현황  URI 주소 입력하기 
        cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/cop/logcatch/selectOrderList.do', { force: true });
-       cy.wait(500);
+       cy.wait(1000);
 
        // 검색 버튼 클릭 
        cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-       cy.wait(500);
+       cy.wait(1000);
 
        // 미등록 URI 관리  검색값 결과 검증코드  
        // '/cop/logcatch/selectOrderList.do' 텍스트를 포함하고 있는 테이블 행(tr)을 찾습니다.

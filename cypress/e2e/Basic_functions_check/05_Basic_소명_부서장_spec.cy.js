@@ -187,7 +187,7 @@ navigateToSomyungManagement_1();
       //기능동작
       //달력표를 펼침  월/일 지정  
       cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
       cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
@@ -212,11 +212,11 @@ navigateToSomyungManagement_1();
       
       // 소속 클릭하여 전체 선택 
       cy.get('.material-icons').filter(':visible').contains('settings').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').closest('.v-list__tile').click({ force: true });
       // 화면 본문(body)에 ESC 키 전송 (팝업창 닫는 동작 )
       cy.get('body').type('{esc}');
-      cy.wait(500);
+      cy.wait(1000);
 
       //// 사용자 계정 클릭하여 hojun 아이디 입력
       cy.contains('.v-label', '사용자 계정').closest('.v-input').find('input').type('loginid445', { force: true });
@@ -225,10 +225,10 @@ navigateToSomyungManagement_1();
       // 소명상태 점검 시작 
       // 소명상태 - 요청을  클릭하는 코드 
       cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 소명상태중 '요청' 클릭하는 코드
       cy.get('.v-list__tile__title').filter(':visible').contains('요청').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 선택 후 메뉴 닫기
       cy.get('body').type('{esc}');
 
@@ -237,7 +237,7 @@ navigateToSomyungManagement_1();
       cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
       // 소명유형중  '사후 소명' 클릭하는 코드
       cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 선택 후 메뉴 닫기
       cy.get('body').type('{esc}');
 
@@ -254,10 +254,10 @@ navigateToSomyungManagement_1();
       //-------------------------
       // 소명상태 - 요청 + 반려 다중선택 클릭하는 코드 
       cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 소명상태중 '취소' 클릭하는 코드
       cy.get('.v-list__tile__title').filter(':visible').contains('반려').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 선택 후 메뉴 닫기
       cy.get('body').type('{esc}');
 
@@ -266,7 +266,7 @@ navigateToSomyungManagement_1();
       cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
       // 소명유형중  '사후 소명' 클릭하는 코드
       cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 선택 후 메뉴 닫기
       cy.get('body').type('{esc}');
 
@@ -287,10 +287,10 @@ navigateToSomyungManagement_1();
      //-------------------------
       // 소명상태 - 반려 클릭하는 코드 
       cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 소명상태중 '취소' 클릭하는 코드
       cy.get('.v-list__tile__title').filter(':visible').contains('반려').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 선택 후 메뉴 닫기
       cy.get('body').type('{esc}');
 
@@ -299,7 +299,7 @@ navigateToSomyungManagement_1();
       cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
       // 소명유형중  '사후 소명' 클릭하는 코드
       cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 선택 후 메뉴 닫기
       cy.get('body').type('{esc}');
 
@@ -320,10 +320,10 @@ navigateToSomyungManagement_1();
       //-------------------------
       // 소명상태 - 승인 클릭하는 코드 
       cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 소명상태중 '취소' 클릭하는 코드
       cy.get('.v-list__tile__title').filter(':visible').contains('승인').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 선택 후 메뉴 닫기
       cy.get('body').type('{esc}');
 
@@ -332,7 +332,7 @@ navigateToSomyungManagement_1();
       cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
       // 소명유형중  '사후 소명' 클릭하는 코드
       cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
       // 선택 후 메뉴 닫기
       cy.get('body').type('{esc}');
 

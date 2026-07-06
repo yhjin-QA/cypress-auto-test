@@ -418,7 +418,7 @@ describe('로그캐치 사이트 테스트', () => {
      //기능동작
     //달력표를 펼침 2월 1일 선택하기
     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
@@ -434,22 +434,22 @@ describe('로그캐치 사이트 테스트', () => {
     // 업무유형 - 로그 수집기
      // '업무 유형' 클릭하여 콤보박스 열기 -----------------
      cy.get('input[aria-label="업무 유형"]').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 콤보박스 리스트안에서 '로그 수집기'를 찾아 클릭합니다.
      cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', '로그 수집기').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 선택이 잘 되었는지 검증코드
      cy.get('input[aria-label="업무 유형"]').closest('.v-input').should('contain', '로그 수집기');
 
      // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
      cy.get('input[aria-label="로그 파일"]').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      
      // 콤보박스 리스트안에서 'task_iid_2001.std'를 찾아 클릭합니다.
      cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'task_iid_2001.std').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 선택이 잘 되었는지 검증코드
      cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'task_iid_2001.std');
@@ -462,7 +462,7 @@ describe('로그캐치 사이트 테스트', () => {
      //- 선택한 로그 파일의 전체 내용을 보여줍니다.
      cy.get('input[aria-label="tail"]').check({ force: true })
      .should('be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
-     cy.wait(500);
+     cy.wait(1000);
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -477,19 +477,19 @@ describe('로그캐치 사이트 테스트', () => {
      // 업무유형 - 접속 로그 분석기 
      //'업무 유형' 클릭하여 콤보박스 열기 -----------------
      cy.get('input[aria-label="업무 유형"]').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 콤보박스 리스트안에서 '접속로그 분석기'를 찾아 클릭합니다.
      cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', '접속 로그 분석기').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
      cy.get('input[aria-label="로그 파일"]').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      
      // 콤보박스 리스트안에서 'DISCRIMINATOR_2002_api_20260204.log'를 찾아 클릭합니다.
      cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'DISCRIMINATOR_2002_api_20260204.log').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 선택이 잘 되었는지 검증코드
      cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'DISCRIMINATOR_2002_api_20260204.log');
@@ -497,7 +497,7 @@ describe('로그캐치 사이트 테스트', () => {
      // tail 토글 OFF-> ON
      cy.get('input[aria-label="tail"]').check({ force: true })
      .should('be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
-     cy.wait(500);
+     cy.wait(1000);
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -511,27 +511,27 @@ describe('로그캐치 사이트 테스트', () => {
      // 업무유형 - 통계 처리기 
      //'업무 유형' 클릭하여 콤보박스 열기 -----------------
      cy.get('input[aria-label="업무 유형"]').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 콤보박스 리스트안에서 '통계 처리기'를 찾아 클릭합니다.
      cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', '통계 처리기').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
      cy.get('input[aria-label="로그 파일"]').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      
      // 콤보박스 리스트안에서 'STATISTICS_2501_20260207.log'를 찾아 클릭합니다.
      //cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'STATISTICS_2501_20260207.log').click({ force: true });
      // 'STATISTICS_2501_'로 시작하고 날짜 상관없이 '.log'로 끝나는 항목을 찾아 클릭
      cy.get('.v-select-list, .v-menu__content').filter(':visible').contains('.v-list__tile__title', /STATISTICS_2501_.*\.log/).click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
 
      // tail 토글 OFF-> ON
      cy.get('input[aria-label="tail"]').check({ force: true })
      .should('be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
-     cy.wait(500);
+     cy.wait(1000);
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -557,27 +557,27 @@ describe('로그캐치 사이트 테스트', () => {
      // 업무유형 - 규칙 분석기 
      //'업무 유형' 클릭하여 콤보박스 열기 -----------------
      cy.get('input[aria-label="업무 유형"]').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 콤보박스 리스트안에서 '규칙 분석기'를 찾아 클릭합니다.
      cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', '규칙 분석기').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
      cy.get('input[aria-label="로그 파일"]').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      
      // 콤보박스 리스트안에서 'RULEANALYZER_200320260209.log'를 찾아 클릭합니다.
      //cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'RULEANALYZER_200320260209.log').click({ force: true });
      // 콤보박스 리스트안에서 'RULEANALYZER_2003'로 시작하고 날짜/시간 상관없이 '.log'로 끝나는 항목을 찾아 클릭합니다.
      cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', /RULEANALYZER_2003.*\.log/).click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
 
      // tail 토글 OFF-> ON
      cy.get('input[aria-label="tail"]').check({ force: true })
      .should('be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
-     cy.wait(500);
+     cy.wait(1000);
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -592,19 +592,19 @@ describe('로그캐치 사이트 테스트', () => {
      // 업무유형 - 로그 수집기 & tail OFF
      //'업무 유형' 클릭하여 콤보박스 열기 -----------------
      cy.get('input[aria-label="업무 유형"]').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 콤보박스 리스트안에서 '로그 수집기'를 찾아 클릭합니다.
      cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', '로그 수집기').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
      cy.get('input[aria-label="로그 파일"]').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      
      // 콤보박스 리스트안에서 '/SQLPARSER_2001_********.log/'를 찾아 클릭합니다.
      cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', /SQLPARSER_2001_\d{8}\.log/).click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 선택이 잘 되었는지 검증코드
      //cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', /SQLPARSER_2001_\d{8}\.log/);
@@ -612,7 +612,7 @@ describe('로그캐치 사이트 테스트', () => {
      // tail 토글 ON -> OFF
      cy.get('input[aria-label="tail"]').uncheck({ force: true }) // 체크 해제 실행
      .should('not.be.checked'); // 실제로 체크가 해제되었는지(OFF) 확인
-     cy.wait(500);
+     cy.wait(1000);
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -625,7 +625,7 @@ describe('로그캐치 사이트 테스트', () => {
       // tail 토글 OFF-> ON
      cy.get('input[aria-label="tail"]').check({ force: true })
      .should('be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
-     cy.wait(500);
+     cy.wait(1000);
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -667,10 +667,10 @@ describe('로그캐치 사이트 테스트', () => {
      //기능확인
      // 기간 - 시작 날짜 달력 지정하기 
      cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 5일 클릭
      cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      //달력창 닫기
      cy.get('body').type('{esc}');
      cy.log('✅ 시작 날짜 지정 성공');
@@ -678,29 +678,29 @@ describe('로그캐치 사이트 테스트', () => {
     // 태스크 그룹 - 태스크 유형 : 로그 수집기
      // '태스크 그룹' 클릭하여 콤보박스 열기 -----------------
      cy.get('input[aria-label="태스크 그룹"]').last().click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 콤보박스 리스트안에서 'Background Service'를 찾아 클릭합니다.
      cy.contains('.v-list__tile__title', 'Background Service').filter(':visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 선택이 잘 되었는지 검증코드
      cy.get('input[aria-label="태스크 그룹"]').closest('.v-input').should('contain', 'Background Service');
 
      // '태스크 유형' 콤보박스을 찾아 클릭합니다.--------
      cy.get('input[aria-label="태스크 유형"]').last().click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      
      // 태스크 유형 콤보박스 리스트안에서 '로그 수집기'를 찾아 클릭합니다.
      cy.get('.v-list__tile__title').filter(':visible').contains('.v-list__tile__title', '로그 수집기').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 선택이 잘 되었는지 검증코드
      cy.get('input[aria-label="태스크 유형"]').closest('.v-input').should('contain', '로그 수집기');
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      
      //검색결과 검증코드
@@ -716,18 +716,18 @@ describe('로그캐치 사이트 테스트', () => {
 
       // '태스크 유형' 콤보박스을 찾아 클릭합니다.--------
      cy.get('input[aria-label="태스크 유형"]').last().click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      
      // 태스크유형 콤보박스 리스트안에서 '접속 로그 분석기'를 찾아 클릭합니다.
      cy.get('.v-list__tile__title').filter(':visible').contains('.v-list__tile__title', '접속 로그 분석기').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 선택이 잘 되었는지 검증코드
      cy.get('input[aria-label="태스크 유형"]').closest('.v-input').should('contain', '접속 로그 분석기');
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      //검색결과 검증코드
      // 파일명이 있는 행을 타겟팅
@@ -742,18 +742,18 @@ describe('로그캐치 사이트 테스트', () => {
 
       // '태스크 유형' 콤보박스을 찾아 클릭합니다.--------
      cy.get('input[aria-label="태스크 유형"]').last().click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      
      // 태스크유형 콤보박스 리스트안에서 '통계 처리기'를 찾아 클릭합니다.
      cy.get('.v-list__tile__title').filter(':visible').contains('.v-list__tile__title', '통계 처리기').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 선택이 잘 되었는지 검증코드
      cy.get('input[aria-label="태스크 유형"]').closest('.v-input').should('contain', '통계 처리기');
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      //검색결과 검증코드
      // 파일명이 있는 행을 타겟팅
@@ -768,18 +768,18 @@ describe('로그캐치 사이트 테스트', () => {
 
        // '태스크 유형' 콤보박스을 찾아 클릭합니다.--------
      cy.get('input[aria-label="태스크 유형"]').last().click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      
      // 태스크유형 콤보박스 리스트안에서 '규칙 분석기'를 찾아 클릭합니다.
      cy.get('.v-list__tile__title').filter(':visible').contains('.v-list__tile__title', '규칙 분석기').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 선택이 잘 되었는지 검증코드
      cy.get('input[aria-label="태스크 유형"]').closest('.v-input').should('contain', '규칙 분석기');
 
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      //검색결과 검증코드
      // 파일명이 있는 행을 타겟팅

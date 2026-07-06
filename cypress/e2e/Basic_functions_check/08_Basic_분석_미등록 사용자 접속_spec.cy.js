@@ -127,7 +127,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 정책 추가 기능 확인 -------------------
     //추가된 test_auto_개인정보과다조회 삭제 --------------------------
     cy.contains('tr', 'test_auto_개인정보과다조회').find('.fa-trash').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 삭제 확인 알림창에서 확인 버튼 클릭 
     cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
 
@@ -148,11 +148,11 @@ describe('로그캐치 사이트 테스트', () => {
     // 정책설정 부분
     // 정책 사용여부 토글 ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
     // 소명 사용여부 토글 ON 
     cy.get('input[aria-label="소명 여부"]').check({ force: true });
-    cy.wait(500);  
+    cy.wait(1000);  
     
     // 업무시스템 - 리눅스_배송관리 선택
     cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
@@ -170,9 +170,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
     // 그룹별중 총무,인사팀 클릭하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('인사팀').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('.v-menu__content').filter(':visible').contains('총무팀').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
@@ -180,19 +180,19 @@ describe('로그캐치 사이트 테스트', () => {
     // 개인정보 사용 건수 입력
     // 주의 입력 
     cy.get('input[aria-label="주의"]').filter(':visible').clear({ force: true }).type('10', { force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 경계 입력
     cy.get('input[aria-label="경계"]').filter(':visible').clear({ force: true }).type('100', { force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 심각 입력
     cy.get('input[aria-label="심각"]').filter(':visible').clear({ force: true }).type('300', { force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     
 
@@ -213,14 +213,14 @@ describe('로그캐치 사이트 테스트', () => {
         // 추가된 정책 화면으로 이동 -----
         // 정책이름 입력 
         cy.get('input[aria-label="정책 이름"]').filter(':visible').clear({ force: true }).type('test_auto_개인정보과다조회', { force: true });
-        cy.wait(500);
+        cy.wait(1000);
 
         // 심각 300-> 500 변경 입력
         cy.get('input[aria-label="심각"]').filter(':visible').clear({ force: true }).type('500', { force: true });
 
         // 저장버튼 클릭 
         cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-        cy.wait(500);
+        cy.wait(1000);
 
           // 추가한 정책  검증코드 
           cy.contains('tr', 'test_auto_개인정보과다조회').should('be.visible');   
@@ -231,7 +231,7 @@ describe('로그캐치 사이트 테스트', () => {
        cy.log('✅ 중복 알림 없이 정책 추가되었습니다.');
        // 추가한 정책  검증코드 
        cy.contains('tr', 'test_auto_개인정보과다조회').should('be.visible');
-       cy.wait(500);
+       cy.wait(1000);
 
      }
    });
@@ -240,12 +240,12 @@ describe('로그캐치 사이트 테스트', () => {
     //기본정책 설정 /철회 코드 -------------------------
     //깃발 클릭 
     cy.get('.fa-flag').first().click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
    
     //기본정책 설정
     //기본 정책 설정 팝업창 확인 버튼 클릭 
     cy.contains('기본정책으로 설정하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
      // 기본 정책 설정확인 검증 코드 (초록색색상값 확인 )
      cy.contains('tr', 'test_auto_개인정보과다조회').find('.fa-flag').should('be.visible')
@@ -256,11 +256,11 @@ describe('로그캐치 사이트 테스트', () => {
     //기본 정책 철회
     // 초록색 깃발아이콘 클릭 
     cy.contains('tr', 'test_auto_개인정보과다조회').find('.fa-flag').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     //기본 정책 철회 팝업창 확인 버튼 클릭
     cy.contains('기본정책에서 철회하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 기본 정책 철회 검증
     // test_auto_개인정보과다조회 사용여부 false 상태로 되어있는지 검증 (철회시 사용여부 false로 변하기때문)
@@ -270,11 +270,11 @@ describe('로그캐치 사이트 테스트', () => {
     // 추가한 test_auto_개인정보과다 조회정책 수정--------------------------------------
     // 추가된 정책명 : test_auto_개인정보과다조회 다시 재클릭 
     cy.contains('a', 'test_auto_개인정보과다조회').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 정책 사용여부 토글 ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 선택한 그룹 x버튼 클릭하여 초기화 
     // cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
@@ -282,16 +282,16 @@ describe('로그캐치 사이트 테스트', () => {
     //추가된 부서 에서 개발팀 추가 하는 코드 
     // 그룹 톱니바퀴 아이콘 클릭
     cy.get('.v-icon').filter(':visible').contains('settings').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 그룹 톱니바퀴 클릭해서 뜬 그룹화면에서 '개발팀' 추가선택
     // '개발팀' 텍스트를 포함하고 있는 리스트 항목(.v-list__tile)을 찾아서 클릭
     cy.contains('.v-list__tile', '개발팀').filter(':visible').click({ force: true }); // 클릭 (체크박스 체크됨)
-    cy.wait(500);
+    cy.wait(1000);
 
     // 그룹 선택 팝업창 닫기
     cy.get('body').type('{esc}');
-    cy.wait(500);
+    cy.wait(1000);
 
     // 개발팀이 추가되었는지 검증하는 코드 ( 그룹 숫자확인 )
     cy.contains('span.grey--text.caption', '(+2)').should('be.visible');
@@ -299,7 +299,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
 
     cy.log('✅  분석 탭 진입 및 데이터 출력 확인 완료!');  
@@ -309,7 +309,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 이상행위 정책 -  업무 시간 외 접속
     ///////////////////////////////////////////////
     cy.contains('.v-chip__content', '업무 시간 외 접속').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     cy.contains('.c-headline', '업무 시간 외 접속 정책 목록').should('exist');
     // 표 문구열 확인
     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
@@ -321,7 +321,7 @@ describe('로그캐치 사이트 테스트', () => {
     
     //추가된 test_auto_업무 시간 외 접속 삭제 --------------------------
     cy.contains('tr', 'test_auto_업무 시간 외 접속').find('.fa-trash').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 삭제 확인 알림창에서 확인 버튼 클릭 
     cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
 
@@ -342,11 +342,11 @@ describe('로그캐치 사이트 테스트', () => {
     // 정책설정 부분
     // 정책 사용여부 토글 ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
     // 소명 사용여부 토글 ON 
     cy.get('input[aria-label="소명 여부"]').check({ force: true });
-    cy.wait(500); 
+    cy.wait(1000); 
     
     // 업무시스템 - 전체 선택
     cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
@@ -368,18 +368,18 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
 
     //기본정책 설정 /철회 코드 -------------------------
     //깃발 클릭 
     cy.get('.fa-flag').first().click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
    
     //기본정책 설정
     //기본 정책 설정 팝업창 확인 버튼 클릭 
     cy.contains('기본정책으로 설정하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
      // 기본 정책 설정확인 검증 코드 (초록색색상값 확인 )
      cy.contains('tr', 'test_auto_업무 시간 외 접속').find('.fa-flag').should('be.visible')
@@ -390,11 +390,11 @@ describe('로그캐치 사이트 테스트', () => {
     //기본 정책 철회
     // 초록색 깃발아이콘 클릭 
     cy.contains('tr', 'test_auto_업무 시간 외 접속').find('.fa-flag').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     //기본 정책 철회 팝업창 확인 버튼 클릭
     cy.contains('기본정책에서 철회하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 기본 정책 철회 검증
     // test_auto_업무 시간 외 접속 사용여부 false 상태로 되어있는지 검증 (철회시 사용여부 false로 변하기때문)
@@ -405,36 +405,36 @@ describe('로그캐치 사이트 테스트', () => {
     // 추가한 test_auto_'test_auto_업무 시간 외 접속 정책 수정--------------------------------------
     // 추가된 정책명 : test_auto_'test_auto_업무 시간 외 접속 다시 재클릭 
     cy.contains('a', 'test_auto_업무 시간 외 접속').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 정책 설정창 안에서 '공휴일설정' 버튼 클릭 
     cy.contains('.v-btn__content', '공휴일 설정').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
  
     // 공휴일 설정 팝업창 공휴일 헤더문구 있는지확인 검증코드
     cy.contains('th', '공휴일').should('be.visible');
 
     //  공휴일 설정 팝업창 안에서 '동기화' 버튼 클릭
     cy.contains('.v-btn__content', '동기화').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 동기화 버튼 클릭하여 동기화 알림창 발생 확인 검증코드
     cy.get('.v-dialog').filter(':visible').contains('자동 생성된 공휴일은 관련 법안 개정').should('be.visible');
 
     // 동기화 확인 알림창 - '확인'버튼클릭 하여 창닫기
     cy.contains('.c-headline', '알림').closest('.v-dialog, .v-card').contains('.v-btn__content', '확인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 동기화후 공휴일 동기화 확인하는 검증코드
     cy.get('.v-dialog').filter(':visible').find('tbody').contains('새해 첫날').should('be.visible');
 
     // 공휴일 설정 팝업창 - '저장'버튼 클릭하기 
     cy.contains('.c-headline', '공휴일 설정').closest('.v-dialog, .v-card').contains('.v-btn__content', '저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 정책 추가 된 상태에서 더이상 추가 안되는지 확인 
     
@@ -445,9 +445,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
     // 팝업창 확인
    cy.get('.v-dialog').filter(':visible').contains('이미 모든 업무시스템이 정책에 할당되어 있어').should('be.visible');
-   cy.wait(500); 
+   cy.wait(1000); 
    cy.get('.v-dialog').filter(':visible').should('contain', '이미 모든 업무시스템이 정책에 할당되어 있어').contains('.v-btn__content', '확인').click({ force: true });
-   cy.wait(500);
+   cy.wait(1000);
     
 
     cy.log('✅  분석 탭 - 업무시간 외 접속 및 데이터 출력 확인 완료!');
@@ -472,7 +472,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     //추가된 test_auto_장기 미접속 사용자 삭제 --------------------------
     cy.contains('tr', 'test_auto_장기 미접속 사용자').find('.fa-trash').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 삭제 확인 알림창에서 확인 버튼 클릭 
     cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
 
@@ -493,7 +493,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 정책설정 부분
     // 정책 사용여부 토글 ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
 
     // 그룹별 클릭하는 코드 
@@ -501,24 +501,24 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
     // 그룹 - 전체 선택 클릭하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('전체 선택').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     
     
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     //기본정책 설정 /철회 코드 -------------------------
     //깃발 클릭 
     cy.get('.fa-flag').first().click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
    
     //기본정책 설정
     //기본 정책 설정 팝업창 확인 버튼 클릭 
     cy.contains('기본정책으로 설정하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
      // 기본 정책 설정확인 검증 코드 (초록색색상값 확인 )
      cy.contains('tr', 'test_auto_장기 미접속 사용자').find('.fa-flag').should('be.visible')
@@ -529,11 +529,11 @@ describe('로그캐치 사이트 테스트', () => {
     //기본 정책 철회
     // 초록색 깃발아이콘 클릭 
     cy.contains('tr', 'test_auto_장기 미접속 사용자').find('.fa-flag').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     //기본 정책 철회 팝업창 확인 버튼 클릭
     cy.contains('기본정책에서 철회하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 기본 정책 철회 검증
     // test_auto_장기 미접속 사용자 사용여부 false 상태로 되어있는지 검증 (철회시 사용여부 false로 변하기때문)
@@ -544,11 +544,11 @@ describe('로그캐치 사이트 테스트', () => {
     // 추가한 test_auto_개인정보과다 조회정책 그룹 수정1.--------------------------------------
     // 추가된 정책명 : test_auto_장기 미접속 사용자 다시 재클릭 
     cy.contains('a', 'test_auto_장기 미접속 사용자').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 정책 사용여부 토글 ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 선택한 그룹 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
@@ -556,19 +556,19 @@ describe('로그캐치 사이트 테스트', () => {
     //추가된 부서 에서 개발팀 추가 하는 코드 
     // 그룹 톱니바퀴 아이콘 클릭
     cy.get('.v-icon').filter(':visible').contains('settings').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 그룹 톱니바퀴 클릭해서 뜬 그룹화면에서 '팀별' 추가선택
     // '경영지원팀' 텍스트를 포함하고 있는 리스트 항목(.v-list__tile)을 찾아서 클릭
     cy.contains('.v-list__tile', '경영지원팀').filter(':visible').click({ force: true }); // 클릭 (체크박스 체크됨)
-    cy.wait(500);
+    cy.wait(1000);
     // '기술지원팀' 텍스트를 포함하고 있는 리스트 항목(.v-list__tile)을 찾아서 클릭
     cy.contains('.v-list__tile', '기술지원팀').filter(':visible').click({ force: true }); // 클릭 (체크박스 체크됨)
-    cy.wait(500);
+    cy.wait(1000);
 
     // 그룹 선택 팝업창 닫기
     cy.get('body').type('{esc}');
-    cy.wait(500);
+    cy.wait(1000);
 
     // 경영지원, 기술지원팀 추가되어있는지 검증하는 코드 ( 그룹 숫자확인 )
     cy.contains('span.grey--text.caption', '(+1)').should('be.visible');
@@ -579,49 +579,49 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 추가한 test_auto_개인정보과다 조회정책 그룹 수정2.--------------------------------------
     // 추가된 정책명 : test_auto_장기 미접속 사용자 다시 재클릭 
     cy.contains('a', 'test_auto_장기 미접속 사용자').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
   
     // 접속 차단 주기 '주단위' -> '월단위' 로 변경 
     cy.contains('label', '접속 차단 주기').closest('.v-input').contains('주단위').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월단위').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 장기간 미접속 기간 설정 1개월(디폴트) -> 3개월로 수치 변경
     cy.get('input[aria-label="개월"]').type('{selectall}{backspace}3');
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
 
      // 추가한 test_auto_개인정보과다 조회정책 그룹 수정2.--------------------------------------
     // 추가된 정책명 : test_auto_장기 미접속 사용자 다시 재클릭 
     cy.contains('a', 'test_auto_장기 미접속 사용자').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
   
     // 접속 차단 주기 '월단위' -> '주단위' 로 변경 
     cy.contains('label', '접속 차단 주기').closest('.v-input').contains('월단위').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '주단위').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 장기간 미접속 기간 설정 3주일 -> 2주로 수치 변경
     cy.get('input[aria-label="주일"]').type('{selectall}{backspace}2');
-    cy.wait(500);
+    cy.wait(1000);
     
     // 접속 차단 설정 OFF-> ON
     cy.get('input[aria-label="접속 차단"]').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 추가한 test_auto_개인정보과다 조회정책 그룹 수정한 부분 검증확인.--------------------------------------
     // 추가된 정책명 : test_auto_장기 미접속 사용자 다시 재클릭 
@@ -638,11 +638,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="접속 차단"]').siblings('.v-input--selection-controls__ripple').should('have.css', 'color', 'rgb(169, 209, 142)');
     cy.get('input[aria-label="접속 차단"]').should('have.attr', 'aria-checked', 'true');
 
-    cy.wait(500);
+    cy.wait(1000);
 
     // 취소 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('취소').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     cy.log('✅  분석 탭 - 장기 미접속 사용자 및 데이터 출력 확인 완료!');
     cy.wait(2000);
@@ -664,7 +664,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     //추가된 test_auto_미등록 사용자 접속 삭제 --------------------------
     cy.contains('tr', 'test_auto_미등록 사용자 접속').find('.fa-trash').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 삭제 확인 알림창에서 확인 버튼 클릭 
     cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
 
@@ -685,7 +685,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 정책설정 부분
     // 정책 사용여부 토글 OFF-> ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 업무시스템 - 전체 선택
     cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
@@ -693,12 +693,12 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
     // 업무시스템중 '전체 선택 클릭하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('전체 선택').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
     
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
     //미등록 사용자 접속정책 목록에 정책이 잘 추가되었는지 검증하는 코드 
     cy.get('tbody').contains('tr', 'test_auto_미등록 사용자 접속').should('be.visible');
@@ -707,12 +707,12 @@ describe('로그캐치 사이트 테스트', () => {
     //기본정책 설정 /철회 코드 -------------------------
     //깃발 클릭 
     cy.get('.fa-flag').first().click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
    
     //기본정책 설정
     //기본 정책 설정 팝업창 확인 버튼 클릭 
     cy.contains('기본정책으로 설정하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
      // 기본 정책 설정확인 검증 코드 (초록색색상값 확인 )
      cy.contains('tr', 'test_auto_미등록 사용자 접속').find('.fa-flag').should('be.visible')
@@ -723,11 +723,11 @@ describe('로그캐치 사이트 테스트', () => {
     //기본 정책 철회
     // 초록색 깃발아이콘 클릭 
     cy.contains('tr', 'test_auto_미등록 사용자 접속').find('.fa-flag').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     //기본 정책 철회 팝업창 확인 버튼 클릭
     cy.contains('기본정책에서 철회하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 기본 정책 철회 검증
     // test_auto_미등록 사용자 접속 사용여부 false 상태로 되어있는지 검증 (철회시 사용여부 false로 변하기때문)
@@ -738,11 +738,11 @@ describe('로그캐치 사이트 테스트', () => {
     // 추가한 test_auto_미등록 사용자 접속 정책 그룹 수정1.--------------------------------------
     // 추가된 정책명 : test_auto_미등록 사용자 접속 사용자 다시 재클릭 
     cy.contains('a', 'test_auto_미등록 사용자 접속').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 정책 사용여부 토글 OFF-> ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 선택한 그룹 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
@@ -759,57 +759,57 @@ describe('로그캐치 사이트 테스트', () => {
     
     //경보등급 주의 -> 경계로 선택하기 
     cy.contains('label', '경계').closest('div').find('.v-input--selection-controls__ripple').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 경보등급 경례 상태 확인 검증코드 
     cy.contains('label', '경계').closest('div').find('input').should('have.attr', 'aria-checked', 'true');
-    cy.wait(500);
+    cy.wait(1000);
 
      // 저장 버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 추가한 test_auto_미등록 사용자 접속 정책 그룹 수정2.--------------------------------------
     // 추가된 정책명 :test_auto_미등록 사용자 접속 사용자 다시 재클릭 
     cy.contains('a', 'test_auto_미등록 사용자 접속').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     //경보등급 경계 -> 심각 선택하기 
     cy.contains('label', '심각').closest('div').find('.v-input--selection-controls__ripple').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 경보등급 심각 상태 확인 검증코드 
     cy.contains('label', '심각').closest('div').find('input').should('have.attr', 'aria-checked', 'true');
-    cy.wait(500);
+    cy.wait(1000);
 
     //  버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 추가한 test_auto_미등록 사용자 접속 정책 그룹 수정3.--------------------------------------
     // 추가된 정책명 :test_auto_미등록 사용자 접속 사용자 다시 재클릭 
     cy.contains('a', 'test_auto_미등록 사용자 접속').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     //경보등급 심각 -> 주의로 선택하기 
     cy.contains('label', '주의').closest('div').find('.v-input--selection-controls__ripple').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 경보등급 주의 상태 확인 검증코드 
     cy.contains('label', '주의').closest('div').find('input').should('have.attr', 'aria-checked', 'true');
-    cy.wait(500);
+    cy.wait(1000);
 
     // 취소 버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('취소').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 추가된 정책명 :test_auto_미등록 사용자 접속 사용자 다시 재클릭 
     cy.contains('a', 'test_auto_미등록 사용자 접속').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
     // 경보등급 심각 상태 확인 검증코드 
     cy.contains('label', '심각').closest('div').find('input').should('have.attr', 'aria-checked', 'true');
 
     // 취소 버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('취소').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     cy.log('✅  분석 탭 - 미등록 사용자 접속 및 데이터 출력 확인 완료!');
     cy.wait(1000);

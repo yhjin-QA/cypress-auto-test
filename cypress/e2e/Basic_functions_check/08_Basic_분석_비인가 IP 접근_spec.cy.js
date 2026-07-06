@@ -140,7 +140,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     //추가된 test_auto_미등록 사용자 접속 삭제 --------------------------
     cy.contains('tr', 'test_auto_비인가 IP 접근').find('.fa-trash').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 삭제 확인 알림창에서 확인 버튼 클릭 
     cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
 
@@ -161,11 +161,11 @@ describe('로그캐치 사이트 테스트', () => {
     // 정책설정 부분
     // 정책 사용여부 토글 OFF-> ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 소명 사용여부 토글 ON 
     cy.get('input[aria-label="소명 여부"]').check({ force: true });
-    cy.wait(500); 
+    cy.wait(1000); 
 
     // 업무시스템 - 선택
     cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
@@ -173,43 +173,43 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
     // 업무시스템중 '리눅스배송관리' 클릭하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('리눅스_배송관리').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
 
     // 허용 IP설정-------
     // 식별자 이름 tester 입력하기 
     cy.get('input[aria-label="식별자 이름"]').filter(':visible').first().type('{selectall}{backspace}tester', { force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     //정보사용자 선택하기
     cy.get('input[aria-label="정보 사용자"]').filter(':visible').first().click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 정보 사용자 팝업창에서 이름 검색 - 임솔 입력 
     cy.get('.v-dialog').filter(':visible').find('input[aria-label="사용자"]').type('임솔', { force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 정보사용자 팝업창에서 유우종이라는 사람 그옆 체크박스 클릭
     cy.contains('tr', '임솔').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 체크가 잘되어있는지 검증코드
     cy.contains('tr', '임솔').find('.v-icon').should('contain', 'check_box');
 
     //정보사용자 팝업창 '확인' 버튼 클릭
     cy.get('.v-dialog__content--active').find('button').contains('확인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 2. 접근 IP 주소 입력
     cy.get('input[aria-label="접근 IP 주소"]').filter(':visible').clear({ force: true }).type('192.168.0.1');
-    cy.wait(500);
+    cy.wait(1000);
     // 3. 넷마스크 입력
     cy.get('input[aria-label="넷마스크"]').filter(':visible').clear({ force: true }).type('255.255.255.0');
-    cy.wait(500);
+    cy.wait(1000);
     // 4. 우측 끝 '추가' 버튼 클릭
     cy.contains('button', '추가').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // [검증] 아래 리스트(Grid)에 'tester'라는 식별자가 추가되었는지 확인
     cy.contains('td', 'tester').should('be.visible');
@@ -217,7 +217,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     
     //비인가 IP 접근 정책 목록에 정책이 잘 추가되었는지 검증하는 코드 
     cy.get('tbody').contains('tr', 'test_auto_비인가 IP 접근').should('be.visible');
@@ -225,12 +225,12 @@ describe('로그캐치 사이트 테스트', () => {
     //기본정책 설정 /철회 코드 -------------------------
     //깃발 클릭 
     cy.get('.fa-flag').first().click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
    
     //기본정책 설정
     //기본 정책 설정 팝업창 확인 버튼 클릭 
     cy.contains('기본정책으로 설정하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
      // 기본 정책 설정확인 검증 코드 (초록색색상값 확인 )
      cy.contains('tr', 'test_auto_비인가 IP 접근').find('.fa-flag').should('be.visible')
@@ -241,11 +241,11 @@ describe('로그캐치 사이트 테스트', () => {
     //기본 정책 철회
     // 초록색 깃발아이콘 클릭 
     cy.contains('tr', 'test_auto_비인가 IP 접근').find('.fa-flag').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     //기본 정책 철회 팝업창 확인 버튼 클릭
     cy.contains('기본정책에서 철회하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 기본 정책 철회 검증
     // ttest_auto_비인가 IP 접근 사용여부 false 상태로 되어있는지 검증 (철회시 사용여부 false로 변하기때문)
@@ -255,18 +255,18 @@ describe('로그캐치 사이트 테스트', () => {
      // 추가한 test_auto_미등록 사용자 접속 정책 그룹 수정1.--------------------------------------
     // 추가된 정책명 : test_auto_비인가 IP 접근  다시 재클릭 
     cy.contains('a', 'test_auto_비인가 IP 접근').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 정책 사용여부 토글 OFF-> ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     //경보등급 주의 -> 경계로 선택하기 
     cy.contains('label', '경계').closest('div').find('.v-input--selection-controls__ripple').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 경보등급 경례 상태 확인 검증코드 
     cy.contains('label', '경계').closest('div').find('input').should('have.attr', 'aria-checked', 'true');
-    cy.wait(500);
+    cy.wait(1000);
 
      // 허용 IP설정-------
      // 허용/비허용 상태 ON->OFF상태로 변경
@@ -278,36 +278,36 @@ describe('로그캐치 사이트 테스트', () => {
      // 허용 IP설정-------
     // 식별자 이름 Block 입력하기 
     cy.get('input[aria-label="식별자 이름"]').filter(':visible').first().type('{selectall}{backspace}block', { force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     //정보사용자 선택하기
     cy.get('input[aria-label="정보 사용자"]').filter(':visible').first().click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 정보 사용자 팝업창에서 이름 검색 - 임솔 입력 
     cy.get('.v-dialog').filter(':visible').find('input[aria-label="사용자"]').type('차은우', { force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 정보사용자 팝업창에서 차은우이라는 사람 그옆 체크박스 클릭
     cy.contains('tr', '차은우').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 체크가 잘되어있는지 검증코드
     cy.contains('tr', '차은우').find('.v-icon').should('contain', 'check_box');
 
     //정보사용자 팝업창 '확인' 버튼 클릭
     cy.get('.v-dialog__content--active').find('button').contains('확인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 2. 접근 IP 주소 입력
     cy.get('input[aria-label="접근 IP 주소"]').filter(':visible').clear({ force: true }).type('192.168.0.2');
-     cy.wait(500);
+     cy.wait(1000);
     // 3. 넷마스크 입력
     cy.get('input[aria-label="넷마스크"]').filter(':visible').clear({ force: true }).type('255.255.0.0');
-     cy.wait(500);
+     cy.wait(1000);
     // 4. 우측 끝 '추가' 버튼 클릭
     cy.contains('button', '추가').filter(':visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // [검증] 아래 리스트(Grid)에 'block'라는 식별자가 추가되었는지 확인
     cy.contains('td', 'block').should('be.visible');
@@ -315,7 +315,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 저장버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
   
     cy.log('✅  분석 탭 - 비인가 IP 접근 및 데이터 출력 확인 완료!');

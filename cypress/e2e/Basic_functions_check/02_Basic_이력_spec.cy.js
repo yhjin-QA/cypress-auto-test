@@ -164,19 +164,19 @@ describe('로그캐치 사이트 테스트', () => {
     //cy.get('label').filter(':visible').contains('업무시스템').closest('.v-input').find('.v-input__slot').click({ force: true });
     //부서/소속 클릭하여 전체 선택 
     cy.get('.material-icons').filter(':visible').contains('settings').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').closest('.v-list__tile').click({ force: true });
     // 화면 본문(body)에 ESC 키 전송 (팝업창 닫는 동작 )
     cy.get('body').type('{esc}');
-    cy.wait(500);
+    cy.wait(1000);
     cy.log('✅ 팝업 닫기 성공');
 
      // 기간 - 시작 날짜 달력 지정하기 
      cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 1일 클릭
      cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 검색버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -287,10 +287,10 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 기간 - 시작 날짜 달력 지정하기 
      cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 1일 클릭
      cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      //달력창 닫기
      cy.get('body').type('{esc}');
      cy.log('✅ 시작 날짜 지정 성공');
@@ -299,7 +299,7 @@ describe('로그캐치 사이트 테스트', () => {
     //조건입력 기능 동작 
     //이상행위 유형 클릭하는 코드 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 이상행위 유형중 개인정보 과다조회 클릭하는 코드
     //cy.get('.v-list__tile__title').contains('개인정보 과다조회').should('be.visible').closest('.v-list__tile').click({ force: true });
     cy.get('.v-list__tile__title').filter(':visible').contains('개인정보 과다조회').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
@@ -312,7 +312,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     //표 안의 결과 확인 
     //표안의 소명 대상 문구확인 
-    cy.wait(500);
+    cy.wait(1000);
     //cy.get('tbody').contains('a', '개인정보 과다조회').should('be.visible');
     cy.get('tbody').filter(':visible').contains('tr', '개인정보 과다조회').should('contain', '소명 대상').and('be.visible');
   
@@ -366,7 +366,7 @@ describe('로그캐치 사이트 테스트', () => {
     //기능동작
     //달력표를 펼침 
     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
@@ -538,7 +538,7 @@ cy.wait(1000);
 
     //달력표를 펼침 
     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
@@ -553,7 +553,7 @@ cy.wait(1000);
     // 조건 입력 
     //업무시스템 클릭하는 코드 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 업무시스템중 리눅스_배송관리 클릭하는 코드
     cy.get('.v-list__tile__title').contains('리눅스_배송관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
@@ -561,10 +561,10 @@ cy.wait(1000);
 
     // 사용자 상태 - 미등록  선택----------------------------------------------- 
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      cy.get('.v-list__tile__title').contains('미등록').should('be.visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      //검색버튼 클릭
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -619,12 +619,12 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
 
     // 엑셀 다운로드 클릭하는 코드 
     cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 엑셀 파일 다운로드 확인창 진행
     // 파일다운로드 그룹 선택 (팝업창에서찾기 )
     cy.get('.v-dialog--active').find('.v-select__selections').first().click({ force: true });
     
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('.v-list__tile__title').filter(':visible').contains('접속이력 조회 화면 결과 파일').closest('.v-list__tile').click({ force: true });
     // 다운로드 유형 선택
     cy.get('.v-dialog--active').find('.v-select__selections').eq(1).click({ force: true });

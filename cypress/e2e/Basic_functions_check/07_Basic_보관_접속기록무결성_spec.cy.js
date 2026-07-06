@@ -177,12 +177,12 @@ describe('로그캐치 사이트 테스트', () => {
     //정책추가화면에서 날짜 선택 - 시작 기간선택
     //날짜 선택 콤보박스 열기 
     cy.get('input[aria-label="날짜 선택"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 날짜선택  콤보박스에서  '시작 기간선택' 선택하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '시작 기간선택').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('body').type('{esc}');
-    cy.wait(500);
+    cy.wait(1000);
 
     // 금일로부터 0일 이전 데이터에 대해 검사할지 입력
     // 텍스트를 먼저 찾고 그 텍스트를 감싸는 컴포넌트(입력창 영역)를 찾아서 진짜 input 태그 선택
@@ -204,12 +204,12 @@ describe('로그캐치 사이트 테스트', () => {
     //정책추가화면에서 날짜 선택 - 특정 기간선택
     //날짜 선택 콤보박스 열기 
     cy.get('input[aria-label="날짜 선택"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 날짜선택  콤보박스에서  '시작 기간선택' 선택하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '특정 기간선택').should('be.visible').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('body').type('{esc}');
-    cy.wait(500);
+    cy.wait(1000);
 
     // 금일로부터 0일 이전 데이터에 대해 검사할지 입력  (7->3으로 변경)
     // 텍스트를 먼저 찾고 그 텍스트를 감싸는 컴포넌트(입력창 영역)를 찾아서 진짜 input 태그 선택
@@ -249,7 +249,7 @@ describe('로그캐치 사이트 테스트', () => {
 
            // 삭제 확인 팝업 처리
            cy.contains('삭제하시겠습니까?').should('be.visible');
-           cy.wait(500); // 팝업 애니메이션 안정화 대기
+           cy.wait(1000); // 팝업 애니메이션 안정화 대기
       
            cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
            // 삭제 후 목록이 갱신될 시간을 잠깐 줍니다.
@@ -342,7 +342,7 @@ describe('로그캐치 사이트 테스트', () => {
      //엑셀 다운로드 확인기능 -----------------
      // 엑셀 다운로드 클릭하는 코드 
     cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 엑셀 파일 다운로드 팝업 확인창 진행
     cy.get('input[aria-label="확장자"]').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -434,13 +434,13 @@ describe('로그캐치 사이트 테스트', () => {
     // 위 변조 여부 값중 - 일치 클릭 
     // 위변조 여부 전체(디폴트)값을 클릭하여 콤보박스 열기 
     cy.get('span[title="전체"]').filter(':visible').click({ force: true });
-    cy.wait(500); // 메뉴가 펼쳐지는 애니메이션을 위해 잠시 대기
+    cy.wait(1000); // 메뉴가 펼쳐지는 애니메이션을 위해 잠시 대기
 
     // 위변주 여부 열린 메뉴(.v-menu__content) 중에서 '일치'를 찾아 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '일치').should('be.visible').click({ force: true });
     // 선택한 컨텍스트메뉴닫기 (팝업창 닫는 동작 )
     cy.get('body').type('{esc}');
-    cy.wait(500);
+    cy.wait(1000);
 
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -471,13 +471,13 @@ describe('로그캐치 사이트 테스트', () => {
     // 위변조 여부 [일치]값을 클릭하여 콤보박스 열기 
     cy.get('input[aria-label="위 변조 여부"]').closest('.v-input').find('.v-input__slot').filter(':visible').click({ force: true });
     //cy.get('span[title="일치"]').filter(':visible').click({ force: true });
-    cy.wait(500); // 메뉴가 펼쳐지는 애니메이션을 위해 잠시 대기
+    cy.wait(1000); // 메뉴가 펼쳐지는 애니메이션을 위해 잠시 대기
 
     // 위변주 여부 열린 메뉴(.v-menu__content) 중에서 '일치'를 찾아 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '불일치').should('be.visible').click({ force: true });
     // 선택한 컨텍스트메뉴닫기 (팝업창 닫는 동작 )
     cy.get('body').type('{esc}');
-    cy.wait(500);
+    cy.wait(1000);
 
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -513,13 +513,13 @@ describe('로그캐치 사이트 테스트', () => {
     // 위변조 여부 [일치]값을 클릭하여 콤보박스 열기 
     cy.get('input[aria-label="위 변조 여부"]').closest('.v-input').find('.v-input__slot').filter(':visible').click({ force: true });
     //cy.get('span[title="일치"]').filter(':visible').click({ force: true });
-    cy.wait(500); // 메뉴가 펼쳐지는 애니메이션을 위해 잠시 대기
+    cy.wait(1000); // 메뉴가 펼쳐지는 애니메이션을 위해 잠시 대기
 
     // 위변주 여부 열린 메뉴(.v-menu__content) 중에서 '일치'를 찾아 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '전체').should('be.visible').click({ force: true });
     // 선택한 컨텍스트메뉴닫기 (팝업창 닫는 동작 )
     cy.get('body').type('{esc}');
-    cy.wait(500);
+    cy.wait(1000);
 
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -533,7 +533,7 @@ describe('로그캐치 사이트 테스트', () => {
     //엑셀 다운로드 확인기능 -----------------
     // 엑셀 다운로드 클릭하는 코드 
     cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
 
     // 엑셀 파일 다운로드 팝업 확인창 진행
     cy.get('input[aria-label="확장자"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });

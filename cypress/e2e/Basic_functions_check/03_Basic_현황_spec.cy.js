@@ -140,7 +140,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 조건 입력 
     //업무시스템 클릭하는 코드 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 업무시스템중 리눅스_배송관리 클릭하는 코드
     cy.contains('.v-list__tile__title', '전체 선택').should('be.visible').click();
     //cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -154,7 +154,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 정보 사용자 클릭하는 코드 
     cy.get('span[title="정보 사용자"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     //cy.get('span[title="정보 사용자"]').should('be.visible').click();
-    cy.wait(500);
+    cy.wait(1000);
     // 업무시스템중 리눅스_배송관리 클릭하는 코드
     cy.get('.v-list__tile__title').contains('아이피').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
@@ -197,7 +197,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 조건 입력 
     //업무시스템 클릭하는 코드 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 업무시스템중 리눅스_배송관리 클릭하는 코드
     cy.contains('.v-list__tile__title', '전체 선택').should('be.visible').click();
     //cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -210,7 +210,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 조건 입력 
     // 그룹별 클릭하는 코드 
     cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 그룹별중 영업팀 클릭하는 코드
     cy.get('.v-list__tile__title').contains('인사팀').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
@@ -312,14 +312,14 @@ describe('로그캐치 사이트 테스트', () => {
     // 업무시스템중 리눅스_배송관리 클릭하는 코드
     //cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').click({ force: true });
     cy.get('.v-list__tile__title').filter(':visible').contains('리눅스_배송관리').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
     //추적타입 - 정보사용자는 디폴트값으로 선택 Skip
     //사용자 선택
     cy.get('input[aria-label="사용자"]').filter(':visible').click({ force: true });
     // 사용자 리스트 콤보박스에서 첫번쨰 사람 선택
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('.v-list__tile__title').filter(':visible').eq(0).click({ force: true });
 
     // 검색 버튼 클릭
@@ -354,18 +354,18 @@ describe('로그캐치 사이트 테스트', () => {
     // 조건 입력 
     //업무시스템 클릭하는 코드 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 업무시스템중 리눅스_배송관리 클릭하는 코드
     //cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
 
     // 조건 입력 
     // 그룹별 클릭하는 코드 
     cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 그룹별중 영업팀 클릭하는 코드
     cy.get('.v-list__tile__title').contains('협력사').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기

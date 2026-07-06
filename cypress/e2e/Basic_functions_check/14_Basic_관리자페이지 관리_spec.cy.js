@@ -356,18 +356,18 @@ describe('로그캐치 사이트 테스트', () => {
      // 소속(전체 )검색조건에서 이름 검색----------------------------------------------------
      // '검색 조건' 콤보박스(input)를 찾아 클릭하여 리스트를 엽니다.
      cy.get('input[aria-label="검색 조건"]').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 화면에 나타난 리스트 메뉴 중에서 '이름'을 선택
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '이름').should('be.visible').click({ force: true });
      // '값' 입력창을 찾아 비운 뒤 '사원_1'을 타이핑합니다.
      cy.get('input[aria-label="값"]').should('be.visible').clear().type('사원_1');
-     cy.wait(500);
+     cy.wait(1000);
      //상태 클릭
      cy.get('input[aria-label="상태"]').filter(':visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 상태 리스트중 '사용자' 클릭
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '사용자').should('be.visible').click({ force: true });
-     cy.wait(500);    
+     cy.wait(1000);    
      // 검색버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
@@ -378,24 +378,24 @@ describe('로그캐치 사이트 테스트', () => {
      // 소속(전체 )검색조건에서 이름 -> 아이디 검색으로----------------------------------------------------
      // '검색 조건' 콤보박스(input)를 찾아 클릭하여 리스트를 엽니다.
      cy.get('span[title="이름"]').should('be.visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 화면에 나타난 리스트 메뉴 중에서 '아이디'을 선택
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '아이디').should('be.visible').click({ force: true });
      
      cy.get('input[aria-label="값"]').should('be.visible').clear().type('loginid2');
-     cy.wait(500);
+     cy.wait(1000);
      //상태 콤보박스 — 선택 영역(.v-select__selections) 직접 클릭
      cy.contains('label', '상태').closest('.v-input').find('.v-select__selections').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 드롭다운에서 '퇴직자' 선택
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '퇴직자').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      // 선택 닫기
      cy.get('body').type('{esc}');
 
-     cy.wait(500);    
+     cy.wait(1000);    
      // 검색버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
@@ -407,21 +407,21 @@ describe('로그캐치 사이트 테스트', () => {
      // 소속(전체 )검색조건에서 아이디 -> 이메일 검색으로----------------------------------------------------
      // '검색 조건' 콤보박스(input)를 찾아 클릭하여 리스트를 엽니다.
      cy.get('span[title="아이디"]').should('be.visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 화면에 나타난 리스트 메뉴 중에서 '아이디'을 선택
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '이메일').should('be.visible').click({ force: true });
     
      cy.get('input[aria-label="값"]').should('be.visible').clear().type('user001@logcatch.com');
-     cy.wait(500);
+     cy.wait(1000);
 
      // 상태 콤보박스 — '사용자'로 초기화
      cy.contains('label', '상태').closest('.v-input').find('.v-select__selections').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '사용자').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
 
-     cy.wait(500);    
+     cy.wait(1000);    
      // 검색버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
@@ -498,7 +498,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 기능확인
     //달력표를 펼침  월/일 지정  
     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
@@ -512,29 +512,29 @@ describe('로그캐치 사이트 테스트', () => {
     // 월 정기점검 보고서 조회하기 -------------------------------------------------------------
     //파일 다운로드 그룹 클릭 
      cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      
      // 열려있는 메뉴창을 찾아 맨 아래로 부드럽게 스크롤합니다.
      cy.get('.v-menu__content:visible').scrollTo('bottom', { duration: 500 });
-     cy.wait(500);
+     cy.wait(1000);
      // 상태 리스트중 '월 정기점검 보고서' 클릭
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '월 정기점검 보고서').should('exist').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 선택한 컨텍스트 메뉴 닫기
      cy.get('body').type('{esc}');  
 
      //상태 클릭
      cy.get('input[aria-label="상태"]').filter(':visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 상태 리스트중 '완료' 클릭
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '완료').should('be.visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 선택한 컨텍스트 메뉴 닫기
      cy.get('body').type('{esc}');    
 
      // 검색버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 검색결과 검증코드
      cy.contains('tbody tr', '월 정기점검 보고서')
      .first() // 혹시 목록에 여러 개가 있다면 가장 최신(첫 번째) 것을 선택
@@ -552,25 +552,25 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 파일 다운로드 그룹 x버튼 클릭하여 초기화 
      cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true }); 
-     cy.wait(500);
+     cy.wait(1000);
 
      //접속이력 조회 화면 결과 파일 보고서 조회하기 -----------------------------------------------
      //파일 다운로드 그룹 클릭 
      cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      
      // 열려있는 메뉴창을 찾아 맨 아래로 부드럽게 스크롤합니다.
      cy.get('.v-menu__content:visible').scrollTo('bottom', { duration: 500 });
-     cy.wait(500);
+     cy.wait(1000);
      // 상태 리스트중 '접속이력 조회 화면 결과 파일' 클릭
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '접속이력 조회 화면 결과 파일').should('exist').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 선택한 컨텍스트 메뉴 닫기
      cy.get('body').type('{esc}'); 
      
      // 검색버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 검색결과 검증코드 
      cy.contains('tbody tr', '접속이력 조회 화면 결과 파일')
      .within(() => {

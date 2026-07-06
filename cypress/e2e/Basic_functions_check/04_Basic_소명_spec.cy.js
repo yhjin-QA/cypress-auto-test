@@ -162,11 +162,11 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 소속 클릭하여 전체 선택 
     cy.get('.material-icons').filter(':visible').contains('settings').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').closest('.v-list__tile').click({ force: true });
     // 화면 본문(body)에 ESC 키 전송 (팝업창 닫는 동작 )
     cy.get('body').type('{esc}');
-    cy.wait(500);
+    cy.wait(1000);
 
     // 사용자 계정 클릭하여 hojun 아이디 입력
     //cy.get('input[aria-label="사용자 계정"]').filter(':visible').click({ force: true });
@@ -175,10 +175,10 @@ describe('로그캐치 사이트 테스트', () => {
     
     // 기간 - 시작 날짜 달력 지정하기 
      cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      // 1일 클릭
      cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
-     cy.wait(500);
+     cy.wait(1000);
      //달력창 닫기
      cy.get('body').type('{esc}');
     
@@ -186,10 +186,10 @@ describe('로그캐치 사이트 테스트', () => {
     // 소명상태 별로 검증 /////////////
     // 소명상태  클릭하는 코드 
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 소명상태중 '취소' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('취소').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -203,7 +203,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '대기' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('대기').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -225,7 +225,7 @@ cy.get('tbody').find('a').then(($links) => {
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '대기' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('대기').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -242,7 +242,7 @@ cy.get('tbody').find('a').then(($links) => {
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '요청' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('요청').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -258,7 +258,7 @@ cy.get('tbody').find('a').then(($links) => {
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '승인' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('승인').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -275,7 +275,7 @@ cy.get('tbody').find('a').then(($links) => {
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '반려' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('반려').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -294,7 +294,7 @@ cy.get('tbody').find('a').then(($links) => {
     cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
      // 소명유형중  '사전소명' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('사전 소명').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -310,7 +310,7 @@ cy.get('tbody').find('a').then(($links) => {
     cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
      // 소명유형중  '사후 소명' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -325,7 +325,7 @@ cy.get('tbody').find('a').then(($links) => {
     cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
      // 소명유형중  '소명 필요' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('소명 필요').click({ force: true });
-    cy.wait(500);
+    cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
@@ -473,7 +473,7 @@ cy.get('tbody').find('a').then(($links) => {
            });
 
        // 결재 정책등록창이 떴는지 확인
-       cy.wait(500);
+       cy.wait(1000);
        cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 등록');
        // 정책이름 입력하기
        cy.get('input[aria-label="정책 이름"]').filter(':visible').clear().type('auto_add_test 결재정책');
@@ -571,9 +571,9 @@ cy.get('tbody').find('a').then(($links) => {
 
        // 결재라인 추가한 정책 삭제하는 시나리오
        cy.contains('tr', 'auto_add_test 결재정책').find('.fa-trash').click({ force: true });
-       cy.wait(500); 
+       cy.wait(1000); 
        cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 삭제');
-       cy.wait(500); 
+       cy.wait(1000); 
        cy.get('.v-dialog').find('button.success--text').contains('확인').click({ force: true });
        // 결재 정책 모두 다 삭제된 상태
        // 결제정책모두 삭제되었을때 문구 확인
@@ -584,13 +584,13 @@ cy.get('tbody').find('a').then(($links) => {
        //지난 정책보기 확인하는 코드
        //지난 정책 보기 OFF -> ON상태로 바꾸기
        cy.contains('.v-input', '지난 정책 보기').find('.v-input--selection-controls__ripple').click({ force: true });
-       cy.wait(500);
+       cy.wait(1000);
        cy.get('tbody').find('a.font-weight-bold').contains('auto_add_test 결재정책').should('be.visible');
        cy.get('tbody').find('a').contains(/^X$/).should('be.visible');
        cy.wait(1000);
        //지난 정책보기 ON -> OFF로 상태 바꾸기
        cy.contains('.v-input', '지난 정책 보기').find('.v-input--selection-controls__ripple').click({ force: true });
-       cy.wait(500);
+       cy.wait(1000);
        //결제정책모두 삭제되었을때 문구 확인
        //cy.contains('td', 'No data available').should('be.visible');
        // [핵심] 'auto_add_test 결재정책'을 포함한 행(tr)이 아예 사라졌는지 확인
