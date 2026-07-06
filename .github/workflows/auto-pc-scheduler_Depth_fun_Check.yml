@@ -203,16 +203,17 @@ jobs:
           }
 
           # 💡 종료 코드 분석 및 '깡통 에러(matched no report files)' 판별
-          # $LASTEXITCODE는 바로 위 cmd 실행 결과의 종료 코드를 가지고 있습니다.
           if ($LASTEXITCODE -ne 0) {
-              if ($logContent -match "matched no report files") {
-                  Write-Host "✅ [INFO] Reporter error caused by no assigned tests. Processing for normal termination.."
-                  exit 0
+              $hasHookError   = $logContent -match "matched no report files"
+              $hasTestFailure = $logContent -match "\d+ failing"
+              if ($hasHookError -and -not $hasTestFailure) {
+                 Write-Host "[INFO] Hook error only - normal exit"
+                 exit 0
               } else {
-                  Write-Host "❌ An actual test failure or system error occurred."
-                  exit 1
-              }
-          }
+                 Write-Host "[FAIL] Test failure detected"
+                 exit 1
+               }
+           }
 
       - name: Extract Dashboard URL
         if: always()
@@ -352,17 +353,18 @@ jobs:
 
               # 종료 코드 확인
               if ($LASTEXITCODE -ne 0) {
-                  if ($logContent -match "matched no report files") {
-                      Write-Host "✅ [INFO] No tests assigned (Reporter error). Ignore and continue."
+                  $hasHookError   = $logContent -match "matched no report files"
+                  $hasTestFailure = $logContent -match "\d+ failing"
+                  if ($hasHookError -and -not $hasTestFailure) {
+                      Write-Host "[INFO] Hook error only - ignore and continue."
                   } else {
-                      Write-Host "❌An error occurred while executing $pattern."
+                      Write-Host "❌ Error in $pattern"
                       $overallSuccess = $false
-                      # 필요하다면 여기서 'break'를 걸어 뒤의 파일을 실행 안 하게 할 수 있습니다.
                   }
               } else {
-                  Write-Host "✅ $pattern 실행 완료."
+                  Write-Host "✅ $pattern completed."
               }
-          }
+             }   
 
           # 모든 반복문 종료 후 전체 상태 결정
           if (-not $overallSuccess) {
