@@ -70,7 +70,7 @@ jobs:
 
       - name: 📊 Upload Fast Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           # 👇 [수정됨] 복잡한 IP를 빼고 러너 번호(1, 2)로만 깔끔하게 저장합니다.
           name: Lighthouse-Fast-Report-${{ matrix.containers }} 
@@ -91,7 +91,7 @@ jobs:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
     steps:
       - name: 📥 Download Fast Reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           pattern: Lighthouse-Fast-Report-*
@@ -216,7 +216,7 @@ jobs:
 
       - name: 📊 Upload Limit Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           # 👇 [수정] 껍데기(폴더명)에 IP를 뺍니다. 러너 번호(-1, -2)만으로 덮어쓰기 완벽 방지!
           name: Lighthouse-Limit-Report-${{ matrix.containers }} 
@@ -237,7 +237,7 @@ jobs:
         shell: powershell -ExecutionPolicy Bypass -Command "{0}"
     steps:
       - name: 📥 Download Limit Reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           pattern: Lighthouse-Limit-Report-*

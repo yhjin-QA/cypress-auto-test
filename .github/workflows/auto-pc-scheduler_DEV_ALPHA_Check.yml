@@ -353,7 +353,7 @@ jobs:
 
       - name: Upload URL File
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dashboard-url-${{ matrix.containers }}
           path: run_url.txt
@@ -370,7 +370,7 @@ jobs:
 
       - name: 📂 리포트 데이터 업로드
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: Dev-Raw-Data-${{ matrix.containers }}
           path: |
@@ -450,7 +450,7 @@ jobs:
           
       - name: 📂 리포트 데이터 업로드
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           # 💡 패턴 매칭을 위해 이름을 맞춥니다.
           name: Dev-Raw-Data-Restart 

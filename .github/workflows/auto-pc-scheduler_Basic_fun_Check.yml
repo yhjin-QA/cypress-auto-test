@@ -217,7 +217,7 @@ jobs:
 
       - name: Upload URL File
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dashboard-url-${{ matrix.containers }}
           path: run_url.txt
@@ -227,7 +227,7 @@ jobs:
       # 👇 [수정됨] 경로를 'cypress/reports' 전체로 변경하여 파일 누락 방지
       - name: 📂 리포트 데이터 업로드
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: Basic-Raw-Data-${{ matrix.containers }}
           path: |
@@ -308,7 +308,7 @@ jobs:
           
       - name: 📂 리포트 데이터 업로드 (Restart Spec)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: Basic-Raw-Data-Restart
           path: |
