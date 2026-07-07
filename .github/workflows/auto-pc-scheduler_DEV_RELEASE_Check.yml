@@ -75,6 +75,14 @@ jobs:
 
           Write-Host "2️⃣ New Version Searching..."
           $repoHtml = (curl.exe -k -s -b cookies.txt $repoBaseUrl) -join "`n"
+
+          # ← 디버깅 코드
+          Write-Host "=== DEBUG: Page length = $($repoHtml.Length)"
+          Write-Host "=== DEBUG: Page preview ==="
+          Write-Host ($repoHtml.Substring(0, [Math]::Min(800, $repoHtml.Length)))
+          Write-Host "=========================="
+
+          
           $folderPattern = '([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_r[0-9]+)'
           $allMatches = [regex]::Matches($repoHtml, $folderPattern)
           if ($allMatches.Count -eq 0) { Write-Error "❌ Cannot find version."; exit 1 }
