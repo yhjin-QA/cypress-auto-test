@@ -72,7 +72,6 @@ jobs:
                    --data-urlencode "password=$userPw" `
                    --data-urlencode "authenticity_token=$token" `
                    $loginUrl > $null
-
         
           Write-Host "2️⃣ New Version Searching..."
           $folderPattern = '([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_r[0-9]+)'
@@ -94,8 +93,6 @@ jobs:
           }
           if ($allMatches.Count -eq 0) { Write-Error "Cannot find version."; exit 1 }
 
-
-          
           $versions = $allMatches | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique
           $latestVersion = $versions | Sort-Object { [version]($_ -replace '_r.*', '') }, { [int]($_ -replace '.*_r', '') } | Select-Object -Last 1
 
