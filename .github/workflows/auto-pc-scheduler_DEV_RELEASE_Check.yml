@@ -73,19 +73,28 @@ jobs:
                    --data-urlencode "authenticity_token=$token" `
                    $loginUrl > $null
 
+        
           Write-Host "2️⃣ New Version Searching..."
+          $folderPattern = '([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_r[0-9]+)'
+          $repoHtml = ""
+          $allMatches = @()
+          for ($retry = 1; $retry -le 3; $retry++) {
           $repoHtml = (curl.exe -k -s -b cookies.txt $repoBaseUrl) -join "`n"
-
-          # ← 디버깅 코드
+          
+          # ← 디버그 출력code
           Write-Host "=== DEBUG: Page length = $($repoHtml.Length)"
           Write-Host "=== DEBUG: Page preview ==="
           Write-Host ($repoHtml.Substring(0, [Math]::Min(800, $repoHtml.Length)))
           Write-Host "=========================="
 
-          
-          $folderPattern = '([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_r[0-9]+)'
           $allMatches = [regex]::Matches($repoHtml, $folderPattern)
-          if ($allMatches.Count -eq 0) { Write-Error "❌ Cannot find version."; exit 1 }
+          if ($allMatches.Count -gt 0) { break }
+          Write-Host "Retry $retry/3: No version found, retrying in 5s..."
+          Start-Sleep -Seconds 5
+          }
+          if ($allMatches.Count -eq 0) { Write-Error "Cannot find version."; exit 1 }
+
+
           
           $versions = $allMatches | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique
           $latestVersion = $versions | Sort-Object { [version]($_ -replace '_r.*', '') }, { [int]($_ -replace '.*_r', '') } | Select-Object -Last 1
