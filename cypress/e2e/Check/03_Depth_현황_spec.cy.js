@@ -361,8 +361,8 @@ dashboardStats1.forEach((stat) => {
     // 그룹별 클릭하는 코드 
     cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
-    // 그룹별중 영업팀 클릭하는 코드
-    cy.get('.v-list__tile__title').contains('AI개발1팀').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // 그룹별중 제품기획팀 클릭하는 코드
+    cy.get('.v-list__tile__title').contains('제품기획팀').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
@@ -399,7 +399,8 @@ dashboardStats2.forEach((stat) => {
     cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
     cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
     cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
-
+   
+   
 
     // ==========================================
     // [정합성 검증] 부서 별 - 업무시스템 - 그룹검색  정합성 검증  (569건수 = 하단표 합수 비교 )
@@ -416,7 +417,10 @@ dashboardStats2.forEach((stat) => {
       });
     });
     cy.wait(1500); 
+    
 
+
+    // 3. [검증] 표 합계 vs 카드 숫자
     // 2. [하단] 나타난 표의 '개인정보 사용 건수'를 모두 더해서 비교합니다.
     cy.get('@expectedTotal').then((expectedTotal) => {
       let tableSum = 0; 

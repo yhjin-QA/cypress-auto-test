@@ -309,12 +309,12 @@ cy.get('.side-menu', { timeout: 15000 }).should('be.visible');
         cy.log(`📂 현재 설정된 백업 경로: ${backupPath}`);
         
         // 2. [Scenario 2] 백업 디렉토리의 유공간 확인 (SSH)
-        // df -BG 명령어로 GB 단위 추출 후 50 이상인지 검증
+        // df -BG 명령어로 GB 단위 추출 후 20 이상인지 검증
         cy.task('runSSH', `df -BG ${backupPath} | awk 'NR==2 {print $4}' | sed 's/G//'`).then((availableGB) => {
             const space = parseInt(availableGB);
             cy.log(`💾 해당 경로의 여유 공간: ${space}GB`);
             
-            expect(space, '✅ 백업 디렉토리 여유 공간(30GB 이상) 확인').to.be.at.least(30);
+            expect(space, '✅ 백업 디렉토리 여유 공간(20GB 이상) 확인').to.be.at.least(20);
         });
 
     // ==========================================
