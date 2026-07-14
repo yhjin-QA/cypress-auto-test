@@ -297,8 +297,9 @@ describe('로그캐치 사이트 테스트', () => {
  /////////////////////////////////////////////////
 // 인사연동 스케줄러 로그파일 검증 로직 
 /////////////////////////////////////////////////
-cy.task('runSSH', `pscheck | grep -w "rank"`).then((pscheckOutput) => {
-    expect(pscheckOutput, '✅ 로그 경로에 antiforgery 포함 여부 확인').to.not.be.null;
+    cy.task('runSSH', `pscheck | grep -w "rank"`).then((pscheckOutput) => {
+    // ✅ [수정 1] null 대신 empty로 검증 (빈 문자열도 여기서 즉시 실패 처리)
+    expect(pscheckOutput.trim(), '✅ pscheck 결과가 비어있지 않아야 함').to.not.be.empty;
     
     cy.log(`🖥️ [pscheck 결과]:\n${pscheckOutput}`);
 
@@ -311,6 +312,8 @@ cy.task('runSSH', `pscheck | grep -w "rank"`).then((pscheckOutput) => {
     cy.log('===================================================');
 
     expect(logPath, '🚨  로그 경로 추출 포함여부 확인').to.include('/proc/rank/');
+    // ✅ [수정 2] dirPath가 루트나 빈 문자열로 떨어지는 것 차단
+    expect(dirPath, '🚨 유효한 로그 디렉터리 경로여야 함').to.match(/^\/.+\/.+/);
 
     // 2. [수정] 스케줄러가 비즈니스 로직(Queue flush)을 완료할 때까지 충분히 대기
     // 3초는 짧을 수 있으므로 15초 정도를 권장합니다.
@@ -319,7 +322,7 @@ cy.task('runSSH', `pscheck | grep -w "rank"`).then((pscheckOutput) => {
 
     // 3. [핵심 수정] 단일 파일(logPath)이 아닌 폴더 내 모든 파일(*)을 cat 합니다.
     // 이렇게 해야 .std 파일과 .log 파일의 내용을 모두 가져와 검증할 수 있습니다.
-    cy.task('runSSH', `cat ${dirPath}/*`).then((allLogContent) => {
+      cy.task('runSSH', `timeout 10 cat ${dirPath}/*`, { timeout: 30000 }).then((allLogContent) => {
         cy.log(`📄 [로그 통합 내용 읽기 완료]`);
 
         // 4. [최종 검증] 통합된 내용에서 각 항목 확인
@@ -496,7 +499,7 @@ cy.wait(3000);
     /////////////////////////////////////////////////
     // 1. pscheck를 통해 antiforgery 프로세스 정보 가져오기
     cy.task('runSSH', `pscheck | grep -w "antiforgery"`).then((pscheckOutput) => {
-    expect(pscheckOutput, '✅ 로그 경로에 antiforgery 포함 여부 확인').to.not.be.null;
+    expect(pscheckOutput.trim(), '✅ pscheck 결과가 비어있지 않아야 함').to.not.be.empty;
     
     cy.log(`🖥️ [antiforgery pscheck 결과]:\n${pscheckOutput}`);
 
@@ -515,13 +518,15 @@ cy.wait(3000);
     cy.log('===================================================');
 
     expect(logPath, '🚨 로그 경로 추출 포함여부 확인 ').to.include('/proc/antiforgery/');
+    expect(dirPath, '🚨 유효한 로그 디렉터리 경로여야 함').to.match(/^\/.+\/.+/);
+
 
     // 3. 작업 완료를 위한 대기 (프로세스 기동 및 초기 로그 기록 시간)
     cy.log('⏳ Antiforgery 작업 완료 대기 중 (15초)...');
     cy.wait(15000); 
 
     // 4. 폴더 내 모든 로그 통합 읽기 (* 사용)
-    cy.task('runSSH', `cat ${dirPath}/*`).then((allLogContent) => {
+    cy.task('runSSH', `timeout 10 cat ${dirPath}/*`, { timeout: 30000 }).then((allLogContent) => {
         cy.log(`📄 [Antiforgery 로그 통합 내용 읽기 완료]`);
 
         // 5. 정밀 검증 시작
