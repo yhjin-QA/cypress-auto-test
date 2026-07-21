@@ -7,6 +7,7 @@ def main():
     startApplication("MaxManagerU64")
     type(waitForObject(names.o_Edit), "Manager1!@")
     type(waitForObject(names.o_Edit), "<Return>")
+    snooze(5) # 3초간 명시적 일시 정지
     clickButton(waitForObject(names.chakra_Max_Manager_V4_5_x64_Button))
     clickButton(waitForObject(names.chakra_Max_Manager_V4_5_x64_chakramax_10_10_54_24_chakra_policy_Button))
     clickButton(waitForObject(names.chakra_Max_Manager_V4_5_x64_chakramax_10_10_54_24_chakra_search_Button))
