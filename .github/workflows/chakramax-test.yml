@@ -1,0 +1,48 @@
+name: ChakraMax UI Test
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 22 * * *'   # 매일 KST 07:00 (UTC 22:00)
+
+jobs:
+  run-squish-tests:
+    runs-on: [self-hosted, ChakramaxAuto]   # ORANGEWEB 러너의 라벨 지정
+
+    steps:
+      - name: Checkout test suite
+        uses: actions/checkout@v4
+
+      - name: Start Squish Server
+        run: |
+          Start-Process -FilePath "C:\Users\Orange\Squish for Windows 9.2.2\bin\squishserver.exe" -ArgumentList "--verbose"
+          Start-Sleep -Seconds 5
+        shell: powershell
+
+      - name: Run tst_chakra_test
+        run: |
+          & "C:\Users\Orange\Squish for Windows 9.2.2\bin\squishrunner.exe" `
+            --testsuite ".\suite_TEST_QA" `
+            --testcase "tst_chakra_test" `
+            --reportgen junit,results\chakra_manager_result.xml
+        shell: powershell
+
+      - name: Run tst_test2
+        run: |
+          & "C:\Users\Orange\Squish for Windows 9.2.2\bin\squishrunner.exe" `
+            --testsuite ".\suite_TEST_QA" `
+            --testcase "tst_test2" `
+            --reportgen junit,results\chakramax_client_result.xml
+        shell: powershell
+
+      - name: Publish Test Report
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: 'results/*.xml'
+
+      - name: Stop Squish Server
+        if: always()
+        run: |
+          Stop-Process -Name "squishserver" -Force -ErrorAction SilentlyContinue
+        shell: powershell
