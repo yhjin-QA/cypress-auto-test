@@ -15,26 +15,36 @@ jobs:
       - name: Checkout test suite
         uses: actions/checkout@v4
 
+      # 1. 리포트를 저장할 폴더 미리 생성
+      - name: Create Results Directory
+        run: |
+          New-Item -ItemType Directory -Force -Path "results"
+        shell: powershell
+
       - name: Start Squish Server
         run: |
           Start-Process -FilePath "C:\Users\Orange\Squish for Windows 9.2.2\bin\squishserver.exe" -ArgumentList "--verbose"
           Start-Sleep -Seconds 5
         shell: powershell
 
+      # 2. Client 테스트 실행 (파일명 교정 및 실패 시에도 진행 설정)
       - name: Run tst_test_chakramax_Client
+        continue-on-error: true
         run: |
           & "C:\Users\Orange\Squish for Windows 9.2.2\bin\squishrunner.exe" `
             --testsuite ".\suite_TEST_QA" `
             --testcase "tst_test_chakramax_Client" `
-            --reportgen junit,results\chakra_manager_result.xml
+            --reportgen junit,results\chakramax_client_result.xml
         shell: powershell
 
+      # 3. Manager 테스트 실행
       - name: Run tst_test_chakramax_manager
+        continue-on-error: true
         run: |
           & "C:\Users\Orange\Squish for Windows 9.2.2\bin\squishrunner.exe" `
             --testsuite ".\suite_TEST_QA" `
             --testcase "tst_test_chakramax_manager" `
-            --reportgen junit,results\chakramax_client_result.xml
+            --reportgen junit,results\chakra_manager_result.xml
         shell: powershell
 
       - name: Publish Test Report
