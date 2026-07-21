@@ -1,6 +1,8 @@
 name: ChakraMax UI Test
 
 on:
+  push:
+    branches: [ "master" ]
   workflow_dispatch:
   schedule:
     - cron: '0 22 * * *'   # 매일 KST 07:00 (UTC 22:00)
