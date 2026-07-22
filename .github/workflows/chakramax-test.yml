@@ -37,6 +37,7 @@ jobs:
             --testsuite ".\suite_TEST_QA" `
             --testcase "tst_test_chakramax_Client" `
             --reportgen junit,results\chakramax_client_result.xml
+             Write-Host "Exit Code: $LASTEXITCODE"
         shell: powershell
 
       # 3. Manager 테스트 실행
@@ -46,11 +47,25 @@ jobs:
             --testsuite ".\suite_TEST_QA" `
             --testcase "tst_test_chakramax_manager" `
             --reportgen junit,results\chakra_manager_result.xml
+             Write-Host "Exit Code: $LASTEXITCODE"
         shell: powershell
+
+      - name: Debug - Check Results Files
+        if: always()
+        run: |
+          Write-Host "=== results 폴더 내용 ==="
+          Get-ChildItem -Path "results" -Recurse -ErrorAction SilentlyContinue
+          Write-Host "=== chakramax_client_result.xml 내용 ==="
+          if (Test-Path "results\chakramax_client_result.xml") {
+            Get-Content "results\chakramax_client_result.xml"
+          } else {
+            Write-Host "파일이 존재하지 않습니다!"
+          }
+        shell: powershell  
 
       - name: Publish Test Report
         if: always()
-        uses: mikepenz/action-junit-report@v4
+        uses: mikepenz/action-junit-report@v6
         with:
           report_paths: 'results/*.xml'
 
