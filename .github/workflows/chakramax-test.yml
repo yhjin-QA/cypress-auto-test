@@ -1,5 +1,8 @@
 name: ChakraMax UI Test
 
+env:
+ FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     branches: [ "master" ]
@@ -14,7 +17,7 @@ jobs:
     steps:
       - name: Checkout test suite
         uses: actions/checkout@v5
-        
+
       # 1. 리포트를 저장할 폴더 미리 생성
       - name: Create Results Directory
         run: |
@@ -29,7 +32,6 @@ jobs:
 
       # 2. Client 테스트 실행 (파일명 교정 및 실패 시에도 진행 설정)
       - name: Run tst_test_chakramax_Client
-        continue-on-error: true
         run: |
           & "C:\Users\Orange\Squish for Windows 9.2.2\bin\squishrunner.exe" `
             --testsuite ".\suite_TEST_QA" `
@@ -39,7 +41,6 @@ jobs:
 
       # 3. Manager 테스트 실행
       - name: Run tst_test_chakramax_manager
-        continue-on-error: true
         run: |
           & "C:\Users\Orange\Squish for Windows 9.2.2\bin\squishrunner.exe" `
             --testsuite ".\suite_TEST_QA" `
