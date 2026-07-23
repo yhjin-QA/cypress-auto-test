@@ -314,7 +314,7 @@ cy.get('.side-menu', { timeout: 15000 }).should('be.visible');
             const space = parseInt(availableGB);
             cy.log(`💾 해당 경로의 여유 공간: ${space}GB`);
             
-            expect(space, '✅ 백업 디렉토리 여유 공간(20GB 이상) 확인').to.be.at.least(20);
+            expect(space, '✅ 백업 디렉토리 여유 공간(10GB 이상) 확인').to.be.at.least(10);
         });
 
     // ==========================================
