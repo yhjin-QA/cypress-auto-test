@@ -481,8 +481,8 @@ dashboardStats2.forEach((stat) => {
     //업무시스템 클릭하는 코드 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
-    // 업무시스템중 Apache_PHP_WAS 클릭하는 코드
-    cy.get('.v-list__tile__title').contains('Apache_PHP_WAS').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // 업무시스템별 클릭하는 코드
+    cy.get('.v-list__tile__title').contains('Embedded Tomcat_WAS').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     cy.wait(1000);
     // 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
