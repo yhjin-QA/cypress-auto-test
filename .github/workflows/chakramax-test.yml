@@ -5,10 +5,10 @@ env:
 
 on:
   push:
-    branches: [ "master" ]
-  workflow_dispatch:
-  schedule:
-    - cron: '0 22 * * 1-5'   # 매일 KST 07:00 (UTC 22:00)
+  #branches: [ "master" ]
+  #workflow_dispatch:
+  #schedule:
+  #  - cron: '0 22 * * 1-5'   # 매일 KST 07:00 (UTC 22:00)
 
 jobs:
   run-squish-tests:
