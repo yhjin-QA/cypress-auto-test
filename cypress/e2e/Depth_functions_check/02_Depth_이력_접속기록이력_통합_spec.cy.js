@@ -350,24 +350,25 @@ cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
     // [이력 > 통합 > 검출 팝업 > 오탐/확정 탭]
     ////////////////////////////////////////
     // Case1  전체 확정선택 -> 전체 오탐 선택 으로 변경하기 
-    // 1. 검출 팝업 오픈
+    // 검색된 결과 첫번쨰 행 클릭하여 검출 팝업 오픈
 cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
 cy.wait(1500); 
 
 
 // 1. 검출 팝업 오픈 후 팝업이 뜰 때까지 대기
 cy.get('.v-dialog--active', { timeout: 10000 }).should('be.visible');
-cy.wait(2000); 
+cy.wait(3000); 
 
-// 🌟 [수정 1] 아코디언 열림 여부 판단 로직 업그레이드 (라벨 OR 입력창)
 const ensureMenuOpen = () => {
     cy.get('.v-dialog--active').then(($dialog) => {
-        // fa-angle-right = 닫힘
-        const isClosed = $dialog.find('i.fa-angle-right').filter((i, el) => {
-            return Cypress.$(el).siblings('span.sub-title-title').text().includes('메뉴 설정');
+        // 🌟 "기본 행위 유형" 텍스트를 포함하되, 자식 요소가 없는(=텍스트를 직접 담고 있는) 
+        // 최말단 요소만 걸러내서 실제 노출 여부를 판단합니다.
+        const contentVisible = $dialog.find('*:contains("기본 행위 유형")').filter((i, el) => {
+            const $el = Cypress.$(el);
+            return $el.children().length === 0 && $el.is(':visible');
         }).length > 0;
 
-        if (isClosed) {
+        if (!contentVisible) {
             cy.log('📁 메뉴 설정이 닫혀 있습니다. 클릭합니다.');
             cy.get('.v-dialog--active')
                 .contains('span.sub-title-title', '메뉴 설정')
@@ -381,19 +382,30 @@ const ensureMenuOpen = () => {
 
 ensureMenuOpen();
 
-// 🌟 [수정 2] 3가지 상태에 대한 분기 처리 로직
+// 🌟 [수정 3] Case 1과 Case 4를 통합 (체크 해제 -> 메뉴명 입력 흐름으로 일원화)
 cy.get('.v-dialog--active').then(($innerBody) => {
     const autoRegLabel = $innerBody.find('label:contains("메뉴명 자동 등록")');
-    const menuNameInput = $innerBody.find('input[aria-label="메뉴명"]'); // 존재 여부 파악용
+    const menuNameInput = $innerBody.find('input[aria-label="메뉴명"]');
 
-    if (autoRegLabel.length > 0 && autoRegLabel.is(':visible')) {
+    // "메뉴명 자동 등록" 체크박스 자체의 checked 상태 확인 (라벨 노출 여부와 무관하게)
+    const autoRegCheckboxWrapper = $innerBody.find('.v-input')
+        .filter((i, el) => Cypress.$(el).text().includes('메뉴명 자동 등록'));
+    const isAutoRegChecked = autoRegCheckboxWrapper.length > 0 &&
+        autoRegCheckboxWrapper.find('input[type="checkbox"]').prop('checked') === true;
+
+    if ((autoRegLabel.length > 0 && autoRegLabel.is(':visible')) || isAutoRegChecked) {
         // ==========================================
-        // [Case 1] 라벨이 보이는 경우 (최초 등록 or 체크된 상태)
+        // [Case 1 통합] 라벨이 보이거나, 체크박스가 체크된 모든 경우
+        // -> 체크 해제 후 메뉴명 입력창 노출을 기다렸다가 신규 입력
         // ==========================================
-        cy.log('📝 [Case 1] 라벨 존재 -> 체크 해제 후 신규 입력');
-        cy.wrap(autoRegLabel).closest('.v-input').find('input[type="checkbox"]').uncheck({ force: true });
-        
-        cy.get('input[aria-label="메뉴명"]')
+        cy.log('📝 [Case 1] 자동 등록 체크됨(라벨 노출 여부 무관) -> 체크 해제 후 신규 입력');
+
+        cy.wrap(autoRegCheckboxWrapper.length > 0 ? autoRegCheckboxWrapper : autoRegLabel.closest('.v-input'))
+          .find('input[type="checkbox"]')
+          .uncheck({ force: true });
+
+        // 체크 해제 직후 메뉴명 입력창이 나타날 때까지 대기 후 입력
+        cy.get('input[aria-label="메뉴명"]', { timeout: 10000 })
           .should('be.visible')
           .clear({ force: true })
           .type(`Depth_Test_${formattedDate}`, { force: true });
@@ -407,11 +419,10 @@ cy.get('.v-dialog--active').then(($innerBody) => {
 
     } else if (menuNameInput.length > 0 && menuNameInput.is(':visible')) {
         // ==========================================
-        // [Case 3 - 추가된 로직] 라벨은 없지만 입력창은 보이는 경우 (이미 이름이 저장된 상태)
+        // [Case 3] 라벨은 없지만 입력창은 보이는 경우 (이미 이름이 저장된 상태)
         // ==========================================
         cy.log('📝 [Case 3] 이미 메뉴명 저장됨(라벨 없음) -> 기존 텍스트 덮어쓰기');
-        
-        // 언체크 할 필요 없이 바로 입력창을 지우고 덮어씁니다. (실시간 탐색)
+
         cy.get('input[aria-label="메뉴명"]')
           .should('be.visible')
           .clear({ force: true })
@@ -441,13 +452,11 @@ cy.get('.v-dialog--active').then(($innerBody) => {
     // 공통 마무리 로직: 최종 저장 버튼 클릭
     // ==========================================
     cy.contains('button.v-btn:visible', '저장').should('be.visible').click({ force: true });
-    
+
     cy.contains('메뉴를 저장하시겠습니까?', { timeout: 10000 }).should('be.visible');
     cy.contains('button.v-btn:visible', '확인').click({ force: true });
-    cy.wait(1000); 
+    cy.wait(1000);
 });
-
-
 
    
     //오탐확정----------------------------------------------------------------------------------------------
@@ -488,10 +497,9 @@ cy.get('.v-dialog--active').then(($innerBody) => {
     cy.wait(1000);
 
      //----------------------------------------------------------------------------------------------
-
-     //case2
      // 전체 오탐 선택 - > 이전 선택 복구 -> 전체 확정 선택으로 변경하기
      // 표의 첫번째 행 처리 아이콘 다시 재 클릭 
+    // 검색된 결과 첫번쨰 행 클릭하여 검출 팝업 오픈
      cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
      cy.wait(1000);
 
