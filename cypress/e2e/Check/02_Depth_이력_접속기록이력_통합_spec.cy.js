@@ -996,7 +996,7 @@ cy.get('.v-dialog--active').then(($innerBody) => {
 // 3. SQL 탭 검증
 // ====================================================================
 // 변수명을 sqlTargets로 변경
-const sqlTargets = ['menuNo', 'id', 'name', 'password', 'Url'];
+const sqlTargets = ['menuNo', 'id', 'name', 'NAME', 'password', 'Url'];
 
 cy.contains('span.tab-title', 'SQL').should('be.visible').click({ force: true });
 cy.wait(1500); 
