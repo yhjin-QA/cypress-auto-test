@@ -463,33 +463,49 @@ dashboardStats2.forEach((stat) => {
     // 검색조건 입력문구 확인
     cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
 
-    //==========================================
-    // 업무시스템 별 검색 검증하기 
-    //==========================================
-    // 기능확인 - 달력 날짜 기간 1월 20일 지정---------------------------------------------------------------------------
-    // 기간 input의 달력 아이콘 클릭 (aria-label로 정확히 타겟)
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('i.material-icons').click({ force: true });
-    cy.wait(500);
-    // 활성화된 달력 팝업에서 헤더 클릭 → 월 선택 모드
-    cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
-    // 1월 클릭
-    cy.get('.menuable__content__active').find('.v-date-picker-table--month').contains('1월').click({ force: true });
-    // 20일 클릭
-    cy.get('.menuable__content__active').find('.v-date-picker-table').contains('.v-btn__content', '20').closest('.v-btn').click({ force: true });
-    cy.get('body').type('{esc}');
+//==========================================
+// 업무시스템 별 검색 검증하기 
+//==========================================
+// 기능확인 - 달력 날짜 기간 (오늘 기준 5일 전 날짜 동적 지정) --------------------------------
 
-    //업무시스템 클릭하는 코드 
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
-    // 업무시스템별 클릭하는 코드
-    cy.get('.v-list__tile__title').contains('Embedded Tomcat_WAS').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
-    cy.wait(1000);
-    // 컨텍스트 메뉴 닫기
-    cy.get('body').type('{esc}');
+// 오늘 날짜 기준 5일 전 계산
+const targetDate = new Date();
+targetDate.setDate(targetDate.getDate() - 5);
+const targetMonth = targetDate.getMonth() + 1; // getMonth()는 0부터 시작하므로 +1
+const targetDay = targetDate.getDate();
 
-    // 검색 버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    cy.wait(1000);
+cy.log(`시작 날짜: ${targetMonth}월 ${targetDay}일`);
+
+// 기간 input의 달력 아이콘 클릭 (aria-label로 정확히 타겟)
+cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('i.material-icons').click({ force: true });
+cy.wait(500);
+
+// 활성화된 달력 팝업에서 헤더 클릭 → 월 선택 모드
+cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
+
+// 동적으로 계산된 월 클릭
+cy.get('.menuable__content__active').find('.v-date-picker-table--month').contains(`${targetMonth}월`).click({ force: true });
+
+// 동적으로 계산된 일 클릭
+cy.get('.menuable__content__active').find('.v-date-picker-table').contains('.v-btn__content', `${targetDay}`).closest('.v-btn').click({ force: true });
+
+cy.get('body').type('{esc}');
+
+//업무시스템 클릭하는 코드 
+cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+cy.wait(500);
+// 업무시스템별 클릭하는 코드
+cy.get('.v-list__tile__title').contains('JEUS_CRM고객관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+cy.wait(1000);
+// 컨텍스트 메뉴 닫기
+cy.get('body').type('{esc}');
+
+// 검색 버튼 클릭
+cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+cy.wait(1000);
+
+
+
 
     //검증 코드
     // 1. 검증할 카드 목록 정의 (숫자만 작성)
@@ -515,46 +531,47 @@ dashboardStats3.forEach((stat) => {
     });
 });
     
-    //맨티스 이슈 : 37386
-    //[현황] 업무시스템별 차트에 개인정보 사용량 건수와 하단표 개인정보 사용건수 합이 일치하지 않는 문제
-    // =========================================================
-    // [정합성 검증] 업무시스템 별 '개인정보 사용량' 카드 클릭 후 하단 표 데이터 합산 검증 (하단표 38합)
-    // =========================================================
-    // 1. [상단] '개인정보 사용량' 카드를 찾아 첫 번째 숫자(<b>)를 추출하고 클릭합니다.
-    cy.contains('.v-card', '개인정보 사용량').should('be.visible').within(() => {
-    cy.get('b').first().then(($b) => {
-      // 텍스트에서 숫자만 추출 (예: '610' -> 610)
-      const text = $b.text(); 
-      const totalFromCard = parseInt(text.replace(/[^0-9]/g, ''), 10);
-      // 변수명 충돌을 막기 위해 Alias 이름을 'expectedTotal_IP'로 지정합니다.
-      cy.wrap(totalFromCard).as('expectedTotal_IP'); 
-      // 해당 요소를 클릭하여 하단 표를 갱신합니다.
-      cy.wrap($b).click({ force: true });
-      });
-    });
-    cy.wait(1500); 
-    // 2. [하단] 현재 화면에 보이는 표의 데이터를 모두 더합니다.
-    cy.get('@expectedTotal_IP').then((expectedTotal_IP) => {
-     let tableSum = 0; 
-     // 표가 화면에 완전히 렌더링되었는지 확인
-     cy.get('table').filter(':visible').should('be.visible');
-     // 보이는 표의 본문(tbody) 행(tr)을 순회하며 덧셈
-     cy.get('table').filter(':visible').find('tbody tr').each(($row) => {
-     // 각 행의 마지막 열(td) 텍스트 가져오기
-     const cellText = $row.find('td').eq(-2).text();
-     const num = parseInt(cellText.replace(/[^0-9]/g, ''), 10);
-     if (!isNaN(num)) {
+//맨티스 이슈 : 37386 (이슈는 해결된거같으나 아직 상태가 안바뀐듯함.)
+//[현황] 업무시스템별 차트에 개인정보 사용량 건수와 하단표 개인정보 사용건수 합이 일치하지 않는 문제
+// =========================================================
+// [정합성 검증] 업무시스템 별 '개인정보 사용량' 카드 클릭 후 하단 표 데이터 합산 검증 (하단표 38합)
+// =========================================================
+// 1. [상단] '개인정보 사용량' 카드를 찾아 첫 번째 숫자(<b>)를 추출하고 클릭합니다.
+cy.contains('.v-card', '개인정보 사용량').should('be.visible').within(() => {
+  cy.get('b').first().then(($b) => {
+    const text = $b.text(); 
+    const totalFromCard = parseInt(text.replace(/[^0-9]/g, ''), 10);
+    cy.wrap(totalFromCard).as('expectedTotal_IP'); 
+    cy.wrap($b).click({ force: true });
+  });
+});
+
+// ==========================================
+// 페이지수 10 -> 100 개 옵션 변경 (within 블록 밖으로 이동!)
+// ==========================================
+cy.wait(1000); // 클릭 후 하단 표 갱신 대기
+cy.get('.v-select__selection--comma').filter(':visible').contains('10').click({ force: true });
+cy.wait(1000); // 콤보박스 메뉴 열릴 때까지 대기
+cy.get('.v-menu__content').filter(':visible').contains('100').click({ force: true });
+cy.wait(3000); // 목록 갱신 대기
+//---------------------------------------------------------------------
+
+// 2. [하단] 현재 화면에 보이는 표의 데이터를 모두 더합니다.
+cy.get('@expectedTotal_IP').then((expectedTotal_IP) => {
+  let tableSum = 0; 
+  cy.get('table').filter(':visible').should('be.visible');
+  cy.get('table').filter(':visible').find('tbody tr').each(($row) => {
+    const cellText = $row.find('td').eq(-2).text();
+    const num = parseInt(cellText.replace(/[^0-9]/g, ''), 10);
+    if (!isNaN(num)) {
       cy.log(`➕ IP 검색 표 데이터: ${num}`); 
       tableSum += num;
-      }
-     }).then(() => {
-        // 3. [최종 검증] 상단 숫자 vs 하단 표 합계
-        cy.log(`📊 상단 카드 클릭 수: ${expectedTotal_IP} / 하단 표 계산 합계: ${tableSum}`);
-        // 두 숫자가 일치하는지 단호하게 검증!
-        expect(tableSum).to.equal(expectedTotal_IP);
-      });
-    });
-    
+    }
+  }).then(() => {
+    cy.log(`📊 상단 카드 클릭 수: ${expectedTotal_IP} / 하단 표 계산 합계: ${tableSum}`);
+    expect(tableSum).to.equal(expectedTotal_IP);
+  });
+});
 
     //검색결과 통계 그래프 문구 확인 코드
     cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
