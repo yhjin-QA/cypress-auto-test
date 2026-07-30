@@ -69,8 +69,8 @@ module.exports = defineConfig({
       // 브라우저 실행 전 Lighthouse 감사 준비
       on("before:browser:launch", (browser = {}, launchOptions) => {
         prepareAudit(launchOptions);
-        
-  });
+        return launchOptions; // 🌟 이 줄만 추가
+     });
 
       // 스크린샷을 JSON에 넣으려면 플러그인 리스너가 반드시 필요합니다!
       require('cypress-mochawesome-reporter/plugin')(on);
