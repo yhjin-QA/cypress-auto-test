@@ -325,6 +325,8 @@ cy.get('i.v-icon.material-icons').filter(':visible').contains('search').should('
 cy.get('input[aria-label="메시지 + 정책명 검색"]').should('exist');
 cy.get('input[aria-label="From"]').should('exist');
 cy.get('input[aria-label="To"]').should('exist');
+
+//검색 버튼 확인 
 cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
 
 // 위험도 필터 버튼 확인
@@ -344,7 +346,45 @@ cy.get('button.sev-filter-btn').contains('1년').should('be.visible');
 
 // 결과 영역 확인
 cy.contains('.v-toolbar__title', '경보').should('be.visible');
-cy.contains('경보가 없습니다.').should('be.visible');
+// ==========================================
+// 이상행위 경보 결과  (동적 데이터 대응)
+// ==========================================
+
+cy.get('.incident-header').filter(':visible').should('have.length.greaterThan', 0).each(($row) => {
+  cy.wrap($row).within(() => {
+
+    // 1. 위험도 칩 - "높음/보통/낮음" 중 하나인지 확인
+    cy.get('.v-chip--label').first().invoke('text').then((text) => {
+      expect(['높음', '보통', '낮음']).to.include(text.trim());
+    });
+
+    // 2. 사용자 뱃지 - "person" 아이콘 + 이름(또는 "알수없음(0)")이 비어있지 않은지
+    cy.get('.lookup-badge-group').should('be.visible').within(() => {
+      cy.get('.material-icons').should('contain.text', 'person');
+    });
+
+    // 🌟 아이콘 텍스트가 섞이는 문제 방지: clone으로 아이콘 제거 후 순수 텍스트만 검증
+    cy.get('.lookup-badge-group').then(($el) => {
+      const clone = $el.clone();
+      clone.find('.material-icons').remove();
+      const labelText = clone.text().trim();
+      expect(labelText.length).to.be.greaterThan(0);
+    });
+
+    // 3. 건수 - 숫자 형식인지 확인
+    cy.get('.incident-count').invoke('text').then((text) => {
+      const num = parseInt(text.trim(), 10);
+      expect(isNaN(num)).to.be.false;
+    });
+
+    // 4. 연관 정책명 - 비어있지 않은지 확인 (콤마로 여러 개일 수도, 1개일 수도 있음)
+    cy.get('.incident-window.truncate-cell').invoke('text').then((text) => {
+      const policies = text.split(',').map((p) => p.trim()).filter((p) => p.length > 0);
+      expect(policies.length).to.be.greaterThan(0);
+    });
+
+  });
+});
 
 cy.log('✅ 결재 - 신청 - [이상행위 경보] 화면 확인 완료!');
 

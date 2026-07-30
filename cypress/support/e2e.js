@@ -22,3 +22,6 @@ import 'cypress-mochawesome-reporter/register';
 // Import commands.js using ES2015 syntax:
 import './commands'
 
+//마우스 오버(mouseover 이벤트 )
+import 'cypress-real-events/support';
+

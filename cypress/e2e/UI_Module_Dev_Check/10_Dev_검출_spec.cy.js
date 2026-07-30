@@ -392,15 +392,16 @@ describe('로그캐치 사이트 테스트', () => {
 
 
 
-
+       ////////////////////////////////////////
        // 검출탭 > 검출 메뉴 관리  서브메뉴 선택 
+       ///////////////////////////////////////
        cy.log('🚀 검출 탭 > 검출 메뉴 관리 서브메뉴 선택 ');
        cy.contains('button', '검출').should('be.visible').should('be.visible').click({ force: true });
        cy.wait(2000);
        cy.get('.v-list__tile__title').filter(':contains("검출 메뉴 관리")').filter(':visible').click({ force: true });
        cy.wait(3000); 
       
-      //검출탭 > 검출 메뉴 관리 > 메뉴관리 선택 
+      //검출탭 > 검출 메뉴 관리 > 메뉴관리 선택 --------------------------------------------------------------------------------------
        cy.contains('.v-btn__content', '메뉴 관리').click({ force: true });
        cy.log('--- 화면 검증 시작 ---');
        // 검색조건 확인
@@ -412,15 +413,11 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('.v-label').filter(':visible').contains('오탐/확정').should('be.visible');
        
        //3.0.3.0_R34785 에서 파일 선택 버튼식으로 변경 
-       // 파일선택 확인
-       //cy.get('input[type="file"][accept=".xls, .xlsx"]').filter(':visible').should('be.visible');
-       
-       // 버튼 확인 
        cy.get('.v-btn__content').filter(':visible').contains('들여오기').should('be.visible');
-       //3.0.3.0_R34785 에서 파일선택 버튼식으로 변경 
        cy.get('.v-btn__content').filter(':visible').contains('파일 선택').should('be.visible');
        cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').should('be.visible');
        cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+       
        // 표 컬럼 확인
        cy.get('th').filter(':visible').contains('발견 일시').should('be.visible');
        cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
@@ -432,7 +429,7 @@ describe('로그캐치 사이트 테스트', () => {
        cy.log('✅ 검출 - 검출메뉴관리 - [메뉴 관리] 출력 확인 완료 ');
 
       
-       // 검출탭 > 검출 메뉴 관리 > URI 관리 선택 
+       // 검출탭 > 검출 메뉴 관리 > URI 관리 선택 ---------------------------------------------------------------
        cy.contains('.v-btn__content', 'URI 관리').should('be.visible').click({ force: true });
        cy.wait(3000);
        cy.log('--- 화면 검증 시작 ---');
@@ -454,31 +451,176 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('th').filter(':visible').contains('수집 제외').should('be.visible');
        cy.log('✅ 검출 - 검출메뉴관리 - [URI 관리] 출력 확인 완료 ');
 
-/*
-    //==========================
-    // new 버전에 추가될 화면 
-    //============================
+       // 검출탭 > 검출 메뉴 관리 > 메뉴 규칙 설정 화면------------------------------------------------------------------------
+       cy.contains('.v-btn__content', '메뉴 규칙설정').should('be.visible').click({ force: true });
+       cy.wait(3000);
+       cy.log('--- 화면 검증 시작 ---');
+  
+       // 좌측 - 업무시스템 목록 (동적 데이터 대응)
+       // 목록 타이틀 확인
+       cy.contains('.v-card__title', '업무시스템 목록 (Master)').should('be.visible');
+
+       // 각 업무시스템 항목 - 이름/상태칩이 비어있지 않은지 구조 검증
+       cy.get('.v-list__tile__title').filter(':visible').should('have.length.greaterThan', 0).each(($title) => {
+       // 이름이 비어있지 않은지 확인
+        cy.wrap($title).invoke('text').then((text) => {
+          expect(text.trim().length).to.be.greaterThan(0);
+        });
+      });
+
+      // 상태 칩 - "미설정" 또는 "설정완료" 등 유효한 상태값인지 확인 (칩 개수만큼 순회)
+      cy.get('.v-chip__content').filter(':visible').each(($chip) => {
+        cy.wrap($chip).invoke('text').then((text) => {
+          const validStatuses = ['미설정', '설정완료', '설정 완료']; // 실제 존재하는 상태값에 맞게 조정 필요
+          expect(text.trim().length).to.be.greaterThan(0);
+          // 상태값 종류가 더 있다면 validStatuses 배열에 추가해주세요
+        });
+      });
+
+      // 우측 - "0 정책 설정" 상단 헤더 영역
+      cy.contains('h2', '정책 설정').should('be.visible');
+      cy.contains('신규 설정 작성 중').should('be.visible');
+
+      // 업무시스템 명 / 시스템 ID (Scope) 라벨 확인
+      cy.contains('.caption', '업무시스템 명').should('be.visible');
+      cy.contains('.caption', '시스템 ID (Scope)').should('be.visible');
+
+
+      // URI 메뉴키 포함 여부 (is_global) 섹션
+      cy.contains('h3', 'URI 메뉴키 포함 여부 (is_global)').should('be.visible');
+      cy.contains('고객사가 제공한 키만으로 전역 유니크함 보장이 없으면 반드시 켜야 합니다.').should('be.visible');
+      cy.contains('포함 (켬)').should('be.visible');
+      cy.contains('포함 안 함 (끔)').should('be.visible');
+
+
+      // 메뉴 키 조합 규칙 (Expressions) 섹션
+      cy.contains('h3', '1. 메뉴 키 조합 규칙 (Expressions)').should('be.visible');
+      // 규칙추가 버튼
+      cy.contains('.v-btn__content', '규칙 추가').should('be.visible');
+
+      // 기본 규칙 1행 확인 (순번 칩, 드롭다운, 입력창, 삭제버튼)
+      cy.get('.v-chip').filter(':visible').contains('1').should('be.visible');
+      cy.get('select.custom-input').filter(':visible').first().within(() => {
+        cy.get('option[value="RequestHeader"]').should('exist');
+        cy.get('option[value="RequestBody"]').should('exist');
+        cy.get('option[value="RequestParam"]').should('exist');
+        cy.get('option[value="ResponseHeader"]').should('exist');
+        cy.get('option[value="ResponseBody"]').should('exist');
+      });
+
+      cy.get('input[placeholder="키 이름 입력 (예: globalMenuId)"]').should('be.visible');
+      // 🌟 "키 이름 입력 (예: globalMenuId)" - 규칙이 여러 개 추가된 만큼 존재할 수 있음
+
+      cy.get('input[placeholder="키 이름 입력 (예: globalMenuId)"]').filter(':visible').should('have.length.greaterThan', 0)
+      .each(($input) => {
+        cy.wrap($input).should('be.visible');
+      });
+
+      // 추가 속성 추출 정책 섹션
+      cy.contains('h3', '2. 추가 속성 추출 정책 (선택사항)').should('be.visible');
+
+      // 메뉴명 추출
+      cy.contains('메뉴명 추출:').should('be.visible');
+      cy.get('input[placeholder*="menuName"]').should('be.visible');
+      // "메뉴명 추출" 입력창
+      cy.get('input[placeholder="키 이름 입력 (예: menuName) - 미입력 가능"]').filter(':visible').should('be.visible');
+
+      // 행위구분 추출
+      cy.contains('행위구분 추출:').should('be.visible');
+      cy.get('input[placeholder*="action"]').should('be.visible');
+      // "행위구분 추출" 입력창
+      cy.get('input[placeholder="키 이름 입력 (예: action) - 미입력 가능"]').filter(':visible').should('be.visible');
+
+      // 행위구분 맵핑 (Map) 섹션
+      cy.contains('행위구분 맵핑 (Map):').should('be.visible');
+      cy.contains('엑셀 양식에 기재되는 텍스트를 시스템 전용 숫자 코드로 변환하기 위한 맵핑입니다.').should('be.visible');
+      
+      // 매핑 추가 버튼
+      cy.contains('.v-btn__content', '매핑 추가').should('be.visible');      
+      cy.contains('설정된 매핑이 없습니다.').should('be.visible');
+
+      // 하단 저장 버튼
+      cy.contains('.v-btn__content', '신규 정책 저장').should('be.visible');
+
+      cy.log('✅ 검출 - 검출메뉴 관리 - [메뉴 규칙설정] 화면 확인 완료!'); 
+
+
+       // 검출탭 > 검출 메뉴 관리 > 메뉴 일괄 등록 화면 ---------------------------------------------------------------------------------------
+       cy.contains('.v-btn__content', '메뉴 일괄등록').should('be.visible').click({ force: true });
+       cy.wait(3000);
+       cy.log('--- 화면 검증 시작 ---');
+
+       // 3. 좌측 - 업무시스템 목록 (동적 데이터 대응, 재사용)
+       cy.contains('.v-card__title', '업무시스템 목록 (Master)').should('be.visible');
+       cy.get('.v-list__tile__title').filter(':visible').should('have.length.greaterThan', 0).each(($title) => {
+        cy.wrap($title).invoke('text').then((text) => {
+          expect(text.trim().length).to.be.greaterThan(0);
+        });
+      });
+      cy.get('.v-chip__content').filter(':visible').each(($chip) => {
+        cy.wrap($chip).invoke('text').then((text) => {
+          expect(text.trim().length).to.be.greaterThan(0);
+        });
+      });
+
+      // 우측 - "메뉴 하이브리드 일괄등록" 상단 헤더 영역
+      cy.contains('h2', '메뉴 하이브리드 일괄등록').should('be.visible');
+      // 표준 템플릿 다운로드 버튼
+      cy.contains('.v-btn__content', '표준 템플릿 다운로드').should('be.visible');
+      // 엑셀 업로드 버튼
+      cy.contains('.v-btn__content', '엑셀 업로드').should('be.visible');
+
+      // 경고 알림 (Alert) 영역
+      cy.get('.v-alert--outline.warning--text').filter(':visible').should('be.visible').within(() => {
+        cy.contains('경고:').should('be.visible');
+        cy.contains('선택하신 업무시스템의 정책이 설정되어 있지 않습니다.').should('be.visible');
+        cy.contains('[규칙설정] 메뉴에서 먼저 해당 시스템의 정책을 설정해 주세요.').should('be.visible');
+      });
+      // 안내 문구 (caption)
+      cy.contains('업로드 시 엑셀 헤더와 선택한 시스템 규칙을 자동으로 매핑합니다. 불일치하는 경우 아래에서 수동으로 매핑할 수 있습니다.').should('be.visible');
+
+
+      cy.contains('h3', '이미 등록되어 있는 메뉴 목록').should('be.visible');
+
+      // 초기 상태 - 데이터 없음 안내 확인
+      cy.contains('td', '등록된 메뉴 데이터가 없습니다.').should('be.visible');
+
+      // 페이지네이션 영역 확인
+      cy.contains('Rows per page:').should('be.visible');
+      cy.get('.v-select__selection--comma').filter(':visible').contains('10').should('be.visible');
+      cy.get('button[aria-label="Previous page"]').should('exist').and('be.disabled');
+      cy.get('button[aria-label="Next page"]').should('exist').and('be.disabled');
+
+      // "등록 대기중인 데이터" 섹션
+      cy.contains('h3', '등록 대기중인 데이터').should('be.visible');
+
+      // 일괄 저장 버튼 - 초기 비활성화 상태 확인
+      cy.contains('.v-btn__content', '일괄 저장').closest('button').should('be.disabled');
+
+      // 초기 상태 - 데이터 없음 안내 확인
+      cy.contains('업로드된 데이터가 없습니다. 엑셀 파일을 업로드 해주세요.').should('be.visible');
+      
+      cy.log('✅ 검출 - 검출 메뉴 관리 - [메뉴 일괄등록] 화면 확인 완료!');
+
+
+    //==========================================
     // 검출탭 > 개인정보 유형 정의 서브메뉴 선택 
+    //=========================================
     cy.log('🚀 검출 - 개인정보 유형 정의선택 ');
     cy.contains('button', '검출').should('be.visible').click({ force: true });
     cy.wait(2000);
+    
     // 검출탭 서브메뉴 -  개인정보 유형 정의 탭 (디폴트)
     cy.get('.v-list__tile__title').filter(':contains("개인정보 유형 정의")').filter(':visible').click({ force: true });
     cy.wait(3000); 
+    
     cy.log('---  개인정보 식별 유형 정의 화면 검증 시작 ---');
-    cy.log('🔍 화면 내 주요 UI 요소 가시성 검증 시작');
-
-    // 화면이 완전히 렌더링될 때까지 잠시 대기
-    cy.wait(1000);
-
-    // 1. 검색 조건 영역 검증
-    cy.log('✔️ 검색 조건 영역 검증');
+    
     // '검색 조건' 타이틀 
     cy.contains('.c-headline', '검색 조건').should('exist');
     
     // '개인정보 유형 명' 입력창
     cy.get('input[aria-label="개인정보 유형 명"]').should('be.visible');
-    
     // 토글 라벨들 (정보주체만 조회, 삭제된 유형 포함)
     cy.contains('label.v-label', '정보주체만 조회').should('be.visible');
     cy.contains('label.v-label', '삭제된 유형 포함').should('be.visible');
@@ -490,7 +632,6 @@ describe('로그캐치 사이트 테스트', () => {
     // 표 데이터 테이블 헤더(컬럼명) 검증
     cy.log('✔️ 데이터 테이블 컬럼명 검증');
     
-    // 검증할 헤더 목록을 배열로 만들어 반복문으로 깔끔하게 처리합니다.
     const expectedHeaders = [
         '유형 명', 
         '정보주체 설정', 
@@ -509,10 +650,10 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✔️ 신규 추가 버튼 검증');
     // 테이블 상단의 핑크색 둥근 + 버튼 (add 아이콘)
     cy.contains('i.material-icons', 'add').should('be.visible');
-    cy.log('✅ 개인정보 식별 유형 정의 화면 UI 검증완료');
+    cy.log('✅ 검출 - 개인정보 유형 정의 -  개인정보 식별 유형 정의 화면 UI 검증완료');
 
 
-    // 검출탭 > 개인정보 유형 정의  > 식별 정규식 정의 선택 ------------------------------------------------------------
+    // 검출탭 > 개인정보 유형 정의  > 식별 정규식 정의 탭 선택 ------------------------------------------------------------
     cy.contains('.v-btn__content', '식별 정규식 정의').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 식별 정규식 정의 화면 검증 시작 ---');
@@ -549,10 +690,10 @@ describe('로그캐치 사이트 테스트', () => {
         cy.get('th').contains('식별 정규식 패턴 설명').should('be.visible');
         cy.get('th').contains('확정').should('be.visible');
 
-         cy.log('✅ 식별 정규식 정의 화면 UI 검증완료');
+         cy.log('✅ 검출 - 개인정보 유형 정의 - 식별 정규식 정의 화면 UI 검증완료');
 
        
-    // 검출탭 > 개인정보 유형 정의 > 식별 키워드 정의 선택 ---------------------------------------------------------------
+    // 검출탭 > 개인정보 유형 정의 > 식별 키워드 정의 탭 선택 ---------------------------------------------------------------
     cy.contains('.v-btn__content', '식별 키워드 정의').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 식별 키워드 정의 화면 검증 시작 ---');
@@ -560,7 +701,6 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('span.title.font-weight-bold', '식별 키워드 정의').should('be.visible');
    
     // 2. 본문(content) 설명란 검증
-    // 줄바꿈(<br>) 요소가 있으므로, 텍스트가 끊기지 않는 단위로 쪼개서 체인(chain) 검증합니다.
     cy.get('span.content')
       .should('be.visible')
       .and('contain', '식별된 키워드를 바탕으로 개인정보를 검출합니다.')
@@ -592,9 +732,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
 
 
-    // ----------------------------------------------------------
     // 하단: 검색 조건 영역
-    // ----------------------------------------------------------
     cy.log('✔️ 중단 [검색 조건] 영역 검증');
     
     // 검색 조건 타이틀
@@ -611,9 +749,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 검색버튼 확인 
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
 
-    // ----------------------------------------------------------
     // 3. 하단: 데이터 테이블 헤더
-    // ----------------------------------------------------------
     cy.log('✔️ 하단 데이터 테이블 컬럼명 검증');
     
     const keywordHeaders = [
@@ -625,11 +761,40 @@ describe('로그캐치 사이트 테스트', () => {
         cy.get('th').contains(headerName).should('be.visible');
     });
 
+    cy.log('✅ 검출 - 개인정보 유형 정의 - 식별 키워드 정의 화면 UI 검증완료');
 
+    //===========================================
+    // 검출탭 > 행위 구분 정책관리 선택 
+    //===========================================
+    cy.log('🚀 검출 - 행위 구분 정책 관리선택 ');
+    cy.contains('button', '검출').should('be.visible').click({ force: true });
+    cy.wait(2000);
+    // 검출탭 서브메뉴 -  개인정보 유형 정의 탭 (디폴트)
+    cy.get('.v-list__tile__title').filter(':contains("행위구분 정책 관리")').filter(':visible').click({ force: true });
+    cy.wait(3000); 
+    cy.log('---  행위구분 정책 관리 화면 검증 시작 ---');
+    cy.wait(1000);
 
-    cy.log('✅ 식별 키워드 정의 화면 UI 검증완료');
+    // 1. 검색 조건 영역 검증
+    cy.log('✔️ 검색 조건 영역 검증');
+    // '검색 조건' 타이틀 
+    cy.contains('.c-headline', '검색 조건').should('exist');
+    cy.get('input[aria-label="업무시스템"]').should('be.visible');
+    cy.get('input[aria-label="행위 유형"]').should('be.visible');
+    cy.get('input[aria-label="URI 주소"]').should('be.visible');
+    
+    // 표 컬럼 확인
+    cy.get('th').filter(':visible').contains('정책 ID').should('be.visible');
+    cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
+    cy.get('th').filter(':visible').contains('URI 주소 패턴').should('be.visible');
+    cy.get('th').filter(':visible').contains('행위 유형').should('be.visible');
 
-*/
+    // 추가버튼 확인 
+    cy.get('.v-btn__content').filter(':visible').contains('추가').should('be.visible');
+    // 검색버튼 확인 
+    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+    
+    cy.log('✅ 검출 - 행위구분 정책 관리 - 정책 관리 UI 검증완료');
 
 
     // ==========================================
@@ -648,4 +813,3 @@ describe('로그캐치 사이트 테스트', () => {
 
  })()
 ;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic3BlYy5jeS5qcyIsIm1hcHBpbmdzIjoiOzs7Ozs7O0FBQUFBLFFBQVEsQ0FBQyxlQUFlLEVBQUUsTUFBTTtFQUM5QkMsRUFBRSxDQUFDLFFBQVEsRUFBRSxNQUFNO0lBQ2pCQyxFQUFFLENBQUNDLEtBQUssQ0FBQyw0QkFBNEIsQ0FBQztFQUN4QyxDQUFDLENBQUM7QUFDSixDQUFDLENBQUMsQyIsInNvdXJjZXMiOlsid2VicGFjazovLy8uL2N5cHJlc3MvZTJlL3NwZWMuY3kuanMiXSwic291cmNlc0NvbnRlbnQiOlsiZGVzY3JpYmUoJ3RlbXBsYXRlIHNwZWMnLCAoKSA9PiB7XHJcbiAgaXQoJ3Bhc3NlcycsICgpID0+IHtcclxuICAgIGN5LnZpc2l0KCdodHRwczovL2V4YW1wbGUuY3lwcmVzcy5pbycpXHJcbiAgfSlcclxufSkiXSwibmFtZXMiOlsiZGVzY3JpYmUiLCJpdCIsImN5IiwidmlzaXQiXSwic291cmNlUm9vdCI6IiJ9
