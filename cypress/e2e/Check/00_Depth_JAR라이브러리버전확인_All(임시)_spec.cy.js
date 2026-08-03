@@ -95,29 +95,29 @@ describe('로그캐치 Depth Jar 라이브러리 정합성 검증', () => {
 
                         requiredPlugins.forEach(pluginName => {
 
-                                // 3.0.5.1191_r35135 임시 예외처리
-                                //-------------------------------------------------------------------
-                                // ⚠️ [임시패스] tomcat 계열 라이브러리 버전 불일치 허용
-                                // 확인사항: plugins에는 9.0.104 명시되어 있으나 실제 설치는 9.0.117
-                                // JAR 재빌드 전까지 임시로 버전 무관 존재 여부만 검증
-                                const tomcatTempPassList = [
-                                    'tomcat-embed-websocket',
-                                    'tomcat-jdbc',
-                                    'tomcat-annotations-api',
-                                    'tomcat-embed-el',
-                                    'tomcat-juli',
-                                ];
-                                const matchedTomcat = tomcatTempPassList.find(baseName => pluginName.startsWith(baseName));
-                                if (matchedTomcat) {
-                                    const hasAnyVersion = existingFiles.some(f => f.startsWith(matchedTomcat));
-                                    cy.log(`⚠️ [임시패스] ${pluginName} → 버전 불일치 허용, ${matchedTomcat} 계열 파일 존재 여부만 확인`);
-                                    expect(
-                                        hasAnyVersion,
-                                        `⚠️ [임시패스] ${matchedTomcat} 계열 파일이 ${commonLibPath}에 존재해야 합니다.`
-                                    ).to.be.true;
-                                    return;
-                                }
-                                //-------------------------------------------------------------------------------
+                                // // 3.0.5.1191_r35135 임시 예외처리
+                                // //-------------------------------------------------------------------
+                                // // ⚠️ [임시패스] tomcat 계열 라이브러리 버전 불일치 허용
+                                // // 확인사항: plugins에는 9.0.104 명시되어 있으나 실제 설치는 9.0.117
+                                // // JAR 재빌드 전까지 임시로 버전 무관 존재 여부만 검증
+                                // const tomcatTempPassList = [
+                                //     'tomcat-embed-websocket',
+                                //     'tomcat-jdbc',
+                                //     'tomcat-annotations-api',
+                                //     'tomcat-embed-el',
+                                //     'tomcat-juli',
+                                // ];
+                                // const matchedTomcat = tomcatTempPassList.find(baseName => pluginName.startsWith(baseName));
+                                // if (matchedTomcat) {
+                                //     const hasAnyVersion = existingFiles.some(f => f.startsWith(matchedTomcat));
+                                //     cy.log(`⚠️ [임시패스] ${pluginName} → 버전 불일치 허용, ${matchedTomcat} 계열 파일 존재 여부만 확인`);
+                                //     expect(
+                                //         hasAnyVersion,
+                                //         `⚠️ [임시패스] ${matchedTomcat} 계열 파일이 ${commonLibPath}에 존재해야 합니다.`
+                                //     ).to.be.true;
+                                //     return;
+                                // }
+                                // //-------------------------------------------------------------------------------
                                 
                             expect(
                                 existingFiles, 
