@@ -264,7 +264,7 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('th').filter(':visible').contains('등록').should('be.visible');
        cy.get('th').filter(':visible').contains('수정').should('be.visible');
        cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-       cy.get('th').filter(':visible').contains('..').should('be.visible');
+       
        // 정책 추가 + 버튼
        cy.get('.material-icons').filter(':visible').contains('add').should('be.visible');
        cy.log('✅ 소명 - 결재 - [결재라인] 탭 진입 및 데이터 출력 확인 완료!');

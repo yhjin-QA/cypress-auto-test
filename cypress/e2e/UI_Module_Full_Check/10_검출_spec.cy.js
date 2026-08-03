@@ -577,7 +577,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.contains('[규칙설정] 메뉴에서 먼저 해당 시스템의 정책을 설정해 주세요.').should('be.visible');
       });
       // 안내 문구 (caption)
-      cy.contains('업로드 시 엑셀 헤더와 선택한 시스템 규칙을 자동으로 매핑합니다. 불일치하는 경우 아래에서 수동으로 매핑할 수 있습니다.').should('be.visible');
+      cy.contains('업로드(또는 붙여넣기) 시 엑셀 헤더와 선택한 시스템 규칙을 자동으로 매핑합니다. 불일치하는 경우 아래에서 수동으로 매핑할 수 있습니다.').should('be.visible');
 
 
       cy.contains('h3', '이미 등록되어 있는 메뉴 목록').should('be.visible');
@@ -598,7 +598,7 @@ describe('로그캐치 사이트 테스트', () => {
       cy.contains('.v-btn__content', '일괄 저장').closest('button').should('be.disabled');
 
       // 초기 상태 - 데이터 없음 안내 확인
-      cy.contains('업로드된 데이터가 없습니다. 엑셀 파일을 업로드 해주세요.').should('be.visible');
+      cy.contains('업로드된 데이터가 없습니다. 엑셀 파일을 업로드하거나 내용을 붙여넣어 주세요.').should('be.visible');
       
       cy.log('✅ 검출 - 검출 메뉴 관리 - [메뉴 일괄등록] 화면 확인 완료!');
 
