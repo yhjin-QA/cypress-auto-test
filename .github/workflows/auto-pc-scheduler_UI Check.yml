@@ -6,10 +6,10 @@ env:
   TZ: Asia/Seoul
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #schedule:
-  #  - cron: '5 2 * * *'
+  push:
+   branches: [ "master" ]
+  schedule:
+    - cron: '5 2 * * *'
   workflow_dispatch:
 
 jobs:
@@ -363,7 +363,7 @@ jobs:
           WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
           JOB_STATUS: ${{ needs.cypress-run.result }}
           # 👇 원하시는 버전명을 여기에 하드코딩 하세요!
-          HARDCODED_VERSION: "3.0.5.1191_r35135" 
+          HARDCODED_VERSION: "2.9.1.125_r35234" 
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "확인결과"
