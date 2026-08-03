@@ -56,7 +56,7 @@ jobs:
 
           $loginUrl = "https://project.warevalley.com/login"
           #RELEASE 빌드파일 경로 raw가인 show
-          $repoBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/show/logcatch/QA/logcatch"
+          $repoBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/show/logcatch/QA/logcatch-2.9"
           
           $userId = "${{ secrets.REDMINE_USER_ID }}"
           $userPw = "${{ secrets.REDMINE_PW }}"
@@ -157,7 +157,7 @@ jobs:
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath cookies.txt "${target}:${remotePath}/cookies.txt"
 
           # (수정 후)  ALPHA를 RELEASE로 변경! 유의점  show 아닌 raw 
-          $rawBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/raw/logcatch/QA/logcatch/${env:LATEST_VERSION}"
+          $rawBaseUrl = "https://project.warevalley.com/projects/chakra-error/repository/to_tech/raw/logcatch/QA/logcatch-2.9/${env:LATEST_VERSION}"
 
 
 

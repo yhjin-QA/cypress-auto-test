@@ -456,26 +456,38 @@ describe('로그캐치 사이트 테스트', () => {
        cy.wait(3000);
        cy.log('--- 화면 검증 시작 ---');
   
-       // 좌측 - 업무시스템 목록 (동적 데이터 대응)
-       // 목록 타이틀 확인
-       cy.contains('.v-card__title', '업무시스템 목록 (Master)').should('be.visible');
+// ==========================================
+// 좌측 - 업무시스템 목록 (동적 데이터 대응 + 신규 설치 시 빈 목록 방어)
+// ==========================================
 
-       // 각 업무시스템 항목 - 이름/상태칩이 비어있지 않은지 구조 검증
-       cy.get('.v-list__tile__title').filter(':visible').should('have.length.greaterThan', 0).each(($title) => {
-       // 이름이 비어있지 않은지 확인
-        cy.wrap($title).invoke('text').then((text) => {
-          expect(text.trim().length).to.be.greaterThan(0);
-        });
-      });
+cy.contains('.v-card__title', '업무시스템 목록 (Master)').should('be.visible');
 
-      // 상태 칩 - "미설정" 또는 "설정완료" 등 유효한 상태값인지 확인 (칩 개수만큼 순회)
-      cy.get('.v-chip__content').filter(':visible').each(($chip) => {
-        cy.wrap($chip).invoke('text').then((text) => {
-          const validStatuses = ['미설정', '설정완료', '설정 완료']; // 실제 존재하는 상태값에 맞게 조정 필요
-          expect(text.trim().length).to.be.greaterThan(0);
-          // 상태값 종류가 더 있다면 validStatuses 배열에 추가해주세요
-        });
+cy.get('body').then(($body) => {
+  const itemCount = $body.find('.v-list__tile__title:visible').length;
+
+  if (itemCount === 0) {
+    // 🌟 신규 설치 등으로 업무시스템이 아직 하나도 등록되지 않은 경우
+    cy.log('ℹ️ 업무시스템 목록이 비어있음 (신규 설치 상태로 판단)');
+    // 필요 시, 빈 상태 안내 문구가 있다면 여기서 확인
+    // cy.contains('등록된 업무시스템이 없습니다').should('be.visible');
+  } else {
+    // 🌟 데이터가 있는 경우 - 이름 검증
+    cy.get('.v-list__tile__title').filter(':visible').should('have.length.greaterThan', 0).each(($title) => {
+      cy.wrap($title).invoke('text').then((text) => {
+        expect(text.trim().length).to.be.greaterThan(0);
       });
+    });
+
+    // 🌟 데이터가 있는 경우 - 상태 칩 검증 (여기 안으로만 위치)
+    cy.get('.v-chip__content').filter(':visible').each(($chip) => {
+      cy.wrap($chip).invoke('text').then((text) => {
+        const validStatuses = ['미설정', '설정완료', '설정 완료'];
+        expect(text.trim().length).to.be.greaterThan(0);
+        // 상태값 종류가 더 있다면 validStatuses 배열에 추가해주세요
+      });
+    });
+  }
+});
 
       // 우측 - "0 정책 설정" 상단 헤더 영역
       cy.contains('h2', '정책 설정').should('be.visible');
@@ -548,20 +560,42 @@ describe('로그캐치 사이트 테스트', () => {
        // 검출탭 > 검출 메뉴 관리 > 메뉴 일괄 등록 화면 ---------------------------------------------------------------------------------------
        cy.contains('.v-btn__content', '메뉴 일괄등록').should('be.visible').click({ force: true });
        cy.wait(3000);
+       cy.contains('.v-btn__content', '메뉴 규칙설정').should('be.visible').click({ force: true });
+       cy.wait(1000);
+       cy.contains('.v-btn__content', '메뉴 일괄등록').should('be.visible').click({ force: true });
+       cy.wait(3000);
+
        cy.log('--- 화면 검증 시작 ---');
 
-       // 3. 좌측 - 업무시스템 목록 (동적 데이터 대응, 재사용)
-       cy.contains('.v-card__title', '업무시스템 목록 (Master)').should('be.visible');
-       cy.get('.v-list__tile__title').filter(':visible').should('have.length.greaterThan', 0).each(($title) => {
-        cy.wrap($title).invoke('text').then((text) => {
-          expect(text.trim().length).to.be.greaterThan(0);
-        });
+// ==========================================
+// 좌측 - 업무시스템 목록 (동적 데이터 대응 + 신규 설치 시 빈 목록 방어)
+// ==========================================
+// 🌟 timeout을 넉넉하게 줘서, 렌더링될 때까지 재시도하도록
+cy.contains('.v-card__title', '업무시스템 목록 (Master)', { timeout: 15000 }).should('be.visible');
+
+cy.get('body').then(($body) => {
+  const itemCount = $body.find('.v-list__tile__title:visible').length;
+
+  if (itemCount === 0) {
+    // 🌟 신규 설치 등으로 업무시스템이 아직 하나도 등록되지 않은 경우
+    cy.log('ℹ️ 업무시스템 목록이 비어있음 (신규 설치 상태로 판단)');
+    // 필요 시, 빈 상태 안내 문구가 있다면 여기서 확인 (예: "등록된 업무시스템이 없습니다" 등)
+    // cy.contains('등록된 업무시스템이 없습니다').should('be.visible');
+  } else {
+    // 🌟 데이터가 있는 경우 - 기존 구조 검증 로직 수행
+    cy.get('.v-list__tile__title').filter(':visible').should('have.length.greaterThan', 0).each(($title) => {
+      cy.wrap($title).invoke('text').then((text) => {
+        expect(text.trim().length).to.be.greaterThan(0);
       });
-      cy.get('.v-chip__content').filter(':visible').each(($chip) => {
-        cy.wrap($chip).invoke('text').then((text) => {
-          expect(text.trim().length).to.be.greaterThan(0);
-        });
+    });
+
+    cy.get('.v-chip__content').filter(':visible').each(($chip) => {
+      cy.wrap($chip).invoke('text').then((text) => {
+        expect(text.trim().length).to.be.greaterThan(0);
       });
+    });
+  }
+});
 
       // 우측 - "메뉴 하이브리드 일괄등록" 상단 헤더 영역
       cy.contains('h2', '메뉴 하이브리드 일괄등록').should('be.visible');
@@ -577,7 +611,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.contains('[규칙설정] 메뉴에서 먼저 해당 시스템의 정책을 설정해 주세요.').should('be.visible');
       });
       // 안내 문구 (caption)
-      cy.contains('업로드 시 엑셀 헤더와 선택한 시스템 규칙을 자동으로 매핑합니다. 불일치하는 경우 아래에서 수동으로 매핑할 수 있습니다.').should('be.visible');
+      cy.contains('업로드(또는 붙여넣기) 시 엑셀 헤더와 선택한 시스템 규칙을 자동으로 매핑합니다. 불일치하는 경우 아래에서 수동으로 매핑할 수 있습니다.').should('be.visible');
 
 
       cy.contains('h3', '이미 등록되어 있는 메뉴 목록').should('be.visible');
@@ -598,7 +632,7 @@ describe('로그캐치 사이트 테스트', () => {
       cy.contains('.v-btn__content', '일괄 저장').closest('button').should('be.disabled');
 
       // 초기 상태 - 데이터 없음 안내 확인
-      cy.contains('업로드된 데이터가 없습니다. 엑셀 파일을 업로드 해주세요.').should('be.visible');
+      cy.contains('업로드된 데이터가 없습니다. 엑셀 파일을 업로드하거나 내용을 붙여넣어 주세요.').should('be.visible');
       
       cy.log('✅ 검출 - 검출 메뉴 관리 - [메뉴 일괄등록] 화면 확인 완료!');
 

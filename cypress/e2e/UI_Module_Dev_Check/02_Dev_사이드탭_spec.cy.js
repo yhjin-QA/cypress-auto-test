@@ -110,7 +110,7 @@ describe('로그캐치 사이트 테스트', () => {
     // button 태그 중에서 '이력'이라는 글자를 가진 녀석을 클릭
     cy.contains('button', '이력').click({ force: true });
     cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    // 컨텍스트 메뉴 제거거
+    // 컨텍스트 메뉴 제거
     cy.get('body').type('{esc}');
     cy.wait(1000);
     
@@ -120,10 +120,12 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('body').type('{esc}');
     cy.wait(500);
 
-    cy.contains('button', '소명').click({ force: true });
-    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.get('body').type('{esc}');
-    cy.wait(500);
+
+    // v2.9.1.125_r35234 에서 소명 메뉴 없어짐 (디폴트)
+    // cy.contains('button', '소명').click({ force: true });
+    // cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
+    // cy.get('body').type('{esc}');
+    // cy.wait(500);
     
     cy.contains('button', '자산').click({ force: true });
     cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
@@ -152,6 +154,12 @@ describe('로그캐치 사이트 테스트', () => {
 
     cy.contains('button', '운영').click({ force: true });
     cy.wait(3000); 
+    cy.get('body').type('{esc}');
+    cy.wait(500);
+    
+    // v2.9.1.125_r35234 에서 결재메뉴  디폴트로 추가됨. 
+    cy.contains('button', '결재').click({ force: true });
+    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
     cy.get('body').type('{esc}');
     cy.wait(500);
 
