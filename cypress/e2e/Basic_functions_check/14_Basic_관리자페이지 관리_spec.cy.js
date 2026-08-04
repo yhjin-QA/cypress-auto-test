@@ -411,7 +411,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 화면에 나타난 리스트 메뉴 중에서 '아이디'을 선택
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '이메일').should('be.visible').click({ force: true });
     
-     cy.get('input[aria-label="값"]').should('be.visible').clear().type('user001@logcatch.com');
+     cy.get('input[aria-label="값"]').should('be.visible').clear().type('user011@logcatch.com');
      cy.wait(1000);
 
      // 상태 콤보박스 — '사용자'로 초기화
@@ -426,7 +426,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
      //검색결과 검증
-     cy.get('td', { timeout: 10000 }).contains('user001@logcatch.com').should('be.visible');
+     cy.get('td', { timeout: 10000 }).contains('user011@logcatch.com').should('be.visible');
      //----------------------------------------------------------------------------------------------
      
 

@@ -285,23 +285,81 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('조회').should('be.visible'); 
 
 
-     // 기간 - 시작 날짜 달력 지정하기 
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-     cy.wait(1000);
-     // 1일 클릭
-     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
-     cy.wait(1000);
-     //달력창 닫기
-     cy.get('body').type('{esc}');
-     cy.log('✅ 시작 날짜 지정 성공');
+    //  // 기간 - 시작 날짜 달력 지정하기 
+    //  cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    //  cy.wait(1000);
+    //  // 1일 클릭
+    //  cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
+    //  cy.wait(1000);
+    //  //달력창 닫기
+    //  cy.get('body').type('{esc}');
+    //  cy.log('✅ 시작 날짜 지정 성공');
+
+ // ==========================================
+// 기간 - "기간" input 클릭하여 달력 오픈 (한 달 전 날짜 동적 지정)
+// ==========================================
+
+// 1. 오늘 날짜 기준 한 달 전 날짜 계산
+const targetDate = new Date();
+targetDate.setMonth(targetDate.getMonth() - 1);
+const targetYear = targetDate.getFullYear();
+const targetMonth = targetDate.getMonth() + 1; // 0부터 시작하므로 +1
+const targetDay = targetDate.getDate();
+
+cy.log(`🎯 선택할 날짜: ${targetYear}년 ${targetMonth}월 ${targetDay}일`);
+
+// 2. "기간" input 클릭하여 달력 오픈
+cy.get('input[aria-label="기간"]').filter(':visible').first().click({ force: true });
+cy.wait(1000);
+
+// 3. 🌟 달력 헤더의 연/월과 목표 연/월을 비교해서, 필요한 만큼 이전/다음 달 화살표 클릭
+cy.get('.v-date-picker-header__value').filter(':visible').invoke('text').then((headerText) => {
+  // 헤더 텍스트 예: "2026년 8월"
+  const match = headerText.match(/(\d{4})년\s*(\d{1,2})월/);
+
+  if (match) {
+    const displayedYear = parseInt(match[1], 10);
+    const displayedMonth = parseInt(match[2], 10);
+
+    const diffMonths = (targetYear - displayedYear) * 12 + (targetMonth - displayedMonth);
+
+    if (diffMonths !== 0) {
+      const clicks = Math.abs(diffMonths);
+      // diffMonths < 0 이면 이전 달(chevron_left)로, > 0 이면 다음 달(chevron_right)로 이동
+      const iconName = diffMonths < 0 ? 'chevron_left' : 'chevron_right';
+
+      cy.log(`📅 달력 이동: ${clicks}회 ${diffMonths < 0 ? '이전' : '다음'} 달로 이동`);
+
+      for (let i = 0; i < clicks; i++) {
+        cy.get('.v-date-picker-header')
+          .filter(':visible')
+          .find('i.material-icons')
+          .contains(iconName)
+          .click({ force: true });
+        cy.wait(300);
+      }
+    }
+  }
+});
+
+// 4. 목표 일자 클릭 (예: "3일")
+cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', `${targetDay}일`).click({ force: true });
+cy.wait(1000);
+//달력창 닫기
+cy.get('body').type('{esc}');
+
+cy.log('✅ 시작 날짜 지정 성공');
+//-----------------------------------------------------------------
   
+
+
+
      
     //조건입력 기능 동작 
     //이상행위 유형 클릭하는 코드 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     // 이상행위 유형중 개인정보 과다조회 클릭하는 코드
-    //cy.get('.v-list__tile__title').contains('개인정보 과다조회').should('be.visible').closest('.v-list__tile').click({ force: true });
     cy.get('.v-list__tile__title').filter(':visible').contains('개인정보 과다조회').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
@@ -363,19 +421,65 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible'); 
     cy.get('th').filter(':visible').contains('검출 건수').should('be.visible'); 
 
-    //기능동작
-    //달력표를 펼침 
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.wait(1000);
-    // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
-    cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
+    // 기능동작
+    // 달력표를 펼침 
+    // cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    // cy.wait(1000);
+    // // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
+    // cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
-    // 2. '4월'이라는 글자를 찾아 클릭합니다.
-     cy.get('.v-date-picker-table--month').filter(':visible').contains('4월').click({ force: true });
-    // 달력 20일 클릭
-    cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '20일').closest('.v-btn').click({ force: true });
-    //달력창 닫기
-    cy.get('body').type('{esc}');
+    // // 2. '4월'이라는 글자를 찾아 클릭합니다.
+    //  cy.get('.v-date-picker-table--month').filter(':visible').contains('4월').click({ force: true });
+    // // 달력 20일 클릭
+    // cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '20일').closest('.v-btn').click({ force: true });
+    // //달력창 닫기
+    // cy.get('body').type('{esc}');
+
+//=============================
+// 한달전 선택하기
+//=================================
+    // 2. "기간" input 클릭하여 달력 오픈
+cy.get('input[aria-label="기간"]').filter(':visible').first().click({ force: true });
+cy.wait(1000);
+
+// 3. 🌟 달력 헤더의 연/월과 목표 연/월을 비교해서, 필요한 만큼 이전/다음 달 화살표 클릭
+cy.get('.v-date-picker-header__value').filter(':visible').invoke('text').then((headerText) => {
+  // 헤더 텍스트 예: "2026년 8월"
+  const match = headerText.match(/(\d{4})년\s*(\d{1,2})월/);
+
+  if (match) {
+    const displayedYear = parseInt(match[1], 10);
+    const displayedMonth = parseInt(match[2], 10);
+
+    const diffMonths = (targetYear - displayedYear) * 12 + (targetMonth - displayedMonth);
+
+    if (diffMonths !== 0) {
+      const clicks = Math.abs(diffMonths);
+      // diffMonths < 0 이면 이전 달(chevron_left)로, > 0 이면 다음 달(chevron_right)로 이동
+      const iconName = diffMonths < 0 ? 'chevron_left' : 'chevron_right';
+
+      cy.log(`📅 달력 이동: ${clicks}회 ${diffMonths < 0 ? '이전' : '다음'} 달로 이동`);
+
+      for (let i = 0; i < clicks; i++) {
+        cy.get('.v-date-picker-header')
+          .filter(':visible')
+          .find('i.material-icons')
+          .contains(iconName)
+          .click({ force: true });
+        cy.wait(300);
+      }
+    }
+  }
+});
+
+// 4. 목표 일자 클릭 (예: "3일")
+cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', `${targetDay}일`).click({ force: true });
+cy.wait(1000);
+//달력창 닫기
+cy.get('body').type('{esc}');
+
+cy.log('✅ 시작 날짜 지정 성공');
+//-----------------------------------------------------------------
 
     //사용자 상태 클릭
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
@@ -474,9 +578,14 @@ const searchSequential = (dateIndex, currentUIText) => {
     });
 };
 
-// 🌟 4. 함수 최초 실행
-// 초기 화면에 '2026-04-20'이 세팅되어 있으므로 이를 기준으로 첫 탐색 시작
-searchSequential(0, '2026-04-20');
+// // 🌟 4. 함수 최초 실행
+// // 초기 화면에 '2026-04-20'이 세팅되어 있으므로 이를 기준으로 첫 탐색 시작
+// searchSequential(0, '2026-04-20');
+// 상단에서 "기간" 달력으로 선택한 날짜(한 달 전)를 기준으로 첫 탐색 시작
+const initialDateText = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(targetDay).padStart(2, '0')}`;
+cy.log(`🎯 초기 탐색 기준 날짜: ${initialDateText}`);
+
+searchSequential(0, initialDateText);
 
 
 // =====================================================

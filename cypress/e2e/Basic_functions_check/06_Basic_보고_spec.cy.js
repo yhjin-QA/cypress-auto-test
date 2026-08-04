@@ -236,8 +236,8 @@ describe('로그캐치 사이트 테스트', () => {
     //보고서 종류 콤보박스 열기 
     cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
-    // 보고서 종류 콤보박스에서  '월 정기점검 보고서 (행위_Mongo)' 선택하는 코드
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월 정기점검 보고서 (행위_Mongo)').should('be.visible').click({ force: true });
+    // 보고서 종류 콤보박스에서  '개인정보접속 종합 보고서' 선택하는 코드
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '개인정보접속 종합 보고서').should('be.visible').click({ force: true });
     cy.wait(1000);
     cy.get('body').type('{esc}');
     cy.wait(1000);
