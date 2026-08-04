@@ -112,26 +112,34 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // STEP 4: 현황서브메뉴 
     // ==========================================
     
-    cy.contains('button', '현황').click({ force: true });
-    cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
+cy.contains('button', '현황').click({ force: true });
+cy.wait(2000);
 
+cy.log('--- 현황 > 정보사용자별 탭 클릭 ---');
+cy.get('.tab-btn').contains('정보사용자 별').should('be.visible').click({ force: true });
+cy.log('--- 화면 검증 시작 ---');
+cy.contains('.c-headline', '검색 조건').should('exist');
 
-    cy.log('--- 현황 > 정보사용자별 탭 클릭  ---');
-    cy.get('.tab-btn').contains('정보사용자 별').should('be.visible').click({ force: true });
-    cy.log('--- 화면 검증 시작 ---');
-    cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘 확인 (부모 display:none 이슈로 exist 사용)
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('exist');
-    // 종료날짜 달력 아이콘 확인 - aria-label이 빈 값인 종료날짜 input으로 타겟
-    cy.get('input[aria-label=""][readonly="readonly"]').filter(':visible').first().closest('.v-input').find('.material-icons').should('exist'); // visible 대신 exist로 변경 (부모 display:none 이슈 회피)
-    // 달력 아이콘이 2개 존재하는지 확인
-    cy.get('i.material-icons').filter((i, el) => el.textContent.trim() === 'event').should('have.length.gte', 2); 
-    // 버튼확인
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    //검색 조건 입력문구 확인
-    cy.get('label').filter(':visible').contains('기간').should('be.visible');
-    cy.get('label').filter(':visible').contains('추적 타입').should('be.visible');
-    cy.get('span').filter(':visible').contains('정보 사용자').should('be.visible');
+// 🌟 시작날짜 달력 아이콘 확인 (display:none 부모 이슈 완전 회피)
+cy.contains('기간').closest('.v-input').find('.material-icons').should(($icons) => {
+  const hasEvent = $icons.toArray().some((el) => el.textContent.trim() === 'event');
+  expect(hasEvent).to.be.true;
+});
+
+// 🌟 종료날짜 달력 아이콘 확인
+cy.get('input[aria-label=""][readonly="readonly"]').filter(':visible').first()
+  .closest('.v-input').find('.material-icons').should('exist');
+
+// 달력 아이콘이 2개 존재하는지 확인
+cy.get('i.material-icons').filter((i, el) => el.textContent.trim() === 'event').should('have.length.gte', 2);
+
+// 버튼확인
+cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+
+// 검색 조건 입력문구 확인
+cy.get('label').filter(':visible').contains('기간').should('be.visible');
+cy.get('label').filter(':visible').contains('추적 타입').should('be.visible');
+cy.get('span').filter(':visible').contains('정보 사용자').should('be.visible');
 
     
     // ==========================================

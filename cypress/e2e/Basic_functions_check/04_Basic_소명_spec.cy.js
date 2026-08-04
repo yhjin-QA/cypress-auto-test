@@ -600,6 +600,11 @@ cy.get('tbody').find('a').then(($links) => {
        cy.get('.line-add-mini').filter(':visible').contains('참조').click({ force: true });
        cy.wait(1000);
 
+       // 🌟 참조 영역이 열린 뒤, 다이얼로그 내부 스크롤 컨테이너를 끝까지 내려서
+       // 새로 나타난 입력 영역(결재자 유형/결재자/추가 버튼)이 뷰포트 안에 들어오도록 함
+       cy.get('.scrollable-detail-content').filter(':visible').scrollTo('bottom', { ensureScrollable: false, duration: 500 });
+       cy.wait(1000);
+
        // 2. 결재자 유형 콤보박스 클릭 → "사용자" 선택
        cy.get('input[aria-label="결재자 유형"]').filter(':visible').last().click({ force: true });
        cy.wait(1000);
@@ -613,6 +618,10 @@ cy.get('tbody').find('a').then(($links) => {
        cy.get('input[aria-label="결재자"]').filter(':visible').last().type('인사팀', { force: true });
        cy.wait(1000);
        cy.get('.v-list__tile__title').filter(':visible').contains(/^인사팀$/).click({ force: true });
+
+       // 🌟 결재자 선택 완료 후, 다시 한 번 스크롤을 끝까지 내려서 "추가" 버튼이 확실히 보이게 함
+       cy.get('.scrollable-detail-content').filter(':visible').scrollTo('bottom', { ensureScrollable: false, duration: 500 });
+       cy.wait(1000);
 
        // 4. 추가 버튼 클릭
        // 4. 추가 버튼 클릭 (line-picker-ok 클래스로 정확히 타겟팅)

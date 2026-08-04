@@ -434,7 +434,7 @@ jobs:
           PRODUCT_NAME: "로그캐치"
           TEST_TYPE: "기능(Basic)"
           # 👇 원하시는 버전명을 직접 하드코딩해서 입력하세요!
-          HARDCODED_VERSION: "3.0.5.1191_r35135"
+          HARDCODED_VERSION: "2.9.1.125_r35234"
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "시나리오 확인결과"

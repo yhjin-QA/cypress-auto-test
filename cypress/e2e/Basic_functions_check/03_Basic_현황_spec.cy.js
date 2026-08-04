@@ -109,46 +109,64 @@ describe('로그캐치 사이트 테스트', () => {
     
     //로그인 성공
 
-// 맨티스 이슈 : 37423 다음버전 수정 예정 
-/*
-    // ==========================================
-    // STEP 4: 현황서브메뉴 
-    // ==========================================
+
+// ==========================================
+// STEP 4: 현황서브메뉴 
+// ==========================================
     
-    cy.contains('button', '현황').click({ force: true });
-    cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
+cy.contains('button', '현황').click({ force: true });
+cy.wait(2000);
+
+cy.log('--- 현황 > 정보사용자별 탭 클릭 ---');
+cy.get('.tab-btn').contains('정보사용자 별').should('be.visible').click({ force: true });
+cy.log('--- 화면 검증 시작 ---');
+cy.contains('.c-headline', '검색 조건').should('exist');
+
+// 🌟 시작날짜 달력 아이콘 확인 (display:none 부모 이슈 완전 회피)
+cy.contains('기간').closest('.v-input').find('.material-icons').should(($icons) => {
+  const hasEvent = $icons.toArray().some((el) => el.textContent.trim() === 'event');
+  expect(hasEvent).to.be.true;
+});
+
+// 🌟 종료날짜 달력 아이콘 확인
+cy.get('input[aria-label=""][readonly="readonly"]').filter(':visible').first()
+  .closest('.v-input').find('.material-icons').should('exist');
+
+// 달력 아이콘이 2개 존재하는지 확인
+cy.get('i.material-icons').filter((i, el) => el.textContent.trim() === 'event').should('have.length.gte', 2);
+
+// 버튼확인
+cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+
+// 검색 조건 입력문구 확인
+cy.get('label').filter(':visible').contains('기간').should('be.visible');
+cy.get('label').filter(':visible').contains('추적 타입').should('be.visible');
+cy.get('span').filter(':visible').contains('정보 사용자').should('be.visible');
+
+////////////////////////////
+// 기능확인 - 조건별로 검색
+// 업무 시스템 - 리눅스_배송관리 선택
+////////////////////////////
+
+// 업무시스템 클릭하는 코드
+cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+cy.wait(500);
+
+// 🌟 드롭다운이 실제로 열렸는지 (menuable__content__active 클래스로) 확인
+cy.get('.v-menu__content').filter(':visible').should('be.visible');
+
+// 전체 선택 클릭
+//cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '전체 선택').should('be.visible').click({ force: true });
+//cy.wait(1000);
+
+// 업무시스템중 리눅스_배송관리 클릭하는 코드
+cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_배송관리').scrollIntoView().should('be.visible').click({ force: true });
+cy.wait(1000);
+
+// 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+cy.get('body').type('{esc}');
 
 
-    cy.log('--- 현황 > 정보사용자별 탭 클릭  ---');
-    cy.get('.tab-btn').contains('정보사용자 별').should('be.visible').click({ force: true });
-    cy.log('--- 화면 검증 시작 ---');
-    cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-     // 버튼확인
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    //검색 조건 입력문구 확인
-    cy.get('label').filter(':visible').contains('기간').should('be.visible');
-    cy.get('label').filter(':visible').contains('추적 타입').should('be.visible');
-    cy.get('span').filter(':visible').contains('정보 사용자').should('be.visible');
-
-    ////////////////////////////
-    // 기능확인 - 조건별로 검색 
-    //업무 시스템 - 리눅스_배송관리 선택
-    // 조건 입력 
-    //업무시스템 클릭하는 코드 
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(1000);
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    cy.contains('.v-list__tile__title', '전체 선택').should('be.visible').click();
-    //cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    //cy.get('.v-input--selection-controls__ripple').eq(1).click({ force: true });
-    cy.get('.v-list__tile__title').contains('리눅스_배송관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
-    cy.wait(1000);
-    // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
-    cy.get('body').type('{esc}');
     
     // 조건 입력 
     // 정보 사용자 클릭하는 코드 
@@ -173,39 +191,54 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 현황 - 정보사용자 별 탭 진입 및 데이터 출력 확인 완료!');
 
     // 업무시스템 컨텍스트 메뉴 안닫히는 문제가있어 강제 페이지 새로고침
-    cy.reload();
+    //cy.reload();
 
-    cy.log('--- 현황 > 부서별 탭 클릭  ---');
-    cy.get('.tab-btn').contains('부서 별').should('be.visible').click({ force: true });
-    cy.wait(3000);
-    cy.log('--- 화면 검증 시작 ---');
-    cy.get('.tab-btn').contains('부서 별').closest('button').should('not.have.class', 'inactive');
-    cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-    cy.contains('label', '기간') .closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-    // 검색 버튼확인
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // 검색조건 입력문구 확인 
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
-    cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
+cy.log('--- 현황 > 부서별 탭 클릭  ---');
+cy.get('.tab-btn').contains('부서 별').should('be.visible').click({ force: true });
+cy.wait(3000);
+cy.log('--- 화면 검증 시작 ---');
+cy.get('.tab-btn').contains('부서 별').closest('button').should('not.have.class', 'inactive');
+cy.contains('.c-headline', '검색 조건').should('exist');
+
+// 🌟 시작날짜 달력 아이콘 확인 (display:none 부모 이슈 회피 - exist로 완화)
+cy.contains('label', '기간').closest('.v-input').find('i.material-icons').should('exist').then(($icon) => {
+  expect($icon.text().trim()).to.equal('event');
+});
+
+// 🌟 종료날짜 달력 아이콘 확인
+cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1)
+  .closest('.v-input').find('i.material-icons').should('exist');
+
+// 검색 버튼확인
+cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+
+// 검색조건 입력문구 확인
+cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
+cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
     
-    ////////////////////////////
-    // 기능확인 - 조건별로 검색 
-    //업무 시스템 - 리눅스_배송관리 선택
-    // 조건 입력 
-    //업무시스템 클릭하는 코드 
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(1000);
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    cy.contains('.v-list__tile__title', '전체 선택').should('be.visible').click();
-    //cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    //cy.get('.v-input--selection-controls__ripple').eq(1).click({ force: true });
-    cy.get('.v-list__tile__title').contains('전체 선택').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
-    cy.wait(1000);
-    // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
-    cy.get('body').type('{esc}');
+
+////////////////////////////
+// 기능확인 - 조건별로 검색
+// 업무 시스템 - 리눅스_배송관리 선택
+////////////////////////////
+
+// 업무시스템 클릭하는 코드
+cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+cy.wait(500);
+
+// 🌟 드롭다운이 실제로 열렸는지 (menuable__content__active 클래스로) 확인
+cy.get('.v-menu__content').filter(':visible').should('be.visible');
+
+// 전체 선택 클릭
+//cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '전체 선택').should('be.visible').click({ force: true });
+//cy.wait(1000);
+
+// 업무시스템중 리눅스_배송관리 클릭하는 코드
+cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_배송관리').scrollIntoView().should('be.visible').click({ force: true });
+cy.wait(1000);
+
+// 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+cy.get('body').type('{esc}');
     
     // 조건 입력 
     // 그룹별 클릭하는 코드 
@@ -229,21 +262,28 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 부서 별 탭 진입 및 데이터 출력 확인 완료!');
 
     
-    cy.log('--- 현황 > 업무시스템 별 탭 클릭  ---');
-    cy.get('.tab-btn').contains('업무 시스템 별').should('be.visible').click({ force: true });
-    cy.wait(3000);
-    cy.log('--- 화면 검증 시작 ---');
-    cy.get('.tab-btn').contains('업무 시스템 별').closest('button').should('not.have.class', 'inactive');
-    // 'c-headline' 클래스를 가진 요소 중에 '파일 다운로드' 글자가 존재하는지 확인
-    cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-    cy.contains('label', '기간') .closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-    // 검색 버튼 확인
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // 검색조건 입력문구 확인
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
+cy.log('--- 현황 > 업무시스템 별 탭 클릭  ---');
+cy.get('.tab-btn').contains('업무 시스템 별').should('be.visible').click({ force: true });
+cy.wait(3000);
+cy.log('--- 화면 검증 시작 ---');
+cy.get('.tab-btn').contains('업무 시스템 별').closest('button').should('not.have.class', 'inactive');
+// 'c-headline' 클래스를 가진 요소 중에 '검색 조건' 글자가 존재하는지 확인
+cy.contains('.c-headline', '검색 조건').should('exist');
+
+// 🌟 시작날짜 달력 아이콘확인 (display:none 부모 이슈 회피 - exist로 완화)
+cy.contains('label', '기간').closest('.v-input').find('i.material-icons').should('exist').then(($icon) => {
+  expect($icon.text().trim()).to.equal('event');
+});
+
+// 🌟 종료날짜 달력 아이콘확인
+cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1)
+  .closest('.v-input').find('i.material-icons').should('exist');
+
+// 검색 버튼 확인
+cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+// 검색조건 입력문구 확인
+cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
+
 
     ////////////////////////////
     // 기능확인 - 조건별로 검색 
@@ -260,7 +300,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
     // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
-    
+
 
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -271,7 +311,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
     cy.log('✅ 업무 시스템 별 탭 진입 및 데이터 출력 확인 완료!');
 
-
+    
+    // 종합현황 사라짐 
+    /*
     //  현황 > 종합 현항 탭
     cy.log('--- 현황 > 종합 현항 탭 클릭  ---');
     cy.get('.tab-btn').contains('종합 현황').should('be.visible').click({ force: true });
@@ -384,7 +426,7 @@ describe('로그캐치 사이트 테스트', () => {
     
     // 업무시스템 콤보박스 닫히지 않는 이슈 새로고침 실행
     cy.reload();
-
+    
     // 현황 > 종합현황  > [업무시스템 별] 탭 클릭 
     cy.get('.tab-title').filter(':visible').contains('업무 시스템 별').click();
     cy.wait(3000);
@@ -426,7 +468,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 현황 - 종합현황 - [업무 시스템 별]탭 진입 및 데이터 출력 확인 완료!');
     
     cy.wait(1000);
-
+    */
    
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
@@ -435,7 +477,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 
-*/
+
 
   });
 });  
