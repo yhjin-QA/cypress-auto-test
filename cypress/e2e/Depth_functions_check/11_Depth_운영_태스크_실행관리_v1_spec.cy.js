@@ -166,20 +166,16 @@ processList.forEach((process) => {
       cy.log(`⚠️ [${process.uiName}] 정지 상태로 남아있음! 먼저 시작시켜 정규화합니다.`);
 
       cy.wrap($card).contains('.v-btn', '시작').filter(':visible').click({ force: true });
+       cy.wait(1000);
 
-      cy.get('.c-headline:visible').contains('마스터 Task 실행').should('be.visible');
+      cy.get('.c-headline').filter(':visible').contains('마스터 Task 실행').should('be.visible');
       cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
       cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+       cy.wait(1000);
 
       // '정지' 버튼(=실행 중)과 초록색 상태바가 나타날 때까지 대기
-      cy.contains('p', process.uiName)
-        .closest('.v-card')
-        .contains('.v-btn__content', '정지', { timeout: 20000 })
-        .should('be.visible');
-      cy.contains('p', process.uiName)
-        .closest('.v-card')
-        .find('.v-progress-linear__bar__determinate')
-        .should('have.class', 'success');
+      cy.contains('p', process.uiName).closest('.v-card').contains('.v-btn__content', '정지', { timeout: 20000 }).should('be.visible');
+      cy.contains('p', process.uiName).closest('.v-card').find('.v-progress-linear__bar__determinate').should('have.class', 'success');
 
       // 서버에도 실제로 떴는지 한번 더 교차 확인 (다음 [1단계]가 신뢰할 수 있는 상태에서 시작하도록)
       cy.wait(5000);
@@ -195,12 +191,15 @@ processList.forEach((process) => {
   // [1단계: 정지 테스트]
   // ==========================================
   // 1. [UI 제어] 정지 버튼 클릭 (uiName 사용)
-  cy.contains('p', process.uiName).should('be.visible')
-    .closest('.v-card').contains('.v-btn', '정지').filter(':visible').click({ force: true });
+  cy.contains('p', process.uiName).should('be.visible').closest('.v-card').contains('.v-btn', '정지').filter(':visible').click({ force: true });
+  cy.wait(1000);
 
-  cy.get('.c-headline:visible').contains('마스터 Task 종료').should('be.visible');
+
+  cy.get('.c-headline').filter(':visible').contains('마스터 Task 종료').should('be.visible');
+  cy.wait(1000);
   cy.contains('p', 'Task 종료하시겠습니까?').should('be.visible');
   cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+  cy.wait(1000);
 
   // 2. [UI 검증] 상태가 '정지'로 변했는지
   cy.contains('p', process.uiName).closest('.v-card').contains('.v-btn__content', '시작', { timeout: 15000 }).should('be.visible');
@@ -225,12 +224,14 @@ processList.forEach((process) => {
   // [2단계: 시작 테스트]
   // ==========================================
   // 4. [UI 제어] 시작 버튼 클릭 (uiName 사용)
-  cy.contains('p', process.uiName).should('be.visible')
-    .closest('.v-card').contains('.v-btn', '시작').filter(':visible').click({ force: true });
+  cy.contains('p', process.uiName).should('be.visible').closest('.v-card').contains('.v-btn', '시작').filter(':visible').click({ force: true });
+  cy.wait(1000);
 
-  cy.get('.c-headline:visible').contains('마스터 Task 실행').should('be.visible');
+  cy.get('.c-headline').filter(':visible').contains('마스터 Task 실행').should('be.visible');
+  cy.wait(1000);
   cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
   cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+  cy.wait(1000);
 
   // 5. [UI 검증] 상태가 '실행'으로 변했는지
   cy.contains('p', process.uiName).closest('.v-card').contains('.v-btn__content', '정지', { timeout: 15000 }).should('be.visible');

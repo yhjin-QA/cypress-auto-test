@@ -144,88 +144,88 @@ cy.contains('.c-headline', '결재 정책 목록').should('exist');
 cy.log('--- 소명 - 결재라인 UI화면 진입완료 ---');
 
 // ==========================================================
-// STEP: "auto_add_test 결재정책" 존재 여부 확인 및 조건부 추가
+// STEP: "소명" 유형의 "auto_add_test 결재정책" 존재 여부 확인 및 조건부 추가
 // ==========================================================
-    cy.log('🔍 "auto_add_test 결재정책" 존재 여부 확인 중...');
+cy.log('🔍 "소명" 유형의 "auto_add_test 결재정책" 존재 여부 확인 중...');
 
-    // 테이블 렌더링 대기
-    cy.wait(1000); 
+cy.wait(1000);
 
-    cy.get('body').then(($body) => {
-        
-        // --------------------------------------------------
-        // [CASE 1] "auto_add_test 결재정책"이 이미 표에 있는 경우
-        // --------------------------------------------------
-        if ($body.find('table tbody tr:contains("auto_add_test 결재정책")').length > 0) {
-            cy.log('✅ 기존 "auto_add_test 결재정책" 발견! 사용 여부를 검증합니다.');
-            
-            // 기존 상태 검증 로직 실행
-            cy.wrap($body).find('table tbody tr:contains("auto_add_test 결재정책")').within(() => {
-                cy.contains('a', /^O$/).should('be.visible');
-            });
-            
-        } 
-        // --------------------------------------------------
-        // [CASE 2] "auto_add_test 결재정책"이 표에 없는 경우 (새로 추가)
-        // --------------------------------------------------
-        else {
-            cy.log('⚠️ "auto_add_test 결재정책"이 없습니다. 신규 추가 로직을 실행합니다.');
+const TARGET_TYPE = '소명';
 
-            // 1. + 동그란 플러스 버튼 클릭 (순수 HTML 요소 직접 명령)
-            cy.get('.grid-add-button').should('exist').then(($btn) => {
-                $btn[0].click(); 
-            });
+cy.get('body').then(($body) => {
 
-            // 2. 결재 정책 등록 창 렌더링 대기
-            cy.wait(500);
-            cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 등록');
-
-            // 3. 정책 이름 입력 (테스트 식별용 이름으로 적용)
-            cy.get('input[aria-label="정책 이름"]').filter(':visible').clear().type('auto_add_test 결재정책');
-            
-            // 4. 정책 설명 입력
-            cy.get('textarea[aria-label="정책 설명"]').filter(':visible').clear().type('테스트로 자동 추가된 결재라인입니다');
-            
-            // 5. 사용 여부 OFF -> ON 상태로 바꾸기 
-            cy.get('input[aria-label="사용 여부"]').check({ force: true }).should('be.checked');
-            
-            // 6. 권한 유형 선택 [일반]
-            cy.get('input[aria-label="권한 유형"]').filter(':visible').click({ force: true });
-            cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '일반').click({ force: true });
-            cy.wait(300); // 팝업 닫힘 대기
-            
-            // 7. 결재 적용 대상 선택 [소명]
-            cy.get('input[aria-label="결재 적용 대상"]').filter(':visible').click({ force: true });
-            cy.get('.v-menu__content').filter(':visible').find('.v-list__tile__title').filter((_, el) => el.innerText.trim() === '소명').click({ force: true });
-            cy.wait(300);
-            
-            // 8. 결재자 유형 선택 [부서장]
-            cy.get('input[aria-label="결재자 유형"]').filter(':visible').click({ force: true });
-            cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '부서장').click({ force: true });
-            cy.wait(300);
-            
-            // 9. 결재자 선택 [각 사용자의 부서장이...]
-            cy.get('input[aria-label="결재자"]').filter(':visible').click({ force: true });
-            cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '각 사용자의 부서장이 결재 라인으로 지정됩니다.').click({ force: true });
-            cy.wait(300);
-
-            // 10. 결재 정책 '추가' 버튼 클릭
-            cy.get('.v-dialog').contains('button', '추가').click({ force: true });
-            cy.wait(500); // 창 내부에 리스트 추가되는 시간 대기
-
-            // 11. 최종 '저장' 버튼 클릭
-            cy.get('.v-dialog').contains('button', '저장').click({ force: true });
-            cy.wait(1500); // 모달 창 닫힘 및 바깥 테이블 갱신 대기
-
-            // 12. 방금 추가한 데이터가 정상적으로 들어갔는지 꼼꼼하게 최종 교차 검증
-            cy.log('✅ 신규 추가 완료! 목록에 정상 반영되었는지 검증합니다.');
-            cy.get('table tbody').contains('tr', 'auto_add_test 결재정책').within(() => {
-                cy.contains('a', /^O$/).should('be.visible');
-            });
-        }
+    const matchedRow = $body.find('table tbody tr').filter((i, el) => {
+        const typeText = Cypress.$(el).find('td').first().text().trim();
+        const nameText = Cypress.$(el).text();
+        return typeText === TARGET_TYPE && nameText.includes('auto_add_test 결재정책');
     });
 
-    cy.log('✅ "소명 결재" 사용 여부 [O] 검증 완료!');
+    // --------------------------------------------------
+    // [CASE 1] 해당 유형("소명")의 "auto_add_test 결재정책"이 이미 있는 경우
+    // --------------------------------------------------
+    if (matchedRow.length > 0) {
+        cy.log(`✅ "${TARGET_TYPE}" 유형의 "auto_add_test 결재정책" 발견! 사용 여부를 검증합니다.`);
+
+        cy.get('table tbody').filter(':visible').find('tr').filter((i, el) => {
+            const typeText = Cypress.$(el).find('td').first().text().trim();
+            const nameText = Cypress.$(el).text();
+            return typeText === TARGET_TYPE && nameText.includes('auto_add_test 결재정책');
+        }).first().within(() => {
+            cy.get('.ag-status').should('contain.text', '사용');
+        });
+
+    }
+    // --------------------------------------------------
+    // [CASE 2] 해당 유형의 "auto_add_test 결재정책"이 없는 경우 (새로 추가)
+    // --------------------------------------------------
+    else {
+        cy.log(`⚠️ "${TARGET_TYPE}" 유형의 "auto_add_test 결재정책"이 없습니다. 신규 추가 로직을 실행합니다.`);
+
+        cy.contains('.v-btn__content', '정책 추가').filter(':visible').click({ force: true });
+
+        cy.wait(500);
+        cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 등록');
+
+        cy.get('input[aria-label="정책 이름"]').filter(':visible').clear().type('auto_add_test 결재정책');
+        cy.get('textarea[aria-label="정책 설명"]').filter(':visible').clear().type('테스트로 자동 추가된 결재라인입니다');
+        cy.get('input[aria-label="사용 여부"]').check({ force: true }).should('be.checked');
+
+        cy.get('input[aria-label="권한 유형"]').filter(':visible').click({ force: true });
+        cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '일반').click({ force: true });
+        cy.wait(300);
+
+        cy.get('input[aria-label="결재 적용 대상"]').filter(':visible').click({ force: true });
+        cy.get('.v-menu__content').filter(':visible').find('.v-list__tile__title')
+            .filter((_, el) => el.innerText.trim() === TARGET_TYPE)
+            .click({ force: true });
+        cy.wait(300);
+
+        cy.get('input[aria-label="결재자 유형"]').filter(':visible').click({ force: true });
+        cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '부서장').click({ force: true });
+        cy.wait(300);
+
+        cy.get('input[aria-label="결재자"]').filter(':visible').click({ force: true });
+        cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '각 사용자의 부서장이 결재 라인으로 지정됩니다.').click({ force: true });
+        cy.wait(300);
+
+        cy.get('.v-dialog').contains('button', '추가').click({ force: true });
+        cy.wait(500);
+
+        cy.get('.v-dialog').contains('button', '저장').click({ force: true });
+        cy.wait(1500);
+
+        cy.log('✅ 신규 추가 완료! 목록에 정상 반영되었는지 검증합니다.');
+        cy.get('table tbody').filter(':visible').find('tr').filter((i, el) => {
+            const typeText = Cypress.$(el).find('td').first().text().trim();
+            const nameText = Cypress.$(el).text();
+            return typeText === TARGET_TYPE && nameText.includes('auto_add_test 결재정책');
+        }).first().within(() => {
+            cy.get('.ag-status').should('contain.text', '사용');
+        });
+    }
+});
+
+cy.log(`✅ "${TARGET_TYPE} 결재" 사용 여부 [사용] 검증 완료!`);
 
 // ===============================================
 // STEP :이상행위 발생 사용자 : loginid445 //Manager1

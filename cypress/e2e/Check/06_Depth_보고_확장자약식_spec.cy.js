@@ -205,7 +205,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     //보고서 종류 콤보박스 열기 
     cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
-    // 보고서 종류 콤보박스에서  '월 정기점검 보고서 (행위_Mongo)' 선택하는 코드
+    // 보고서 종류 콤보박스에서  '월 정기점검 보고서' 선택하는 코드
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월 정기점검 보고서').should('be.visible').click({ force: true });
     cy.wait(1000);
     cy.get('body').type('{esc}');
@@ -328,68 +328,11 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     //------------------------------------------------------------------------------------------------------------------------------------------------------
 
     // ==========================================================
-    // 보고서 변경하기 - 월 정기점검 보고서 (행위) -> 월 정기점검 보고서 (행위_Mongo)
+    // 보고서 변경하기 - 월 정기점검 보고서 (행위) -> 개인정보접속 종합 보고서
     // ===========================================================
     // 1. [수정] **/export 를 떼고 실제 호출되는 주소로 변경합니다.
      cy.intercept('POST', '**/logcatch/pams/ozreport').as('saveReportApi');
       
-    //보고서 종류 콤보박스 열기 
-    cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(1000);
-    // 보고서 종류중 월 정기점검 보고서 (행위) 선택하는 코드
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월 정기점검 보고서 (행위_Mongo)').should('be.visible').click({ force: true });
-    cy.wait(1000);
-
-    // 저장버튼 클릭 
-    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(1000);
-
-     // 3. [확인] 이제 주소가 일치하므로 정상적으로 기다립니다.
-     cy.wait('@saveReportApi', { timeout: 20000 }).its('response.statusCode').should('eq', 200);
-     cy.log('✅ 보고서 저장 성공 확인!');
-    
-     //보고서 목록에서 추가한 Depth검증용 보고서_auto 클릭
-    // cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
-    // cy.wait(500);
-
-    // ==========================================
-    // [검증코드] 월 정기점검 보고서 (행위_Mongo)
-    // ========================================== 
-    // // [[보고서 미리보기 검증 코드]
-    // cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
-    // .within(() => {
-    //   // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-    //   cy.contains('월 정기점검 보고서', { timeout: 60000 }).should('be.visible');
-    //   // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-    //   cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
-    // });
-
-    // 1. 🚨 [매우 중요] 클릭하기 직전에, 화면을 그렸다는 서버의 신호(getPage)를 낚아채기 위해 그물을 칩니다!
-    cy.intercept('POST', '**/oz80/server?getPage=*').as('loadReport');
-
-    // 2. 보고서 목록에서 추가한 보고서 클릭하여 열기
-    cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
-    
-    // 3. 🌟 [최종 해결책] 아이프레임 안의 글자를 찾는 대신, 그물에 통신이 걸려들 때까지 60초를 기다립니다!
-    // 이 통신이 200(성공)으로 떨어졌다는 것은, 이미지든 글자든 리포트 렌더링이 무사히 끝났다는 뜻입니다.
-    cy.wait('@loadReport', { timeout: 60000 }).its('response.statusCode').should('eq', 200);
-    cy.log('✅ 오즈 리포트 렌더링 완료 (통신 성공 검증)!');
-
-
-    cy.log('✅ 월 정기점검 보고서 (행위_Mongo) 우측 미리보기  검증 완료!');
-    //좌측 (수정 패널) 입력값 검증코드
-    cy.get('input[aria-label="보고서 이름"]').filter(':visible').first().should('have.value', 'Depth검증용 보고서_auto');
-    cy.get('input[aria-label="설명"]').filter(':visible').first().should('have.value', 'Depth검증용 보고서입니다.');
-    cy.get('input[aria-label="보고서 종류"]').closest('.v-input').should('contain.text', '월 정기점검 보고서 (행위_Mongo)');
-    cy.get('input[aria-label="업무시스템"]').closest('.v-input').find('.v-chip__content').should('be.visible').and('contain.text', '리눅스_배송관리');
-    cy.get('input[aria-label="확장자"]').closest('.v-input').should('contain.text', 'pdf');
-    cy.log('✅ 월 정기점검 보고서 (행위_Mongo) 좌측 폼 입력값 보존 검증 완료!'); 
-    //------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    // ===================================================================
-    // 보고서 변경하기 - 월 정기점검 보고서 (행위_Mongo) -> 개인정보접속 종합 보고서
-    // ====================================================================
-    
     //보고서 종류 콤보박스 열기 
     cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
@@ -401,22 +344,10 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
     cy.wait(1000);
 
-    //보고서 목록에서 추가한 Depth검증용 보고서_auto 클릭
-    // cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
-    // cy.wait(500);
-
-    // ==========================================
-    // [검증코드] 개인정보접속 종합 보고서
-    // ========================================== 
-    // // [[보고서 미리보기 검증 코드]
-    // cy.get('iframe', { timeout: 60000 }).its('0.contentDocument.body').should('not.be.empty').then(cy.wrap)
-    // .within(() => {
-    //   // 우측 상단 헤더: '보고서 종류' 텍스트가 존재하는지 확인
-    //   cy.contains('개인정보접속 종합 보고서', { timeout: 60000 }).should('be.visible');
-    //   // 중앙 타이틀: 방금 입력한 '보고서 이름'이 화면에 잘 그려졌는지 확인
-    //   cy.contains('Depth검증용 보고서_auto', { timeout: 60000 }).should('be.visible');
-    // });
-
+     // 3. [확인] 이제 주소가 일치하므로 정상적으로 기다립니다.
+     cy.wait('@saveReportApi', { timeout: 20000 }).its('response.statusCode').should('eq', 200);
+     cy.log('✅ 보고서 저장 성공 확인!');
+    
     // 1. 🚨 [매우 중요] 클릭하기 직전에, 화면을 그렸다는 서버의 신호(getPage)를 낚아채기 위해 그물을 칩니다!
     cy.intercept('POST', '**/oz80/server?getPage=*').as('loadReport');
 
@@ -428,6 +359,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.wait('@loadReport', { timeout: 60000 }).its('response.statusCode').should('eq', 200);
     cy.log('✅ 오즈 리포트 렌더링 완료 (통신 성공 검증)!');
 
+
     cy.log('✅ 개인정보접속 종합 보고서 우측 미리보기  검증 완료!');
     //좌측 (수정 패널) 입력값 검증코드
     cy.get('input[aria-label="보고서 이름"]').filter(':visible').first().should('have.value', 'Depth검증용 보고서_auto');
@@ -437,6 +369,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('input[aria-label="확장자"]').closest('.v-input').should('contain.text', 'pdf');
     cy.log('✅ 개인정보접속 종합 보고서 좌측 폼 입력값 보존 검증 완료!'); 
     //------------------------------------------------------------------------------------------------------------------------------------------------------
+
     
     // ===================================================================
     // 보고서 디폴트상태  - 개인정보접속 종합 보고서-> 월 정기점검 보고서 (초기화)
@@ -463,7 +396,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // ====================================================================
     
     // 1. 테스트할 데이터 배열 정의
-    const reportTypes = ['월 정기점검 보고서', '월 정기점검 보고서 (행위)', '월 정기점검 보고서 (행위_Mongo)', '개인정보접속 종합 보고서'];
+    const reportTypes = ['월 정기점검 보고서', '월 정기점검 보고서 (행위)', '개인정보접속 종합 보고서'];
     //const extensions = ['html', 'xlsx', 'pdf', 'docx', 'mht', 'xls', 'ppt', 'txt', 'jpg', 'png', 'gif', 'tif', 'svg', 'hwp', 'csv']; 
     // 약식버전
     //const extensions = ['html', 'xlsx', 'pdf', 'docx', 'ppt', 'hwp', 'csv']; 

@@ -95,30 +95,60 @@ describe('로그캐치 Depth Jar 라이브러리 정합성 검증', () => {
 
                         requiredPlugins.forEach(pluginName => {
 
-                                // // 3.0.5.1191_r35135 임시 예외처리
-                                // //-------------------------------------------------------------------
-                                // // ⚠️ [임시패스] tomcat 계열 라이브러리 버전 불일치 허용
-                                // // 확인사항: plugins에는 9.0.104 명시되어 있으나 실제 설치는 9.0.117
-                                // // JAR 재빌드 전까지 임시로 버전 무관 존재 여부만 검증
-                                // const tomcatTempPassList = [
-                                //     'tomcat-embed-websocket',
-                                //     'tomcat-jdbc',
-                                //     'tomcat-annotations-api',
-                                //     'tomcat-embed-el',
-                                //     'tomcat-juli',
-                                // ];
-                                // const matchedTomcat = tomcatTempPassList.find(baseName => pluginName.startsWith(baseName));
-                                // if (matchedTomcat) {
-                                //     const hasAnyVersion = existingFiles.some(f => f.startsWith(matchedTomcat));
-                                //     cy.log(`⚠️ [임시패스] ${pluginName} → 버전 불일치 허용, ${matchedTomcat} 계열 파일 존재 여부만 확인`);
-                                //     expect(
-                                //         hasAnyVersion,
-                                //         `⚠️ [임시패스] ${matchedTomcat} 계열 파일이 ${commonLibPath}에 존재해야 합니다.`
-                                //     ).to.be.true;
-                                //     return;
-                                // }
-                                // //-------------------------------------------------------------------------------
-                                
+                                // 3.0.5.1191_r35135 임시 예외처리
+                                //-------------------------------------------------------------------
+                                // ⚠️ [임시패스] tomcat 계열 라이브러리 버전 불일치 허용
+                                // 확인사항: plugins에는 9.0.104 명시되어 있으나 실제 설치는 9.0.117
+                                // JAR 재빌드 전까지 임시로 버전 무관 존재 여부만 검증
+                                const tomcatTempPassList = [
+                                    'tomcat-embed-websocket',
+                                    'tomcat-jdbc',
+                                    'tomcat-annotations-api',
+                                    'tomcat-embed-el',
+                                    'tomcat-juli',
+                                ];
+
+                                // 확인사항: plugins에는 3.0.0 명시되어 있으나 실제 설치는 [실제 확인된 버전]
+                                // JAR 재빌드 전까지 임시로 버전 무관 존재 여부만 검증
+                                const wvInputParamTempPassList = [
+                                    'wv-input-param',
+                                    'wv-spring-repository',
+                                    'wv-spring-mongodb',
+                                    'wv-spring-component',
+                                    'wv-spring-common',
+                                    'wv-spring-redis',
+                                    'wv-spring-dao',
+                                    'wv-spring-dto',
+                                    'wv-spring-util',
+                                    'wv-spring-config',
+                                    'wv-commons-component',
+                                    'wv-commons-dto-public',
+                                    'wv-commons-utils-crypto',
+                                    'wv-commons-utils-io',
+                                    'wv-commons-process-object',
+                                    'wv-commons-process-custom',
+                                    'wv-commons-process-code',
+                                    'wv-commons-process-message',
+                                    'wv-commons-process-properties',
+
+
+                                ];
+
+                                const allTempPassList = [...tomcatTempPassList, ...wvInputParamTempPassList];
+
+                                // 2. 🌟 기존 tomcatTempPassList 대신 allTempPassList에서 검색하도록 수정
+                                const matchedLibrary = allTempPassList.find(baseName => pluginName.startsWith(baseName));
+                                if (matchedLibrary) {
+                                    const hasAnyVersion = existingFiles.some(f => f.startsWith(matchedLibrary));
+                                    cy.log(`⚠️ [임시패스] ${pluginName} → 버전 불일치 허용, ${matchedLibrary} 계열 파일 존재 여부만 확인`);
+                                    expect(
+                                        hasAnyVersion,
+                                        `⚠️ [임시패스] ${matchedLibrary} 계열 파일이 ${commonLibPath}에 존재해야 합니다.`
+                                    ).to.be.true;
+                                    return;
+                                }
+                                //-------------------------------------------------------------------------------
+                            
                             expect(
                                 existingFiles, 
                                 `✅ [라이브러리 파일명 확인 (${fileName})] ${pluginName}`

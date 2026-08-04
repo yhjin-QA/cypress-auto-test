@@ -574,7 +574,8 @@ cy.get('.v-dialog--active').then(($innerBody) => {
      cy.wait(1000);
 
      // 저장알림창 확인
-     cy.contains('p.mb-0', '저장했습니다.').should('be.visible');
+     // v2.9.1.125_r35234 p.mb-0'->p.ca-msg 변경됨. 
+     cy.contains('p.ca-msg', '저장했습니다.').should('be.visible');
      cy.wait(1000);
      
      // 저장 > 알림창 안의 '확인' 버튼을 찾아 클릭!
@@ -614,7 +615,8 @@ cy.get('.v-dialog--active').then(($innerBody) => {
      cy.wait(1000);
      
      // 수정알림창 확인
-     cy.contains('p.mb-0', '수정했습니다.').should('be.visible');
+     // v2.9.1.125_r35234 p.mb-0'->p.ca-msg 변경됨.
+     cy.contains('p.ca-msg', '수정했습니다.').should('be.visible');
      cy.wait(1000);
 
      // 저장 > 알림창 안의 '확인' 버튼을 찾아 클릭!
@@ -1040,10 +1042,13 @@ cy.get('.v-dialog--active').within(() => {
     });
 });
 
-     // 검출팝업 왼쪽 HTTP 상세 팝업 닫기 -----------------------------------------------------------------
-     cy.get('i.material-icons').contains('close').filter(':visible').first().click({ force: true });
-     cy.wait(1000);
+    // 검출팝업 왼쪽 HTTP 상세 팝업 닫기 -----------------------------------------------------------------
+    cy.contains('.tab-title', 'HTTP Request').parents('.flex.xs12.sm12.md12.lg12').first()
+    .within(() => {
+      cy.get('i.material-icons').contains('close').filter(':visible').first().click({ force: true });
+    });
 
+     cy.wait(1000);
      // 검출창 닫기버튼 클릭
      cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
      cy.wait(1000);

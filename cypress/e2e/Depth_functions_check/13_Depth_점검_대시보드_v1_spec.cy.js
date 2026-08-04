@@ -465,7 +465,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
    cy.log('✅ 5초 간격 실제 데이터 통신 검증 완료');
 
 
-   
+// v2.9.1.125_r35234
+// 맨티스 이슈 : 
 // ==========================================
 // 점검 대시보드 차트 → 팝업 검증 (신규 버전) 팝업창 뜨는 호출사항만 확인
 // ==========================================
@@ -479,8 +480,9 @@ const clickChartAndVerifyPopup = (logLabel, clickAction) => {
 
   clickAction();
   cy.wait(500);
-
-  cy.contains('p.mb-0:visible', '상세 페이지로 이동하시겠습니까?').should('be.visible');
+  
+  // 🌟 수정: p.mb-0 -> p.cc-msg 로 변경
+  cy.contains('p.cc-msg:visible', '상세 페이지로 이동하시겠습니까?').should('be.visible');
   cy.wait(500);
   cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
   cy.wait(1000);
@@ -554,6 +556,8 @@ clickChartAndVerifyPopup('이상행위 유형별 현황', () => {
 }, 'anomaly');
 
 cy.log('🎉 점검 대시보드 모든 차트 팝업 검증 완료!');
+
+
   
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
