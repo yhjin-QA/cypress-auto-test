@@ -463,38 +463,37 @@ cy.get('.v-dialog--active').then(($innerBody) => {
 });
 
    
-    //오탐확정----------------------------------------------------------------------------------------------
-    // 확정상태로 체크된 상태로 시작
-    // '전체 확정 선택' 글자가 있는 버튼을 찾아 강제 클릭합니다.
-    //cy.contains('button.v-btn:visible', '전체 확정 선택').should('be.visible').click({ force: true });
-    // 수정된 코드: ':visible' 제거
-    cy.contains('button.v-btn', '전체 확정 선택').should('be.visible').click({ force: true });
-    cy.wait(1000);
+//오탐확정----------------------------------------------------------------------------------------------
+// 1. [전체 확정 선택] 클릭 및 검증
+cy.contains('button.v-btn', '전체 확정 선택')
+  .should('be.visible')
+  .click({ force: true });
 
-    // 화면에 보이는 '확정' 버튼들을 모두 가져와서 반복문(each)으로 하나씩 검사합니다.
-    cy.get('button.btn-toggle-style-1').filter(':contains("확정")') // '확정' 글자가 있는 버튼만 추려냄
-    .each(($btn) => {
-      // 쏙쏙 뽑아낸 각각의 버튼들이 모두 'selected' 클래스를 가지고 있는지 깐깐하게 확인!
-       cy.wrap($btn).should('have.class', 'selected');
-     });
+// 확정 버튼 갯수 비교 검증 (each 대체)
+cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns) => {
+  const totalCount = $allBtns.length; // 예: 4개
+  
+  // 'selected'가 붙은 확정 버튼이 전체 갯수와 동일해질 때까지 자동 대기 및 검증
+  cy.get('button.btn-toggle-style-1.selected', { timeout: 10000 })
+    .filter(':contains("확정")')
+    .should('have.length', totalCount);
+});
 
-     
-    // 전체 확정 선택 - > 전체 오탐 선택으로 변경하기
-    // 화면에 보이는 버튼(.v-btn) 중 '전체 오탐 선택' 글자가 있는 버튼을 찾아 강제 클릭합니다.
-    cy.contains('button.v-btn', '전체 오탐 선택').should('be.visible').click({ force: true });
-    cy.wait(1000);
 
-    // 2. [핵심] 첫 번째 버튼이 'selected' 클래스를 가질 때까지 기다림 (최대 4초 자동 대기)
-    // 이렇게 하면 UI가 갱신될 시간을 확보할 수 있습니다.
-    cy.get('button.btn-toggle-style-1').filter(':contains("오탐")').first().should('have.class', 'selected', { timeout: 15000 });
+// 2. [전체 오탐 선택] 변경 클릭 및 검증
+cy.contains('button.v-btn', '전체 오탐 선택')
+  .should('be.visible')
+  .click({ force: true });
 
-    // 3. 이제 모든 버튼을 돌며 확인 (이미 첫 번째가 통과됐으니 나머지도 완료됐을 확률이 높음)
-    cy.get('button.btn-toggle-style-1').filter(':contains("오탐")')
-     .each(($btn) => {
-       cy.wrap($btn).should('have.class', 'selected');
-      });
-    cy.wait(1000);
-
+// 오탐 버튼 갯수 비교 검증 (each 대체 및 올바른 timeout 적용)
+cy.get('button.btn-toggle-style-1').filter(':contains("오탐")').then(($allBtns) => {
+  const totalCount = $allBtns.length;
+  
+  // 'selected'가 붙은 오탐 버튼이 전체 갯수와 동일해질 때까지 최대 15초 자동 대기
+  cy.get('button.btn-toggle-style-1.selected', { timeout: 15000 })
+    .filter(':contains("오탐")')
+    .should('have.length', totalCount);
+});
 
     
      // 1. 다이얼로그 내부 스크롤 컨테이너를 끝까지 내림
@@ -515,44 +514,58 @@ cy.get('.v-dialog--active').then(($innerBody) => {
      cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
      cy.wait(1000);
 
-     // '전체 확정 선택' 클릭
-    cy.contains('button.v-btn:visible', '전체 확정 선택').should('be.visible').click({ force: true });
-    cy.wait(1000);
+// ============================================================================
+// 1. [전체 확정 선택] 클릭 및 검증
+// ============================================================================
+cy.contains('button.v-btn', '전체 확정 선택')
+  .should('be.visible')
+  .click({ force: true });
 
-    // 2. [핵심] 첫 번째 버튼이 'selected' 클래스를 가질 때까지 기다림 (최대 4초 자동 대기)
-    // 이렇게 하면 UI가 갱신될 시간을 확보할 수 있습니다.
-    cy.get('button.btn-toggle-style-1').filter(':contains("확정")').first().should('have.class', 'selected', { timeout: 15000 });
+// 확정 버튼 갯수 비교 검증 (each 대체)
+cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns) => {
+  const totalCount = $allBtns.length;
+  
+  // 'selected'가 붙은 확정 버튼이 전체 갯수와 동일해질 때까지 대기
+  cy.get('button.btn-toggle-style-1.selected', { timeout: 10000 })
+    .filter(':contains("확정")')
+    .should('have.length', totalCount);
+});
 
-    // 3. 이제 모든 버튼을 돌며 확인 (이미 첫 번째가 통과됐으니 나머지도 완료됐을 확률이 높음)
-    cy.get('button.btn-toggle-style-1').filter(':contains("확정")')
-     .each(($btn) => {
-       cy.wrap($btn).should('have.class', 'selected');
-      });
-    cy.wait(1000);
 
-      // '이전 선택 복구' 클릭
-    cy.contains('button.v-btn:visible', '이전 선택 복구').should('be.visible').click({ force: true });
-    cy.wait(1000);
+// ============================================================================
+// 2. [이전 선택 복구] 클릭 및 검증 (오탐 상태로 복구)
+// ============================================================================
+cy.contains('button.v-btn', '이전 선택 복구')
+  .should('be.visible')
+  .click({ force: true });
 
-    // 오탐 선택 상태였기에 [이전 선택 복구] 클릭 시,   오탐상태로 복구되기때문
-    // 오탐 선택 상태 검증
-    cy.get('button.btn-toggle-style-1').filter(':contains("오탐")') // '확정' 글자가 있는 버튼만 추려냄
-    .each(($btn) => {
-      // 쏙쏙 뽑아낸 각각의 버튼들이 모두 'selected' 클래스를 가지고 있는지 깐깐하게 확인!
-       cy.wrap($btn).should('have.class', 'selected');
-     });
+// 오탐 버튼 갯수 비교 검증 (복구 완료 대기)
+cy.get('button.btn-toggle-style-1').filter(':contains("오탐")').then(($allBtns) => {
+  const totalCount = $allBtns.length;
+  
+  // 'selected'가 붙은 오탐 버튼이 전체 갯수와 동일해질 때까지 대기
+  cy.get('button.btn-toggle-style-1.selected', { timeout: 10000 })
+    .filter(':contains("오탐")')
+    .should('have.length', totalCount);
+});
 
-    // 다시 전체 확정 선택' 으로 변경
-    cy.contains('button.v-btn:visible', '전체 확정 선택').should('be.visible').click({ force: true });
-    cy.wait(1000);
 
-    // 화면에 보이는 '확정' 버튼들을 모두 가져와서 반복문(each)으로 하나씩 검사합니다.
-    cy.get('button.btn-toggle-style-1').filter(':contains("확정")') // '확정' 글자가 있는 버튼만 추려냄
-    .each(($btn) => {
-      // 쏙쏙 뽑아낸 각각의 버튼들이 모두 'selected' 클래스를 가지고 있는지 깐깐하게 확인!
-       cy.wrap($btn).should('have.class', 'selected');
-     });
-     cy.wait(1000);
+// ============================================================================
+// 3. 다시 [전체 확정 선택] 클릭 및 검증
+// ============================================================================
+cy.contains('button.v-btn', '전체 확정 선택')
+  .should('be.visible')
+  .click({ force: true });
+
+// 다시 한번 확정 버튼 갯수 비교 검증
+cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns) => {
+  const totalCount = $allBtns.length;
+  
+  // 'selected'가 붙은 확정 버튼이 전체 갯수와 동일해질 때까지 대기
+  cy.get('button.btn-toggle-style-1.selected', { timeout: 10000 })
+    .filter(':contains("확정")')
+    .should('have.length', totalCount);
+});
 
      // 1. 다이얼로그 내부 스크롤 컨테이너를 끝까지 내림
      cy.get('.scrollable-content').filter(':visible').scrollTo('bottom', { ensureScrollable: false, duration: 500 });
