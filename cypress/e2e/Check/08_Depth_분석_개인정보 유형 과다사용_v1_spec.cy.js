@@ -246,7 +246,7 @@ describe('로그캐치 사이트 테스트', () => {
    
      // 추가한 패턴유형 검증하는 코드
      cy.contains('tr', '휴대전화번호').should('contain', '1');
-     cy.wait(500);
+     cy.wait(1000);
 
      // 저장버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });

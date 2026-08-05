@@ -404,6 +404,10 @@ cy.get('.v-dialog--active').then(($innerBody) => {
           .find('input[type="checkbox"]')
           .uncheck({ force: true });
 
+        cy.wait(500);
+        // 🌟 체크 해제 후 메뉴 설정 아코디언이 닫혔을 가능성을 대비해, 다시 한번 강제로 열림 보장
+        ensureMenuOpen();
+
         // 체크 해제 직후 메뉴명 입력창이 나타날 때까지 대기 후 입력
         cy.get('input[aria-label="메뉴명"]', { timeout: 10000 })
           .should('be.visible')
@@ -462,7 +466,9 @@ cy.get('.v-dialog--active').then(($innerBody) => {
     //오탐확정----------------------------------------------------------------------------------------------
     // 확정상태로 체크된 상태로 시작
     // '전체 확정 선택' 글자가 있는 버튼을 찾아 강제 클릭합니다.
-    cy.contains('button.v-btn:visible', '전체 확정 선택').should('be.visible').click({ force: true });
+    //cy.contains('button.v-btn:visible', '전체 확정 선택').should('be.visible').click({ force: true });
+    // 수정된 코드: ':visible' 제거
+    cy.contains('button.v-btn', '전체 확정 선택').should('be.visible').click({ force: true });
     cy.wait(1000);
 
     // 화면에 보이는 '확정' 버튼들을 모두 가져와서 반복문(each)으로 하나씩 검사합니다.
@@ -473,9 +479,9 @@ cy.get('.v-dialog--active').then(($innerBody) => {
      });
 
      
-     // 전체 확정 선택 - > 전체 오탐 선택으로 변경하기
-     // 화면에 보이는 버튼(.v-btn) 중 '전체 오탐 선택' 글자가 있는 버튼을 찾아 강제 클릭합니다.
-    cy.contains('button.v-btn:visible', '전체 오탐 선택').should('be.visible').click({ force: true });
+    // 전체 확정 선택 - > 전체 오탐 선택으로 변경하기
+    // 화면에 보이는 버튼(.v-btn) 중 '전체 오탐 선택' 글자가 있는 버튼을 찾아 강제 클릭합니다.
+    cy.contains('button.v-btn', '전체 오탐 선택').should('be.visible').click({ force: true });
     cy.wait(1000);
 
     // 2. [핵심] 첫 번째 버튼이 'selected' 클래스를 가질 때까지 기다림 (최대 4초 자동 대기)
@@ -487,9 +493,15 @@ cy.get('.v-dialog--active').then(($innerBody) => {
      .each(($btn) => {
        cy.wrap($btn).should('have.class', 'selected');
       });
-     
+    cy.wait(1000);
+
+
+    
+     // 1. 다이얼로그 내부 스크롤 컨테이너를 끝까지 내림
+     cy.get('.scrollable-content').filter(':visible').scrollTo('bottom', { ensureScrollable: false, duration: 500 });
+     cy.wait(1000);
      // 오탐/확정 저장버튼 클릭
-     cy.get('button.v-btn').filter(':visible').contains('저장').last().click({ force: true });
+     cy.get('.v-window-item.tab-item-wrapper').filter(':visible').find('button.v-btn').filter(':visible').contains('저장').scrollIntoView().should('be.visible').click({ force: true });
      cy.wait(1000);
 
      // 검출창 닫기버튼 클릭
@@ -516,6 +528,7 @@ cy.get('.v-dialog--active').then(($innerBody) => {
      .each(($btn) => {
        cy.wrap($btn).should('have.class', 'selected');
       });
+    cy.wait(1000);
 
       // '이전 선택 복구' 클릭
     cy.contains('button.v-btn:visible', '이전 선택 복구').should('be.visible').click({ force: true });
@@ -539,6 +552,11 @@ cy.get('.v-dialog--active').then(($innerBody) => {
       // 쏙쏙 뽑아낸 각각의 버튼들이 모두 'selected' 클래스를 가지고 있는지 깐깐하게 확인!
        cy.wrap($btn).should('have.class', 'selected');
      });
+     cy.wait(1000);
+
+     // 1. 다이얼로그 내부 스크롤 컨테이너를 끝까지 내림
+     cy.get('.scrollable-content').filter(':visible').scrollTo('bottom', { ensureScrollable: false, duration: 500 });
+     cy.wait(1000);
 
      // 오탐/확정 저장버튼 클릭
      cy.get('button.v-btn').filter(':visible').contains('저장').last().click({ force: true });
