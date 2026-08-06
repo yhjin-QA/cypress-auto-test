@@ -458,6 +458,7 @@ dashboardStats2.forEach((stat) => {
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.get('.tab-btn').contains('업무 시스템 별').closest('button').should('not.have.class', 'inactive');
+
     // 'c-headline' 클래스를 가진 요소 중에 '파일 다운로드' 글자가 존재하는지 확인
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘 확인 (부모 display:none 이슈로 exist 사용)
@@ -499,14 +500,21 @@ cy.get('.menuable__content__active').find('.v-date-picker-table').contains('.v-b
 
 cy.get('body').type('{esc}');
 
-//업무시스템 클릭하는 코드 
-cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-cy.wait(500);
-// 업무시스템별 클릭하는 코드
-cy.get('.v-list__tile__title').contains('JEUS_CRM고객관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
-cy.wait(1000);
-// 컨텍스트 메뉴 닫기
+// ===========================================
+// 업무시스템 선택 (WebSphere_IBM_Liberty_CRM고객관리)
+// ===========================================
+
+// 1. 입력창을 클릭하고 화살표 아래(downarrow) 키를 눌러 메뉴를 확실하게 엽니다.
+cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true }) .type('{downarrow}'); 
+
+cy.wait(1000); // 메뉴가 열리고 데이터가 렌더링될 시간 넉넉히 대기
+
+// 2. 메뉴가 열린 상태에서 항목을 찾아 클릭합니다. (앞에서 배운 범위 좁히기 적용)
+cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'WebSphere_IBM_Liberty_CRM고객관리').scrollIntoView().should('be.visible').click({ force: true });
+
+// 3. 항목 선택이 끝났으니 메뉴를 닫아줍니다.
 cy.get('body').type('{esc}');
+cy.wait(500);
 
 // 검색 버튼 클릭
 cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -542,17 +550,31 @@ dashboardStats3.forEach((stat) => {
 //맨티스 이슈 : 37386 (이슈는 해결된거같으나 아직 상태가 안바뀐듯함.)
 //[현황] 업무시스템별 차트에 개인정보 사용량 건수와 하단표 개인정보 사용건수 합이 일치하지 않는 문제
 // =========================================================
-// [정합성 검증] 업무시스템 별 '개인정보 사용량' 카드 클릭 후 하단 표 데이터 합산 검증 (하단표 38합)
+// [정합성 검증] 업무시스템 별 '개인정보 사용량' 카드 클릭 후 하단 표 데이터 합산 검증
 // =========================================================
-// 1. [상단] '개인정보 사용량' 카드를 찾아 첫 번째 숫자(<b>)를 추출하고 클릭합니다.
+cy.get('body').type('{esc}');
+cy.wait(500);
+
+// 1. [상단] '개인정보 사용량' 카드를 찾아 값만 추출합니다.
 cy.contains('.v-card', '개인정보 사용량').should('be.visible').within(() => {
   cy.get('b').first().then(($b) => {
     const text = $b.text(); 
     const totalFromCard = parseInt(text.replace(/[^0-9]/g, ''), 10);
     cy.wrap(totalFromCard).as('expectedTotal_IP'); 
-    cy.wrap($b).click({ force: true });
+    
+    cy.log(`상단 카드에서 추출한 값: ${totalFromCard}`);
   });
 });
+
+// ✨ 2. 수정 포인트: within 블록 밖에서 카드를 클릭합니다.
+// 강제 클릭({force: true})을 빼고, '개인정보 사용량'이라는 글자 자체를 정확히 조준해서 누릅니다.
+cy.contains('.v-card', '개인정보 사용량')
+  .contains('개인정보 사용량')
+  .should('be.visible')
+  .click(); 
+
+// ✨ 3. 클릭 후 하단 표가 나타나고 데이터가 호출될 시간을 충분히 줍니다.
+cy.wait(2000);
 
 // ==========================================
 // 페이지수 10 -> 100 개 옵션 변경 (within 블록 밖으로 이동!)
@@ -572,7 +594,7 @@ cy.get('@expectedTotal_IP').then((expectedTotal_IP) => {
     const cellText = $row.find('td').eq(-2).text();
     const num = parseInt(cellText.replace(/[^0-9]/g, ''), 10);
     if (!isNaN(num)) {
-      cy.log(`➕ IP 검색 표 데이터: ${num}`); 
+      cy.log(`➕  표 데이터: ${num}`); 
       tableSum += num;
     }
   }).then(() => {
