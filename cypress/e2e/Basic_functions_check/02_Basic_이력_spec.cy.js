@@ -839,9 +839,9 @@ cy.get('tbody tr')
       cy.log(`${index + 1}번째 줄 검증 완료!`);
     });
   });
-
-// 맨티스 이슈 : 38305
 /*
+// 맨티스 이슈 : 38305
+// 복수 업무시스템 선택하라는 알림창 뜨는 이슈
 //===========================================
 // 접속 메뉴 - 복수 or 전체선택시 업무시스템 확인 Case
 //========================================
@@ -852,7 +852,9 @@ cy.wait(1000);
 cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
 cy.wait(1000);
 // 업무시스템 - 전체 선택
-cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '전체 선택').scrollIntoView().should('be.visible').click({ force: true });
+cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_VIP고객').scrollIntoView().should('be.visible').click({ force: true });
+cy.wait(1000);
+cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'JEUS_CRM고객관리').scrollIntoView().should('be.visible').click({ force: true });
 cy.get('body').type('{esc}');
 cy.wait(1000); // 상위 메뉴가 완전히 닫히고 내부 상태가 업데이트될 때까지 넉넉히 대기
 
@@ -870,6 +872,8 @@ cy.wait(1000); // 애니메이션 대기
 
 //'VIP_대량 조회 훈련 접속메뉴 선택
 cy.get('.v-list__tile__title', { timeout: 10000 }).contains('VIP_대량 조회 훈련').scrollIntoView().should('be.visible').click({ force: true });
+cy.get('.v-list__tile__title', { timeout: 10000 }).contains('사전소명_JEUS_CRM').scrollIntoView().should('be.visible').click({ force: true });
+
 cy.get('body').type('{esc}');
 
 //검색버튼 클릭
@@ -879,16 +883,14 @@ cy.wait(1000);
 // 검색 결과 검증 
 // [검증] 검색 결과의 모든 행(Row)에 'VIP_대량 조회 훈련'이 포함되어 있는지 확인
 cy.get('tbody tr')
-  .filter(':visible') // 화면에 보이는 실제 데이터 행만 추려냄
+  .filter(':visible')
   .each(($row, index) => {
-    // 각 행(tr) 안에서 a 태그를 찾아 텍스트 검증
     cy.wrap($row).within(() => {
       cy.get('a')
-        .contains('VIP_대량 조회 훈련')
-        .should('exist') // DOM에 존재하는지 확인
-        .and('be.visible'); // 사용자 눈에도 잘 보이는지 확인
-        
-      // (선택) 몇 번째 줄 검증 중인지 로그를 남기면 디버깅할 때 아주 편합니다.
+        .contains(/VIP_대량 조회 훈련|사전소명_JEUS_CRM/)
+        .should('exist')
+        .and('be.visible');
+
       cy.log(`${index + 1}번째 줄 검증 완료!`);
     });
   });
