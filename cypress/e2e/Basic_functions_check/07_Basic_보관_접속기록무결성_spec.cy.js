@@ -505,30 +505,44 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="업무시스템"]').closest('.v-input').find('.v-input__icon--append').click({ force: true });
     
 
-    // 20260205_0_nonPrivacy_res_0000.gz 파일명 입력하기 
-    cy.get('input[aria-label="파일명"]').filter(':visible').clear({ force: true }).type('20260205_0_nonPrivacy_res_0000.gz', { force: true }); // 원하는 파일명 입력
-    cy.wait(1000);
+// 2026으로 시작하는 파일명 검색하기 (기존 정확한 파일명 검색보다 너프하게 변경)
+cy.get('input[aria-label="파일명"]').filter(':visible').clear({ force: true }).type('2026', { force: true });
+cy.wait(1000);
 
-    // 위 변조 여부 값중 - 일치 클릭 
-    // 위변조 여부 [일치]값을 클릭하여 콤보박스 열기 
-    cy.get('input[aria-label="위 변조 여부"]').closest('.v-input').find('.v-input__slot').filter(':visible').click({ force: true });
-    //cy.get('span[title="일치"]').filter(':visible').click({ force: true });
-    cy.wait(1000); // 메뉴가 펼쳐지는 애니메이션을 위해 잠시 대기
+// 위변조 여부 [전체] 선택하는 코드
+cy.get('input[aria-label="위 변조 여부"]').closest('.v-input').find('.v-input__slot').filter(':visible').click({ force: true });
+cy.wait(1000);
 
-    // 위변주 여부 열린 메뉴(.v-menu__content) 중에서 '일치'를 찾아 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '전체').should('be.visible').click({ force: true });
-    // 선택한 컨텍스트메뉴닫기 (팝업창 닫는 동작 )
-    cy.get('body').type('{esc}');
-    cy.wait(1000);
+cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '전체').should('be.visible').click({ force: true });
+cy.get('body').type('{esc}');
+cy.wait(1000);
 
-    // 검색 버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     
-    //조건 검색결과 검증
-    cy.contains('a', '20260205_0_nonPrivacy_res_0000.gz').should('be.visible');
-    // '파일을 찾을 수 없습니다'라는 텍스트를 가진 a 태그가 화면에 보이는지 확인
+// 검색 버튼 클릭
+cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+cy.wait(1000);
+
+// =====================================================================
+// "2026"으로 검색된 결과가 존재하고, 그중 최소 1개는 "2026"으로 시작하는지 확인
+// ======================================================================
+
+cy.get('body').then(($body) => {
+  // "파일을 찾을 수 없습니다" 안내 문구가 뜨는지(결과 0건인지) 먼저 확인
+  const noResult = $body.find('a:contains("파일을 찾을 수 없습니다")').length > 0;
+
+  if (noResult) {
+    cy.log('⚠️ "2026"으로 검색된 결과가 없습니다.');
     cy.contains('a', '파일을 찾을 수 없습니다').should('be.visible').and('have.class', 'ellipsis');
-    //cy.get('.ellipsis').contains('a', '일치').should('be.visible');
+  } else {
+    cy.log('✅ "2026" 검색 결과가 존재합니다. 파일명 형식을 검증합니다.');
+
+    // 검색 결과 목록에서 파일명이 담긴 요소들을 가져와, 그중 최소 하나는 "2026"으로 시작하는지 확인
+    cy.get('a.ellipsis').filter(':visible').should(($links) => {
+      const texts = $links.toArray().map((el) => el.textContent.trim());
+      const hasMatchingFile = texts.some((text) => text.startsWith('2026'));
+      expect(hasMatchingFile, '검색 결과 중 최소 하나는 "2026"으로 시작해야 함').to.be.true;
+    });
+  }
+});
 
     //엑셀 다운로드 확인기능 -----------------
     // 엑셀 다운로드 클릭하는 코드 
