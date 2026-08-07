@@ -218,25 +218,83 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     //cy.get('th').filter(':visible').contains('처리').should('be.visible');
     // 3.0.5.1191_r35135 가로 스크롤 문제로 DOM 존재 확인으로 처리 
     cy.get('th').contains('처리').should('exist');
-    //달력표를 펼침 
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.wait(1000);
-    // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
-    cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
-    // 2. '1월'이라는 글자를 찾아 클릭합니다.
-     cy.get('.v-date-picker-table--month').filter(':visible').contains('1월').click({ force: true });
-    // 달력 20일 클릭
-    cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '20일').closest('.v-btn').click({ force: true });
-    //달력창 닫기
-    cy.get('body').type('{esc}');
+
+    // //달력표를 펼침 
+    // cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    // cy.wait(1000);
+    // // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
+    // cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
+
+    // // 2. '1월'이라는 글자를 찾아 클릭합니다.
+    //  cy.get('.v-date-picker-table--month').filter(':visible').contains('7월').click({ force: true });
+    // // 달력 20일 클릭
+    // cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '20일').closest('.v-btn').click({ force: true });
+    // //달력창 닫기
+    // cy.get('body').type('{esc}');
+
+ // ==========================================
+// 기간 - "기간" input 클릭하여 달력 오픈 (한 달 전 날짜 동적 지정)
+// ==========================================
+
+// 1. 오늘 날짜 기준 한 달 전 날짜 계산
+const targetDate = new Date();
+targetDate.setMonth(targetDate.getMonth() - 1);
+const targetYear = targetDate.getFullYear();
+const targetMonth = targetDate.getMonth() + 1; // 0부터 시작하므로 +1
+const targetDay = targetDate.getDate();
+
+cy.log(`🎯 선택할 날짜: ${targetYear}년 ${targetMonth}월 ${targetDay}일`);
+
+// 2. "기간" input 클릭하여 달력 오픈
+cy.get('input[aria-label="기간"]').filter(':visible').first().click({ force: true });
+cy.wait(1000);
+
+// 3. 🌟 달력 헤더의 연/월과 목표 연/월을 비교해서, 필요한 만큼 이전/다음 달 화살표 클릭
+cy.get('.v-date-picker-header__value').filter(':visible').invoke('text').then((headerText) => {
+  // 헤더 텍스트 예: "2026년 8월"
+  const match = headerText.match(/(\d{4})년\s*(\d{1,2})월/);
+
+  if (match) {
+    const displayedYear = parseInt(match[1], 10);
+    const displayedMonth = parseInt(match[2], 10);
+
+    const diffMonths = (targetYear - displayedYear) * 12 + (targetMonth - displayedMonth);
+
+    if (diffMonths !== 0) {
+      const clicks = Math.abs(diffMonths);
+      // diffMonths < 0 이면 이전 달(chevron_left)로, > 0 이면 다음 달(chevron_right)로 이동
+      const iconName = diffMonths < 0 ? 'chevron_left' : 'chevron_right';
+
+      cy.log(`📅 달력 이동: ${clicks}회 ${diffMonths < 0 ? '이전' : '다음'} 달로 이동`);
+
+      for (let i = 0; i < clicks; i++) {
+        cy.get('.v-date-picker-header')
+          .filter(':visible')
+          .find('i.material-icons')
+          .contains(iconName)
+          .click({ force: true });
+        cy.wait(300);
+      }
+    }
+  }
+});
+
+// 4. 목표 일자 클릭 (예: "3일")
+cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', `${targetDay}일`).click({ force: true });
+cy.wait(1000);
+//달력창 닫기
+cy.get('body').type('{esc}');
+
+cy.log('✅ 시작 날짜 지정 성공');
+//-----------------------------------------------------------------
 
 
     // 조건 입력 
     //업무시스템 클릭하는 코드 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    // 업무시스템 종류 클릭하는 코드
     cy.get('.v-list__tile__title').contains('리눅스_배송관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
@@ -259,17 +317,24 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-list__tile__title').filter(':visible').contains('날짜별').closest('.v-list__tile').click({ force: true });
     //개인정보 유형별 상세내역 포함 클릭 
     cy.get('.v-dialog--active').contains('label', '개인정보 유형별 상세 내역 포함').click({ force: true });
+    
+
+
+    // 1. ✨ 클릭 전 미리 API 낚아채기 준비 (메서드가 POST인 점에 주의!)
+    cy.intercept('POST', '**/statistics/log/excel*').as('downloadExcel');
+
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+
+    // 3. ✨ 서버에서 엑셀 파일 생성을 완료하고 응답을 줄 때까지 기다립니다.
+    // 넉넉하게 2분(120초)을 설정했지만, 서버가 10초 만에 응답하면 딱 10초만 기다리고 바로 다음 줄로 넘어갑니다!
+    cy.wait('@downloadExcel', { timeout: 120000 });
      
-    // 2. [수정] be.visible 대신 exist를 먼저 사용하고, 텍스트 확인을 결합합니다.
-    //cy.contains('엑셀 다운로드 요청에 성공했습니다', { timeout: 10000 }).should('exist'); // 찰나의 순간이라도 DOM에 나타나면 성공 처리
-    //cy.contains(/엑셀.*요청.*성공/, { timeout: 30000 }).should('exist');
 
     // 3. 사라지는 것 확인
     cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
     
-    // 서버에서 zip 파일을 생성하고 다운로드가 100% 완료될 때까지 충분히 기다립니다. (7초 -> 15초로 연장)
-    cy.wait(15000);
+    // 서버에서 zip 파일을 생성하고 다운로드가 100% 완료될 때까지 충분히 기다립니다. (7초 -> 10초로 연장)
+    cy.wait(10000);
     
     // [검증] 다운로드 폴더를 확인합니다.
     // 수행시 기존에 다운로드 받아두었던 파일은 자동으로 지움(사전초기화)
@@ -297,7 +362,6 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
             expect(stats.size, '파일 용량 0바이트 초과 정상 확인').to.be.greaterThan(0);
 
             // 검증 2: ZIP 파일 무결성 최소 체크
-            // 압축 파일(.zip)은 내용물이 비어있는 빈 폴더만 압축해도 헤더 정보 때문에 최소 22바이트 이상을 차지합니다.
             // 엑셀 로그가 정상적으로 포함되었다면 최소 수백 바이트 이상이어야 하므로 100바이트를 최소 기준으로 잡습니다.
             expect(stats.size, 'ZIP 파일 최소 용량(100 bytes) 이상 무결성 확인').to.be.at.least(100);
             
@@ -591,7 +655,7 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      cy.wait(1000);
 
      // 키워드 탭 클릭
-     cy.contains('.v-tabs__item', '키워드').should('be.visible').click({ force: true });
+     cy.contains('.v-tabs__item, a', '키워드').filter(':visible').click({ force: true });
      cy.wait(1000);
 
      // 키워드 값 'Depth_test_KeyWord'를 입력
