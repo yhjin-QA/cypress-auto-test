@@ -749,18 +749,18 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     cy.get('body').type('{esc}');
 
     // 정보 사용자 클릭하여 리스트 열기
-    cy.get('input[aria-label="정보 사용자"]').filter(':visible').click({ force: true });
-    cy.wait(1000);
+    //cy.get('input[aria-label="정보 사용자"]').filter(':visible').click({ force: true });
+    //cy.wait(1000);
 
-    cy.get('input[aria-label="정보 사용자"]').filter(':visible').type('사원_5');
-    cy.wait(1000); // 필터링된 결과가 나타날 때까지 대기
+    //cy.get('input[aria-label="정보 사용자"]').filter(':visible').type('사원_5');
+    //cy.wait(1000); // 필터링된 결과가 나타날 때까지 대기
 
     // 필터링되어 나타난 항목 클릭
     // 필터링되어 나타난 항목 클릭 (괄호 안 내용 무관하게 '사원_5'로 시작하는 항목 클릭)
-    cy.contains('.v-list__tile__title', /^사원_5/).should('be.visible').click({ force: true });
-    cy.wait(1000);
+    //cy.contains('.v-list__tile__title', /^사원_5/).should('be.visible').click({ force: true });
+    //cy.wait(1000);
     // 3. 선택 후 메뉴 닫기
-    cy.get('body').type('{esc}');
+    //cy.get('body').type('{esc}');
 
 
     // 사용자 계정 입력하기 
@@ -772,8 +772,8 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     cy.wait(1000);
 
     // URI 주소에 /cop/logcatch/btnExcessCheck.do 입력 
-    cy.get('input[aria-label="URI 주소"]').filter(':visible').clear().type('/crm/soc_matrix.jsp');
-    cy.wait(1000);
+    cy.get('input[aria-label="URI 주소"]').filter(':visible').clear().type('/crm');
+    //cy.wait(1000);
 
     // 행위 유형 클릭하여 리스트 열기
     cy.get('input[aria-label="행위 유형"]').filter(':visible').click({ force: true });

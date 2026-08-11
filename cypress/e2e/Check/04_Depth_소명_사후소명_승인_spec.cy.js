@@ -623,7 +623,7 @@ cy.get('table tbody tr')
                       // 2. 소명 승인 팝업 내부 작업 (승인 -> 코멘트 -> 확인)
                       // [승인] 버튼 클릭하기
                       cy.get('.v-dialog').filter(':visible').within(() => {
-                          cy.contains('button', '승인').click({ force: true });
+                          cy.contains('button', '승인').scrollIntoView().click({ force: true });
                           cy.wait(1000); 
 
                           const now = new Date();
@@ -635,6 +635,19 @@ cy.get('table tbody tr')
 
                           cy.contains('button', '확인').click({ force: true });
                       });
+                      cy.wait(2000);
+
+                      // 🌟 디버깅: "확인" 클릭 직후 화면에 뭐라고 찍히는지 확인
+cy.get('body').then(($body) => {
+  const text = $body.text();
+  cy.log(`현재 화면 전체 텍스트 일부: ${text.substring(0, 500)}`);
+  
+  const hasApproved = text.includes('승인 (');
+  const hasRequested = text.includes('요청됨');
+  const hasError = text.includes('오류') || text.includes('실패');
+  
+  cy.log(`승인 텍스트 존재: ${hasApproved}, 요청됨 텍스트 존재: ${hasRequested}, 오류 텍스트 존재: ${hasError}`);
+});
                       
                       found = true;
                       return false; 
