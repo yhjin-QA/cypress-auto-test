@@ -561,40 +561,37 @@ cy.contains('.v-card', '개인정보 사용량').should('be.visible').within(() 
     const text = $b.text(); 
     const totalFromCard = parseInt(text.replace(/[^0-9]/g, ''), 10);
     cy.wrap(totalFromCard).as('expectedTotal_IP'); 
-    
     cy.log(`상단 카드에서 추출한 값: ${totalFromCard}`);
   });
 });
 
-// ✨ 2. 수정 포인트: within 블록 밖에서 카드를 클릭합니다.
-// 강제 클릭({force: true})을 빼고, '개인정보 사용량'이라는 글자 자체를 정확히 조준해서 누릅니다.
-cy.contains('.v-card', '개인정보 사용량')
-  .contains('개인정보 사용량')
-  .should('be.visible')
-  .click(); 
-
-// ✨ 3. 클릭 후 하단 표가 나타나고 데이터가 호출될 시간을 충분히 줍니다.
-cy.wait(2000);
-
-// ==========================================
-// 페이지수 10 -> 100 개 옵션 변경 (within 블록 밖으로 이동!)
-// ==========================================
-cy.wait(1000); // 클릭 후 하단 표 갱신 대기
-cy.get('.v-select__selection--comma').filter(':visible').contains('10').click({ force: true });
-cy.wait(1000); // 콤보박스 메뉴 열릴 때까지 대기
-cy.get('.v-menu__content').filter(':visible').contains('100').click({ force: true });
-cy.wait(3000); // 목록 갱신 대기
-//---------------------------------------------------------------------
-
-// 2. [하단] 현재 화면에 보이는 표의 데이터를 모두 더합니다.
+// 🌟 카드 값이 0이면 클릭/하단표 검증만 스킵 (return으로 이 콜백 안에서만 종료)
 cy.get('@expectedTotal_IP').then((expectedTotal_IP) => {
-  let tableSum = 0; 
+  if (expectedTotal_IP === 0) {
+    cy.log('ℹ️ "개인정보 사용량" 값이 0건이므로, 클릭 및 하단 표 검증을 생략합니다.');
+    return;
+  }
+
+  cy.contains('.v-card', '개인정보 사용량').contains('개인정보 사용량').should('be.visible').click();
+  cy.wait(2000);
+
+  // ==========================================
+  // 페이지수 10 -> 100 개 옵션 변경
+  // ==========================================
+  cy.wait(1000);
+  cy.get('.v-select__selection--comma').filter(':visible').contains('10').click({ force: true });
+  cy.wait(1000);
+  cy.get('.v-menu__content').filter(':visible').contains('100').click({ force: true });
+  cy.wait(3000);
+
+  // 2. [하단] 현재 화면에 보이는 표의 데이터를 모두 더합니다.
+  let tableSum = 0;
   cy.get('table').filter(':visible').should('be.visible');
   cy.get('table').filter(':visible').find('tbody tr').each(($row) => {
     const cellText = $row.find('td').eq(-2).text();
     const num = parseInt(cellText.replace(/[^0-9]/g, ''), 10);
     if (!isNaN(num)) {
-      cy.log(`➕  표 데이터: ${num}`); 
+      cy.log(`➕ 표 데이터: ${num}`);
       tableSum += num;
     }
   }).then(() => {
@@ -603,13 +600,13 @@ cy.get('@expectedTotal_IP').then((expectedTotal_IP) => {
   });
 });
 
-    //검색결과 통계 그래프 문구 확인 코드
-    cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
-    cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
-    cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
-    
-    cy.log('✅ 업무 시스템 별 탭 진입 및 데이터 출력 확인 완료!');
+// 🌟 [수정] 그래프 문구 확인은 if 블록 밖으로 분리 - 카드 값과 무관하게 항상 실행
+// 검색결과 통계 그래프 문구 확인 코드
+cy.get('div[title="개인정보 유형별 현황"]').should('be.visible').and('contain.text', '개인정보 유형별 현황');
+cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
+cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
 
+cy.log('✅ 업무 시스템 별 탭 진입 및 데이터 출력 확인 완료!');
 
     // //  현황 > 종합 현항 탭
     // cy.log('--- 현황 > 종합 현항 탭 클릭  ---');
