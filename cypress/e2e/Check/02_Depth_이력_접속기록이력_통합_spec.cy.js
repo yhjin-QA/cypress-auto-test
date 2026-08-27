@@ -418,7 +418,7 @@ cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
 cy.get('tbody tr').filter(':visible').first().then(($row) => {
     // 접속 메뉴 컬럼 텍스트 추출 (테이블 컬럼 순서 기준: 접속일시, 업무시스템, 정보사용자, 부서/소속, 접속IP주소, 접속메뉴...)
     const menuText = $row.find('td').eq(5).text().trim(); // "접속 메뉴" 컬럼 인덱스는 실제 구조에 맞게 조정 필요
-    const isUnregisteredMenu = menuText.startsWith('/');
+    const isUnregisteredMenu = menuText.startsWith('/');  // / 로 시작할경우 미등록메뉴, / 로 시작하지않을경우 등록된 메뉴로 판단기준 
 
     cy.log(`🔍 클릭할 행의 접속 메뉴: "${menuText}" → ${isUnregisteredMenu ? '미등록(펼쳐짐 예상)' : '등록됨(닫힘 예상)'}`);
 

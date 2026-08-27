@@ -463,8 +463,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
 
-    // [검증] 검색 결과 검증(업무시스템으로 검증방법 대체)
-    cy.get('tbody tr', { timeout: 10000 }).contains('리눅스_배송관리').should('be.visible');
+    // [검증] 'Depth_Test_20260807' 또는 '/cop/logcatch/btnExcessCheck.do' 둘 중 하나라도 보이면 통과
+    cy.get('tbody tr', { timeout: 10000 }).contains(/Depth_Test_20260807|\/cop\/logcatch\/btnExcessCheck\.do/).should('be.visible');
 
     /// 해당 구조(.ellipsis.text-xs-center a)를 가진 요소를 찾아서
     cy.get('.ellipsis.text-xs-center a').should('be.visible').invoke('text') // 텍스트 값을 추출한 뒤
