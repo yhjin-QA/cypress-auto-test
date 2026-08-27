@@ -223,7 +223,10 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // 그래서 .within() 블록 바깥으로 빠져나와서 클릭해야 합니다!
     cy.wait(500); 
     // 개인정보 유형 계좌번호 선택
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', /^계좌 번호$/).click({ force: true });
+    // 1. 드롭다운 메뉴를 찾아 맨 아래로 스크롤합니다.
+    cy.get('.v-menu__content').filter(':visible').scrollTo('bottom', { ensureScrollable: false });
+    cy.wait(1000); 
+    cy.get('.v-menu__content').filter(':visible').scrollIntoView().contains('.v-list__tile__title', /^계좌 번호$/).click({ force: true });
 
     // // 저장 버튼 클릭 (다시 팝업창 안으로 들어가서 클릭)
     // cy.log('💾 식별자 패턴 저장 버튼 클릭');

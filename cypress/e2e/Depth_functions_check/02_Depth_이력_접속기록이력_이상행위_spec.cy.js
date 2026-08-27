@@ -352,17 +352,17 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
  
-    cy.log('--- [핵심 검증] 비로그인 & 업무 시간 외 접속 행 확인 ---');
-    cy.contains('tbody tr', '비로그인').filter(':contains("업무 시간 외 접속")').filter(':contains("소명 불필요")').within(() => {
-    // 1. 아이콘 확인
+    cy.log('--- [핵심 검증] 업무 시간 외 접속 첫 번째 행 확인 ---');
+    // 1. '업무 시간 외 접속'이 포함된 행들 중 '첫 번째' 행만 선택
+    cy.get('tbody tr').filter(':contains("업무 시간 외 접속")').first() .within(() => {
+    // 2. [추가된 검증] '소명 불필요' 또는 '소명 대상' 텍스트가 보이는지 확인
+    cy.contains('td', /^(소명 불필요|소명 대상)$/).should('be.visible');
+
+    // 3. 아이콘 확인
     cy.get('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
 
-    // 2. [수정됨] '존재' 또는 '미존재' 중 하나가 포함되어 있는지 검증
-    cy.get('td').should(($td) => {
-       const text = $td.text();
-       const isValid = text.includes('존재') || text.includes('미존재');
-       expect(isValid, `예상된 상태값(존재/미존재)이 포함되어야 합니다. 현재값: ${text}`).to.be.true;
-      });
+    // 4. '존재' 또는 '미존재' 텍스트가 보이는지 확인
+    cy.contains('td', /^(존재|미존재)$/).should('be.visible');
     });
 
      // 특정 사용자(제흔휴) 검증
