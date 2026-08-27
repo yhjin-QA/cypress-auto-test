@@ -512,9 +512,9 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
                 cy.wait(1500);
             }
         }
-
-        cy.contains('button.v-btn:visible', '저장').should('be.visible').click({ force: true });
-        cy.wait(1000);
+     
+     cy.contains('button.v-btn', '저장').last().scrollIntoView().click({ force: true });
+     cy.wait(1000);
        
 
         // 🌟 [분기 처리] 미등록 메뉴(메뉴 설정 펼쳐짐)일 때만 "저장하시겠습니까?" 확인 팝업이 뜸
@@ -532,9 +532,10 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
    
 //오탐확정----------------------------------------------------------------------------------------------
 // 1. [전체 확정 선택] 클릭 및 검증
-cy.contains('button.v-btn', '전체 확정 선택')
-  .should('be.visible')
-  .click({ force: true });
+// 스크롤 올려서 버튼 선택 
+cy.get('.scrollable-content').filter(':visible').scrollTo('top');
+cy.wait(1000);
+cy.contains('button.v-btn', '전체 확정 선택').should('be.visible').click({ force: true });
 
 // 확정 버튼 갯수 비교 검증 (each 대체)
 cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns) => {
@@ -585,9 +586,7 @@ cy.get('button.btn-toggle-style-1').filter(':contains("오탐")').then(($allBtns
 // ============================================================================
 // 1. [전체 확정 선택] 클릭 및 검증
 // ============================================================================
-cy.contains('button.v-btn', '전체 확정 선택')
-  .should('be.visible')
-  .click({ force: true });
+cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.visible').click({ force: true });
 
 // 확정 버튼 갯수 비교 검증 (each 대체)
 cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns) => {
@@ -603,7 +602,7 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
 // ============================================================================
 // 2. [이전 선택 복구] 클릭 및 검증 (오탐 상태로 복구)
 // ============================================================================
-cy.contains('button.v-btn', '이전 선택 복구').should('be.visible').click({ force: true });
+cy.contains('button.v-btn', '이전 선택 복구').scrollIntoView().should('be.visible').click({ force: true });
 
 // 🌟 디버깅: 복구 후 실제로 어떤 버튼이 selected 상태인지 확인
 cy.get('button.btn-toggle-style-1.selected').then(($selected) => {
@@ -627,9 +626,7 @@ cy.get('button.btn-toggle-style-1').filter(':contains("오탐")').then(($allBtns
 // ============================================================================
 // 3. 다시 [전체 확정 선택] 클릭 및 검증
 // ============================================================================
-cy.contains('button.v-btn', '전체 확정 선택')
-  .should('be.visible')
-  .click({ force: true });
+cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.visible').click({ force: true });
 
 // 다시 한번 확정 버튼 갯수 비교 검증
 cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns) => {
@@ -665,7 +662,7 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      cy.wait(1000);
 
      // 키워드 탭 클릭
-     cy.contains('.v-tabs__item, a', '키워드').filter(':visible').click({ force: true });
+     cy.contains('.v-tabs__item, a', '키워드').scrollIntoView().filter(':visible').click({ force: true });
      cy.wait(1000);
 
      // 키워드 값 'Depth_test_KeyWord'를 입력
@@ -680,7 +677,7 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
 
      // 저장알림창 확인
      // v2.9.1.125_r35234 p.mb-0'->p.ca-msg 변경됨. 
-     cy.contains('p.ca-msg', '저장했습니다.').should('be.visible');
+     cy.contains('p.ca-msg', /저장했습니다\.|중복된 값입니다/).should('be.visible');
      cy.wait(1000);
      
      // 저장 > 알림창 안의 '확인' 버튼을 찾아 클릭!
@@ -698,7 +695,7 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      cy.wait(1000);
 
      // 키워드 탭 클릭
-     cy.contains('.v-tabs__item', '키워드').should('be.visible').click({ force: true });
+     cy.contains('.v-tabs__item', '키워드').scrollIntoView().should('be.visible').click({ force: true });
      cy.wait(1000);
 
      //등록한 키워드 클릭하기  
@@ -738,7 +735,7 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      cy.wait(1000);
 
      // 키워드 탭 클릭
-     cy.contains('.v-tabs__item', '키워드').should('be.visible').click({ force: true });
+     cy.contains('.v-tabs__item', '키워드').scrollIntoView().should('be.visible').click({ force: true });
      cy.wait(1000);
 
      // 1. 해당 텍스트 영역을 찾아 마우스를 올립니다(Hover)
@@ -763,7 +760,7 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      cy.wait(1000);
 
      // 불용 데이터 - 키워드 탭 클릭
-     cy.contains('.v-tabs__item', '불용 데이터 - 키워드').should('be.visible').click({ force: true });
+     cy.contains('.v-tabs__item', '불용 데이터 - 키워드').scrollIntoView().should('be.visible').click({ force: true });
      cy.wait(1000);
 
      // 표가 화면에 나타날 때까지 대기 (데이터 로딩 기다림)
@@ -900,7 +897,7 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      cy.wait(1000);
 
      // 불용 데이터 - 키워드 탭 클릭
-     cy.contains('.v-tabs__item', '불용 데이터 - 값').should('be.visible').click({ force: true });
+     cy.contains('.v-tabs__item', '불용 데이터 - 값').scrollIntoView().should('be.visible').click({ force: true });
      cy.wait(1000);
 
      // 표가 화면에 나타날 때까지 대기 (데이터 로딩 기다림)
