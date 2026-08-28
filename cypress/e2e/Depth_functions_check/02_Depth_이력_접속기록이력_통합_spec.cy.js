@@ -668,11 +668,14 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      /////////////////////////////////////////////////
      // [이력 > 통합 > 검출 팝업 > 키워드  탭]
      /////////////////////////////////////////////////
-     
-     
+
      //Case 키워드 등록하기-------------------------------------------------------------
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
      cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
+     cy.wait(1000);
+
+     // 다이얼로그 내부 스크롤을 맨 위로 올린 뒤 탭 클릭
+     cy.get('.v-dialog--active').scrollTo('top', { ensureScrollable: false });
      cy.wait(1000);
 
      // 키워드 탭 클릭
@@ -706,6 +709,10 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      // Case 키워드 수정하기 -----------------------------------------------------------------
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
      cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
+     cy.wait(1000);
+
+     // 다이얼로그 내부 스크롤을 맨 위로 올린 뒤 탭 클릭
+     cy.get('.v-dialog--active').scrollTo('top', { ensureScrollable: false });
      cy.wait(1000);
 
      // 키워드 탭 클릭
@@ -748,6 +755,10 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
      cy.wait(1000);
 
+     // 다이얼로그 내부 스크롤을 맨 위로 올린 뒤 탭 클릭
+     cy.get('.v-dialog--active').scrollTo('top', { ensureScrollable: false });
+     cy.wait(1000);
+
      // 키워드 탭 클릭
      cy.contains('.v-tabs__item', '키워드').scrollIntoView().should('be.visible').click({ force: true });
      cy.wait(1000);
@@ -771,6 +782,10 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      /////////////////////////////////////////////////////
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
      cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
+     cy.wait(1000);
+
+     // 다이얼로그 내부 스크롤을 맨 위로 올린 뒤 탭 클릭
+     cy.get('.v-dialog--active').scrollTo('top', { ensureScrollable: false });
      cy.wait(1000);
 
      // 불용 데이터 - 키워드 탭 클릭
@@ -851,7 +866,10 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      cy.wait(1000);
 
      // 불용 데이터 - 키워드 탭 클릭
-     cy.contains('.v-tabs__item', '불용 데이터 - 키워드').should('be.visible').click({ force: true });
+     // 다이얼로그 내부 스크롤을 맨 위로 올린 뒤 탭 클릭
+     cy.get('.v-dialog--active').scrollTo('top', { ensureScrollable: false });
+     cy.wait(1000);
+     cy.contains('.v-tabs__item', '불용 데이터 - 키워드').scrollIntoView().should('be.visible').click({ force: true });
      cy.wait(1000);
   
      // '주민등록번호_키워드'라는 텍스트를 포함하고 있는 테이블 행을 찾아 수정버튼 클릭
@@ -908,6 +926,10 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      
      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
      cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
+     cy.wait(1000);
+
+     // 다이얼로그 내부 스크롤을 맨 위로 올린 뒤 탭 클릭
+     cy.get('.v-dialog--active').scrollTo('top', { ensureScrollable: false });
      cy.wait(1000);
 
      // 불용 데이터 - 키워드 탭 클릭
@@ -984,7 +1006,11 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      cy.wait(1000);
 
      // 불용 데이터 - 키워드 탭 클릭
-     cy.contains('.v-tabs__item', '불용 데이터 - 값').should('be.visible').click({ force: true });
+     // 다이얼로그 내부 스크롤을 맨 위로 올린 뒤 탭 클릭
+     cy.get('.v-dialog--active').scrollTo('top', { ensureScrollable: false });
+     cy.wait(1000);
+
+     cy.contains('.v-tabs__item', '불용 데이터 - 값').scrollIntoView().should('be.visible').click({ force: true });
      cy.wait(1000);
   
      // 'Depth_test_신용카드번호'라는 텍스트를 포함하고 있는 테이블 행을 찾아 수정버튼 클릭
