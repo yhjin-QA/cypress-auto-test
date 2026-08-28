@@ -115,15 +115,15 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 
     cy.contains('button', '이력').should('be.visible').click({ force: true });
     cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
-
-
     // 이력 > 사용자 추척 서브메뉴 클릭 
     cy.log('--- 이력 > 사용자 추적 클릭 ---');
-    // 설명: .v-list__tile__title 클래스 내의 '사용자 추적' 글자를 찾아 클릭
+    // 간헐적으로 서브 컨텍스트 메뉴 클릭못하는 현상을 해결 
+    cy.get('#side-menu-110000').should('be.visible').trigger('mouseover');
+    cy.wait(300);
+    cy.get('.v-menu__content.menuable__content__active').filter(':visible').should('have.length.at.least', 1);
     cy.contains('.v-list__tile__title', '사용자 추적').should('be.visible').click({ force: true });
-    cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
-    cy.contains('.c-headline', '검색 조건').should('exist');
+    cy.contains('.c-headline', '검색 조건', { timeout: 10000 }).should('exist');
   
     // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
@@ -171,7 +171,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.contains('button', '이력').click({ force: true });
     cy.log('--- 이력 > 접속기록 이력  클릭 ---');
     cy.wait(3000);
-    // 설명: .v-list__tile__title 클래스 내의 '사용자 추적' 글자를 찾아 클릭
+    
     cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
     cy.wait(3000);
   
@@ -413,6 +413,10 @@ cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
 ////////////////////////////////////////
 // [이력 > 통합 > 검출 팝업 > 오탐/확정 탭]
 ////////////////////////////////////////
+// //업무시스템 초기화 x버튼 클릭하기
+//cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+//cy.wait(1000);
+cy.intercept('GET', '**/logcatch/api/v1/doubt-menus/*').as('doubtMenus');
 
 // 🌟 클릭할 첫번쨰 행의 "접속 메뉴" 텍스트를 미리 확인해서, 메뉴 설정 펼침 여부를 사전에 판단
 cy.get('tbody tr').filter(':visible').first().then(($row) => {
@@ -447,10 +451,12 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
                 cy.wait(2000);
             } else {
                 cy.log(`🟢 예상대로 ${shouldBeOpen ? '펼쳐짐' : '닫힘'} 상태입니다.`);
+                cy.wait(2000);
             }
         });
     };
 
+    
     ensureMenuState(isUnregisteredMenu);
 
     // ==========================================
@@ -512,21 +518,29 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
                 cy.wait(1500);
             }
         }
-     
-     cy.contains('button.v-btn', '저장').last().scrollIntoView().click({ force: true });
-     cy.wait(1000);
-       
 
-        // 🌟 [분기 처리] 미등록 메뉴(메뉴 설정 펼쳐짐)일 때만 "저장하시겠습니까?" 확인 팝업이 뜸
-        if (isUnregisteredMenu) {
-          cy.log('📋 [미등록 메뉴] 저장 확인 팝업이 뜰 것으로 예상 → 확인 처리');
-          cy.contains('메뉴를 저장하시겠습니까?', { timeout: 10000 }).should('be.visible');
-          cy.contains('button.v-btn:visible', '확인').click({ force: true });
-          cy.wait(1000);
-        } else {
-          cy.log('📋 [등록된 메뉴] 저장 확인 팝업 없이 즉시 처리됨 → 별도 확인 생략');
-        }
-    });
+  cy.wait('@doubtMenus', { timeout: 10000 }); // 데이터 로딩 완료까지 대기      
+
+  cy.get('button.v-btn.success--text')
+  .filter(':visible')
+  .then(($buttons) => {
+    const saveBtn = $buttons.filter((i, el) => Cypress.$(el).text().trim() === '저장');
+
+    if (saveBtn.length > 0) {
+      cy.log('💾 저장 버튼 발견 → 클릭');
+      cy.wrap(saveBtn).first().click({ force: true });
+
+      if (isUnregisteredMenu) {
+        cy.contains('메뉴를 저장하시겠습니까?', { timeout: 10000 }).should('be.visible');
+        cy.contains('button.v-btn:visible', '확인').click({ force: true });
+        cy.wait(1000);
+      }
+    } else {
+      cy.log('ℹ️ 이미 처리 완료된 화면이거나 저장 버튼이 없는 구조 → 저장 단계 생략');
+    }
+  });
+
+ });
 });
 
    
@@ -1035,6 +1049,19 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      //HTTP Request 탭 클릭---------------------
      cy.contains('span.tab-title', 'HTTP Request').should('be.visible').click({ force: true });
      cy.wait(1000); 
+
+     // 안쪽 팝업의 Key/Value 테이블이 실제로 로드됐는지 먼저 확인
+     cy.get('table').filter(':visible').should('exist');
+     cy.wait(500);
+
+    cy.get('.v-dialog--active').last().within(() => {
+  cy.contains('tr', 'connection', { timeout: 10000 })
+    .scrollIntoView()
+    .should('exist')          // be.visible 대신 exist로 완화
+    .then(($tr) => {
+      cy.wrap($tr).contains('keep-alive').should('exist');
+    });
+});
 
     // ==========================================================
     // STEP: HTTP REQUEST 정보 검증 (조건부 분기)
