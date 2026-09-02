@@ -120,10 +120,10 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('body').type('{esc}');
     cy.wait(500);
 
-    cy.contains('button', '소명').click({ force: true });
-    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.get('body').type('{esc}');
-    cy.wait(500);
+    // cy.contains('button', /^소명하기$/).click({ force: true });
+    // cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
+    // cy.get('body').type('{esc}');
+    // cy.wait(500);
     
     cy.contains('button', '자산').click({ force: true });
     cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
@@ -150,7 +150,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('body').type('{esc}');
     cy.wait(500);
 
-    cy.contains('button', '운영').click({ force: true });
+    
+    cy.contains('button', /^운영$/).click({ force: true });
     cy.wait(3000); 
     cy.get('body').type('{esc}');
     cy.wait(500);

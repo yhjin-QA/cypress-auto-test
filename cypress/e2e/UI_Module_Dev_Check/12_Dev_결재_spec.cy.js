@@ -136,7 +136,8 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 표 문구열 확인
     cy.get('th').filter(':visible').contains('결재 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    //2.9.1.262_r35274 정책이름 -> 정책명 문구수정
+    cy.get('th').filter(':visible').contains('정책명').should('be.visible');
     cy.get('th').filter(':visible').contains('설명').should('be.visible');
     cy.get('th').filter(':visible').contains('등록').should('be.visible');
     cy.get('th').filter(':visible').contains('수정').should('be.visible');
@@ -179,8 +180,9 @@ cy.get('input[aria-label="부서"]').should('exist');
 // 부서 settings 아이콘
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('settings').should('exist');
 
-// 신청인 콤보박스 + 드롭다운 아이콘
-cy.get('input[aria-label="신청인"]').should('exist');
+// 신청자 콤보박스 + 드롭다운 아이콘
+// 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
+cy.get('input[aria-label="신청자"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('arrow_drop_down').should('exist');
 
 // 로그인 아이디 입력 필드
@@ -195,7 +197,8 @@ cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visib
 // 테이블 컬럼 확인
 cy.get('th').filter(':visible').contains('신청일').should('be.visible');
 cy.get('th').filter(':visible').contains('부서').should('be.visible');
-cy.get('th').filter(':visible').contains('신청인').should('be.visible');
+// 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
+cy.get('th').filter(':visible').contains('신청자').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 대상').should('be.visible');
 cy.get('th').filter(':visible').contains('제목').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 상태').should('be.visible');
@@ -228,7 +231,8 @@ cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visib
 // 테이블 컬럼 확인
 cy.get('th').filter(':visible').contains('신청일').should('be.visible');
 cy.get('th').filter(':visible').contains('부서').should('be.visible');
-cy.get('th').filter(':visible').contains('신청인').should('be.visible');
+// 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
+cy.get('th').filter(':visible').contains('신청자').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 대상').should('be.visible');
 cy.get('th').filter(':visible').contains('제목').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 상태').should('be.visible');
@@ -252,7 +256,8 @@ cy.get('input[aria-label="기간"]').should('exist');
 cy.get('i.v-icon.material-icons').filter(':visible').contains('event').should('exist');
 cy.get('input[aria-label="부서"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('settings').should('exist');
-cy.get('input[aria-label="신청인"]').should('exist');
+// 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
+cy.get('input[aria-label="신청자"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('arrow_drop_down').should('exist');
 cy.get('input[aria-label="로그인 아이디"]').should('exist');
 cy.get('input[aria-label="결재 상태"]').should('exist');
@@ -261,7 +266,8 @@ cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visib
 // 테이블 컬럼 확인
 cy.get('th').filter(':visible').contains('신청일').should('be.visible');
 cy.get('th').filter(':visible').contains('부서').should('be.visible');
-cy.get('th').filter(':visible').contains('신청인').should('be.visible');
+// 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
+cy.get('th').filter(':visible').contains('신청자').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 대상').should('be.visible');
 cy.get('th').filter(':visible').contains('제목').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 상태').should('be.visible');
@@ -285,7 +291,8 @@ cy.get('input[aria-label="기간"]').should('exist');
 cy.get('i.v-icon.material-icons').filter(':visible').contains('event').should('exist');
 cy.get('input[aria-label="부서"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('settings').should('exist');
-cy.get('input[aria-label="신청인"]').should('exist');
+// 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
+cy.get('input[aria-label="신청자"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('arrow_drop_down').should('exist');
 cy.get('input[aria-label="로그인 아이디"]').should('exist');
 cy.get('input[aria-label="결재 상태"]').should('exist');
@@ -294,7 +301,8 @@ cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visib
 // 테이블 컬럼 확인
 cy.get('th').filter(':visible').contains('신청일').should('be.visible');
 cy.get('th').filter(':visible').contains('부서').should('be.visible');
-cy.get('th').filter(':visible').contains('신청인').should('be.visible');
+// 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
+cy.get('th').filter(':visible').contains('신청자').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 대상').should('be.visible');
 cy.get('th').filter(':visible').contains('제목').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 상태').should('be.visible');
@@ -316,12 +324,25 @@ cy.log('--- 신청 > 이상행위 경보 화면 검증 시작 ---');
 cy.url().should('include', '/approval/submit/anomaly-alerts');
 cy.get('.v-btn__content').filter(':visible').contains('이상행위 경보').should('be.visible');
 
+// [신규] 상단 안내 배너
+cy.contains('탐지된 본인 이상행위 경보를 선택해 사유를 작성하고 결재로 소명을 상신합니다').should('be.visible');
+
+// [신규] 진행 단계 인디케이터
+cy.contains('경보 선택').should('be.visible');
+cy.contains('소명하기').should('be.visible');
+cy.contains('결재 상신').should('be.visible');
+
 // 검색 조건 요소 확인
-cy.get('input[aria-label="정책 선택"]').should('exist');
+// [변경] aria-label 없음 → placeholder 기반
+cy.get('input[placeholder="정책 선택"]').should('exist');
 cy.get('i.v-icon.material-icons').filter(':visible').contains('search').should('exist');
-cy.get('input[aria-label="메시지 + 정책명 검색"]').should('exist');
-cy.get('input[aria-label="From"]').should('exist');
-cy.get('input[aria-label="To"]').should('exist');
+cy.get('input[placeholder="메시지 + 정책명 검색"]').should('exist');
+
+// [변경] From/To aria-label 삭제 → date-range-picker 내 type="date" 2개로 확인
+cy.get('.date-range-picker input[type="date"]').should('have.length', 2);
+cy.get('.date-range-picker input[type="date"]').eq(0).should('be.visible'); // From
+cy.get('.date-range-picker input[type="date"]').eq(1).should('be.visible'); // To
+cy.get('.date-range-sep').filter(':visible').contains('~').should('be.visible');
 
 //검색 버튼 확인 
 cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
@@ -343,6 +364,7 @@ cy.get('button.sev-filter-btn').contains('1년').should('be.visible');
 
 // 결과 영역 확인
 cy.contains('.v-toolbar__title', '경보').should('be.visible');
+
 // ==========================================
 // 이상행위 경보 결과 (동적 데이터 대응)
 // ==========================================

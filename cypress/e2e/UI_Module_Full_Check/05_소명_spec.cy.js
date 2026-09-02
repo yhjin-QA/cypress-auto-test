@@ -124,7 +124,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="소속"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
-    cy.get('input[aria-label="소명 상태"]').filter(':visible').should('be.visible');
+    //2.9.1.262_r35274  소명상태 -> 소명하기 조건
+    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="소명 유형"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
     // 시작날짜 달력 아이콘확인
@@ -133,12 +134,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     // 표 문구열 확인
     cy.get('th').filter(':visible').contains('일시').should('be.visible');
-     cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
-      cy.get('th').filter(':visible').contains('부서').should('be.visible');
+    cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
+    cy.get('th').filter(':visible').contains('부서').should('be.visible');
     cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
     cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
-     cy.get('th').filter(':visible').contains('건수').should('be.visible');
-    cy.get('th').filter(':visible').contains('소명 상태').should('be.visible');
+    cy.get('th').filter(':visible').contains('건수').should('be.visible');
+    cy.get('th').filter(':visible').contains('소명 내용').should('be.visible');
+    cy.get('th').filter(':visible').contains('소명하기 조건').should('be.visible');
     cy.get('th').filter(':visible').contains('소명 유형').should('be.visible');
     cy.log('✅ 소명 - 관리 - [종합 현황] 탭 진입 및 데이터 출력 확인 완료!');
 
@@ -158,7 +160,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 검색버튼 존재 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
      // 업무시스템 검색문구 확인
-     cy.get('input[aria-label="소명 상태"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="소명하기 조건"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="소명 유형"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
      // 시작날짜 달력 아이콘확인
@@ -170,9 +172,10 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
      cy.get('th').filter(':visible').contains('부서').should('be.visible');
      cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
-      cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
-       cy.get('th').filter(':visible').contains('건수').should('be.visible');
-     cy.get('th').filter(':visible').contains('소명 상태').should('be.visible');
+     cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
+     cy.get('th').filter(':visible').contains('건수').should('be.visible');
+     cy.get('th').filter(':visible').contains('소명 내용').should('be.visible');
+     cy.get('th').filter(':visible').contains('소명하기 조건').should('be.visible');
      cy.get('th').filter(':visible').contains('소명 유형').should('be.visible');
      cy.log('✅ 소명 - 나의 소명 - [나의 소명 내역]탭 진입 및 데이터 출력 확인 완료!');
 
@@ -212,7 +215,7 @@ describe('로그캐치 사이트 테스트', () => {
       cy.get('input[aria-label="소속"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
-      cy.get('input[aria-label="소명 상태"]').filter(':visible').should('be.visible');
+      cy.get('input[aria-label="소명하기 조건"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="소명 유형"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
       // 시작날짜 달력 아이콘확인
@@ -228,7 +231,8 @@ describe('로그캐치 사이트 테스트', () => {
       cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
       cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
       cy.get('th').filter(':visible').contains('건수').should('be.visible');
-      cy.get('th').filter(':visible').contains('소명 상태').should('be.visible');
+      cy.get('th').filter(':visible').contains('소명 내용').should('be.visible');
+      cy.get('th').filter(':visible').contains('소명하기 조건').should('be.visible');
       cy.get('th').filter(':visible').contains('소명 유형').should('be.visible');
       cy.log('✅ 소명 - 나의 소명 - [승인하기]탭 진입 및 데이터 출력 확인 완료!');
 
@@ -259,7 +263,7 @@ describe('로그캐치 사이트 테스트', () => {
       cy.get('label').filter(':visible').contains('지난 정책 보기').should('be.visible');
        // 표 문구열 확인
        cy.get('th').filter(':visible').contains('유형').should('be.visible');
-       cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+       cy.get('th').filter(':visible').contains('정책명').should('be.visible');
        cy.get('th').filter(':visible').contains('설명').should('be.visible');
        cy.get('th').filter(':visible').contains('등록').should('be.visible');
        cy.get('th').filter(':visible').contains('수정').should('be.visible');

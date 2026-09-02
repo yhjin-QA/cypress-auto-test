@@ -114,8 +114,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('body').type('{esc}');
     cy.wait(1000);
     
-    // button 태그이면서 '현황'이라는 글자를 포함한 요소를 클릭
-    cy.contains('button', '현황').click({ force: true });
+    //2.9.1.262_r35274  버전에서 '현황' 문구 ->  상태 문구로 변경됨.
+    cy.contains('button', '상태').click({ force: true });
     cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
     cy.get('body').type('{esc}');
     cy.wait(500);
@@ -2497,4 +2497,3 @@ describe('로그캐치 사이트 테스트', () => {
 
  })()
 ;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic3BlYy5jeS5qcyIsIm1hcHBpbmdzIjoiOzs7Ozs7O0FBQUFBLFFBQVEsQ0FBQyxlQUFlLEVBQUUsTUFBTTtFQUM5QkMsRUFBRSxDQUFDLFFBQVEsRUFBRSxNQUFNO0lBQ2pCQyxFQUFFLENBQUNDLEtBQUssQ0FBQyw0QkFBNEIsQ0FBQztFQUN4QyxDQUFDLENBQUM7QUFDSixDQUFDLENBQUMsQyIsInNvdXJjZXMiOlsid2VicGFjazovLy8uL2N5cHJlc3MvZTJlL3NwZWMuY3kuanMiXSwic291cmNlc0NvbnRlbnQiOlsiZGVzY3JpYmUoJ3RlbXBsYXRlIHNwZWMnLCAoKSA9PiB7XHJcbiAgaXQoJ3Bhc3NlcycsICgpID0+IHtcclxuICAgIGN5LnZpc2l0KCdodHRwczovL2V4YW1wbGUuY3lwcmVzcy5pbycpXHJcbiAgfSlcclxufSkiXSwibmFtZXMiOlsiZGVzY3JpYmUiLCJpdCIsImN5IiwidmlzaXQiXSwic291cmNlUm9vdCI6IiJ9

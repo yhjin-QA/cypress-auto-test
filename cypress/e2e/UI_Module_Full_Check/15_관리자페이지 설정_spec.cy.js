@@ -157,7 +157,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-select--chips').find('.v-input__icon--append .material-icons').should('be.visible');
     // 버튼 확인 
     cy.get('.v-btn__content').filter(':visible').contains('들여오기').should('be.visible');
-    cy.get('.v-btn__content').filter(':visible').contains('내보내기').should('be.visible');
+    cy.get('.v-btn__content').filter(':visible').contains('Export').should('be.visible');
     cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
     //v3.0.3.0_R34785 취소 버튼 없어짐 
     //cy.get('.v-btn__content').filter(':visible').contains('취소').should('be.visible');
@@ -207,7 +207,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 이 안에서는 오직 '두 번째 테이블' 내부만 검사합니다.
     cy.contains('th', '아이디').should('be.visible');
     cy.contains('th', '이름').should('be.visible');      // 중복 문제 완벽 해결!
-    cy.contains('th', '상태').should('be.visible');      // 혹시 1번 테이블에 상태가 생겨도 안전함
+    cy.contains('th', '조건').should('be.visible');      // 혹시 1번 테이블에 상태가 생겨도 안전함
     cy.contains('th', '권한 그룹').should('be.visible');
     cy.contains('th', '이메일').should('be.visible');
     cy.contains('th', '접속 가능 IP').should('be.visible');
@@ -296,10 +296,10 @@ describe('로그캐치 사이트 테스트', () => {
      // v버튼 확인
      cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
      //표열 문구확인
-     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성자').should('be.visible');
-     cy.get('th').filter(':visible').contains('타입').should('be.visible');
+     cy.get('th').filter(':visible').contains('유형').should('be.visible');
      cy.get('th').filter(':visible').contains('설명').should('be.visible');
      cy.get('th').filter(':visible').contains('삭제').should('be.visible')
      // 정책 추가 + 버튼 확인

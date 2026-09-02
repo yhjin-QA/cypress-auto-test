@@ -106,9 +106,9 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // STEP 4: 현황서브메뉴 
     // ==========================================
-    cy.contains('button', '현황').click({ force: true });
+    cy.contains('button', '상태').click({ force: true });
     cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.log('--- 현황 > 정보사용자별 탭(디폴트 화면) ---');
+    cy.log('--- 상태 > 정보사용자별 탭(디폴트 화면) ---');
     
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
@@ -122,9 +122,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('label').filter(':visible').contains('기간').should('be.visible');
     cy.get('label').filter(':visible').contains('추적 타입').should('be.visible');
     cy.get('span').filter(':visible').contains('정보 사용자').should('be.visible');
-    cy.log('✅ 현황 - 정보사용자 별 탭 진입 및 데이터 출력 확인 완료!');
+    cy.log('✅ 상태 - 정보사용자 별 탭 진입 및 데이터 출력 확인 완료!');
     //-----------------------------------------------------------------------------------
-    cy.log('--- 현황 > 부서서 별 탭 클릭  ---');
+    cy.log('--- 상태 > 부서 별 탭 클릭  ---');
     cy.get('.tab-btn').contains('부서 별').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
@@ -139,7 +139,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
     cy.log('✅ 부서 별 탭 진입 및 데이터 출력 확인 완료!');
     //-----------------------------------------------------------------------------------
-    cy.log('--- 현황 > 업무시스템 별 탭 클릭  ---');
+    cy.log('--- 상태 > 업무시스템 별 탭 클릭  ---');
     cy.get('.tab-btn').contains('업무 시스템 별').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
@@ -157,7 +157,7 @@ describe('로그캐치 사이트 테스트', () => {
 
 
     // v3.0.5.1191_r35135 버전에서 종합현황 탭 제거됨.
-    // cy.log('--- 현황 > 종합 현항 탭 클릭  ---');
+    // cy.log('--- 상태 > 종합 현항 탭 클릭  ---');
     // cy.get('.tab-btn').contains('종합 현황').should('be.visible').click({ force: true });
     // cy.wait(3000);
 
