@@ -142,7 +142,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     cy.contains('p', 'Task 종료하시겠습니까?').should('be.visible');
     // 'MASTER 태스크 전체 종료 확인 알림창 확인 버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+    cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
     
 
     //프로세스 정지확인 검증(프로세스 정지상태라면 시작문구로 버튼 변경되어있는상태 ) 
@@ -164,7 +164,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
     // 'MASTER 태스크 전체 종료 확인 알림창 확인 버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+    cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
     
     
     //프로세스 실행확인 검증코드 (프로세스 실행상태라면  정지 문구로 버튼 변경되어있는상태 ) 

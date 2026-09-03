@@ -162,7 +162,7 @@ navigateToSomyungManagement_1();
       cy.get('input[aria-label="소속"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
-      cy.get('input[aria-label="소명 상태"]').filter(':visible').should('be.visible');
+      cy.get('input[aria-label="소명하기 조건"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="소명 유형"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
       // 시작날짜 달력 아이콘확인
@@ -178,7 +178,8 @@ navigateToSomyungManagement_1();
       cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
       cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
       cy.get('th').filter(':visible').contains('건수').should('be.visible');
-      cy.get('th').filter(':visible').contains('소명 상태').should('be.visible');
+      cy.get('th').filter(':visible').contains('소명 내용').should('be.visible');
+      cy.get('th').filter(':visible').contains('소명하기 조건').should('be.visible');
       cy.get('th').filter(':visible').contains('소명 유형').should('be.visible');
 
       // 기능확인 //
@@ -224,7 +225,7 @@ navigateToSomyungManagement_1();
 
       // 소명상태 점검 시작 
       // 소명상태 - 요청을  클릭하는 코드 
-      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+      cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
       cy.wait(1000);
       // 소명상태중 '요청' 클릭하는 코드
       cy.get('.v-list__tile__title').filter(':visible').contains('요청').click({ force: true });
@@ -253,7 +254,7 @@ navigateToSomyungManagement_1();
 
       //-------------------------
       // 소명상태 - 요청 + 반려 다중선택 클릭하는 코드 
-      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+      cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
       cy.wait(1000);
       // 소명상태중 '취소' 클릭하는 코드
       cy.get('.v-list__tile__title').filter(':visible').contains('반려').click({ force: true });
@@ -282,11 +283,11 @@ navigateToSomyungManagement_1();
       cy.wait(1000);
 
       // 선택한 소명 x버튼 클릭하여 초기화 
-      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+      cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
 
      //-------------------------
       // 소명상태 - 반려 클릭하는 코드 
-      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+      cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
       cy.wait(1000);
       // 소명상태중 '취소' 클릭하는 코드
       cy.get('.v-list__tile__title').filter(':visible').contains('반려').click({ force: true });
@@ -315,11 +316,11 @@ navigateToSomyungManagement_1();
       cy.wait(1000);
       
       // 선택한 소명 x버튼 클릭하여 초기화 
-      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+      cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
 
       //-------------------------
       // 소명상태 - 승인 클릭하는 코드 
-      cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+      cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
       cy.wait(1000);
       // 소명상태중 '취소' 클릭하는 코드
       cy.get('.v-list__tile__title').filter(':visible').contains('승인').click({ force: true });

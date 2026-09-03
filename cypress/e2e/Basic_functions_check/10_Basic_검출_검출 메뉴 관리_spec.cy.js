@@ -267,7 +267,7 @@ describe('로그캐치 사이트 테스트', () => {
        cy.wait(1000);
     
        // 엑셀 다운로드 팝업 확인창에서 AutoDetect1 파일명 입력 
-       cy.get('input[aria-label="파일명"]').filter(':visible').first().type('AutoDetect1', { force: true });
+       cy.get('input[aria-label="파일 명"]').filter(':visible').first().type('AutoDetect1', { force: true });
        cy.wait(1000);
     
        // 엑셀다운로드 팝업 확인창에서 확인 버튼 클릭

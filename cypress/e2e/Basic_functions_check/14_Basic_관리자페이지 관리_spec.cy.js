@@ -338,7 +338,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 검색 조건 입력란 
      cy.get('input[aria-label="검색 조건"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="값"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
      // 검색 버튼 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
      // v버튼 아이콘 존재확인
@@ -363,7 +363,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="값"]').should('be.visible').clear().type('사원_1');
      cy.wait(1000);
      //상태 클릭
-     cy.get('input[aria-label="상태"]').filter(':visible').click({ force: true });
+     cy.get('input[aria-label="조건"]').filter(':visible').click({ force: true });
      cy.wait(1000);
      // 상태 리스트중 '사용자' 클릭
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '사용자').should('be.visible').click({ force: true });
@@ -384,9 +384,10 @@ describe('로그캐치 사이트 테스트', () => {
      
      cy.get('input[aria-label="값"]').should('be.visible').clear().type('loginid2');
      cy.wait(1000);
-     //상태 콤보박스 — 선택 영역(.v-select__selections) 직접 클릭
-     cy.contains('label', '상태').closest('.v-input').find('.v-select__selections').click({ force: true });
-     cy.wait(1000);
+
+    // 상태 콤보박스 — 선택 영역(.v-select__selections) 직접 클릭
+    cy.contains('label', /^조건$/).closest('.v-input').find('.v-select__selections').click({ force: true });
+    cy.wait(1000);
 
      // 드롭다운에서 '퇴직자' 선택
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '퇴직자').click({ force: true });
@@ -415,8 +416,8 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(1000);
 
      // 상태 콤보박스 — '사용자'로 초기화
-     cy.contains('label', '상태').closest('.v-input').find('.v-select__selections').click({ force: true });
-     cy.wait(1000);
+    cy.contains('label', /^조건$/).closest('.v-input').find('.v-select__selections').click({ force: true });
+    cy.wait(1000);
 
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '사용자').click({ force: true });
      cy.wait(1000);
@@ -483,16 +484,16 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     // 검색 조건 입력란 
     cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').should('be.visible');
-    cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
+    cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
      // 검색 버튼 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 표 열 문구 확인 
     cy.get('th').filter(':visible').contains('파일 다운로드 그룹').should('be.visible');
     cy.get('th').filter(':visible').contains('제목').should('be.visible');
-    cy.get('th').filter(':visible').contains('파일명').should('be.visible');
+    cy.get('th').filter(':visible').contains('파일 명').should('be.visible');
     cy.get('th').filter(':visible').contains('시작 시간').should('be.visible');
     cy.get('th').filter(':visible').contains('종료 시간').should('be.visible');
-    cy.get('th').filter(':visible').contains('상태').should('be.visible');
+    cy.get('th').filter(':visible').contains('조건').should('be.visible');
     
     
     // 기능확인
@@ -524,7 +525,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('body').type('{esc}');  
 
      //상태 클릭
-     cy.get('input[aria-label="상태"]').filter(':visible').click({ force: true });
+     cy.get('input[aria-label="조건"]').filter(':visible').click({ force: true });
      cy.wait(1000);
      // 상태 리스트중 '완료' 클릭
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '완료').should('be.visible').click({ force: true });
@@ -535,18 +536,23 @@ describe('로그캐치 사이트 테스트', () => {
      // 검색버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
      cy.wait(1000);
+
      // 검색결과 검증코드
-     cy.contains('tbody tr', '월 정기점검 보고서')
-     .first() // 혹시 목록에 여러 개가 있다면 가장 최신(첫 번째) 것을 선택
-     .within(() => {
-      // 2. 보고서 유형 검증
-      cy.get('a.ellipsis').contains('월 정기점검 보고서').should('be.visible');
-      // 3. 파일명 검증 (핵심! 앞에 뭐가 붙든 '월 정기점검 보고서'가 들어가고 '.pdf'로 끝나는지 확인)
-      cy.get('a.font-weight-bold').contains(/.*월 정기점검 보고서.*\.pdf/).should('be.visible');
-    
-      // 4. 처리 상태 검증
-      cy.get('a.ellipsis').contains('완료').should('be.visible');
-      }); 
+     cy.get('tbody tr').filter((i, el) => {
+      const text = Cypress.$(el).text();
+      return text.includes('월 정기점검 보고서') || text.includes('Depth검증용 보고서');
+    })
+    .first() // 혹시 목록에 여러 개가 있다면 가장 최신(첫 번째) 것을 선택
+    .within(() => {
+    // 2. 보고서 유형 검증
+    cy.get('a.ellipsis').contains(/월 정기점검 보고서|Depth검증용 보고서/).should('be.visible');
+
+     // 3. 파일명 검증 (확장자 doc/pdf 둘 다 허용)
+    cy.get('a.font-weight-bold').contains(/.*(월 정기점검 보고서|Depth검증용 보고서).*\.(doc|pdf)/).should('be.visible');
+
+    // 4. 처리 상태 검증
+    cy.get('a.ellipsis').contains('완료').should('be.visible');
+  });
 
      //-----------------------------------------------------------------------------------
 

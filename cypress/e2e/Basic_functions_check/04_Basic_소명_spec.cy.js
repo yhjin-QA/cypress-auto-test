@@ -128,7 +128,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="소속"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
-    cy.get('input[aria-label="소명 상태"]').filter(':visible').should('be.visible');
+    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="소명 유형"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
     // 시작날짜 달력 아이콘확인
@@ -137,12 +137,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     // 표 문구열 확인
     cy.get('th').filter(':visible').contains('일시').should('be.visible');
-     cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
-      cy.get('th').filter(':visible').contains('부서').should('be.visible');
+    cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
+    cy.get('th').filter(':visible').contains('부서').should('be.visible');
     cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
     cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
-     cy.get('th').filter(':visible').contains('건수').should('be.visible');
-    cy.get('th').filter(':visible').contains('소명 상태').should('be.visible');
+    cy.get('th').filter(':visible').contains('건수').should('be.visible');
+    cy.get('th').filter(':visible').contains('소명 내용').should('be.visible');
+    cy.get('th').filter(':visible').contains('소명하기 조건').should('be.visible');
     cy.get('th').filter(':visible').contains('소명 유형').should('be.visible');
 
     ////////////////////////////
@@ -238,9 +239,9 @@ cy.get('body').type('{esc}');
 cy.log('✅ 시작 날짜 지정 성공');
     
 
-    // 소명상태 별로 검증 /////////////
-    // 소명상태  클릭하는 코드 
-    cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    //소명하기 조건 별로 검증 /////////////
+    //소명하기 조건  클릭하는 코드 
+    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     // 소명상태중 '취소' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('취소').click({ force: true });
@@ -254,8 +255,8 @@ cy.log('✅ 시작 날짜 지정 성공');
     cy.wait(1000);
     
     
-    // 소명 상태 클릭 (팝업창 다시띄우기) (소명상태 다중선택 취소 + 대기 )
-    cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
+    // 소명하기 조건 클릭 (팝업창 다시띄우기) (소명상태 다중선택 취소 + 대기 )
+    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '대기' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('대기').click({ force: true });
     cy.wait(1000);
@@ -274,10 +275,10 @@ cy.get('tbody').find('a').then(($links) => {
     cy.wait(1000);
 
     // 선택한 소명 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     
-    // 소명 상태 클릭 (팝업창 다시띄우기)
-    cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
+    // 소명하기 조건 클릭 (팝업창 다시띄우기)
+    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '대기' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('대기').click({ force: true });
     cy.wait(1000);
@@ -290,11 +291,11 @@ cy.get('tbody').find('a').then(($links) => {
     cy.wait(1000);
 
     // 선택한 소명 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
 
     //3.0.5.1191_r35135 신청 -> 요청으로 문구변경됨.
-    // 소명 상태 클릭 (팝업창 다시띄우기)
-    cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
+    // 소명하기 조건 클릭 (팝업창 다시띄우기)
+    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '요청' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('요청').click({ force: true });
     cy.wait(1000);
@@ -307,10 +308,10 @@ cy.get('tbody').find('a').then(($links) => {
     cy.wait(1000);
 
     // 선택한 소명 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
 
-    // 소명 상태 클릭 (팝업창 다시띄우기)
-    cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
+    // 소명하기 조건 클릭 (팝업창 다시띄우기)
+    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '승인' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('승인').click({ force: true });
     cy.wait(1000);
@@ -324,10 +325,10 @@ cy.get('tbody').find('a').then(($links) => {
 
 
     // 선택한 소명 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
 
-    // 소명 상태 클릭 (팝업창 다시띄우기)
-    cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
+    // 소명하기 조건 클릭 (팝업창 다시띄우기)
+    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '반려' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('반려').click({ force: true });
     cy.wait(1000);
@@ -340,7 +341,7 @@ cy.get('tbody').find('a').then(($links) => {
     cy.wait(1000);
 
      // 선택한 소명 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     
      cy.log('✅ 소명싱태 확인완료');
 
@@ -348,7 +349,7 @@ cy.get('tbody').find('a').then(($links) => {
     // 소명유형 클릭 (팝업창 띄우기)
     cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
      // 소명유형중  '사전소명' 클릭하는 코드
-    cy.get('.v-list__tile__title').filter(':visible').contains('사전 소명').click({ force: true });
+    cy.get('.v-list__tile__title').filter(':visible').contains('사전 소명하기').click({ force: true });
     cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
@@ -364,14 +365,14 @@ cy.get('tbody').find('a').then(($links) => {
     // 소명유형 클릭 (팝업창 다시 띄우기)
     cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
      // 소명유형중  '사후 소명' 클릭하는 코드
-    cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명').click({ force: true });
+    cy.get('.v-list__tile__title').filter(':visible').contains('사후 소명하기').click({ force: true });
     cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     // '사후 소명' 선택한 검색결과 검증코드
-    cy.get('tbody').find('a').contains('사후 소명').should('be.visible');
+    cy.get('tbody').find('a').contains('사후 소명하기').should('be.visible');
     cy.wait(1000);
 
      // 선택한 소명 x버튼 클릭하여 초기화 
@@ -408,7 +409,7 @@ cy.get('tbody').find('a').then(($links) => {
      // 검색버튼 존재 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
      // 업무시스템 검색문구 확인
-     cy.get('input[aria-label="소명 상태"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="소명하기 조건"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="소명 유형"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
      // 시작날짜 달력 아이콘확인
@@ -420,9 +421,10 @@ cy.get('tbody').find('a').then(($links) => {
      cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
      cy.get('th').filter(':visible').contains('부서').should('be.visible');
      cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
-      cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
-       cy.get('th').filter(':visible').contains('건수').should('be.visible');
-     cy.get('th').filter(':visible').contains('소명 상태').should('be.visible');
+     cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
+     cy.get('th').filter(':visible').contains('건수').should('be.visible');
+     cy.get('th').filter(':visible').contains('소명 내용').should('be.visible');
+     cy.get('th').filter(':visible').contains('소명하기 조건').should('be.visible');
      cy.get('th').filter(':visible').contains('소명 유형').should('be.visible');
      cy.log('✅ 소명 - 나의 소명 - [나의 소명 내역]탭 진입 및 데이터 출력 확인 완료!');
 
@@ -463,7 +465,7 @@ cy.get('tbody').find('a').then(($links) => {
       cy.get('input[aria-label="소속"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
-      cy.get('input[aria-label="소명 상태"]').filter(':visible').should('be.visible');
+      cy.get('input[aria-label="소명하기 조건"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="소명 유형"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
       // 시작날짜 달력 아이콘확인
@@ -479,7 +481,8 @@ cy.get('tbody').find('a').then(($links) => {
       cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
       cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
       cy.get('th').filter(':visible').contains('건수').should('be.visible');
-      cy.get('th').filter(':visible').contains('소명 상태').should('be.visible');
+      cy.get('th').filter(':visible').contains('소명 내용').should('be.visible');
+      cy.get('th').filter(':visible').contains('소명하기 조건').should('be.visible');
       cy.get('th').filter(':visible').contains('소명 유형').should('be.visible');
       cy.log('✅ 소명 - 나의 소명 - [승인하기]탭 진입 및 데이터 출력 확인 완료!');
 
@@ -509,8 +512,8 @@ cy.get('tbody').find('a').then(($links) => {
       //토글 문구 확인인
       cy.get('label').filter(':visible').contains('지난 정책 보기').should('be.visible');
        // 표 문구열 확인
-       cy.get('th').filter(':visible').contains('유형').should('be.visible');
-       cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+       cy.get('th').filter(':visible').contains('결재 유형').should('be.visible');
+       cy.get('th').filter(':visible').contains('정책명').should('be.visible');
        cy.get('th').filter(':visible').contains('설명').should('be.visible');
        cy.get('th').filter(':visible').contains('등록').should('be.visible');
        cy.get('th').filter(':visible').contains('수정').should('be.visible');
@@ -528,7 +531,7 @@ cy.get('tbody').find('a').then(($links) => {
        cy.wait(1000);
        cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 등록');
        // 정책이름 입력하기
-       cy.get('input[aria-label="정책 이름"]').filter(':visible').clear().type('auto_add_test 결재정책');
+       cy.get('input[aria-label="정책명"]').filter(':visible').clear().type('auto_add_test 결재정책');
        
        // 정책 설명 입력하기
        cy.get('textarea[aria-label="정책 설명"]').filter(':visible').clear().type('테스트로 추가하는 결재라인입니다');
@@ -549,7 +552,7 @@ cy.get('tbody').find('a').then(($links) => {
        // 결재 적용대상 클릭하여 콤보박스 열기 
        cy.get('input[aria-label="결재 적용 대상"]').filter(':visible').click({ force: true });
        // 🌟 정확히 "소명"과 일치하는 항목만 선택 (정규식으로 exact match)
-       cy.get('.v-list__tile__title').filter(':visible').contains(/^소명$/).click();
+       cy.get('.v-list__tile__title').filter(':visible').contains(/^소명하기$/).click();
 
        // 결재자 유형 클릭하여 콤보박스 열기 
        cy.get('input[aria-label="결재자 유형"]').filter(':visible').click({ force: true });
@@ -577,7 +580,7 @@ cy.get('tbody').find('a').then(($links) => {
     
            cy.log('🚨 중복 알림 팝업 발견! 확인 버튼을 클릭합니다.');
            // '확인' 버튼을 찾아서 클릭 (버튼 텍스트가 '확인'이라고 가정)
-           cy.get('button.success--text').filter(':visible').contains('확인').click({ force: true });
+           cy.get('button.success--text').filter(':visible').contains('확정').click({ force: true });
           } else {
             cy.log('✅ 중복 알림 없음. 다음 단계로 진행합니다.');
            }
@@ -704,7 +707,7 @@ cy.get('tbody').find('a').then(($links) => {
 cy.get('tbody').filter(':visible').find('tr').filter((i, el) => {
   const typeText = Cypress.$(el).find('td').first().text().trim();
   const nameText = Cypress.$(el).text();
-  return typeText === '소명' && nameText.includes('auto_add_test 결재정책');
+  return typeText === '소명하기' && nameText.includes('auto_add_test 결재정책');
 }).first().within(() => {
   cy.get('i.material-icons').contains('delete').click({ force: true });
 });
@@ -712,7 +715,7 @@ cy.get('tbody').filter(':visible').find('tr').filter((i, el) => {
 cy.wait(1000);
 cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 삭제');
 cy.wait(1000);
-cy.get('.v-dialog').find('button.success--text').contains('확인').click({ force: true });
+cy.get('.v-dialog').find('button.success--text').contains('확정').click({ force: true });
 cy.wait(1000);
 
 // 🌟 삭제 후, "소명" + "auto_add_test 결재정책" 조합의 행이 더 이상 없는지 확인
@@ -720,7 +723,7 @@ cy.get('tbody').filter(':visible').find('tr').should(($rows) => {
   const stillExists = $rows.filter((i, el) => {
     const typeText = Cypress.$(el).find('td').first().text().trim();
     const nameText = Cypress.$(el).text();
-    return typeText === '소명' && nameText.includes('auto_add_test 결재정책');
+    return typeText === '소명하기' && nameText.includes('auto_add_test 결재정책');
   }).length;
   expect(stillExists).to.equal(0);
 });
@@ -753,7 +756,7 @@ cy.get('tbody').filter(':visible').find('tr').should(($rows) => {
   const stillExists = $rows.filter((i, el) => {
     const typeText = Cypress.$(el).find('td').first().text().trim();
     const nameText = Cypress.$(el).text();
-    return typeText === '소명' && nameText.includes('auto_add_test 결재정책');
+    return typeText === '소명하기' && nameText.includes('auto_add_test 결재정책');
   }).length;
   expect(stillExists).to.equal(0);
 });

@@ -150,10 +150,10 @@ describe('로그캐치 사이트 테스트', () => {
      // v 아이콘 확인하는 코드
      cy.get('.v-icon').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
      // 표 문구열 확인
-     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성자').should('be.visible');
-     cy.get('th').filter(':visible').contains('상태').should('be.visible');
+     cy.get('th').filter(':visible').contains('조건').should('be.visible');
      cy.get('th').filter(':visible').contains('설명').should('be.visible');
      cy.get('th').filter(':visible').contains('삭제').should('be.visible');
 
@@ -165,10 +165,9 @@ describe('로그캐치 사이트 테스트', () => {
            });
     cy.wait(1000);
 
-    // 정책추가 화면
-    // 정책 이름 입력 
-    // 정책 추가화면에서 정책 이름 입력
-    cy.get('input[aria-label="정책 이름"]').filter(':visible').first().clear({ force: true }).type('Test_위변조정책_auto', { force: true });
+    // 정책추가 화면 
+    // 정책 추가화면에서 정책명 입력
+    cy.get('input[aria-label="정책명"]').filter(':visible').first().clear({ force: true }).type('Test_위변조정책_auto', { force: true });
     cy.wait(1000);
     // 정책 상세에서 정책상세설명 입력
     cy.get('input[aria-label="정책 상세"]').filter(':visible').first().clear({ force: true }).type('Test_위변조정책_auto 추가설명입니다.', { force: true });
@@ -193,7 +192,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // 저장 확인 창에서 문구를 확인하고 확인버튼 클릭
-    cy.contains('선택된 기간에대해 무결성 검사를 진행합니다.').should('be.visible').closest('.v-card').find('button').contains('확인').click({ force: true });
+    cy.contains('선택된 기간에대해 무결성 검사를 진행합니다.').should('be.visible').closest('.v-card').find('button').contains('확정').click({ force: true });
     cy.wait(1000);
     
     // 날짜 수정 - 시작기간 -> 특정기간으로 수정 -------------------------------------------------
@@ -220,7 +219,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // 저장 확인 창에서 문구를 확인하고 확인버튼 클릭
-    cy.contains('선택된 기간에대해 무결성 검사를 진행합니다.').should('be.visible').closest('.v-card').find('button').contains('확인').click({ force: true });
+    cy.contains('선택된 기간에대해 무결성 검사를 진행합니다.').should('be.visible').closest('.v-card').find('button').contains('확정').click({ force: true });
     cy.wait(1000);
 
     // 변경사항 검증확인
@@ -251,7 +250,7 @@ describe('로그캐치 사이트 테스트', () => {
            cy.contains('삭제하시겠습니까?').should('be.visible');
            cy.wait(1000); // 팝업 애니메이션 안정화 대기
       
-           cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+           cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
            // 삭제 후 목록이 갱신될 시간을 잠깐 줍니다.
            cy.wait(1000);
 
@@ -296,6 +295,20 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('th').filter(':visible').contains('DB 무결성 점검 상태').should('be.visible');
 
      // 검색 기능 확인 -------------------
+     //시작기간 지정후 검색
+    //달력표를 펼침  월/일 지정  
+    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    cy.wait(1000);
+    // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
+    cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
+
+    // 2. '2월'이라는 글자를 찾아 클릭합니다.
+    cy.get('.v-date-picker-table--month').filter(':visible').contains('2월').click({ force: true });
+    // 달력 1일 클릭
+    cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').closest('.v-btn').click({ force: true });
+    //달력창 닫기
+    cy.get('body').type('{esc}');
+
      //DB 무결성 점검상태 - 정상 확인 
      // DB 무결성 점검상태  팝업창 띄우기
      cy.get('input[aria-label="DB 무결성 점검 상태"]').filter(':visible').click({ force: true });
@@ -351,8 +364,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-menu__content').filter(':visible').find('.v-list__tile').first().click({ force: true });
     cy.wait(1000);
     
-    // 엑셀 다운로드 팝업 확인창에서 파일명 입력 
-    cy.get('input[aria-label="파일명"]').filter(':visible').type('Testauto', { force: true });
+    // 엑셀 다운로드 팝업 확인창에서 파일 명 입력 
+    cy.get('input[aria-label="파일 명"]').filter(':visible').type('Testauto', { force: true });
     cy.wait(1000);
     // 엑셀다운로드 팝업 확인창에서 확인 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
@@ -403,7 +416,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.contains('.c-headline', '검색 조건').should('exist');
      //검색조건 문구 확인
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="파일명"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="파일 명"]').filter(':visible').should('be.visible');
      cy.get('span').filter(':visible').contains(/^전체$/).should('be.visible');
      //엑셀다운로드 버튼 존재 확인
      cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').should('be.visible');
@@ -411,7 +424,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
      // 표 문구열 확인
      cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
-     cy.get('th').filter(':visible').contains('파일명').should('be.visible');
+     cy.get('th').filter(':visible').contains('파일 명').should('be.visible');
      cy.get('th').filter(':visible').contains('무결성 생성일시').should('be.visible');
      cy.get('th').filter(':visible').contains('검증일시').should('be.visible');
      cy.get('th').filter(':visible').contains('CheckSum').should('be.visible');
@@ -505,8 +518,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="업무시스템"]').closest('.v-input').find('.v-input__icon--append').click({ force: true });
     
 
-// 2026으로 시작하는 파일명 검색하기 (기존 정확한 파일명 검색보다 너프하게 변경)
-cy.get('input[aria-label="파일명"]').filter(':visible').clear({ force: true }).type('2026', { force: true });
+// 2026으로 시작하는 파일 명 검색하기 (기존 정확한 파일명 검색보다 너프하게 변경)
+cy.get('input[aria-label="파일 명"]').filter(':visible').clear({ force: true }).type('2026', { force: true });
 cy.wait(1000);
 
 // 위변조 여부 [전체] 선택하는 코드
@@ -556,8 +569,8 @@ cy.get('body').then(($body) => {
     cy.get('.v-menu__content').filter(':visible').find('.v-list__tile').first().click({ force: true });
     cy.wait(1000);
     
-    // 엑셀 다운로드 팝업 확인창에서 AutoTest1 파일명 입력 
-    cy.get('input[aria-label="파일명"]').filter(':visible').first().type('AutoTest1', { force: true });
+    // 엑셀 다운로드 팝업 확인창에서 AutoTest1 파일 명 입력 
+    cy.get('input[aria-label="파일 명"]').filter(':visible').first().type('AutoTest1', { force: true });
     cy.wait(1000);
     // 엑셀다운로드 팝업 확인창에서 확인 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });

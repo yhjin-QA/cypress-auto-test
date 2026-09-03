@@ -70,7 +70,7 @@ Cypress.Commands.add('login', (userId, password) => {
         // 상황 1: 일반 모달(이미 접속 중)
         if ($body.find('.v-card__title:contains("이미 접속 중인 계정입니다."):visible').length > 0) {
             cy.log('⚠️ 모달 알림창 발견! 확인 클릭');
-            cy.contains('.v-card', '확인').find('button').click({ force: true });
+            cy.contains('.v-card', '확정').find('button').click({ force: true });
             cy.wait(1000);
         }
         

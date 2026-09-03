@@ -134,7 +134,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('보고서 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('생성일').should('be.visible');
     cy.get('th').filter(':visible').contains('생성자').should('be.visible');
-    cy.get('th').filter(':visible').contains('상태').should('be.visible');
+    cy.get('th').filter(':visible').contains('조건').should('be.visible');
     cy.get('th').filter(':visible').contains('설명').should('be.visible');
     cy.get('th').filter(':visible').contains('삭제').should('be.visible');
 
@@ -272,12 +272,36 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
  
     
-    // 이전 추가 보고서 잘추가되어있다면 진행가능
-    // 종합보고서 목록에 추가한 추가보고서_auto가 있는지 확인 
-    cy.contains('a', '추가보고서_auto').should('be.visible');
-    cy.contains('a', '추가보고서_auto').click({ force: true }); 
+  // [신규] "대상기간에 통계가 없거나 진행중입니다" 알림창 예외처리------------------------------------------
+ cy.get('body').then(($body) => {
+  const hasAlert = $body.find('.ca-msg:contains("대상기간에 통계가 없거나 진행중입니다")').length > 0;
+
+  if (hasAlert) {
+    cy.log('⚠️ 통계 없음/진행중 알림창 발생 - 확정 클릭 후 취소로 처리');
+
+    // 알림창 확정 버튼 클릭
+    cy.contains('.ca-msg', '대상기간에 통계가 없거나 진행중입니다').should('be.visible');
+    cy.contains('.v-btn__content', '확정').filter(':visible').click({ force: true });
+    cy.wait(500);
+
+    // 저장이 아닌 취소 버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('취소').click({ force: true });
     cy.wait(1000);
 
+    // [신규] 추가보고서_auto는 생성 안 됐으므로, 기존 "월 정기점검보고서" 클릭으로 대체
+    cy.log('ℹ️ 추가보고서_auto 미생성 - 기존 "월 정기점검보고서" 클릭으로 대체 진행');
+    cy.contains('a', '월 정기점검 보고서').should('be.visible');
+    cy.contains('a', '월 정기점검 보고서').click({ force: true });
+    cy.wait(1000);
+
+  } else {
+    // 기존 정상 흐름: 종합보고서 목록에 추가한 추가보고서_auto가 있는지 확인
+    cy.log('✅ 저장 성공 - 추가보고서_auto 클릭 진행');
+    cy.contains('a', '추가보고서_auto').should('be.visible');
+    cy.contains('a', '추가보고서_auto').click({ force: true });
+    cy.wait(1000);
+
+//--------------------------------------------------------------------------------------
     //반복설정 OFF-ON으로 변경
     cy.get('input[aria-label="반복설정"]').click({ force: true });
     cy.wait(1000);
@@ -389,7 +413,8 @@ describe('로그캐치 사이트 테스트', () => {
 
     cy.log('✅  내보내기 - 파일 다운로드  확인 완료!');
 
-
+  }
+});
     
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기

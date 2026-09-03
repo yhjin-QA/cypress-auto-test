@@ -111,13 +111,13 @@ describe('로그캐치 사이트 테스트', () => {
 
 
 // ==========================================
-// STEP 4: 현황서브메뉴 
+// STEP 4: 상태 서브메뉴 
 // ==========================================
     
-cy.contains('button', '현황').click({ force: true });
+cy.contains('button', '상태').click({ force: true });
 cy.wait(2000);
 
-cy.log('--- 현황 > 정보사용자별 탭 클릭 ---');
+cy.log('--- 상태 > 정보사용자별 탭 클릭 ---');
 cy.get('.tab-btn').contains('정보사용자 별').should('be.visible').click({ force: true });
 cy.log('--- 화면 검증 시작 ---');
 cy.contains('.c-headline', '검색 조건').should('exist');
@@ -473,7 +473,7 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 현황 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 상태 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 

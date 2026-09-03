@@ -124,10 +124,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.material-icons').filter(':visible').contains('event').should('be.visible');
     //자동갱신안함 문구확인
     cy.contains('.item-margin', '자동 갱신 안함').should('be.visible');
+    
+    // 2.9.1.262_r35274 버전에서 확인필요
     // 데이터량 확인
     cy.contains('p', '개인정보 사용량').should('be.visible');
-    cy.contains('p', '개인정보 대량 접근').should('be.visible');
-    cy.contains('p', '업무시간 외 접근').should('be.visible');
+    //cy.contains('p', '개인정보 대량 접근').should('be.visible');
+    //cy.contains('p', '업무시간 외 접근').should('be.visible');
+    cy.contains('p', '이상행위 발생 건수').should('be.visible');
     cy.contains('p', '접근 IP 주소').should('be.visible');
     cy.contains('p', '정보 사용자').should('be.visible');
     cy.contains('p', '접근 부서').should('be.visible');

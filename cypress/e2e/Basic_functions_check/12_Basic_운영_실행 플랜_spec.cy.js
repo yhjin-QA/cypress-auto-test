@@ -142,9 +142,9 @@ describe('로그캐치 사이트 테스트', () => {
     // 헤더(th) 안에 있는 체크박스 아이콘(check_box_outline_blank) 확인
     cy.get('th').find('.v-icon:contains("check_box_outline_blank")').should('exist');
     cy.get('th').filter(':visible').contains('플랜 이름').should('be.visible');
-    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('정책명').should('be.visible');
     cy.get('th').filter(':visible').contains('정책 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('상태').should('be.visible');
+    cy.get('th').filter(':visible').contains('조건').should('be.visible');
     cy.get('th').filter(':visible').contains('작업 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('시작 시간').should('be.visible');
     cy.get('th').filter(':visible').contains('종료 시간').should('be.visible');
@@ -160,7 +160,7 @@ describe('로그캐치 사이트 테스트', () => {
     //저장한 영역(@detailHeader) 안에서 컬럼명 확인
     cy.get('@detailHeader').contains('날짜').should('be.visible');
     cy.get('@detailHeader').contains('이름').should('be.visible'); 
-    cy.get('@detailHeader').contains('상태').should('be.visible');
+    cy.get('@detailHeader').contains('조건').should('be.visible');
     cy.get('@detailHeader').contains('플랜 삭제 여부').should('be.visible');
 
 
