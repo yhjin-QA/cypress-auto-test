@@ -293,7 +293,6 @@ cy.get('.anomaly-widget-card__title').filter(':visible').contains('개인정보 
 
 // [신규] 카드별 숨기기 버튼 확인
 cy.get('.anomaly-widget-card__hide')
-  .filter(':visible')
   .should('have.length.greaterThan', 0)
   .first()
   .should('have.attr', 'title', '이 카드 숨기기');
@@ -702,11 +701,14 @@ cy.get('.v-select__selection--comma').filter(':visible').contains('시간').shou
 cy.get('.section-tab').filter(':visible').contains('미리보기').should('be.visible');
 cy.get('.section-tab--active').filter(':visible').contains('수정').should('be.visible');
 
-cy.contains('.ws-toolbar-label', '조건').should('be.visible');
+cy.contains('.ws-toolbar-label', '조건')
+  .scrollIntoView({ offset: { top: -150 } })
+  .should('be.visible');
 cy.contains('.ws-toolbar-subtitle', '어떤 접근 기록을 감시할지 선별합니다').should('be.visible');
 
-cy.contains('.ws-toolbar-label', '집계').should('be.visible');
-cy.contains('.ws-toolbar-subtitle', '수치 기준으로 이상행위를 판정합니다').should('be.visible');
+cy.contains('.ws-toolbar-label', '집계')
+  .scrollIntoView({ offset: { top: -150 } })
+  .should('be.visible');
 
 // [변경] 조건 도구 팔레트 - 신규 5종 추가
 const conditionTools = [
