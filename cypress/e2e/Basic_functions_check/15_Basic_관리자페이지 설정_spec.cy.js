@@ -366,14 +366,14 @@ describe('로그캐치 사이트 테스트', () => {
       cy.get('span.ellipsis').contains('10.10.54.5').should('be.visible');
      });
 
-     // 이벤트  로그인 -> 조회로 변경하여 검색 클릭
+     // 이벤트 유형 : 로그인 -> 로그아웃로 변경하여 검색 클릭
      // 이벤트  x버튼 클릭하여 초기화 
      cy.get('input[aria-label="이벤트"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
      cy.wait(1000);
      // 이벤트 클릭
      cy.get('input[aria-label="이벤트"]').filter(':visible').click({ force: true });
      // 이벤트 리스트중 '조회' 클릭
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '조회').should('be.visible').click({ force: true });
+     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '로그아웃').should('be.visible').click({ force: true });
      cy.wait(1000);
      // 선택한 컨텍스트 메뉴 닫기
      cy.get('body').type('{esc}'); 
@@ -386,7 +386,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.contains('tbody tr', '10.10.54.5').should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
      .within(() => {
     
-      cy.get('a.font-weight-bold').should('contain', '조회').and('be.visible');
+      cy.get('a.font-weight-bold').should('contain', '로그아웃').and('be.visible');
       cy.get('span.ellipsis').contains('10.10.54.5').should('be.visible');
      });
 
@@ -469,7 +469,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="검색 대상"]').filter(':visible').click({ force: true });
      cy.wait(1000);
      // 검색대상 리스트중 '파일 내려받기' 클릭
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '파일 내려받기').should('be.visible').click({ force: true });
+     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '파일 다운로드').should('be.visible').click({ force: true });
      cy.wait(1000); 
 
      //이벤트 클릭
@@ -500,7 +500,7 @@ describe('로그캐치 사이트 테스트', () => {
      // v버튼 확인
      cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
      //표열 문구확인
-     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성자').should('be.visible');
      cy.get('th').filter(':visible').contains('타입').should('be.visible');
