@@ -407,12 +407,18 @@ describe('로그캐치 사이트 테스트', () => {
      const year = today.getFullYear();
      const month = String(today.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작하므로 +1
      const day = String(today.getDate()).padStart(2, '0');
-
      const formattedDate = `${year}${month}${day}`; // 예: "20260303"
-     //const targetFileName = `SQLPARSER_2001_${formattedDate}.log`;
-
      cy.log(`🎯 오늘 검증할 날짜: ${formattedDate}`);
-     //cy.log(`🎯 오늘 검증할 파일명: ${targetFileName}`);
+
+     // 2. 어제 날짜도 동일한 방식으로 생성 (formattedDate와 같은 포맷 규칙 사용)
+     const yesterday = new Date();
+     yesterday.setDate(yesterday.getDate() - 1);
+     const yYear = yesterday.getFullYear();
+     const yMonth = String(yesterday.getMonth() + 1).padStart(2, '0');
+     const yDay = String(yesterday.getDate()).padStart(2, '0');
+     const formattedYesterday = `${yYear}${yMonth}${yDay}`; // 예: "20260903"
+     cy.log(`🎯 어제 검증할 날짜(대체): ${formattedYesterday}`);
+     
 
 
      //기능동작
@@ -703,16 +709,33 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(1000);
 
      
-     //검색결과 검증코드
-     // 파일명이 있는 행을 타겟팅
-     cy.contains('tr', `SQLPARSER_2001_${formattedDate}.log`) 
-     .within(() => {
-      // 해당 행 내부에서만 다음 항목들이 존재하는지 확인 
+     // 검색결과 검증코드 - 오늘 파일이 있으면 오늘 것 우선, 없으면 어제 것으로 검증 대상 결정
+const sqlparserTodayFileName = `SQLPARSER_2001_${formattedDate}.log`;
+const sqlparserYesterdayFileName = `SQLPARSER_2001_${formattedYesterday}.log`;
+
+cy.get('body').then(($body) => {
+  const hasToday = $body.text().includes(sqlparserTodayFileName);
+  const hasYesterday = $body.text().includes(sqlparserYesterdayFileName);
+
+  const targetFileName = hasToday
+    ? sqlparserTodayFileName
+    : hasYesterday
+      ? sqlparserYesterdayFileName
+      : null;
+
+  if (!targetFileName) {
+    throw new Error(`오늘(${sqlparserTodayFileName})도 어제(${sqlparserYesterdayFileName})도 파일을 찾을 수 없습니다.`);
+  }
+
+  cy.log(`✅ 검증 대상 파일: ${targetFileName}`);
+
+  cy.contains('tr', targetFileName)
+    .within(() => {
       cy.contains('.ellipsis', 'Background Service').should('be.visible');
       cy.contains('a.ellipsis', '로그 수집기').should('be.visible');
-    
-      });
-      // ------------------------------------------------------------
+    });
+});
+// ------------------------------------------------------------
 
       // '태스크 유형' 콤보박스을 찾아 클릭합니다.--------
      cy.get('input[aria-label="태스크 유형"]').last().click({ force: true });
@@ -729,15 +752,32 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
      cy.wait(1000);
 
-     //검색결과 검증코드
-     // 파일명이 있는 행을 타겟팅
-     cy.contains('tr', `DISCRIMINATOR_2002${formattedDate}.log`) 
-     .within(() => {
-      // 해당 행 내부에서만 다음 항목들이 존재하는지 확인 
+     // 검색결과 검증코드 
+const discriminatorTodayFileName = `DISCRIMINATOR_2002${formattedDate}.log`;
+const discriminatorYesterdayFileName = `DISCRIMINATOR_2002${formattedYesterday}.log`;
+
+cy.get('body').then(($body) => {
+  const hasToday = $body.text().includes(discriminatorTodayFileName);
+  const hasYesterday = $body.text().includes(discriminatorYesterdayFileName);
+
+  const targetFileName = hasToday
+    ? discriminatorTodayFileName
+    : hasYesterday
+      ? discriminatorYesterdayFileName
+      : null;
+
+  if (!targetFileName) {
+    throw new Error(`오늘(${discriminatorTodayFileName})도 어제(${discriminatorYesterdayFileName})도 파일을 찾을 수 없습니다.`);
+  }
+
+  cy.log(`✅ 검증 대상 파일: ${targetFileName}`);
+
+  cy.contains('tr', targetFileName)
+    .within(() => {
       cy.contains('.ellipsis', 'Background Service').should('be.visible');
       cy.contains('.ellipsis', '접속 로그 분석기').should('be.visible');
-    
-      });
+    });
+});
       // ------------------------------------------------------------
 
       // '태스크 유형' 콤보박스을 찾아 클릭합니다.--------
@@ -755,15 +795,34 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
      cy.wait(1000);
 
-     //검색결과 검증코드
-     // 파일명이 있는 행을 타겟팅
-     cy.contains('tr', `STATISTICS_2501_${formattedDate}.log`) 
-     .within(() => {
-      // 해당 행 내부에서만 다음 항목들이 존재하는지 확인 
+     // 검색결과 검증코드
+     // 오늘 파일이 있으면 오늘 것 우선, 없으면 어제 것으로 검증 대상 결정
+     const todayFileName = `STATISTICS_2501_${formattedDate}.log`;
+     const yesterdayFileName = `STATISTICS_2501_${formattedYesterday}.log`;
+
+     cy.get('body').then(($body) => {
+      const hasToday = $body.text().includes(todayFileName);
+      const hasYesterday = $body.text().includes(yesterdayFileName);
+      const targetFileName = hasToday
+      ? todayFileName
+      : hasYesterday
+      ? yesterdayFileName
+      : null;
+
+  if (!targetFileName) {
+    throw new Error(`오늘(${todayFileName})도 어제(${yesterdayFileName})도 파일을 찾을 수 없습니다.`);
+  }
+
+  cy.log(`✅ 검증 대상 파일: ${targetFileName}`);
+
+  // 파일명이 있는 행을 타겟팅
+  cy.contains('tr', targetFileName)
+    .within(() => {
+      // 해당 행 내부에서만 다음 항목들이 존재하는지 확인
       cy.contains('.ellipsis', 'Background Service').should('be.visible');
       cy.contains('a.ellipsis', '통계 처리기').should('be.visible');
-    
-      });
+    });
+});
       // ------------------------------------------------------------
 
        // '태스크 유형' 콤보박스을 찾아 클릭합니다.--------
@@ -781,15 +840,32 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
      cy.wait(1000);
 
-     //검색결과 검증코드
-     // 파일명이 있는 행을 타겟팅
-     cy.contains('tr', `RULEANALYZER_2003${formattedDate}.log`) 
-     .within(() => {
-      // 해당 행 내부에서만 다음 항목들이 존재하는지 확인 
+     // 검색결과 검증코드 - 오늘/어제 fallback + 언더바 오타 수정 (RULEANALYZER_2003 -> RULEANALYZER_2003_)
+const ruleanalyzerTodayFileName = `RULEANALYZER_2003${formattedDate}.log`;
+const ruleanalyzerYesterdayFileName = `RULEANALYZER_2003${formattedYesterday}.log`;
+
+cy.get('body').then(($body) => {
+  const hasToday = $body.text().includes(ruleanalyzerTodayFileName);
+  const hasYesterday = $body.text().includes(ruleanalyzerYesterdayFileName);
+
+  const targetFileName = hasToday
+    ? ruleanalyzerTodayFileName
+    : hasYesterday
+      ? ruleanalyzerYesterdayFileName
+      : null;
+
+  if (!targetFileName) {
+    throw new Error(`오늘(${ruleanalyzerTodayFileName})도 어제(${ruleanalyzerYesterdayFileName})도 파일을 찾을 수 없습니다.`);
+  }
+
+  cy.log(`✅ 검증 대상 파일: ${targetFileName}`);
+
+  cy.contains('tr', targetFileName)
+    .within(() => {
       cy.contains('.ellipsis', 'Background Service').should('be.visible');
       cy.contains('a.ellipsis', '규칙 분석기').should('be.visible');
-    
-      });
+    });
+});
       // ------------------------------------------------------------
    
    

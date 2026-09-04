@@ -87,7 +87,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확인')
+          .contains('확정')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -183,9 +183,7 @@ describe('로그캐치 사이트 테스트', () => {
        
 
        // 메뉴등록 필요 검색값 결과 검증코드  
-       // '/cop/logcatch/privacyFileDownloadAfter.do' 텍스트를 포함하고 있는 테이블 행(tr)을 찾습니다.
-       cy.contains('tr', '/cop/logcatch/privacyFileDownloadAfter.do')
-       .scrollIntoView({ block: 'center' }) 
+       cy.contains('tr', '/cop/logcatch/privacyFileDownloadAfter.do').scrollIntoView({ block: 'center' }) 
        .within(() => {
        // 2. 그 행(tr) 내부에서 텍스트와 주소가 모두 올바르게 존재하는지 확인합니다.
        cy.contains('a', '리눅스_배송관리').should('be.visible'); 
