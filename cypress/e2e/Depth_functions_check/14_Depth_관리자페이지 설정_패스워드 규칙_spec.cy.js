@@ -182,7 +182,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-select--chips').find('.v-input__icon--append .material-icons').should('be.visible');
     // 버튼 확인 
     cy.get('.v-btn__content').filter(':visible').contains('들여오기').should('be.visible');
-    cy.get('.v-btn__content').filter(':visible').contains('내보내기').should('be.visible');
+    cy.get('.v-btn__content').filter(':visible').contains('Export').should('be.visible');
     cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
     //v3.0.3.0_R34785 취소 버튼 없어짐 
     //cy.get('.v-btn__content').filter(':visible').contains('취소').should('be.visible');
@@ -308,7 +308,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.contains('저장하시겠습니까?', { timeout: 10000 }).should('be.visible');
     
     // 확인 버튼 클릭
-    cy.contains('저장하시겠습니까?').should('be.visible').closest('.v-card').find('button').contains('확인').click({ force: true });
+    cy.contains('저장하시겠습니까?').should('be.visible').closest('.v-card').find('button').contains('확정').click({ force: true });
     
     // 서버 응답 대기 (API 처리가 완료될 때까지 자동으로 기다림)
     cy.wait('@saveRule').its('response.statusCode').should('eq', 200); // 실제 서버 처리가 끝날 때까지 대기

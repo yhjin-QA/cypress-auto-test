@@ -188,7 +188,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // 이 안에서는 오직 '두 번째 테이블' 내부만 검사합니다.
     cy.contains('th', '아이디').should('be.visible');
     cy.contains('th', '이름').should('be.visible');      // 중복 문제 완벽 해결!
-    cy.contains('th', '상태').should('be.visible');      // 혹시 1번 테이블에 상태가 생겨도 안전함
+    cy.contains('th', '조건').should('be.visible');      // 혹시 1번 테이블에 상태가 생겨도 안전함
     cy.contains('th', '권한 그룹').should('be.visible');
     cy.contains('th', '이메일').should('be.visible');
     cy.contains('th', '접속 가능 IP').should('be.visible');
@@ -605,7 +605,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
             cy.log('⚠️ 삭제 확인 팝업 발견! 확인 버튼을 클릭합니다.');
             cy.contains('.v-card', '삭제') // 팝업창 영역
               .find('button')
-              .contains('확인')
+              .contains('확정')
               .click({ force: true });
         }
     });

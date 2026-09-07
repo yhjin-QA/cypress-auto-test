@@ -366,7 +366,7 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
                 cy.get('body').then(($body) => {
                     if ($body.find('.v-card:contains("백업 요청")').length > 0) {
                         cy.contains('.v-card', /백업 요청/).within(() => {
-                            cy.contains('button', '확인').click({ force: true });
+                            cy.contains('button', '확정').click({ force: true });
                         });
                         cy.wait(2000); 
                     }

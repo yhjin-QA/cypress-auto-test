@@ -207,7 +207,7 @@ cy.get('body').then(($body) => {
       .should('be.visible')
       .closest('.v-card')
       .within(() => {
-        cy.contains('button', '확인').click({ force: true });
+        cy.contains('button', '확정').click({ force: true });
       });
 
     // 4. 삭제 완료 대기
@@ -248,7 +248,7 @@ reasonList.forEach((reason) => {
       cy.contains('td', reason).parent().find('i.fa-trash').click({ force: true });
 
       // [팝업 처리 1] 1차 확인 버튼
-      cy.contains('button', '확인').click({ force: true });
+      cy.contains('button', '확정').click({ force: true });
       cy.wait(500);
 
       // [팝업 처리 2] 삭제 경고 팝업
@@ -257,7 +257,7 @@ reasonList.forEach((reason) => {
         .should('be.visible')
         .closest('.v-card')
         .within(() => {
-          cy.contains('button', '확인').click({ force: true });
+          cy.contains('button', '확정').click({ force: true });
         });
 
       

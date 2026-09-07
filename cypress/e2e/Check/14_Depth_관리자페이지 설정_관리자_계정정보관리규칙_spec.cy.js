@@ -289,7 +289,7 @@ cy.task('queryPostgresDB', accountRuleSql).then((rows) => {
     cy.contains('저장하시겠습니까?', { timeout: 10000 }).should('be.visible');
     
     // 확인 버튼 클릭
-    cy.contains('저장하시겠습니까?').should('be.visible').closest('.v-card').find('button').contains('확인').click({ force: true });
+    cy.contains('저장하시겠습니까?').should('be.visible').closest('.v-card').find('button').contains('확정').click({ force: true });
     
     // 4. [스마트 대기 실행] user-profile API 통신이 끝날 때까지 기다리고, 정상(200)인지 확인합니다.
     cy.wait('@saveRule').its('response.statusCode').should('eq', 200);

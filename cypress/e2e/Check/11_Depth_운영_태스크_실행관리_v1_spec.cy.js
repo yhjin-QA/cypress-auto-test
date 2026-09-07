@@ -170,7 +170,7 @@ processList.forEach((process) => {
 
       cy.get('.c-headline').filter(':visible').contains('마스터 Task 실행').should('be.visible');
       cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
-      cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+      cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
        cy.wait(1000);
 
       // '정지' 버튼(=실행 중)과 초록색 상태바가 나타날 때까지 대기
@@ -198,7 +198,7 @@ processList.forEach((process) => {
   cy.get('.c-headline').filter(':visible').contains('마스터 Task 종료').should('be.visible');
   cy.wait(1000);
   cy.contains('p', 'Task 종료하시겠습니까?').should('be.visible');
-  cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+  cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
   cy.wait(1000);
 
   // 2. [UI 검증] 상태가 '정지'로 변했는지
@@ -230,7 +230,7 @@ processList.forEach((process) => {
   cy.get('.c-headline').filter(':visible').contains('마스터 Task 실행').should('be.visible');
   cy.wait(1000);
   cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
-  cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+  cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
   cy.wait(1000);
 
   // 5. [UI 검증] 상태가 '실행'으로 변했는지
@@ -295,7 +295,7 @@ function clickMasterButtonWithRetry(buttonLabel, popupHeadline, popupBodyText) {
 
   cy.get('.c-headline:visible', { timeout: 10000 }).contains(popupHeadline).should('be.visible');
   cy.contains('p', popupBodyText).should('be.visible');
-  cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+  cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
 }
 
 // UI 상태(버튼 문구) 검증 (모든 항목 공통)

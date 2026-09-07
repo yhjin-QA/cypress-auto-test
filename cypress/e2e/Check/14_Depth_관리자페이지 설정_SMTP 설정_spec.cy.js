@@ -213,7 +213,7 @@ cy.wait(1000);
 cy.get('input[aria-label="Mail Address"]').should('be.visible').clear().type('test@logcatch.com');
 cy.wait(1000);
 
-cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
 cy.wait(1000);
 
 cy.contains('테스트에 성공했습니다', { timeout: 10000 }).should('be.visible');

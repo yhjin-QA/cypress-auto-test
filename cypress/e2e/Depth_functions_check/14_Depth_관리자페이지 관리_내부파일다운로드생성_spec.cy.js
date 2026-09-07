@@ -165,7 +165,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
             cy.contains('삭제하시겠습니까?').should('be.visible');
             cy.wait(500); // 팝업 애니메이션 안정화 대기
        
-            cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+            cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
             // 삭제 후 목록이 갱신될 시간을 잠깐 줍니다.
             cy.wait(1000);
 

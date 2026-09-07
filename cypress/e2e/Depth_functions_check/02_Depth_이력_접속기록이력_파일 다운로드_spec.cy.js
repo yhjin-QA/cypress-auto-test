@@ -155,7 +155,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('th').filter(':visible').contains('행위 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 값').should('be.visible');
-    cy.get('th').filter(':visible').contains('조회').should('be.visible');
+    cy.get('th').filter(':visible').contains('선택').should('be.visible');
 
   
   
@@ -192,36 +192,40 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      cy.get('input[aria-label="시작 IP"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="종료 IP"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="파일명"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
+     cy.get('input[aria-label="파일 명"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="파일 명"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
+     
+     //개인정보 문구 확인
+     cy.get('label').filter(':visible').contains('개인정보').should('be.visible');
+     //토글 버튼
+     cy.get('.v-label').filter(':visible').contains('개인정보').should('be.visible');
+     
      //3.0.5.1191_r35135 제거됨.
      //cy.get('input[aria-label="파일 경로"]').filter(':visible').should('be.visible');
      
-     //토글
-     cy.get('.v-label').filter(':visible').contains('개인정보').should('be.visible');
      
-     // 포함 버튼 확인 
-     cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
-     cy.get('input[aria-label="파일명"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      //3.0.5.1191_r35135 제거됨.
      //cy.get('input[aria-label="파일 경로"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      
     
      //검색 버튼 존재확인 
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    //개인정보 문구 확인
-    cy.get('label').filter(':visible').contains('개인정보').should('be.visible');
+   
     
     //표열 문구확인
     cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
     cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
     cy.get('th').filter(':visible').contains('사용자 IP').should('be.visible');
-    cy.get('th').filter(':visible').contains('URL').should('be.visible');
-    cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
-    cy.get('th').filter(':visible').contains('파일명').should('be.visible');
+    cy.get('th').filter(':visible').contains('URL/메뉴 명').should('be.visible');
+    cy.get('th').filter(':visible').contains('업무 시스템').should('be.visible');
+    cy.get('th').filter(':visible').contains('파일 명').should('be.visible');
+    cy.get('th').filter(':visible').contains('파일 크기').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
+    cy.get('th').filter(':visible').contains('건수').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 상세').should('be.visible');
-    cy.get('th').filter(':visible').contains('확인').should('be.visible');
-    cy.get('th').filter(':visible').contains('받기').should('be.visible');
+    cy.get('th').filter(':visible').contains('확정').should('be.visible');
+    cy.get('th').filter(':visible').contains('파일 다운로드').should('be.visible');
 
     
      // 오늘날짜 가져오기 : 검증할 행이 날짜가 흐르면서 다음페이지로 넘어갈수있는 문제 해결
@@ -278,8 +282,8 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
                 .should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
 
             // 2. 다운로드 URI 경로 검증
-            cy.get('span.ellipsis.text-xs-left').contains('/tester3/api/file-download')
-                .should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+            cy.get('a.ellipsis.text-xs-left').contains(/\/tester3\/api\/file-download-pdf/).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+          
 
             // 3. 업무시스템명 색상 검증 (이미 찾은 $aTag를 재사용)
             cy.wrap($aTag).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
@@ -447,11 +451,11 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
 
-    // 'span.ellipsis' 요소 중에서 해당 API 경로 텍스트가 포함된 것을 찾아 화면에 보이는지 검증
-    cy.contains('span.ellipsis.text-xs-left', '/tester3/api/file-download-pdf').should('be.visible');
+    // 'a.ellipsis' 요소 중에서 해당 API 경로 텍스트가 포함된 것을 찾아 화면에 보이는지 검증
+    cy.contains('a.ellipsis.text-xs-left', '/tester3/api/file-download-pdf').should('be.visible');
 
     // [검증] 코드
-    cy.get('span.ellipsis.text-xs-left').should('be.visible').and('contain.text', '/tester3/api/file-download-pdf');
+    cy.get('a.ellipsis.text-xs-left').should('be.visible').and('contain.text', '/tester3/api/file-download-pdf');
 
     // 입력한 URI 주소 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="URI"]').filter(':visible').clear();
@@ -461,7 +465,7 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
     // 파일명 검색 - 타겟 :  tester3-******.확장자
     // ==========================================
     // 파일명 검색에 tester3 입력 
-    cy.get('input[aria-label="파일명"]').filter(':visible').clear().type('tester3');
+    cy.get('input[aria-label="파일 명"]').filter(':visible').clear().type('tester3');
     cy.wait(1000);
 
     //검색버튼 클릭
@@ -480,7 +484,7 @@ cy.log('✅ 검색 결과 첫 번째 행 동적 데이터 검증 완벽 통과!'
       });
 
       // 입력한 URI 주소 x버튼 클릭하여 초기화 
-      cy.get('input[aria-label="파일명"]').filter(':visible').clear();
+      cy.get('input[aria-label="파일 명"]').filter(':visible').clear();
       cy.wait(1000);
 
     //3.0.5.1191_r35135 파일 경로 제거됨.
@@ -711,7 +715,19 @@ cy.log('✅ 검색 결과 정상 확인 완벽 통과! (정보 사용자 열 기
     cy.wait(1000);
 
     // 파일명 검색에 tester3-20260318160556.pdf 입력 
-    cy.get('input[aria-label="파일명"]').filter(':visible').clear().type('tester3-20260318160556.pdf');
+    cy.get('input[aria-label="파일 명"]').filter(':visible').clear().type('tester3-20260318160556.pdf');
+    cy.wait(1000);
+
+    // 개인정보 유형 - 이메일 / 휴대전화번호 선택하기
+    // 1. 개인정보 유형 입력창 클릭 (드롭다운 열기)
+    cy.get('input[aria-label="개인정보 유형 (선택한 유형을 모두 포함)"]').filter(':visible').click({ force: true });
+
+    // 2. 🌟 현재 열려있는 드롭다운 영역 안에서 '이메일' 찾기
+    cy.get('.menuable__content__active') .contains('.v-list__tile__title', /^이메일$/).closest('.v-list__tile').scrollIntoView().click({ force: true });
+    cy.wait(1000);
+
+    // 3. 🌟 현재 열려있는 드롭다운 영역 안에서 '휴대전화번호' 찾기
+    cy.get('.menuable__content__active').contains('.v-list__tile__title', /^휴대전화번호$/).closest('.v-list__tile').scrollIntoView().click({ force: true });
     cy.wait(1000);
 
     //3.0.5.1191_r35135 제거됨.
@@ -735,6 +751,78 @@ cy.log('✅ 검색 결과 정상 확인 완벽 통과! (정보 사용자 열 기
      
     });
     cy.wait(1000);
+
+
+    ////////////////////////
+    // 엑셀 파일다운로드 
+    ////////////////////
+    // 엑셀 다운로드 클릭하는 코드 
+    cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').click({ force: true });
+    cy.wait(1000);
+    
+    // 엑셀 파일 다운로드 확인창 진행
+    // 파일다운로드 그룹 선택 (팝업창에서찾기 )
+    cy.get('.v-dialog--active').find('.v-select__selections').first().click({ force: true });
+    cy.wait(1000);
+    cy.get('.v-list__tile__title').filter(':visible').contains('파일 다운로드 이력 조회 화면 결과 파일').closest('.v-list__tile').click({ force: true });
+    
+    // 다운로드 유형 선택
+    cy.get('.v-dialog--active').find('.v-select__selections').eq(1).click({ force: true });
+    cy.get('.v-list__tile__title').filter(':visible').contains('날짜별').closest('.v-list__tile').click({ force: true });
+    
+    //개인정보 유형별 상세내역 포함 클릭 
+    cy.get('.v-dialog--active').contains('label', '개인정보 유형별 상세 내역 포함').click({ force: true });
+    
+    // 1. ✨ 클릭 전 미리 API 낚아채기 준비 (메서드가 POST인 점에 주의!)
+    // 변경된 API 경로 반영
+    cy.intercept('POST', '**/logcatch/pams/statistics/log-file-download/excel*').as('downloadExcel');
+
+    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+
+    // 3. ✨ 서버에서 엑셀 파일 생성을 완료하고 응답을 줄 때까지 기다립니다.
+    // 넉넉하게 2분(120초)을 설정했지만, 서버가 10초 만에 응답하면 딱 10초만 기다리고 바로 다음 줄로 넘어갑니다!
+    cy.wait('@downloadExcel', { timeout: 120000 });
+     
+    // 3. 사라지는 것 확인
+    cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
+    
+    // 서버에서 zip 파일을 생성하고 다운로드가 100% 완료될 때까지 충분히 기다립니다. (7초 -> 10초로 연장)
+    cy.wait(20000);
+    
+    // [검증] 다운로드 폴더를 확인합니다.
+    // 수행시 기존에 다운로드 받아두었던 파일은 자동으로 지움(사전초기화)
+    // 폴더경로 : C:\Users\user\Desktop\CypressWork\cypress\downloads
+    cy.task('readDirectory', 'cypress/downloads').then((files) => {
+        // files: 다운로드 폴더에 있는 모든 파일 이름들의 리스트
+        
+        // 💡 수정된 부분: 조건에 맞는 파일 찾기 (이름에 'file-download-log-'가 있고, 확장자가 '.zip'인 것)
+        const myFile = files.find(file => file.includes('file-download-log-') && file.endsWith('.zip'));
+
+        // 1단계: 검증: 파일이 존재해야 함 (없으면 테스트 실패)
+        expect(myFile, '다운로드 폴더 내에 file-download-log-가 포함된 .zip 파일이 존재해야 합니다.').to.not.be.undefined; 
+
+        // 2단계: 파일이 존재하면 용량 상태를 체크합니다.
+        if (myFile) {
+            cy.log(`✅ 파일 확인 완료! 파일명: ${myFile}`);
+            
+            const filePath = `cypress/downloads/${myFile}`;
+            
+            // 만들어둔 태스크를 호출해 파일 용량을 가져옵니다.
+            cy.task('getFileStats', filePath).then((stats) => {
+                cy.log(`📊 다운로드된 ZIP 파일 용량: ${stats.size} bytes`);
+
+                // 검증 1: 0바이트 빈 파일 방지
+                expect(stats.size, '파일 용량 0바이트 초과 정상 확인').to.be.greaterThan(0);
+
+                // 검증 2: ZIP 파일 무결성 최소 체크
+                // 엑셀 로그가 정상적으로 포함되었다면 최소 수백 바이트 이상이어야 하므로 100바이트를 최소 기준으로 잡습니다.
+                expect(stats.size, 'ZIP 파일 최소 용량(100 bytes) 이상 무결성 확인').to.be.at.least(100);
+                
+                cy.log(`✅ ZIP 파일 유효성(용량) 검증 완벽 통과!`);
+            });
+        }
+    });
+
 
     
     // ==========================================

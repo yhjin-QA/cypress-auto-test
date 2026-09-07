@@ -277,7 +277,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      // 검색 조건 입력란 
      cy.get('input[aria-label="검색 조건"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="값"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
      // 검색 버튼 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
      // v버튼 아이콘 존재확인

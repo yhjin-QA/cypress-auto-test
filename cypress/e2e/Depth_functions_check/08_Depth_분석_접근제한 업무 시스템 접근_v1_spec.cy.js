@@ -131,7 +131,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.contains('.c-headline', '정책 유형').should('exist');
     cy.contains('.c-headline', '개인정보 과다조회 정책 목록').should('exist');
     // 표 문구열 확인
-    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('정책명').should('be.visible');
     cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
     cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
@@ -143,7 +143,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.contains('.v-chip__content', '접근제한 업무 시스템 접근').should('be.visible').click({ force: true });
     cy.contains('.c-headline', '접근제한 업무 시스템 접근 정책 목록').should('exist');
     // 표 문구열 확인
-    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('정책명').should('be.visible');
     cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
     cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
@@ -165,7 +165,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
       cy.wait(500);
     
       // 삭제 확인 팝업에서 '확인' 클릭
-      cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
+      cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확정').click({ force: true });
       cy.wait(1000); // 삭제 처리가 서버에 반영될 시간 대기
 
       // 추가한 정책 삭제 검증코드 
@@ -187,7 +187,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 
     // 열람 제한 개인정보 접근 정책 추가화면 진입----------------------------------------
     // 정책이름 입력 
-    cy.get('input[aria-label="정책 이름"]').filter(':visible').first().clear({ force: true }).type('test_auto_접근제한 업무 시스템 접근', { force: true });
+    cy.get('input[aria-label="정책명"]').filter(':visible').first().clear({ force: true }).type('test_auto_접근제한 업무 시스템 접근', { force: true });
     
     // 정책설정 부분
     // 정책 사용여부 토글 OFF-> ON
@@ -219,7 +219,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 
     // 접근 제한 업무시스템 등록-----------------------------------------------------------------------------
     // 정책이름 입력하기
-    cy.get('input[aria-label="정책 이름"]').filter(':visible').last().clear({ force: true }).type('test_리눅스_배송관리 업무시스템 제한', { force: true });
+    cy.get('input[aria-label="정책명"]').filter(':visible').last().clear({ force: true }).type('test_리눅스_배송관리 업무시스템 제한', { force: true });
 
     // 업무시스템 - 선택
     //cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
@@ -244,7 +244,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 
      // 접근 제한 업무시스템 등록-----------------------------------------------------------------------------
     // 정책이름 입력하기
-    cy.get('input[aria-label="정책 이름"]').filter(':visible').last().clear({ force: true }).type('test_리눅스_VIP고객관리 제한', { force: true });
+    cy.get('input[aria-label="정책명"]').filter(':visible').last().clear({ force: true }).type('test_리눅스_VIP고객관리 제한', { force: true });
     cy.wait(500);
     
     // 업무시스템 - 선택

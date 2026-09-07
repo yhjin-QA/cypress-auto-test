@@ -153,7 +153,7 @@ cy.log('🔍 "소명" 유형의 "auto_add_test 결재정책" 존재 여부 확�
 
 cy.wait(1000);
 
-const TARGET_TYPE = '소명'; // 필요 시 '사전소명'으로 변경해서 재사용
+const TARGET_TYPE = '소명하기'; // 필요 시 '사전소명'으로 변경해서 재사용
 
 cy.get('body').then(($body) => {
 
@@ -190,7 +190,7 @@ cy.get('body').then(($body) => {
         cy.wait(500);
         cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 등록');
 
-        cy.get('input[aria-label="정책 이름"]').filter(':visible').clear().type('auto_add_test 결재정책');
+        cy.get('input[aria-label="정책명"]').filter(':visible').clear().type('auto_add_test 결재정책');
         cy.get('textarea[aria-label="정책 설명"]').filter(':visible').clear().type('테스트로 자동 추가된 결재라인입니다');
         cy.get('input[aria-label="사용 여부"]').check({ force: true }).should('be.checked');
 
@@ -335,40 +335,48 @@ cy.log('🧹 소명메뉴 클릭 ');
 // cy.wait(2000);
 cy.log('--- 소명 > 소명하기 탭 진입완료---');
 const navigateToSomyungManagement_1 = () => {
-    cy.contains('button', '소명').click({ force: true });
-    cy.wait(1000);
+  cy.log('--- 좌측 사이드바에서 "소명하기" 메뉴 클릭 ---');
+  cy.contains('button', '소명하기').click({ force: true });
+  cy.wait(1000);
 
-    // 소명 버튼 클릭 후 로딩 감지
-    cy.get('body').then(($body) => {
-        if ($body.find('.v-progress-circular:visible').length > 0) {
-            cy.log('🔄 소명 클릭 후 로딩 감지! 새로고침합니다.');
-            cy.reload();
-            cy.wait(3000);
-            cy.contains('button', '소명').click({ force: true });
-            cy.wait(1000);
+  cy.get('body').then(($body) => {
+    if ($body.find('.v-progress-circular:visible').length > 0) {
+      cy.log('🔄 소명 클릭 후 로딩 감지! 새로고침합니다.');
+      cy.reload();
+      cy.wait(3000);
+      cy.contains('button', '소명하기').click({ force: true });
+      cy.wait(1000);
+    }
+  });
+
+  cy.log('--- 소명 > 소명하기 서브메뉴(탭) 클릭 ---');
+
+  // [수정] 사이드바 메뉴와 구분하기 위해 button.tab-btn 클래스로 정확히 좁힘
+  cy.get('button.tab-btn')
+    .contains('소명하기')
+    .should('be.visible')
+    .click({ force: true });
+  cy.wait(3000);
+
+  // URL로 실제 소명하기 탭으로 이동했는지 검증
+  cy.url().should('include', '/my-explanations/submit');
+ 
+
+  cy.get('body').then(($body) => {
+    if ($body.find('.v-progress-circular:visible').length > 0) {
+      cy.log('🔄 소명하기 클릭 후 로딩 감지! 새로고침합니다.');
+      cy.reload();
+      cy.wait(3000);
+
+      cy.get('body').then(($reloadedBody) => {
+        if ($reloadedBody.find('.v-btn__content:contains("소명하기")').length > 0) {
+          cy.log('✅ 소명하기 탭 확인! 재진입 생략합니다.');
+        } else {
+          navigateToSomyungManagement_1();
         }
-    });
-
-    cy.log('--- 소명 > 소명하기 서브메뉴 클릭 ---');
-    cy.contains('.v-btn__content', '소명하기').should('be.visible').click({ force: true });
-    cy.wait(3000);
-
-    // 소명하기 클릭 후 로딩 감지
-    cy.get('body').then(($body) => {
-        if ($body.find('.v-progress-circular:visible').length > 0) {
-            cy.log('🔄 소명하기 클릭 후 로딩 감지! 새로고침합니다.');
-            cy.reload();
-            cy.wait(3000);
-
-            cy.get('body').then(($reloadedBody) => {
-                if ($reloadedBody.find('.v-btn__content:contains("소명하기")').length > 0) {
-                    cy.log('✅ 소명하기 탭 확인! 재진입 생략합니다.');
-                } else {
-                    navigateToSomyungManagement_1();
-                }
-            });
-        }
-    });
+      });
+    }
+  });
 };
 
 navigateToSomyungManagement_1();
@@ -462,7 +470,7 @@ cy.contains('button', '소명 처리').click({ force: true });
 // STEP: 소명상태 유형 선택하기 - 요청
 // ==========================================================
 // 이상행위 유형 드롭다운 클릭
-cy.get('input[aria-label="소명 상태"]').first().click({ force: true });
+cy.get('input[aria-label="소명하기 조건"]').first().click({ force: true });
 cy.wait(1000);
 
 cy.get('.v-list__tile__title').contains('요청').click({ force: true });
@@ -546,7 +554,7 @@ cy.wait(1500); // 반려 대상 리스트 로딩 대기
 // ==========================================================
 // STEP: 소명상태  선택하기 - 요청
 // ==========================================================
-cy.get('input[aria-label="소명 상태"]').first().click({ force: true });
+cy.get('input[aria-label="소명하기 조건"]').first().click({ force: true });
 cy.wait(1000);
 
 // 개인정보 과다조회 선택
@@ -609,7 +617,7 @@ cy.get('table tbody tr')
                           cy.get('input[type="text"]').should('be.visible').clear().type(`${approvalTime}에 반려합니다.`, { force: true });
                           cy.wait(500);
 
-                          cy.contains('button', '확인').scrollIntoView().click({ force: true });
+                          cy.contains('button', '확정').scrollIntoView().click({ force: true });
                       });
                       
                       found = true;
@@ -749,7 +757,7 @@ cy.get('body').then(($body) => {
     cy.contains('.v-label', '사용자 계정').closest('.v-input').find('input').type('loginid445', { force: true });
 
     // 소명상태  클릭
-    cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
     // 소명상태중 '취소' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('반려').click({ force: true });

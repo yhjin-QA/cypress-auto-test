@@ -156,7 +156,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('행위 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 값').should('be.visible');
-    cy.get('th').filter(':visible').contains('조회').should('be.visible');
+    cy.get('th').filter(':visible').contains('선택').should('be.visible');
 
     //기능동작확인 ------------------------------------------------------------------
    
@@ -581,22 +581,25 @@ describe('로그캐치 사이트 테스트', () => {
     //-----------------------------------------------------------------------------------------------------------------------
 
     // 개인정보 유형 조회  - 휴대전화번호 -----------------------------------------------------------------------------------------
-     
-    //개인정보유형 전체선택  클릭하여 유형 선택하는 코드 
     cy.get('input[aria-label="개인정보 유형"]').filter(':visible').click({ force: true });
     cy.wait(1000);
-    
-    // 개인정보유형 리스트중 휴대전화번호 선택
-    cy.get('.v-list__tile__title').contains('휴대전화번호').scrollIntoView().should('be.visible').click({ force: true });
+
+    cy.get('.v-list__tile__title').contains(/^이메일$/).scrollIntoView().click({ force: true });
     cy.wait(1000);
 
-    //휴대번호 입력 수행
-    cy.get('input[aria-label="010"]').filter(':visible').clear().type('010').blur();
+    cy.get('input[aria-label="id"]').clear().type('user001');
     cy.wait(1000);
-    cy.get('input[aria-label="중간 번호 숫자 4개"]').filter(':visible').clear().type('4197').blur();
+
+    cy.get('input[aria-label="@domain.com"]').clear().type('@logcatch.com');
     cy.wait(1000);
-    cy.get('input[aria-label="끝 번호 숫자 4개"]').filter(':visible').clear().type('7524').blur();
-    cy.wait(1000);
+
+    //사용자 상태 클릭
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
+     cy.wait(1000);
+
+     // 사용자 상태 리스트중 - 등록  선택----------------------------------------------------------
+     cy.get('.v-list__tile__title').contains('등록').should('be.visible').click({ force: true });
+     cy.wait(1000);
 
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -605,8 +608,8 @@ describe('로그캐치 사이트 테스트', () => {
     // [검증] 검색 결과 검증
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.contains('a', '010-4197-7524').filter(':visible').should('be.visible');
-     }); 
+      cy.contains('a.ellipsis', 'user001@logcatch.com').should('be.visible');
+    });
     //-----------------------------------------------------------------------------------------------------------------------
 
     // ==========================================

@@ -156,7 +156,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('th').filter(':visible').contains('행위 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 값').should('be.visible');
-    cy.get('th').filter(':visible').contains('조회').should('be.visible');
+    cy.get('th').filter(':visible').contains('선택').should('be.visible');
     
     
     // ==========================================
@@ -201,7 +201,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유무').should('be.visible'); 
     cy.get('th').filter(':visible').contains('소명 대상').should('be.visible');
-    cy.get('th').filter(':visible').contains('조회').should('be.visible'); 
+    cy.get('th').filter(':visible').contains('선택').should('be.visible'); 
 
 
      //기능확인

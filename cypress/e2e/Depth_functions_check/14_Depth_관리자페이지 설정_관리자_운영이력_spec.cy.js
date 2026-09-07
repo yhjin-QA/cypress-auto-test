@@ -275,7 +275,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
           cy.get('span.ellipsis').contains('[Manager] : 오토유저').should('be.visible');
           
           // [설명] 검증 (text-xs-left 클래스 포함 여부까지 꼼꼼하게 확인)
-          cy.get('span.ellipsis.text-xs-left').contains('[Manager] : Create').should('be.visible');
+          cy.get('a.ellipsis.text-xs-left').contains('[Manager] : Create').should('be.visible');
           
           // [결과] 검증 (성공 여부 확인)
           cy.contains('td', '성공').should('be.visible');
@@ -337,7 +337,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
           cy.get('span.ellipsis').contains('[Manager] : 오토유저').should('be.visible');
           
           // [설명] 검증 (text-xs-left 클래스 포함 여부까지 꼼꼼하게 확인)
-          cy.get('span.ellipsis.text-xs-left').contains('[Manager] : Delete').should('be.visible');
+          cy.get('a.ellipsis.text-xs-left').contains('[Manager] : Delete').should('be.visible');
           
           // [결과] 검증 (성공 여부 확인)
           cy.contains('td', '성공').should('be.visible');

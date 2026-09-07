@@ -140,9 +140,9 @@ describe('로그캐치 사이트 테스트', () => {
     // 헤더(th) 안에 있는 체크박스 아이콘(check_box_outline_blank) 확인
     cy.get('th').find('.v-icon:contains("check_box_outline_blank")').should('exist');
     cy.get('th').filter(':visible').contains('플랜 이름').should('be.visible');
-    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('정책명').should('be.visible');
     cy.get('th').filter(':visible').contains('정책 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('상태').should('be.visible');
+    cy.get('th').filter(':visible').contains('조건').should('be.visible');
     cy.get('th').filter(':visible').contains('작업 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('시작 시간').should('be.visible');
     cy.get('th').filter(':visible').contains('종료 시간').should('be.visible');
@@ -158,7 +158,7 @@ describe('로그캐치 사이트 테스트', () => {
     //저장한 영역(@detailHeader) 안에서 컬럼명 확인
     cy.get('@detailHeader').contains('날짜').should('be.visible');
     cy.get('@detailHeader').contains('이름').should('be.visible'); 
-    cy.get('@detailHeader').contains('상태').should('be.visible');
+    cy.get('@detailHeader').contains('조건').should('be.visible');
     cy.get('@detailHeader').contains('플랜 삭제 여부').should('be.visible');
 
 
@@ -196,7 +196,7 @@ describe('로그캐치 사이트 테스트', () => {
       cy.wait(500);
     
       // 삭제 확인 팝업에서 '확인' 클릭
-      cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
+      cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확정').click({ force: true });
       cy.wait(1000); // 삭제 처리가 서버에 반영될 시간 대기
 
       // 추가한 정책 삭제 검증코드 
@@ -393,7 +393,7 @@ cy.wait(3000);
       cy.wait(500); // 애니메이션이 끝날 때까지 0.5초만 숨고르기
     
       // 2. 삭제 확인 팝업에서 '확인' 클릭 (강제 클릭 대신 일반 클릭으로 정상 작동 확인)
-      cy.get('.v-dialog').filter(':visible').find('.v-btn').contains('확인').click();
+      cy.get('.v-dialog').filter(':visible').find('.v-btn').contains('확정').click();
       cy.wait(2000);
       // 팝업창 글자가 화면에서 '안 보이게' 숨겨졌는지 확인합니다.
       cy.contains('삭제하시겠습니까?').should('not.be.visible');

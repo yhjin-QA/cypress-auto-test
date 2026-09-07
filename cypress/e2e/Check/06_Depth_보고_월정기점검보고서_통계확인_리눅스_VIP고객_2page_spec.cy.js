@@ -156,7 +156,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('행위 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 값').should('be.visible');
-    cy.get('th').filter(':visible').contains('조회').should('be.visible');
+    cy.get('th').filter(':visible').contains('선택').should('be.visible');
 
   
   
@@ -352,7 +352,7 @@ cy.get('.v-dialog--active', { timeout: 10000 })
       // 4. 팝업 안의 '확인' 버튼 클릭
       cy.get('.v-btn__content')
         .filter(':visible')
-        .contains('확인')
+        .contains('확정')
         .click({ force: true });
   });
 
@@ -535,7 +535,7 @@ cy.get('.apexcharts-legend').eq(0).find('.apexcharts-legend-text').each(($legend
     cy.get('th').filter(':visible').contains('보고서 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('생성일').should('be.visible');
     cy.get('th').filter(':visible').contains('생성자').should('be.visible');
-    cy.get('th').filter(':visible').contains('상태').should('be.visible');
+    cy.get('th').filter(':visible').contains('조건').should('be.visible');
     cy.get('th').filter(':visible').contains('설명').should('be.visible');
     cy.get('th').filter(':visible').contains('삭제').should('be.visible');
 
@@ -572,7 +572,7 @@ cy.get('.apexcharts-legend').eq(0).find('.apexcharts-legend-text').each(($legend
            cy.contains('삭제하시겠습니까?').should('be.visible');
            cy.wait(500); // 팝업 애니메이션 안정화 대기
       
-           cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+           cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
            // 삭제 후 목록이 갱신될 시간을 잠깐 줍니다.
            cy.wait(1000);
 

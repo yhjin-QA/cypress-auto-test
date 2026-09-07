@@ -133,7 +133,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.c-headline', '정책 유형').should('exist');
     cy.contains('.c-headline', '개인정보 과다조회 정책 목록').should('exist');
     // 표 문구열 확인
-    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('정책명').should('be.visible');
     cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
     cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
@@ -145,7 +145,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.v-chip__content', '열람제한 개인정보 접근').should('be.visible').click({ force: true });
     cy.contains('.c-headline', '열람제한 개인정보 접근 정책 목록').should('exist');
     // 표 문구열 확인
-    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('정책명').should('be.visible');
     cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
     cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
@@ -167,7 +167,7 @@ describe('로그캐치 사이트 테스트', () => {
       cy.wait(500);
     
       // 삭제 확인 팝업에서 '확인' 클릭
-      cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
+      cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확정').click({ force: true });
       cy.wait(1000); // 삭제 처리가 서버에 반영될 시간 대기
 
       // 추가한 정책 삭제 검증코드 
@@ -189,7 +189,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 열람제한 개인정보 접근 정책 추가화면 진입----------------------------------------
     // 정책이름 입력 
-    cy.get('input[aria-label="정책 이름"]').filter(':visible').clear({ force: true }).type('test_auto_열람제한 개인정보 접근', { force: true });
+    cy.get('input[aria-label="정책명"]').filter(':visible').clear({ force: true }).type('test_auto_열람제한 개인정보 접근', { force: true });
 
     // 정책설정 부분
     // 정책 사용여부 토글 OFF-> ON
@@ -560,7 +560,7 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
 
 cy.log('🎉 분석 이상행위 열람제한 개인정보 접근 확인 및 랜덤 등급 검증 완료!');
 
-
+*/
   // ==========================================
   // [FINAL] 테스트 종료 및 메뉴 닫기
   // ==========================================
@@ -569,7 +569,6 @@ cy.log('🎉 분석 이상행위 열람제한 개인정보 접근 확인 및 랜
   cy.get('body').click('center', { force: true });
 
 //맨티스 이슈 탐지되지않음.
-*/
 
   });
 });  
