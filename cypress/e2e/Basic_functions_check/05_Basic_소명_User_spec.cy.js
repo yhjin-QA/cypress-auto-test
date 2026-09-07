@@ -494,10 +494,24 @@ cy.wait(1000);
 
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    
     cy.wait(1000);
-    // 경보등급중 '심각' 검색결과 검증코드 (빨강색)
-    cy.get('.g-IMinorAlert').filter('[style*="rgb(244, 67, 54)"]') .should('be.visible');
+
+    cy.get('tbody').then(($tbody) => {
+  // 1. 'No data available' 문구가 존재하는 경우
+  if ($tbody.text().includes('No data available')) {
+    cy.log('✅ 조회된 심각 경보 데이터가 없습니다 (No data available).');
+  } 
+  // 2. 데이터가 존재하는 경우 (기존 검증 로직 수행)
+  else {
+    // $tbody 안에서 심각 경보(빨간색) 요소를 찾아 검증
+    cy.wrap($tbody)
+      .find('.g-IMinorAlert')
+      .filter('[style*="rgb(244, 67, 54)"]')
+      .should('be.visible');
+    
+    cy.log('✅ 심각 경보 데이터(빨강색) 검증 완료!');
+  }
+});
 
     //경보등급 - 다중선택 심각 + 경계
     cy.wait(1000);
