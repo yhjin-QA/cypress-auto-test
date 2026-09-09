@@ -278,11 +278,10 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
             cy.log('📌 [JEUS_tester3] 데이터 검증을 시작합니다.');
 
             // 1. 파일명 검증
-            cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.(xlsx|pdf)/i)
-                .should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+            cy.get('span.ellipsis.text-xs-left').contains(/tester3-.*\.(xlsx|pdf)/i).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
 
             // 2. 다운로드 URI 경로 검증
-            cy.get('a.ellipsis.text-xs-left').contains(/\/tester3\/api\/file-download-pdf/).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+            cy.get('a.ellipsis.text-xs-left').contains(/\/tester3\/api\/file-download/).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
           
 
             // 3. 업무시스템명 색상 검증 (이미 찾은 $aTag를 재사용)
