@@ -33,8 +33,9 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('https://10.10.54.21:18443/logcatch/login');
+    cy.visit('https://10.10.54.93:18443/logcatch/login');
     cy.wait(4000); // 로딩 대기
+
     ////////////새로고침코드//////
       cy.get('body').then(($body) => {
       // 만약 입력창이 안 보인다면? (흰 화면 상태라면?)
@@ -101,92 +102,28 @@ describe('로그캐치 사이트 테스트', () => {
     //로그인 성공
 
 
-// ==========================================
-// STEP 12: 점검(대시보드) 서브메뉴
-// ==========================================
-cy.log('🚀 점검 탭 클릭');
-cy.contains('button', '점검').click({ force: true });
-cy.wait(2000);
-cy.log('--- 화면 검증 시작 ---');
 
-// [수정] 검색 버튼 - 숨겨진 중복 요소 방지를 위해 :visible 필터 우선 적용
-cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-
-// [수정] 날짜 선택 입력란 - aria-label로 직접 확인 (끝에 공백 포함 주의)
-cy.get('input[aria-label="날짜 선택 "]').filter(':visible').should('be.visible');
-cy.get('.material-icons').filter(':visible').contains('event').should('be.visible');
-
-// [신규] 업무시스템 콤보박스
-cy.get('input[aria-label="업무시스템"]')
-  .filter(':visible')
-  .should('be.visible')
-  .and('have.attr', 'role', 'combobox');
-
-// 자동갱신안함 문구 및 슬라이더 확인
-cy.contains('.item-margin', '자동 갱신 안함').should('be.visible');
-cy.get('input[role="slider"]')
-  .should('exist')
-  .and('have.attr', 'aria-valuenow', '0')
-  .and('have.attr', 'aria-valuemax', '30');
-
-// 시각적으로 보이는 슬라이더 트랙 확인이 필요하면 별도로
-cy.get('.v-slider').filter(':visible').should('be.visible');
-
-// 카드 제목 확인
-const cardTitles = [
-  '개인정보 유형별 현황',
-  '부서별 개인정보 사용 TOP 10',
-  'IP주소별 개인정보 사용 TOP 10',
-  '업무시스템별 개인정보 사용 현황',
-  '개인정보 사용자 TOP 10',
-  '이상행위 유형별 현황',
-];
-cardTitles.forEach((title) => {
-  cy.contains('.v-card__title', title).should('be.visible');
-});
-
-// [신규] "이상행위 발생 건수" 요약 위젯 확인 (카드 제목이 아닌 별도 텍스트 위젯)
-cy.contains('이상행위 발생 건수').should('be.visible');
-cy.contains('이상행위 발생 건수')
-  .parents('.dynamic_chart')
-  .find('h3')
-  .invoke('text')
-  .then((text) => {
-    expect(text.trim()).to.match(/^\d+\s*건$/);
-  });
-
-// [신규] 데이터 없음 상태 위젯 검증 (최초 설치 시 - 통계 테이블 미생성 5종)
-cy.get('.dynamic_chart')
-  .filter(':visible')
-  .contains('아직 통계 테이블이 생성되지 않았습니다')
-  .should('have.length.at.least', 0);
-
-cy.get('.fa-exclamation-triangle')
-  .filter(':visible')
-  .should('have.length.at.least', 0);
-
-// [신규] "이상행위 유형별 현황" - ApexCharts 렌더링 + 데이터 없음 텍스트 확인
-cy.contains('.v-card__title', '이상행위 유형별 현황')
-  .parents('.widget_content')
-  .within(() => {
-    cy.get('#apex-chart svg').should('exist').then(($svg) => {
-      const hasNoDataText = $svg.text().includes('조회 결과가 존재하지 않습니다');
-
-      if (hasNoDataText) {
-        cy.log('ℹ️ 이상행위 데이터 없음 상태 확인');
-        cy.wrap($svg).contains('조회 결과가 존재하지 않습니다').should('exist');
-      } else {
-        cy.log('✅ 이상행위 데이터 존재 - 차트 렌더링 확인');
-        cy.wrap($svg).find('path').should('have.length.greaterThan', 0);
-      }
-    });
-  });
-
-cy.log('✅ 점검 대시보드 출력 및 차트 타이틀 확인 완료 ');
+    // ==========================================
+    // STEP 7: 보고 서브메뉴 
+    // ==========================================
+    cy.contains('button', '보고').click({ force: true });
+    cy.wait(2000);
+    cy.log('--- 화면 검증 시작 ---');
+    cy.get('.tab-btn').contains('접속기록 종합 보고서').closest('button').should('not.have.class', 'inactive');
+    cy.contains('.c-headline', '보고서 목록').should('exist');
+    // v 아이콘 확인하는 코드
+    cy.get('.v-icon').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('보고서 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('생성일').should('be.visible');
+    cy.get('th').filter(':visible').contains('생성자').should('be.visible');
+    cy.get('th').filter(':visible').contains('조건').should('be.visible');
+    cy.get('th').filter(':visible').contains('설명').should('be.visible');
+    cy.get('th').filter(':visible').contains('삭제').should('be.visible');
+    cy.log('✅  보고 탭 진입 및 데이터 출력 확인 완료!');
 
 
 
-    
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================

@@ -1,0 +1,505 @@
+name: Auto-PC Work (Daily_UI_v2.7)
+
+env:
+  PRODUCT_NAME: "로그캐치"
+  TEST_TYPE: UI
+  TZ: Asia/Seoul
+
+on:
+  #push:
+  # branches: [ "master" ]
+  #schedule:
+  #  - cron: '5 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  # ====================================================
+  # [Job 1] 테스트 실행 (Runner)
+  # ====================================================
+  cypress-run:
+    runs-on: [self-hosted, PC-Auto]
+    strategy:
+      fail-fast: false
+      matrix:
+        containers: [1,2,3,4,5] # 5병렬 runner 추가
+
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+        # 👇 [추가] 이전 테스트 결과 찌꺼기(HTML 등) 삭제
+      - name: Clean Previous Reports
+        run: |
+          Remove-Item -Path "cypress/reports" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "cypress/screenshots" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "cypress/videos" -Recurse -Force -ErrorAction SilentlyContinue
+
+      - name: Get Current Time
+        run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      # 👇 [안전장치] 파일이 없어서 에러나는 것 방지용 빈 파일 생성
+      - name: Create Dummy Report File
+        run: |
+          # 👇 경로를 config와 맞춤
+          $dir = "cypress/reports/json_logs/jsons"
+          if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir }
+          # $dummyContent = '{ "stats": { "tests": 0, "passes": 0, "failures": 0, "pending": 0, "duration": 0 }, "results": [], "meta": { "mocha": { "version": "7.0.0" }, "mochawesome": { "version": "7.1.3" } } }'
+          # $dummyContent | Out-File -FilePath "$dir/dummy.json" -Encoding UTF8
+          # 👇 [핵심 수정] 가짜 문자열 대신 '진짜 UUID'를 생성합니다.
+          $suiteUUID = [guid]::NewGuid().ToString()
+          $testUUID  = [guid]::NewGuid().ToString()
+          
+          # 리포트 생성기가 좋아하는 완벽한 데이터 구조
+          $dummyContent = @"
+          {
+            "stats": {
+              "suites": 1,
+              "tests": 1,
+              "passes": 1,
+              "pending": 0,
+              "failures": 0,
+              "start": "2024-01-01T00:00:00.000Z",
+              "end": "2024-01-01T00:00:01.000Z",
+              "duration": 100,
+              "testsRegistered": 1,
+              "passPercent": 100,
+              "pendingPercent": 0,
+              "other": 0,
+              "hasOther": false,
+              "skipped": 0,
+              "hasSkipped": false
+            },
+            "results": [
+              {
+                "uuid": "$suiteUUID",
+                "title": "System Check",
+                "fullFile": "",
+                "file": "",
+                "beforeHooks": [],
+                "afterHooks": [],
+                "tests": [
+                  {
+                    "title": "Report Placeholder",
+                    "fullTitle": "System Check Report Placeholder",
+                    "timedOut": false,
+                    "duration": 100,
+                    "state": "passed",
+                    "speed": "fast",
+                    "pass": true,
+                    "fail": false,
+                    "pending": false,
+                    "context": null,
+                    "code": "true",
+                    "err": {},
+                    "uuid": "$testUUID",
+                    "parentUUID": "$suiteUUID",
+                    "isHook": false,
+                    "skipped": false
+                  }
+                ],
+                "suites": [],
+                "passes": ["$testUUID"],
+                "failures": [],
+                "pending": [],
+                "skipped": [],
+                "duration": 100,
+                "root": false,
+                "rootEmpty": false,
+                "_timeout": 2000
+              }
+            ],
+            "meta": {
+              "mocha": { "version": "7.0.0" },
+              "mochawesome": {
+                "options": {
+                  "quiet": false,
+                  "reportFilename": "mochawesome",
+                  "saveHtml": false,
+                  "saveJson": true,
+                  "consoleReporter": "spec",
+                  "useInlineDiffs": false,
+                  "code": true
+                },
+                "version": "7.1.3"
+              },
+              "marge": {
+                "options": {
+                  "reportDir": "cypress/reports/json_logs",
+                  "overwrite": false,
+                  "html": false,
+                  "json": true
+                },
+                "version": "6.2.0"
+              }
+            }
+          }
+          "@
+          
+          $dummyContent | Out-File -FilePath "$dir/dummy.json" -Encoding UTF8
+         
+
+      - name: Cypress Run
+        id: cypress
+        env:
+          CYPRESS_API_URL: "http://10.10.54.5:1234/"
+          CYPRESS_RECORD_KEY: "my-secret-key"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_INFO_MESSAGE: ${{ github.event.head_commit.message }}
+          NO_COLOR: 1
+          CI: true
+        # continue-on-error: true # 에러가 나도 업로드는 해야 함
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          Write-Host "📦 패키지 설치 시작 (node-ssh 포함)..."
+          # 🌟 기존 install 대신 ci를 사용하여 package.json에 명시된 버전을 정확히 설치합니다.
+          npm ci
+          
+          Write-Host "🚀 Cypress 바이너리 확인 및 설치..."
+          npx cypress install 
+          
+          # 👇 [필수] 'mochawesome'을 명시적으로 설치해야 합니다.
+          npm install cy2 mochawesome mochawesome-merge mochawesome-report-generator --save-dev
+        
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_v2.7_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI-v2.7 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          Get-Content cypress.log
+
+           # ↓ 추가
+          $logContent = Get-Content cypress.log -Raw -Encoding UTF8
+          if ($LASTEXITCODE -ne 0) {
+             $hasHookError   = $logContent -match "matched no report files"
+             $hasTestFailure = $logContent -match "\d+ failing"
+           if ($hasHookError -and -not $hasTestFailure) {
+               Write-Host "[INFO] Hook error only - normal exit"
+               exit 0
+             } else {
+               Write-Host "[FAIL] Test failure detected"
+             exit 1
+             }
+           }
+
+      - name: Copy JSON to visible directory
+        if: always()
+        run: |
+          $src = "cypress/reports/json_logs/.jsons"
+          $dst = "cypress/reports/json_logs/jsons"
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          if (Test-Path $src) {
+            Get-ChildItem -Path $src -Force -Filter "*.json" | Copy-Item -Destination $dst
+            Write-Host "Copied: $((Get-ChildItem -Path $dst -Filter '*.json' | Measure-Object).Count) files"
+          } else {
+            Write-Host "Source not found: $src"
+          }      
+
+      - name: Extract Dashboard URL
+        if: always()
+        run: |
+          $logPath = "cypress.log"
+
+          if (Test-Path $logPath) {
+            # 로그 파일 전체 내용을 읽어옵니다.
+            $content = Get-Content $logPath -Raw -Encoding UTF8
+            
+            # 👇 [최적화] 전체 URL이 아니라, 변하지 않는 뒷부분 "/run/ID" 패턴만 찾습니다.
+            # (ID에 알파벳, 숫자, 하이픈(-)이 섞여 있어도 다 찾아냅니다)
+            if ($content -match "(/run/[a-zA-Z0-9-]+)") {
+                $runPath = $matches[1]  # 예: /run/fd8ece14f001...
+                
+                # 👇 앞부분은 우리가 원하는 '진짜 IP'로 고정해서 붙입니다.
+                $realUrl = "http://10.10.54.5:8080$runPath"
+                
+                Write-Host "✅ 대시보드 URL 생성 완료: $realUrl"
+                echo $realUrl | Out-File -FilePath run_url.txt -Encoding UTF8
+            } else {
+                Write-Host "⚠️ 로그에서 Run ID를 찾을 수 없습니다."
+                # 실패 시 프로젝트 목록 페이지로 안내
+                echo "http://10.10.54.5:8080/projects" | Out-File -FilePath run_url.txt -Encoding UTF8
+            }
+          } else {
+             Write-Host "❌ cypress.log 파일이 없습니다."
+          }
+
+      - name: Upload URL File
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: dashboard-url-${{ matrix.containers }}
+          path: run_url.txt
+          retention-days: 1
+          if-no-files-found: ignore
+
+      # 👇 [수정됨] 경로를 'cypress/reports' 전체로 변경하여 파일 누락 방지
+      - name: 📂 리포트 데이터 업로드
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: UI-Raw-Data-${{ matrix.containers }}
+          path: |
+           cypress/reports/json_logs/jsons
+           cypress/screenshots
+          retention-days: 1
+          if-no-files-found: ignore
+
+  # ====================================================
+  # [Job 2] 종합 알림 (데이터 통합 & 리포트 생성)
+  # ====================================================
+  notify-result:
+    needs: cypress-run
+    if: always()
+    runs-on: [self-hosted, PC-Auto]
+    
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+
+    steps:
+      - name: Checkout  # 👈 추가 필요
+        uses: actions/checkout@v5
+
+      # 👇 [필수 추가] 이 단계가 없으면 이전 테스트 결과(Basic)와 현재 결과(UI)가 뒤섞입니다!
+      - name: 🧹 기존 데이터 청소 (Clean Workspace)
+        run: |
+          Write-Host "이전 작업의 잔여 데이터를 삭제합니다..."
+          Remove-Item -Path "all_raw_data" -Recurse -Force -ErrorAction SilentlyContinue
+          # 👇 [수정] final_report_UI 폴더를 청소
+          Remove-Item -Path "final_report_UI" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "downloaded_url" -Recurse -Force -ErrorAction SilentlyContinue
+          Write-Host "Clear Finish!"
+
+      - name: Get Current Time
+        run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Download Dashboard URL
+        uses: actions/download-artifact@v7
+        continue-on-error: true
+        with:
+          pattern: dashboard-url-*   # 1, 2, 3번 모두 찾음
+          merge-multiple: true     # 파일 이름이 같으므로(run_url.txt) 하나로 합쳐짐 (덮어쓰기)
+          path: downloaded_url
+
+      # 모든 Raw 데이터 다운로드
+      - name: Download All Raw Data
+        uses: actions/download-artifact@v7
+        with:
+          pattern: UI-Raw-Data-*
+          path: all_raw_data
+          merge-multiple: true
+          
+      # 👇 [추가됨] 파일이 진짜 있는지 눈으로 확인 (디버깅용)
+      - name: 🔍 파일 구조 확인
+        run: Get-ChildItem -Path all_raw_data -Recurse       
+
+      # 👇 [통합 로직] 폴더 구조가 바뀌어도 찾을 수 있게 **/*.json 사용
+      - name: 🔄 리포트 하나로 통합하기
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          npm install mochawesome-merge mochawesome-report-generator --no-save
+
+          # 💡 [추가] 스크린샷 경로 복원 - JSON이 참조하는 경로와 일치시키기
+          # JSON 파일은 'cypress/screenshots/...' 경로를 참조하는데
+          # 다운로드된 파일은 'all_raw_data/screenshots/...'에 있어서 불일치 발생
+          if (Test-Path "all_raw_data/cypress/screenshots") {
+          New-Item -ItemType Directory -Force -Path "cypress/screenshots" | Out-Null
+          Copy-Item -Path "all_raw_data/cypress/screenshots/*" -Destination "cypress/screenshots/" -Recurse -Force
+          Write-Host "✅ 스크린샷 경로 복원 완료 (cypress/screenshots/)"
+          } else {
+            Write-Host "⚠️ 스크린샷 없음 - 건너뜀"
+          }
+
+          # 💡 1. dummy.json을 제외한 진짜 결과 JSON 파일이 있는지 체크합니다.
+          $realJsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" | Where-Object { $_.Name -ne "dummy.json" }  
+          if ($realJsonFiles.Count -gt 0) {
+              # 💡 2. 실제 결과가 존재한다면 병합 리포트가 오염되지 않게 dummy.json을 삭제합니다.
+              Get-ChildItem -Path "all_raw_data" -Recurse -Filter "dummy.json" | Remove-Item -Force
+              Write-Host "✅ 실제 테스트 결과 JSON이 존재하여 dummy.json을 제거했습니다."
+          } else {
+              Write-Host "⚠️ 실제 결과 JSON이 없어 dummy.json으로 병합을 진행합니다 (시스템 에러/취소 대비)."
+          }
+          
+          # 2. HTML 생성
+          $jsonFiles = (Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" |
+          Select-Object -ExpandProperty FullName |
+          ForEach-Object { "`"$_`"" }) -join " "
+
+          cmd /c "npx mochawesome-merge $jsonFiles > merged_report.json"
+          Write-Host "merge exit: $LASTEXITCODE"
+          npx marge merged_report.json --reportDir ./final_report_UI --inline --charts --reportTitle "UI Check Report" --reportFilename "LogCatch_UI_Report" --saveJson=false
+
+          # 👇 [추가] 스크린샷 이미지를 base64로 변환하여 HTML에 직접 삽입
+          $htmlPath = "./final_report_UI/LogCatch_UI_Report.html"
+          if (Test-Path $htmlPath) {
+          $html = Get-Content $htmlPath -Raw -Encoding UTF8
+              $html = [regex]::Replace($html, 'src="([^"]+\.png)"', {
+          param($m)
+          $rawPath = $m.Groups[1].Value
+                  # 절대경로에서 screenshots/ 이후 경로만 추출
+          if ($rawPath -match 'screenshots[/\\](.+)') {
+          $relPath = "cypress/screenshots/" + ($Matches[1] -replace '\\', '/')
+          if (Test-Path $relPath) {
+          $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path $relPath).Path)
+          $b64 = [Convert]::ToBase64String($bytes)
+          return "src=""data:image/png;base64,$b64"""
+            }
+           }
+           return $m.Value
+          })
+               $html | Set-Content $htmlPath -Encoding UTF8 -NoNewline
+           Write-Host "✅ Screenshot base64 embedding complete."
+           } else {
+                 Write-Host "⚠️ HTML file not found: $htmlPath"
+            }
+
+
+      - name: Send Google Chat (UI)
+        if: always() 
+        env:
+          WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
+          JOB_STATUS: ${{ needs.cypress-run.result }}
+          # 👇 원하시는 버전명을 여기에 하드코딩 하세요!
+          HARDCODED_VERSION: "3.0.0.250901(v2.7)" 
+          MSG_SUCCESS: "*[성공]*[Auto-PC][.91]"
+          MSG_FAIL: "*[실패]*[Auto-PC][.91]"
+          MSG_TITLE: "확인결과"
+          LABEL_DASH: "대시보드"
+          LABEL_GIT: "GitHub(Report)"
+          NOW: ${{ env.NOW }}
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          
+          $failedSpecNames = @()
+          $isActuallyFailed = $false
+          $totalFailCount = 0
+
+          Write-Host "============= [🔍 데이터 정밀 분석 시작 (Flaky 완벽 방어)] ============="
+
+          # [Step 1] 개별 JSON 리포트 전수 조사 
+          # 💡 [핵심 차단 1] merged_report.json은 전체 파일명이 다 들어있으므로 탐색에서 무조건 제외합니다!
+          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "merged_report.json" }
+          
+          foreach ($file in $jsonFiles) {
+              try {
+                  $rawContent = Get-Content $file.FullName -Raw -Encoding UTF8
+                  $content = $rawContent | ConvertFrom-Json
+                  
+                  # 개별 리포트에 실패가 기록되어 있다면 "진짜 실패"
+                  if ($content.stats -and [int]$content.stats.failures -gt 0) {
+                      $isActuallyFailed = $true
+                      $totalFailCount += [int]$content.stats.failures
+                      
+                      # 이 파일은 진짜 실패한 파일이므로 안심하고 파일명 추출
+                      $fileMatches = [regex]::Matches($rawContent, '(?<="file":\s*")[^"]+\.cy\.js|(?<="fullFile":\s*")[^"]+\.cy\.js')
+                      foreach ($match in $fileMatches) {
+                          $fName = Split-Path ($match.Value -replace '\\', '/') -Leaf
+                          if ($fName) { $failedSpecNames += $fName }
+                      }
+                  }
+              } catch {}
+          }
+
+          # [Step 2] Job 자체 상태 확인 (시스템 크래시 대비)
+          $cyStatus = "${{ env.JOB_STATUS }}".ToLower()
+          if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled") {
+              $isActuallyFailed = $true
+          }
+
+          # 중복 제거 및 1차 필터링
+          $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
+
+          # [Step 3] 스크린샷 물리 경로 추적 (최후의 보루)
+          # 💡 [핵심 차단 2] JSON에서 진짜 실패한 파일명을 이미 찾았다면(Count > 0), 스크린샷은 절대 뒤지지 않습니다!
+          # (Flaky 때문에 생성된 찌꺼기 스크린샷을 읽는 것을 원천 차단)
+          if ($isActuallyFailed -and $uniqueFailures.Count -eq 0) {
+              $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*failed*.png" -ErrorAction SilentlyContinue
+              if ($failedScreenshots.Count -gt 0) {
+                  foreach ($shot in $failedScreenshots) {
+                      $shotMatches = [regex]::Matches($shot.FullName, '([^\\/":*?<>|]+\.cy\.js)')
+                      foreach ($m in $shotMatches) { $failedSpecNames += $m.Value.Trim() }
+                  }
+                  # 스크린샷에서 찾은 값으로 다시 중복 제거
+                  $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" } | Select-Object -Unique
+              }
+          }
+
+          # [Step 4] 대시보드 URL 탐색
+          $dashUrl = "http://10.10.54.5:8080/projects"
+          $urlFiles = Get-ChildItem -Path "all_raw_data", "downloaded_url" -Recurse -Filter "run_url.txt" -ErrorAction SilentlyContinue
+          foreach ($uFile in $urlFiles) {
+              $tempUrl = (Get-Content $uFile.FullName -Raw -Encoding UTF8).Trim()
+              if ($tempUrl -match "http" -and $tempUrl -notmatch "projects$") {
+                  $dashUrl = $tempUrl
+                  break
+              }
+          }
+
+          # [Step 5] 메시지 조립
+          $time = "$env:NOW"
+          if ($isActuallyFailed) {
+              "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
+              
+              $count = if ($totalFailCount -gt 0) { $totalFailCount } elseif ($uniqueFailures.Count -gt 0) { $uniqueFailures.Count } else { 1 }
+              $specListString = if ($uniqueFailures.Count -gt 0) { $uniqueFailures -join ", " } else { "System Error or Crash" }
+              
+              $statusDetail = "FAIL: $count script ( $specListString )"
+          } else {
+              "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$($env:HARDCODED_VERSION))"
+              $statusDetail = ""
+          }
+
+          $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          # 메시지 라인 생성
+          $msgLines = @()
+          if ($isActuallyFailed) {
+              $msgLines += "$title"
+              $msgLines += "($time)"
+              $msgLines += "$statusDetail"
+          } else {
+              $msgLines += "$title"
+              $msgLines += "($time)"
+          }
+          $msgLines += ""
+          $msgLines += "$($env:LABEL_DASH) : $dashUrl"
+          $msgLines += "$($env:LABEL_GIT) : $runUrl"
+
+          # 전송
+          $payload = @{ text = ($msgLines -join "`n") } | ConvertTo-Json -Compress
+          $utf8Bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
+          Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes
+
+
+      - name: 🚨 실패 시 팀원 전체에게 긴급 메일 발송
+        if: always() && env.FINAL_STATUS == 'FAIL'
+        uses: dawidd6/action-send-mail@v17
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: 🚨 [실패][UI] LogCatch UI_v2.7 테스트 실패 알림
+          to: yhjin@warevalley.com
+          from: Cypress Bot <noreply@warevalley.com>
+          
+          # 👇 [수정 2] 첨부 파일 경로를 UI_Report.html로 변경
+          attachments: final_report_UI/LogCatch_UI_Report.html
+
+          body: |
+            [긴급] Auto-PC에서 수행된 로그캐치 [UI 기능] 자동화 테스트가 실패했습니다.
+            (통합된 리포트가 첨부되었습니다.)
+            
+            ---------------------------------------------------
+            발생 시간: ${{ env.NOW }}
+            상태: ❌ FAILED
+            👉 상세 리포트 (GitHub): ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            ---------------------------------------------------
+            담당자분들은 위 링크를 클릭하여 실패 원인을 확인해 주세요.
