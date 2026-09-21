@@ -115,7 +115,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
     
     //2.9.1.262_r35274  버전에서 '현황' 문구 ->  상태 문구로 변경됨.
-    cy.contains('button', '상태').click({ force: true });
+    cy.contains('button', '현황').click({ force: true });
     cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
     cy.get('body').type('{esc}');
     cy.wait(500);
