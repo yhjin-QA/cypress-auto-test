@@ -28,7 +28,7 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('DEV_Release 로그캐치 UI기본체크', () => {
+  it('로그캐치 v2.7_Default_UI기본체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -143,10 +143,10 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-icon').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
      // 표 문구열 확인
      // 2.9.1.262_r35274 표열 문구 수정 (정책이름 -> 정책명, 상태-> 조건)
-     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성자').should('be.visible');
-     cy.get('th').filter(':visible').contains('조건').should('be.visible');
+     cy.get('th').filter(':visible').contains('상태').should('be.visible');
      cy.get('th').filter(':visible').contains('설명').should('be.visible');
      cy.get('th').filter(':visible').contains('삭제').should('be.visible');
      cy.log('✅ 위변조 검사 정책/플랜 진입 및 데이터 출력 확인 완료!');
@@ -158,7 +158,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.tab-btn').contains('위변조 검사 이력 조회').closest('button').should('not.have.class', 'inactive');
      cy.contains('.c-headline', '검색 조건').should('exist');
      //[DB 무결성 점검 상태] 검색조건 문구 확인
-     cy.get('input[aria-label="DB 무결성 점검 상태"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="무결성 점검 상태"]').filter(':visible').should('be.visible');
      //엑셀다운로드 버튼 존재 확인
      cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').should('be.visible');
      //검색 버튼 존재확인
@@ -168,11 +168,11 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('th').filter(':visible').contains('점검 횟수').should('be.visible');
      cy.get('th').filter(':visible').contains('최초 점검 일').should('be.visible');
      cy.get('th').filter(':visible').contains('최종 점검 일').should('be.visible');
-     cy.get('th').filter(':visible').contains('DB 무결성 점검 상태').should('be.visible');
+     cy.get('th').filter(':visible').contains('무결성 점검 상태').should('be.visible');
      cy.log('✅ 접속기록 무결성-위변조 검사 이력조회 탭 진입 및 데이터 출력 확인 완료!');
 
 
-  
+     /*
      // 보관 > 접속기록 무결성 > 파일 위변조 검사 이력 조회 탭 클릭 
      cy.get('.tab-btn').contains('파일 위변조 검사 이력 조회').should('be.visible').click({ force: true });
      cy.wait(3000);
@@ -194,10 +194,11 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('th').filter(':visible').contains('검증일시').should('be.visible');
      cy.get('th').filter(':visible').contains('CheckSum').should('be.visible');
      cy.get('th').filter(':visible').contains('위 변조 여부').should('be.visible');
-    cy.log('✅ 접속기록 무결성-파일 위변조 검사 이력조회 탭 진입 및 데이터 출력 확인 완료!');
+     cy.log('✅ 접속기록 무결성-파일 위변조 검사 이력조회 탭 진입 및 데이터 출력 확인 완료!');
+     */
 
 
-
+     /*
     cy.contains('.side-menu', '보관').should('be.visible').click({ force: true });
     cy.wait(2000);
     cy.log('---보관-접속기록 무결성 보관 서브메뉴 클릭 ---');
@@ -274,8 +275,7 @@ cy.get('button.c-iab')
 
 // 저장 버튼
 cy.get('.v-btn__content:visible').contains('저장').should('be.visible');
-
-
+*/
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================

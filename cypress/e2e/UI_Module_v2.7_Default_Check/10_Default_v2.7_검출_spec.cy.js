@@ -33,7 +33,7 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('로그캐치 UI기본체크', () => {
+  it('로그캐치 v2.7_Default_UI기본체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -130,7 +130,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.contains('.c-headline', '전처리 파일 구분 설정').should('exist');
        //전처리 파일 구분 설정 문구 확인
        //2.9.1.262_r35274 문구 수정 정책이름 -> 정책명
-       cy.get('input[aria-label="정책명"]').filter(':visible').should('be.visible');
+       cy.get('input[aria-label="정책 이름"]').filter(':visible').should('be.visible');
        cy.get('input[aria-label="기본 확장자"]').filter(':visible').should('be.visible');
 
 
@@ -188,7 +188,7 @@ describe('로그캐치 사이트 테스트', () => {
         // IP문구 중복으로 구분처리 
         cy.get('th').filter(':visible').filter(':contains("IP")').eq(1).should('be.visible');
         //2.9.1.262_r35274 문구 수정 "상태" -> "조건"
-        cy.get('th').filter(':visible').contains('조건').should('be.visible');
+        cy.get('th').filter(':visible').contains('상태').should('be.visible');
         cy.log('✅ 검출 - 필터 - 전처리 필터링 정책 - [사용자 IP 제외] 탭 클릭 및 출력 확인 완료');
 
 
@@ -227,7 +227,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.get('th').filter(':visible').contains('관리자').should('be.visible');
         cy.get('th').filter(':visible').contains('IP').should('be.visible');
          //2.9.1.262_r35274 문구 수정 "상태" -> "조건"
-        cy.get('th').filter(':visible').contains('조건').should('be.visible');
+        cy.get('th').filter(':visible').contains('상태').should('be.visible');
         cy.log('✅ 검출 - 필터 - 전처리 필터링 정책 - [화면 (URI) 제외] 탭 클릭 및 출력 확인 완료');
 
 
@@ -267,7 +267,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.get('th').filter(':visible').contains('관리자').should('be.visible');
         cy.get('th').filter(':visible').contains('IP').should('be.visible');
         //2.9.1.262_r35274 문구 수정 "상태" -> "조건"
-        cy.get('th').filter(':visible').contains('조건').should('be.visible');
+        cy.get('th').filter(':visible').contains('상태').should('be.visible');
         cy.log('✅ 검출 - 필터 - 전처리 필터링 정책 - [특정 SQL 제외] 탭 클릭 및 출력 확인 완료');
         
 
@@ -284,7 +284,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.contains('.c-headline', 'Content-Type 제외').should('exist');
         // 화면 URI란 확인
         // 2.9.1.262_r35274  하이픈 제거 됨.  Content-Type -> Content Type
-        cy.get('input[aria-label="Content Type"]').filter(':visible').should('be.visible');
+        cy.get('input[aria-label="Content-Type"]').filter(':visible').should('be.visible');
         //설명 확인
         cy.get('input[aria-label="설명"]').filter(':visible').should('be.visible');
         //업무시스템 할당 확인
@@ -309,9 +309,10 @@ describe('로그캐치 사이트 테스트', () => {
         cy.get('th').filter(':visible').contains('관리자').should('be.visible');
         cy.get('th').filter(':visible').contains('IP').should('be.visible');
         //2.9.1.262_r35274 문구 수정 "상태" -> "조건"
-        cy.get('th').filter(':visible').contains('조건').should('be.visible');
+        cy.get('th').filter(':visible').contains('상태').should('be.visible');
         cy.log('✅ 검출 - 필터 - 전처리 필터링 정책 - [Content-Type 제외] 탭 클릭 및 출력 확인 완료');
         cy.log('✅ 검출 - 필터 - [전처리 필터링 정책] 출력 확인 완료! ');
+         cy.wait(2000);
 
 
         // 검출탭 > 필터 > 전처리 사용자 계정 탐색 설정 탭 클릭 
@@ -326,7 +327,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.contains('.c-headline', '전처리 사용자 계정 탐색 설정').should('exist');
         //전처리 사용자 계정 탐색 설정 문구 확인
         // 2.9.1.262_r35274  정책 이름 -> 정책명 문구수정
-        cy.get('input[aria-label="정책명"]').filter(':visible').should('be.visible');
+        cy.get('input[aria-label="정책 이름"]').filter(':visible').should('be.visible');
         cy.get('span[title="Request Header Cookie"]').should('be.visible');
         cy.get('input[aria-label="key"]').filter(':visible').should('be.visible');
         cy.get('input[aria-label="Log Tracer"]').filter(':visible').should('be.visible');
@@ -347,7 +348,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.contains('.c-headline', '전처리 디코더 설정').should('exist');
         //전처리 사용자 계정 탐색 설정 문구 확인
         //2.9.1.262_r35274 정책이름 -> 정책명 문구 수정
-        cy.get('input[aria-label="정책명"]').filter(':visible').should('be.visible');
+        cy.get('input[aria-label="정책 이름"]').filter(':visible').should('be.visible');
         cy.get('span[title="URL Decoder"]').should('be.visible');
         cy.get('span[title="Response Body(UTF-8)"]').should('be.visible');
         cy.get('input[aria-label="Log Tracer"]').filter(':visible').should('be.visible');
@@ -355,6 +356,8 @@ describe('로그캐치 사이트 테스트', () => {
         cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
         cy.log('✅ 검출 - 필터 - [전처리 디코더 설정] 화면 출력 확인 완료 ');
 
+
+        /*
         // v3.0.4.0_R34865 추가 메뉴
         // 검출탭 > 필터 > 전처리 인코더 설정 탭 클릭 
         cy.log('--- 전처리 인코더 설정 탭 클릭 ---');
@@ -368,7 +371,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.contains('.c-headline', '설정').should('exist');
         //전처리 사용자 계정 탐색 설정 문구 확인
         //2.9.1.262_r35274 정책이름 -> 정책명 문구수정
-        cy.get('input[aria-label="정책명"]').filter(':visible').should('be.visible');
+        cy.get('input[aria-label="정책 이름"]').filter(':visible').should('be.visible');
         cy.get('input[aria-label="Log Tracer"]').should('be.visible').and('have.attr', 'type', 'text').and('have.attr', 'role', 'combobox');
         cy.get('input[aria-label="URI"]').should('be.visible').and('be.enabled').and('have.attr', 'type', 'text').and('have.attr', 'role', 'combobox');
         cy.get('input[aria-label="Charset ( 대소문자 및 빈공간 유의 )"]').should('be.visible').and('have.attr', 'type', 'text');
@@ -408,7 +411,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.contains('th.column.sortable', '식별자 패턴').should('be.visible').and('have.class', 'asc'); 
         
         cy.log('✅ 검출 - 필터 - [식별자 패턴관리] 화면 출력 확인 완료 ');
-
+        
 
 
        ////////////////////////////////////////
@@ -856,7 +859,7 @@ cy.get('body').then(($body) => {
     
     cy.log('✅ 검출 - 행위유형 관리 - 정책 관리 UI 검증완료');
 
-
+*/
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================

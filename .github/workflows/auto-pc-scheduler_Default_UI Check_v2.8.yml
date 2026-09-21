@@ -1,4 +1,4 @@
-name: Auto-PC Work (Daily_UI_v2.7)
+name: Auto-PC Work (Daily_Default_UI_v2.8)
 
 env:
   PRODUCT_NAME: "로그캐치"
@@ -9,7 +9,7 @@ on:
   #push:
   # branches: [ "master" ]
   #schedule:
-  #  - cron: '5 4 * * *'
+  #  - cron: '5 3 * * *'
   workflow_dispatch:
 
 jobs:
@@ -166,7 +166,7 @@ jobs:
           # 👇 [필수] 'mochawesome'을 명시적으로 설치해야 합니다.
           npm install cy2 mochawesome mochawesome-merge mochawesome-report-generator --save-dev
         
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_v2.7_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI-v2.7 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_v2.8_Default_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI-v2.8 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
           Get-Content cypress.log
 
            # ↓ 추가
@@ -363,9 +363,9 @@ jobs:
           WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
           JOB_STATUS: ${{ needs.cypress-run.result }}
           # 👇 원하시는 버전명을 여기에 하드코딩 하세요!
-          HARDCODED_VERSION: "3.0.0.250901" 
-          MSG_SUCCESS: "*[성공]*[Auto-PC][v2.7][.91]"
-          MSG_FAIL: "*[실패]*[Auto-PC][v2.7[.91]"
+          HARDCODED_VERSION: "2.8.0.139_r35236" 
+          MSG_SUCCESS: "*[성공]*[Auto-PC][.81]"
+          MSG_FAIL: "*[실패]*[Auto-PC][.81]"
           MSG_TITLE: "확인결과"
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
@@ -486,7 +486,7 @@ jobs:
           secure: true
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: 🚨 [실패][UI] LogCatch UI_v2.7 테스트 실패 알림
+          subject: 🚨 [실패][UI] LogCatch UI_v2.8 테스트 실패 알림
           to: yhjin@warevalley.com
           from: Cypress Bot <noreply@warevalley.com>
           

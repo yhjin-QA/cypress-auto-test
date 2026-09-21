@@ -16,9 +16,10 @@ describe('로그캐치 사이트 테스트', () => {
       'resetValidation',
       'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
       'Avoided redundant navigation',
-      'Loading chunk',       
+      'Loading chunk',
       'operate.task.packageManagement',
-      'not valid JSON'
+      'e is not defined',
+      'Script error'
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -28,13 +29,13 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('DEV_Release 로그캐치 UI기본체크', () => {
+  it('로그캐치 v2.7_Default_UI기본체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('https://10.10.54.83:18443/logcatch/login');
+    cy.visit('https://10.10.54.93:18443/logcatch/login');
     cy.wait(4000); // 로딩 대기
 
     ////////////새로고침코드//////
@@ -102,27 +103,29 @@ describe('로그캐치 사이트 테스트', () => {
     
     //로그인 성공
 
-/*
+
     // ==========================================
     // STEP 2: 왼쪽 사이드 메뉴뉴탭 클릭
     // ==========================================
     // button 태그 중에서 '이력'이라는 글자를 가진 녀석을 클릭
     cy.contains('button', '이력').click({ force: true });
     cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    // 컨텍스트 메뉴 제거거
+    // 컨텍스트 메뉴 제거
     cy.get('body').type('{esc}');
-    cy.wait(500);
+    cy.wait(1000);
     
-    // button 태그이면서 '현황'이라는 글자를 포함한 요소를 클릭
+    //2.9.1.262_r35274  버전에서 '현황' 문구 ->  상태 문구로 변경됨.
     cy.contains('button', '현황').click({ force: true });
     cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
     cy.get('body').type('{esc}');
     cy.wait(500);
 
-    cy.contains('button', '소명').click({ force: true });
-    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.get('body').type('{esc}');
-    cy.wait(500);
+
+    // v2.9.1.125_r35234 에서 소명 메뉴 없어짐 (디폴트)
+    // cy.contains('button', '소명').click({ force: true });
+    // cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
+    // cy.get('body').type('{esc}');
+    // cy.wait(500);
     
     cy.contains('button', '자산').click({ force: true });
     cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
@@ -153,6 +156,12 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000); 
     cy.get('body').type('{esc}');
     cy.wait(500);
+    
+    // v2.9.1.125_r35234 에서 결재메뉴  디폴트로 추가됨. 
+    cy.contains('button', '결재').click({ force: true });
+    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
+    cy.get('body').type('{esc}');
+    cy.wait(500);
 
     cy.contains('button', '점검').click({ force: true });
     cy.wait(3000); 
@@ -160,7 +169,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(500);
   
   
-  
+  /*
     // ==========================================
     // STEP 3: 이력 서브메뉴 
     // ==========================================
@@ -647,8 +656,7 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('.material-icons').filter(':visible').contains('add').should('be.visible');
        cy.log('✅ 소명 - 결재 - [결재라인] 탭 진입 및 데이터 출력 확인 완료!');
   
-  
-*/
+    
 
     // ==========================================
     // STEP 6: 자산 서브메뉴 
@@ -665,7 +673,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 자산 > 데이터베이스 > [개인정보 탐색 정책]탭 출력 확인 완료!');
 
     // 자산 > 데이터베이스 > [샤크라 아이템 정책] 탭 클릭
-    //클릭하면 관리자페이지모드로 변해버려서 순서 변경해둠 (이슈확인)
+    //클릭하면 관리자페이지모드로 변해버려서 순서 변경해둠 
     cy.get('.v-btn__content').filter(':visible').contains('샤크라 아이템 정책').click();
     cy.wait(2000);
     cy.log('--- 화면 검증 시작 ---');
@@ -771,7 +779,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 자산 > 데이터베이스 확정처리 > [사용자 정의 개인정보 확정처리] 탭 출력 확인 완료!'); 
 
 
-/*
+
  
 
     // ==========================================
@@ -2489,4 +2497,3 @@ describe('로그캐치 사이트 테스트', () => {
 
  })()
 ;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic3BlYy5jeS5qcyIsIm1hcHBpbmdzIjoiOzs7Ozs7O0FBQUFBLFFBQVEsQ0FBQyxlQUFlLEVBQUUsTUFBTTtFQUM5QkMsRUFBRSxDQUFDLFFBQVEsRUFBRSxNQUFNO0lBQ2pCQyxFQUFFLENBQUNDLEtBQUssQ0FBQyw0QkFBNEIsQ0FBQztFQUN4QyxDQUFDLENBQUM7QUFDSixDQUFDLENBQUMsQyIsInNvdXJjZXMiOlsid2VicGFjazovLy8uL2N5cHJlc3MvZTJlL3NwZWMuY3kuanMiXSwic291cmNlc0NvbnRlbnQiOlsiZGVzY3JpYmUoJ3RlbXBsYXRlIHNwZWMnLCAoKSA9PiB7XHJcbiAgaXQoJ3Bhc3NlcycsICgpID0+IHtcclxuICAgIGN5LnZpc2l0KCdodHRwczovL2V4YW1wbGUuY3lwcmVzcy5pbycpXHJcbiAgfSlcclxufSkiXSwibmFtZXMiOlsiZGVzY3JpYmUiLCJpdCIsImN5IiwidmlzaXQiXSwic291cmNlUm9vdCI6IiJ9

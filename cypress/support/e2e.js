@@ -25,3 +25,7 @@ import './commands'
 //마우스 오버(mouseover 이벤트 )
 import 'cypress-real-events/support';
 
+// 에러 예외처리
+import './commands';
+import './ignored-errors';
+

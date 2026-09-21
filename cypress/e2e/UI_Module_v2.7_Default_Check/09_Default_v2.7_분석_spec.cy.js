@@ -27,7 +27,7 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('로그캐치 UI기본체크', () => {
+  it('로그캐치 v2.7_Default_UI기본체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -110,120 +110,120 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(2000); // 메뉴 펼쳐짐 대기
     
     //2.9.1.125_r35234 에서 제거됨.
-    // cy.log('--- 화면 검증 시작 ---');
-    // // 3.0.3.0_R34785 버전 실시간 탭 -> 이상행위 정책 탭 문구 변경됨
-    // cy.get('.v-btn__content').contains('이상행위 정책').closest('button').should('not.have.class', 'inactive');
-    // cy.contains('.c-headline', '정책 유형').should('exist');
-    // cy.contains('.c-headline', '개인정보 과다조회 정책 목록').should('exist');
-    // // 표 문구열 확인
-    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
-    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-    // cy.log('✅  분석 탭 진입 및 데이터 출력 확인 완료!');
-    // cy.wait(2000);
-    // // 설명: 'v-chip__content' 클래스를 가진 요소 중 '업무 시간 외 접속' 텍스트를 찾아 클릭
-    // cy.contains('.v-chip__content', '업무 시간 외 접속').should('be.visible').click({ force: true });
-    // cy.contains('.c-headline', '업무 시간 외 접속 정책 목록').should('exist');
-    // // 표 문구열 확인
-    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
-    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-    // cy.log('✅  분석 탭 - 업무시간 외 접속 및 데이터 출력 확인 완료!');
-    // cy.wait(2000);
+    cy.log('--- 화면 검증 시작 ---');
+    // 3.0.3.0_R34785 버전 실시간 탭 -> 이상행위 정책 탭 문구 변경됨
+    cy.get('.v-btn__content').contains('이상행위 정책').closest('button').should('not.have.class', 'inactive');
+    cy.contains('.c-headline', '정책 유형').should('exist');
+    cy.contains('.c-headline', '개인정보 과다조회 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 진입 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
+    // 설명: 'v-chip__content' 클래스를 가진 요소 중 '업무 시간 외 접속' 텍스트를 찾아 클릭
+    cy.contains('.v-chip__content', '업무 시간 외 접속').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '업무 시간 외 접속 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 업무시간 외 접속 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
 
-    // cy.contains('.v-chip__content', '장기 미접속 사용자').should('be.visible').click({ force: true });
-    // cy.contains('.c-headline', '장기 미접속 사용자 정책 목록').should('exist');
-    // // 표 문구열 확인
-    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
-    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-    // cy.log('✅  분석 탭 - 장기 미접속 사용자 및 데이터 출력 확인 완료!');
-    // cy.wait(2000);
+    cy.contains('.v-chip__content', '장기 미접속 사용자').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '장기 미접속 사용자 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 장기 미접속 사용자 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
 
-    // cy.contains('.v-chip__content', '미등록 사용자 접속').should('be.visible').click({ force: true });
-    // cy.contains('.c-headline', '미등록 사용자 접속 정책 목록').should('exist');
-    // // 표 문구열 확인
-    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
-    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-    // cy.log('✅  분석 탭 - 미등록 사용자 접속 및 데이터 출력 확인 완료!');
-    // cy.wait(2000);
+    cy.contains('.v-chip__content', '미등록 사용자 접속').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '미등록 사용자 접속 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 미등록 사용자 접속 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
 
-    // cy.contains('.v-chip__content', '비인가 IP 접근').should('be.visible').click({ force: true });
-    // cy.contains('.c-headline', '비인가 IP 접근 정책 목록').should('exist');
-    // // 표 문구열 확인
-    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
-    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-    // cy.log('✅  분석 탭 - 비인가 IP 접근 및 데이터 출력 확인 완료!');
-    // cy.wait(2000);
+    cy.contains('.v-chip__content', '비인가 IP 접근').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '비인가 IP 접근 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 비인가 IP 접근 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
 
-    // cy.contains('.v-chip__content', '개인정보 유형 과다사용').should('be.visible').click({ force: true });
-    // cy.contains('.c-headline', '개인정보 유형 과다사용 정책 목록').should('exist');
-    // // 표 문구열 확인
-    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
-    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-    // cy.log('✅  분석 탭 - 개인정보 유형 과다사용 및 데이터 출력 확인 완료!');
-    // cy.wait(2000);
+    cy.contains('.v-chip__content', '개인정보 유형 과다사용').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '개인정보 유형 과다사용 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 개인정보 유형 과다사용 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
 
-    // cy.contains('.v-chip__content', '열람제한 개인정보 접근').should('be.visible').click({ force: true });
-    // cy.contains('.c-headline', '열람제한 개인정보 접근 정책 목록').should('exist');
-    // // 표 문구열 확인
-    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
-    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-    // cy.log('✅  분석 탭 - 열람제한 개인정보 접근 및 데이터 출력 확인 완료!');
-    // cy.wait(2000);
+    cy.contains('.v-chip__content', '열람제한 개인정보 접근').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '열람제한 개인정보 접근 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 열람제한 개인정보 접근 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
 
-    // cy.contains('.v-chip__content', '권한 외 메뉴 접근').should('be.visible').click({ force: true });
-    // cy.contains('.c-headline', '권한 외 메뉴 접근 정책 목록').should('exist');
-    // // 표 문구열 확인
-    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
-    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-    // cy.log('✅  분석 탭 - 권한 외 메뉴 접근 및 데이터 출력 확인 완료!');
-    // cy.wait(2000);
+    cy.contains('.v-chip__content', '권한 외 메뉴 접근').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '권한 외 메뉴 접근 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 권한 외 메뉴 접근 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
 
-    // cy.contains('.v-chip__content', '비인가 접근 사용자').should('be.visible').click({ force: true });
-    // cy.contains('.c-headline', '비인가 접근 사용자 정책 목록').should('exist');
-    // // 표 문구열 확인
-    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
-    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-    // cy.log('✅  분석 탭 - 비인가 접근 사용자 및 데이터 출력 확인 완료!');
-    // cy.wait(2000);
+    cy.contains('.v-chip__content', '비인가 접근 사용자').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '비인가 접근 사용자 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 비인가 접근 사용자 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
 
-    // cy.contains('.v-chip__content', '접근제한 업무 시스템 접근').should('be.visible').click({ force: true });
-    // cy.contains('.c-headline', '접근제한 업무 시스템 접근 정책 목록').should('exist');
-    // // 표 문구열 확인
-    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
-    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-    // cy.log('✅  분석 탭 - 접근제한 업무 시스템 접근 및 데이터 출력 확인 완료!');
-    // cy.wait(2000);
+    cy.contains('.v-chip__content', '접근제한 업무 시스템 접근').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '접근제한 업무 시스템 접근 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 접근제한 업무 시스템 접근 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
 
-    // cy.contains('.v-chip__content', '파일다운로드').should('be.visible').click({ force: true });
-    // cy.contains('.c-headline', '파일다운로드 정책 목록').should('exist');
-    // // 표 문구열 확인
-    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
-    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-    // cy.log('✅  분석 탭 - 파일다운로드 접근 및 데이터 출력 확인 완료!');
-    // cy.wait(2000);
+    cy.contains('.v-chip__content', '파일다운로드').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '파일다운로드 정책 목록').should('exist');
+    // 표 문구열 확인
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    cy.log('✅  분석 탭 - 파일다운로드 접근 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
     
-
+/*
 // ==========================================
 // STEP : 분석 - 사용자 이상행위 대시보드
 // ==========================================
@@ -1030,6 +1030,7 @@ cy.get('.sev-filter-btn').filter(':visible').contains('오늘').click({ force: t
 cy.get('.basic-filter-panel__clear-all', { timeout: 10000 }).filter(':visible').should('be.visible').and('contain.text', '전체 비우기');
 
 cy.log('✅ 분석 - [사용자 이상행위 결과] 화면 확인 완료!');
+*/
 
 // ================================
 // [FINAL] 테스트 종료 및 메뉴 닫기

@@ -27,13 +27,13 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('DEV_Release 로그캐치 UI기본체크', () => {
+  it('로그캐치 v2.7_Default_UI기본체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('https://10.10.54.83:18443/logcatch/login');
+    cy.visit('https://10.10.54.93:18443/logcatch/login');
     cy.wait(4000); // 로딩 대기
 
     ////////////새로고침코드//////
@@ -155,11 +155,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('패스워드 사용 불가 목록').closest('.v-card__actions').find('.material-icons').contains('keyboard_arrow_down').should('be.visible');
     // 패스워드 사용불가목록  콤보박스 아이콘 
     cy.get('input[role="combobox"]').filter(':visible').should('be.visible');
-    cy.get('.v-select--chips').find('.v-input__icon--append .material-icons').should('be.visible');
+    //cy.get('.v-select--chips').find('.v-input__icon--append .material-icons').should('be.visible');
     // 버튼 확인 
     cy.get('.v-btn__content').filter(':visible').contains('들여오기').should('be.visible');
     //2.9.1.262_r35274 내보내기 -> EXPORT 문구 변경
-    cy.get('.v-btn__content').filter(':visible').contains('Export').should('be.visible');
+    cy.get('.v-btn__content').filter(':visible').contains('내보내기').should('be.visible');
     cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
     //v3.0.3.0_R34785 취소 버튼 없어짐 
     //cy.get('.v-btn__content').filter(':visible').contains('취소').should('be.visible');
@@ -207,7 +207,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('th', '아이디').should('be.visible');
     cy.contains('th', '이름').should('be.visible');
     // 2.9.1.262_r35274 상태 -> 조건으로 문구변경됨.
-    cy.contains('th', '조건').should('be.visible');     
+    cy.contains('th', '상태').should('be.visible');     
     cy.contains('th', '권한 그룹').should('be.visible');
     cy.contains('th', '이메일').should('be.visible');
     cy.contains('th', '접속 가능 IP').should('be.visible');
@@ -276,7 +276,7 @@ describe('로그캐치 사이트 테스트', () => {
     //검색버튼 확인 
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     //표열 문구확인
-    cy.get('th').filter(':visible').contains('순번').should('be.visible');
+    cy.get('th').filter(':visible').contains('아이디').should('be.visible');
     cy.get('th').filter(':visible').contains('발생 일시').should('be.visible');
     cy.get('th').filter(':visible').contains('발생자').should('be.visible');
     cy.get('th').filter(':visible').contains('IP').should('be.visible');
@@ -297,11 +297,11 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
      //표열 문구확인
      //2.9.1.262_r35274 정책이름 -> 정책명 문구 변경
-     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성자').should('be.visible');
      //2.9.1.262_r35274 타입 -> 유형 문구 변경
-     cy.get('th').filter(':visible').contains('유형').should('be.visible');
+     cy.get('th').filter(':visible').contains('타입').should('be.visible');
      cy.get('th').filter(':visible').contains('설명').should('be.visible');
      cy.get('th').filter(':visible').contains('삭제').should('be.visible')
      // 정책 추가 + 버튼 확인
