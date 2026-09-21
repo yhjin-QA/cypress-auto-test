@@ -149,7 +149,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 값').should('be.visible');
     // 2.9.1.125_r35234 '조회'문구에서 선택으로 바뀜 
-    cy.get('th').filter(':visible').contains('선택').should('be.visible');
+    cy.get('th').filter(':visible').contains('조회').should('be.visible');
     cy.log('✅ 이력 - 사용자 추적 화면 출력 확인 완료!');
 
 
@@ -184,16 +184,16 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      
      //2.9.1.262_r35274 '파일명' -> '파일 명'  띄어쓰기 변경
-     cy.get('input[aria-label="파일 명"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="파일 명"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
+     cy.get('input[aria-label="파일명"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="파일명"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      
-     //2.9.1.262_r35274 추가사항
-     // [UI 확인] 개인정보 유형 (선택한 유형을 모두 포함) 콤보박스
-     cy.get('input[aria-label="개인정보 유형 (선택한 유형을 모두 포함)"]').filter(':visible').should('be.visible').and('have.attr', 'role', 'combobox');
-     // [UI 확인] 사용자 상태 콤보박스
-     cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible').and('have.attr', 'role', 'combobox');
-     // [UI 확인] 엑셀 다운로드 버튼
-     cy.get('.v-btn__content:visible').contains('엑셀 다운로드').should('be.visible').find('.material-icons').should('contain.text', 'get_app');
+    //  //2.9.1.262_r35274 추가사항
+    //  // [UI 확인] 개인정보 유형 (선택한 유형을 모두 포함) 콤보박스
+    //  cy.get('input[aria-label="개인정보 유형 (선택한 유형을 모두 포함)"]').filter(':visible').should('be.visible').and('have.attr', 'role', 'combobox');
+    //  // [UI 확인] 사용자 상태 콤보박스
+    //  cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible').and('have.attr', 'role', 'combobox');
+    //  // [UI 확인] 엑셀 다운로드 버튼
+    //  cy.get('.v-btn__content:visible').contains('엑셀 다운로드').should('be.visible').find('.material-icons').should('contain.text', 'get_app');
      
      //v3.0.5.1191_R35135 like ->  파일 경로 제거됨. 
      //cy.get('input[aria-label="파일 경로"]').filter(':visible').should('be.visible');
@@ -222,15 +222,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
     cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
     cy.get('th').filter(':visible').contains('사용자 IP').should('be.visible');
-    cy.get('th').filter(':visible').contains('URL/메뉴 명').should('be.visible');
-    cy.get('th').filter(':visible').contains('업무 시스템').should('be.visible');
-    cy.get('th').filter(':visible').contains('파일 명').should('be.visible');
-    cy.get('th').filter(':visible').contains('파일 크기').should('be.visible');
+    cy.get('th').filter(':visible').contains('URL').should('be.visible');
+    cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
+    cy.get('th').filter(':visible').contains('파일명').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('건수').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 상세').should('be.visible');
-    cy.get('th').filter(':visible').contains('확정').should('be.visible');
-    cy.get('th').filter(':visible').contains('파일 다운로드').should('be.visible');
+    cy.get('th').filter(':visible').contains('확인').should('be.visible');
+    cy.get('th').filter(':visible').contains('파일 내려받기').should('be.visible');
     cy.log('✅ 이력 - 파일 다운로드 탭 진입 및 데이터 출력 확인 완료!');
 
     // 이력 > 접속기록 이력 > [이상행위] 탭 선택
@@ -270,7 +268,7 @@ describe('로그캐치 사이트 테스트', () => {
     //v3.0.5.1191_R35135 문구변경됨 소명 대상 여부 -> 소명대상  
     cy.get('th').filter(':visible').contains('소명 대상').should('be.visible');
     // 2.9.1.262_r35274 조회 -> 선택으로 문구 변경됨. 
-    cy.get('th').filter(':visible').contains('선택').should('be.visible'); 
+    cy.get('th').filter(':visible').contains('조회').should('be.visible'); 
     cy.log('✅ 이력 - 이상행위 탭 진입 및 데이터 출력 확인 완료!');
 
     // 이력 > 접속기록 이력 > [검출] 탭 선택

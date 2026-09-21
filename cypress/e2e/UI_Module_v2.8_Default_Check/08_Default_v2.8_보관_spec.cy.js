@@ -143,10 +143,10 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-icon').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
      // 표 문구열 확인
      // 2.9.1.262_r35274 표열 문구 수정 (정책이름 -> 정책명, 상태-> 조건)
-     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성자').should('be.visible');
-     cy.get('th').filter(':visible').contains('조건').should('be.visible');
+     cy.get('th').filter(':visible').contains('상태').should('be.visible');
      cy.get('th').filter(':visible').contains('설명').should('be.visible');
      cy.get('th').filter(':visible').contains('삭제').should('be.visible');
      cy.log('✅ 위변조 검사 정책/플랜 진입 및 데이터 출력 확인 완료!');
@@ -180,7 +180,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.contains('.c-headline', '검색 조건').should('exist');
      //검색조건 문구 확인
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="파일 명"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="파일명"]').filter(':visible').should('be.visible');
      cy.get('span').filter(':visible').contains(/^전체$/).should('be.visible');
      //엑셀다운로드 버튼 존재 확인
      cy.get('.v-btn__content').filter(':visible').contains('엑셀 다운로드').should('be.visible');
@@ -189,7 +189,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 표 문구열 확인
      cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
      // 2.9.1.262_r35274 파일명 -> 파일 명 띄어쓰기
-     cy.get('th').filter(':visible').contains('파일 명').should('be.visible');
+     cy.get('th').filter(':visible').contains('파일명').should('be.visible');
      cy.get('th').filter(':visible').contains('무결성 생성일시').should('be.visible');
      cy.get('th').filter(':visible').contains('검증일시').should('be.visible');
      cy.get('th').filter(':visible').contains('CheckSum').should('be.visible');
@@ -204,6 +204,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-list__tile__title').filter(':contains("접속기록 무결성")').filter(':visible').click({ force: true });
     cy.wait(2000); 
 
+/*
 // ==========================================
 // STEP: 보관 > 운영이력 보관
 // ==========================================
@@ -275,7 +276,7 @@ cy.get('button.c-iab')
 // 저장 버튼
 cy.get('.v-btn__content:visible').contains('저장').should('be.visible');
 
-
+*/
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================

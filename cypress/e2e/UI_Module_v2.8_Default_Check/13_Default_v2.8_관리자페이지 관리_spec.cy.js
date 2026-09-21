@@ -183,7 +183,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('이름').should('be.visible');
     cy.get('th').filter(':visible').contains('그룹').should('be.visible');
     // 2.9.1.262_r35274  타입 -> 유형 문구수정
-    cy.get('th').filter(':visible').contains('유형').should('be.visible');
+    cy.get('th').filter(':visible').contains('타입').should('be.visible');
     cy.get('th').filter(':visible').contains('IP').should('be.visible');
     cy.log('✅ 관리 - 시스템 - [데이터베이스]탭 출력 확인 완료 ');
 
@@ -237,7 +237,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="접속기록 수집기"]').filter(':visible').should('be.visible');
      // 2.9.1.262_r35274 상태 -> 조건 문구 변경
-     cy.get('input[aria-label="조건"]').should('exist').and('be.visible');
+     cy.get('input[aria-label="상태"]').should('exist').and('be.visible');
      // 토글 문구 확인
      cy.get('label').filter(':visible').contains('라이선스 사용 여부').should('be.visible');
      // 검색 버튼 확인
@@ -245,7 +245,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 표 열 문구 확인 
      cy.get('th').filter(':visible').contains('이름').should('be.visible');
      // 2.9.1.262_r35274 상태 -> 조건 문구 변경
-     cy.get('th').filter(':visible').contains('조건').should('be.visible');
+     cy.get('th').filter(':visible').contains('상태').should('be.visible');
      cy.get('th').filter(':visible').contains('사용건수').should('be.visible');
      cy.get('th').filter(':visible').contains('라이선스 사용 여부').should('be.visible');
      cy.log('✅ 관리 - 시스템 - [접속기록 수집기- 통합조회]탭 출력 확인 완료 ');
@@ -278,7 +278,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('th').filter(':visible').contains('차단 날짜').should('be.visible');
      cy.get('th').filter(':visible').contains('마지막 접속 날짜').should('be.visible');
      // 2.9.1.262_r35274 띄어쓰기 
-     cy.get('th').filter(':visible').contains('업무 시스템').should('be.visible');
+     cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
      cy.get('th').filter(':visible').contains('로그 수집기').should('be.visible');
      cy.get('th').filter(':visible').contains('사용자 아이피').should('be.visible');
      cy.get('th').filter(':visible').contains('계정').should('be.visible');
@@ -338,7 +338,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="검색 조건"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="값"]').filter(':visible').should('be.visible');
      //2.9.1.262_r35274 상태 -> 조건으로 문구 변경
-     cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
      // 검색 버튼 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
      // v버튼 아이콘 존재확인
@@ -403,18 +403,18 @@ describe('로그캐치 사이트 테스트', () => {
     // 검색 조건 입력란 
     cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').should('be.visible');
     //2.9.1.262_r35274 상태 -> 조건 문구 변경
-    cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
+    cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
      // 검색 버튼 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 표 열 문구 확인 
     cy.get('th').filter(':visible').contains('파일 다운로드 그룹').should('be.visible');
     cy.get('th').filter(':visible').contains('제목').should('be.visible');
     // 2.9.1.262_r35274 띄워쓰기 
-    cy.get('th').filter(':visible').contains('파일 명').should('be.visible');
+    cy.get('th').filter(':visible').contains('파일명').should('be.visible');
     cy.get('th').filter(':visible').contains('시작 시간').should('be.visible');
     cy.get('th').filter(':visible').contains('종료 시간').should('be.visible');
     // 2.9.1.262_r35274 상태 -> 조건 문구 변경  
-    cy.get('th').filter(':visible').contains('조건').should('be.visible');
+    cy.get('th').filter(':visible').contains('상태').should('be.visible');
     cy.log('✅ 관리 - 내부 파일 다운로드 - [생성된 파일 목록 조회 / 다운로드]탭 출력 확인 완료 ');
 
 
@@ -448,7 +448,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 검색 조건 입력란 
     cy.get('input[aria-label="이름"]').filter(':visible').should('be.visible');
     // // 2.9.1.262_r35274 상태 -> 조건 문구 변경
-    cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
+    cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
     // 검색 버튼 확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 동기화 버튼 확인 
