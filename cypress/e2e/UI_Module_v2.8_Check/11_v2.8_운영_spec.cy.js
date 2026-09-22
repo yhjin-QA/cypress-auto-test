@@ -274,7 +274,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('@detailHeader').contains('날짜').should('be.visible');
     cy.get('@detailHeader').contains('이름').should('be.visible');
     // 2.9.1.262_r35274  상태 -> 조건 문구수정 
-    cy.get('@detailHeader').contains('조건').should('be.visible');
+    cy.get('@detailHeader').contains('상태').should('be.visible');
     cy.get('@detailHeader').contains('플랜 삭제 여부').should('be.visible');
 
     cy.log('✅ 운영 - 실행플랜 - [스케줄러] 출력 확인 완료 ');
