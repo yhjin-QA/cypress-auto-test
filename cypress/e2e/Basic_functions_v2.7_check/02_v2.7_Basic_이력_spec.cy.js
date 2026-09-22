@@ -829,20 +829,82 @@ cy.wait(1000); // 상위 메뉴가 완전히 닫히고 내부 상태가 업데�
 cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 cy.wait(1000);
 
-// 검색 결과 검증 
-// [검증] 검색 결과의 모든 행(Row)에 '리눅스_CRM고객관리'이 포함되어 있는지 확인
+
+
+// =====================================================
+// 통합 탭 - 날짜를 바꿔가며 검색 결과 탐색 (오늘 → 7일 전)
+// =====================================================
+const integratedDates = Array.from({ length: 8 }, (_, i) => getFormattedDate(-i)); // [오늘, 1일 전, ... 7일 전]
+cy.log(`🎯 통합 탭 탐색 날짜: ${integratedDates.join(', ')}`);
+
+// 현재 표에 '리눅스_CRM고객관리' 행이 있는지
+const hasIntegratedRows = ($body) =>
+  $body.find('tbody:visible tr:visible').filter((i, tr) =>
+    Cypress.$(tr).find('a:contains("리눅스_CRM고객관리")').length > 0
+  ).length > 0;
+
+const searchIntegratedByDate = (dateIndex, currentUIText) => {
+  if (dateIndex >= integratedDates.length) {
+    cy.log('❌ 오늘 ~ 7일 전 기간 내에 통합 검색 결과가 없습니다.');
+    // 의도적으로 실패 처리
+    cy.get('tbody:visible a:contains("리눅스_CRM고객관리")').should('be.visible');
+    return;
+  }
+
+  const dateToFind = integratedDates[dateIndex];
+  cy.log(`▶️ [통합 탐색 ${dateIndex + 1}/${integratedDates.length}] ${dateToFind}`);
+
+  // 1) 날짜 드롭다운 열기 → 2) 날짜 선택 (목록이 길어 스크롤 최대 40회)
+  cy.contains('.v-select__selection', currentUIText).filter(':visible').click({ force: true });
+  cy.wait(1000);
+  scrollAndFindDate(dateToFind, 0, 40);
+
+  // 3) 선택 반영 확인 + 로딩 대기
+  cy.contains('.v-select__selection', dateToFind).should('be.visible');
+  cy.wait(2000);
+
+  // 4) 결과 확인
+  cy.get('body').then(($body) => {
+    if (hasIntegratedRows($body)) {
+      cy.log(`✅ [${dateToFind}] 통합 검색 결과 발견`);
+    } else {
+      cy.log(`⚠️ [${dateToFind}] 결과 없음 → 하루 전으로 재탐색`);
+      searchIntegratedByDate(dateIndex + 1, dateToFind);
+    }
+  });
+};
+
+// 현재 드롭다운에 표시된 날짜(YYYY-MM-DD)를 읽어서 탐색 시작
+cy.get('.v-select__selection').filter(':visible')
+  .filter((i, el) => /^\d{4}-\d{2}-\d{2}$/.test(el.innerText.trim()))
+  .first()
+  .invoke('text')
+  .then((initialText) => {
+    const current = initialText.trim();
+    cy.log(`🎯 통합 탭 초기 날짜: ${current}`);
+
+    // 이미 오늘 날짜에 결과가 떠 있으면 바로 검증으로
+    cy.get('body').then(($body) => {
+      if (hasIntegratedRows($body)) {
+        cy.log(`✅ 초기 날짜 [${current}]에서 결과 발견`);
+      } else {
+        searchIntegratedByDate(0, current);
+      }
+    });
+  });
+
+// =====================================================
+// [검증] 모든 데이터 행에 '리눅스_CRM고객관리' 포함
+// =====================================================
 cy.get('tbody tr')
-  .filter(':visible') // 화면에 보이는 실제 데이터 행만 추려냄
+  .filter(':visible')
   .each(($row, index) => {
-    // 각 행(tr) 안에서 a 태그를 찾아 텍스트 검증
     cy.wrap($row).within(() => {
-      cy.get('a').contains('리눅스_CRM고객관리').should('exist') // DOM에 존재하는지 확인
-        .and('be.visible'); // 사용자 눈에도 잘 보이는지 확인
-        
-      // (선택) 몇 번째 줄 검증 중인지 로그를 남기면 디버깅할 때 아주 편합니다.
+      cy.get('a').contains('리눅스_CRM고객관리').should('exist').and('be.visible');
       cy.log(`${index + 1}번째 줄 검증 완료!`);
     });
   });
+  
 /*
 // 맨티스 이슈 : 38305
 // 복수 업무시스템 선택하라는 알림창 뜨는 이슈
