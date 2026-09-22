@@ -162,6 +162,25 @@ cardTitles.forEach((title) => {
 //   .filter(':visible')
 //   .should('have.length.at.least', 5);
 
+// 카드 제목 + 데이터 없음 상태 확인 (통계 테이블 생성 전/후 모두 허용)
+const emptyMsg = /조회 결과가 존재하지 않습니다|아직 통계 테이블이 생성되지 않았습니다/;
+// 텍스트로 "데이터 없음"을 확인할 수 없는 카드 (문구가 이미지/CSS로 렌더링됨)
+const noTextCards = ['IP주소별 개인정보 사용 TOP 10'];
+
+cardTitles.forEach((title) => {
+  cy.contains('.v-card__title', title)
+    .should('be.visible')
+    .parents('.widget_content')
+    .first({ timeout: 10000 })
+    .should(($el) => {
+      expect($el, title).to.be.visible;
+      if (!noTextCards.includes(title)) {
+        const text = $el.text().replace(/\s+/g, ' ');
+        expect(text, title).to.match(emptyMsg);
+      }
+    });
+});
+
 // [신규] "이상행위 유형별 현황" - ApexCharts 렌더링 + 데이터 없음 텍스트 확인
 cy.contains('.v-card__title', '이상행위 유형별 현황')
   .parents('.widget_content')
