@@ -136,7 +136,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(500);
 
     cy.contains('p', 'Data File Cleaner').should('be.visible');
-    cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '시작').should('be.visible');
+    cy.contains('p', 'Data File Cleaner').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
     cy.wait(500);
     
     cy.contains('p', 'Statistics').should('be.visible');
@@ -253,11 +253,11 @@ describe('로그캐치 사이트 테스트', () => {
     // 헤더(th) 안에 있는 체크박스 아이콘(check_box_outline_blank) 확인
     cy.get('th').find('.v-icon:contains("check_box_outline_blank")').should('exist');
     cy.get('th').filter(':visible').contains('플랜 이름').should('be.visible');
-    // 2.9.1.262_r35274  정책이름 -> 정책명 문구수정
-     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+    // 2.9.1.262_r35274  정책 이름 -> 정책명 문구수정
+     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('정책 유형').should('be.visible');
      // 2.9.1.262_r35274  상태 -> 조건 문구수정
-    cy.get('th').filter(':visible').contains('조건').should('be.visible');
+    cy.get('th').filter(':visible').contains('상태').should('be.visible');
     cy.get('th').filter(':visible').contains('작업 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('시작 시간').should('be.visible');
     cy.get('th').filter(':visible').contains('종료 시간').should('be.visible');
@@ -310,12 +310,12 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '정책 목록').should('exist');
      // 표 컬럼 확인
-    // 2.9.1.262_r35274  정책이름 -> 정책명 문구수정
-     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+    // 2.9.1.262_r35274  정책 이름 -> 정책명 문구수정
+     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('생성일').should('be.visible');
     cy.get('th').filter(':visible').contains('생성자').should('be.visible');
     // 2.9.1.262_r35274  상태 -> 조건 문구수정
-    cy.get('th').filter(':visible').contains('조건').should('be.visible');
+    cy.get('th').filter(':visible').contains('상태').should('be.visible');
     cy.get('th').filter(':visible').contains('설명').should('be.visible');
     cy.get('th').filter(':visible').contains('삭제').should('be.visible');
     // v버튼 아이콘 존재확인
@@ -333,11 +333,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.c-headline', '정책 목록').should('exist');
      // 표 컬럼 확인
      // 2.9.1.262_r35274  정책이름 -> 정책명 문구수정
-     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성자').should('be.visible');
      // 2.9.1.262_r35274  상태 -> 조건 문구수정
-     cy.get('th').filter(':visible').contains('조건').should('be.visible');
+     cy.get('th').filter(':visible').contains('상태').should('be.visible');
      cy.get('th').filter(':visible').contains('설명').should('be.visible');
      cy.get('th').filter(':visible').contains('삭제').should('be.visible');
      // v버튼 아이콘 존재확인
@@ -356,12 +356,12 @@ describe('로그캐치 사이트 테스트', () => {
      cy.log('--- 화면 검증 시작 ---');
      cy.contains('.c-headline', '정책 목록').should('exist');
      // 표 컬럼 확인
-     // 2.9.1.262_r35274  정책이름 -> 정책명 문구수정
-     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+     // 2.9.1.262_r35274  정책 이름 -> 정책명 문구수정
+     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성자').should('be.visible');
      // 2.9.1.262_r35274  상태 -> 조건 문구수정
-     cy.get('th').filter(':visible').contains('조건').should('be.visible');
+     cy.get('th').filter(':visible').contains('상태').should('be.visible');
      cy.get('th').filter(':visible').contains('설명').should('be.visible');
      cy.get('th').filter(':visible').contains('삭제').should('be.visible');
      // v버튼 아이콘 존재확인
@@ -387,12 +387,12 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '정책 목록').should('exist');
      // 표 컬럼 확인
-     ////2.9.1.262_r35274  정책이름 -> 정책명 문구 수정
-     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+     ////2.9.1.262_r35274  정책 이름 -> 정책명 문구 수정
+     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성자').should('be.visible');
      // 2.9.1.262_r35274  상태 -> 조건 문구수정
-     cy.get('th').filter(':visible').contains('조건').should('be.visible');
+     cy.get('th').filter(':visible').contains('상태').should('be.visible');
      cy.get('th').filter(':visible').contains('설명').should('be.visible');
      cy.get('th').filter(':visible').contains('삭제').should('be.visible');
      // v버튼 아이콘 존재확인
@@ -410,11 +410,11 @@ describe('로그캐치 사이트 테스트', () => {
      cy.contains('.c-headline', '정책 목록').should('exist');
      // 표 컬럼 확인
      // 2.9.1.262_r35274  정책이름 -> 정책명 문구수정
-     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성자').should('be.visible');
      // 2.9.1.262_r35274  상태 -> 조건 문구수정
-     cy.get('th').filter(':visible').contains('조건').should('be.visible');
+     cy.get('th').filter(':visible').contains('상태').should('be.visible');
      cy.get('th').filter(':visible').contains('설명').should('be.visible');
      cy.get('th').filter(':visible').contains('삭제').should('be.visible');
      // v버튼 아이콘 존재확인
@@ -431,12 +431,12 @@ describe('로그캐치 사이트 테스트', () => {
      cy.log('--- 화면 검증 시작 ---');
      cy.contains('.c-headline', '정책 목록').should('exist');
      // 표 컬럼 확인
-    // 2.9.1.262_r35274  정책이름 -> 정책명 문구수정
-     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+    // 2.9.1.262_r35274  정책 이름 -> 정책명 문구수정
+     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성자').should('be.visible');
      // 2.9.1.262_r35274  상태 -> 조건 문구수정
-     cy.get('th').filter(':visible').contains('조건').should('be.visible');
+     cy.get('th').filter(':visible').contains('상태').should('be.visible');
      cy.get('th').filter(':visible').contains('설명').should('be.visible');
      cy.get('th').filter(':visible').contains('삭제').should('be.visible');
      // v버튼 아이콘 존재확인
@@ -453,11 +453,11 @@ describe('로그캐치 사이트 테스트', () => {
      cy.contains('.c-headline', '정책 목록').should('exist');
      // 표 컬럼 확인
      // 2.9.1.262_r35274  정책이름 -> 정책명 문구수정
-     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+     cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성자').should('be.visible');
      // 2.9.1.262_r35274  상태 -> 조건 문구수정
-     cy.get('th').filter(':visible').contains('조건').should('be.visible');
+     cy.get('th').filter(':visible').contains('상태').should('be.visible');
      cy.get('th').filter(':visible').contains('설명').should('be.visible');
      cy.get('th').filter(':visible').contains('삭제').should('be.visible');
      // v버튼 아이콘 존재확인
