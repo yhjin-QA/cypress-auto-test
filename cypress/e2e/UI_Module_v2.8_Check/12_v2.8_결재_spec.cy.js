@@ -34,7 +34,7 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('DEV_Release 로그캐치 UI기본체크', () => {
+  it('로그캐치 v2.8 UI기본체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -135,15 +135,15 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('i.v-icon').filter(':visible').contains('add').should('be.visible');
 
     // 표 문구열 확인
-    cy.get('th').filter(':visible').contains('결재 유형').should('be.visible');
-    //2.9.1.262_r35274 정책이름 -> 정책명 문구수정
-    cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+    cy.get('th').filter(':visible').contains('유형').should('be.visible');
+    //2.9.1.262_r35274 정책 이름 -> 정책명 문구수정
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('설명').should('be.visible');
     cy.get('th').filter(':visible').contains('등록').should('be.visible');
     cy.get('th').filter(':visible').contains('수정').should('be.visible');
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
     //v2.9.1.125_r35234제거됨.
-    //cy.get('th').filter(':visible').contains('..').should('be.visible');
+    cy.get('th').filter(':visible').contains('..').should('be.visible');
     
     cy.log('✅ 결재 - 정책 - [결재선] 탭 진입 및 데이터 출력 확인 완료!');
 
@@ -182,7 +182,7 @@ cy.get('i.v-icon--link.material-icons').filter(':visible').contains('settings').
 
 // 신청자 콤보박스 + 드롭다운 아이콘
 // 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
-cy.get('input[aria-label="신청자"]').should('exist');
+cy.get('input[aria-label="신청인"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('arrow_drop_down').should('exist');
 
 // 로그인 아이디 입력 필드
@@ -198,7 +198,7 @@ cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visib
 cy.get('th').filter(':visible').contains('신청일').should('be.visible');
 cy.get('th').filter(':visible').contains('부서').should('be.visible');
 // 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
-cy.get('th').filter(':visible').contains('신청자').should('be.visible');
+cy.get('th').filter(':visible').contains('신청인').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 대상').should('be.visible');
 cy.get('th').filter(':visible').contains('제목').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 상태').should('be.visible');
@@ -232,7 +232,7 @@ cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visib
 cy.get('th').filter(':visible').contains('신청일').should('be.visible');
 cy.get('th').filter(':visible').contains('부서').should('be.visible');
 // 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
-cy.get('th').filter(':visible').contains('신청자').should('be.visible');
+cy.get('th').filter(':visible').contains('신청인').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 대상').should('be.visible');
 cy.get('th').filter(':visible').contains('제목').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 상태').should('be.visible');
@@ -257,7 +257,7 @@ cy.get('i.v-icon.material-icons').filter(':visible').contains('event').should('e
 cy.get('input[aria-label="부서"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('settings').should('exist');
 // 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
-cy.get('input[aria-label="신청자"]').should('exist');
+cy.get('input[aria-label="신청인"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('arrow_drop_down').should('exist');
 cy.get('input[aria-label="로그인 아이디"]').should('exist');
 cy.get('input[aria-label="결재 상태"]').should('exist');
@@ -267,7 +267,7 @@ cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visib
 cy.get('th').filter(':visible').contains('신청일').should('be.visible');
 cy.get('th').filter(':visible').contains('부서').should('be.visible');
 // 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
-cy.get('th').filter(':visible').contains('신청자').should('be.visible');
+cy.get('th').filter(':visible').contains('신청인').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 대상').should('be.visible');
 cy.get('th').filter(':visible').contains('제목').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 상태').should('be.visible');
@@ -292,7 +292,7 @@ cy.get('i.v-icon.material-icons').filter(':visible').contains('event').should('e
 cy.get('input[aria-label="부서"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('settings').should('exist');
 // 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
-cy.get('input[aria-label="신청자"]').should('exist');
+cy.get('input[aria-label="신청인"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('arrow_drop_down').should('exist');
 cy.get('input[aria-label="로그인 아이디"]').should('exist');
 cy.get('input[aria-label="결재 상태"]').should('exist');
@@ -302,7 +302,7 @@ cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visib
 cy.get('th').filter(':visible').contains('신청일').should('be.visible');
 cy.get('th').filter(':visible').contains('부서').should('be.visible');
 // 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
-cy.get('th').filter(':visible').contains('신청자').should('be.visible');
+cy.get('th').filter(':visible').contains('신청인').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 대상').should('be.visible');
 cy.get('th').filter(':visible').contains('제목').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 상태').should('be.visible');
@@ -324,19 +324,19 @@ cy.log('--- 신청 > 이상행위 경보 화면 검증 시작 ---');
 cy.url().should('include', '/approval/submit/anomaly-alerts');
 cy.get('.v-btn__content').filter(':visible').contains('이상행위 경보').should('be.visible');
 
-// [신규] 상단 안내 배너
-cy.contains('탐지된 본인 이상행위 경보를 선택해 사유를 작성하고 결재로 소명을 상신합니다').should('be.visible');
+// // [신규] 상단 안내 배너
+// cy.contains('탐지된 본인 이상행위 경보를 선택해 사유를 작성하고 결재로 소명을 상신합니다').should('be.visible');
 
-// [신규] 진행 단계 인디케이터
-cy.contains('경보 선택').should('be.visible');
-cy.contains('소명하기').should('be.visible');
-cy.contains('결재 상신').should('be.visible');
+// // [신규] 진행 단계 인디케이터
+// cy.contains('경보 선택').should('be.visible');
+// cy.contains('소명하기').should('be.visible');
+// cy.contains('결재 상신').should('be.visible');
 
 // 검색 조건 요소 확인
 // [변경] aria-label 없음 → placeholder 기반
-cy.get('input[placeholder="정책 선택"]').should('exist');
+cy.get('input[aria-label="정책 선택"]').should('exist');
 cy.get('i.v-icon.material-icons').filter(':visible').contains('search').should('exist');
-cy.get('input[placeholder="메시지 + 정책명 검색"]').should('exist');
+cy.get('input[aria-label="메시지 + 정책명 검색"]').should('exist');
 
 // [변경] From/To aria-label 삭제 → date-range-picker 내 type="date" 2개로 확인
 cy.get('.date-range-picker input[type="date"]').should('have.length', 2);
@@ -422,6 +422,9 @@ cy.get('body').then(($body) => {
     cy.contains('경보 (사용자별 0건)').should('be.visible');
   }
 });
+
+
+/*
 
 // ==========================================
 // 소명 요청 자동화 화면 검증
@@ -509,7 +512,7 @@ cy.get('body').then(($body) => {
     // ------------------------------------------
     cy.log('✅ 결재 - 신청 - [소명 요청 자동화] 화면 확인 완료!');
 
-
+*/
     
 
     // ==========================================

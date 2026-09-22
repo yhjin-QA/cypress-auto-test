@@ -122,10 +122,10 @@ describe('로그캐치 사이트 테스트', () => {
 
 
     // v2.9.1.125_r35234 에서 소명 메뉴 없어짐 (디폴트)
-    // cy.contains('button', '소명').click({ force: true });
-    // cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    // cy.get('body').type('{esc}');
-    // cy.wait(500);
+    cy.contains('button', '소명').click({ force: true });
+    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
+    cy.get('body').type('{esc}');
+    cy.wait(500);
     
     cy.contains('button', '자산').click({ force: true });
     cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
