@@ -27,7 +27,7 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('DEV_Release 로그캐치 UI기본체크', () => {
+  it('로그캐치 v2.7 UI기본체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -117,7 +117,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('보고서 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('생성일').should('be.visible');
     cy.get('th').filter(':visible').contains('생성자').should('be.visible');
-    cy.get('th').filter(':visible').contains('조건').should('be.visible');
+    cy.get('th').filter(':visible').contains('상태').should('be.visible');
     cy.get('th').filter(':visible').contains('설명').should('be.visible');
     cy.get('th').filter(':visible').contains('삭제').should('be.visible');
     cy.log('✅  보고 탭 진입 및 데이터 출력 확인 완료!');

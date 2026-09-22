@@ -366,7 +366,7 @@ jobs:
           HARDCODED_VERSION: "3.0.0.250901" 
           MSG_SUCCESS: "*[성공]*[Auto-PC][v2.7][.93]"
           MSG_FAIL: "*[실패]*[Auto-PC][v2.7][.93]"
-          MSG_TITLE: "확인결과"
+          MSG_TITLE: "Default 확인결과"
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
           NOW: ${{ env.NOW }}

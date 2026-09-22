@@ -29,7 +29,7 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('DEV_Release 로그캐치 UI기본체크', () => {
+  it('로그캐치 v2.7 UI기본체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -115,17 +115,17 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
     
     //2.9.1.262_r35274  버전에서 '현황' 문구 ->  상태 문구로 변경됨.
-    cy.contains('button', '상태').click({ force: true });
+    cy.contains('button', '현황').click({ force: true });
     cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
     cy.get('body').type('{esc}');
     cy.wait(500);
 
 
     // v2.9.1.125_r35234 에서 소명 메뉴 없어짐 (디폴트)
-    // cy.contains('button', '소명').click({ force: true });
-    // cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-    // cy.get('body').type('{esc}');
-    // cy.wait(500);
+    cy.contains('button', '소명').click({ force: true });
+    cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
+    cy.get('body').type('{esc}');
+    cy.wait(500);
     
     cy.contains('button', '자산').click({ force: true });
     cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기

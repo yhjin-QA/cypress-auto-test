@@ -27,7 +27,7 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('DEV_Release 로그캐치 UI기본체크', () => {
+  it('로그캐치 v2.7 UI기본체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -135,7 +135,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     //플러스 아이콘  확인 
-    cy.get('.v-icon.fa-plus').should('be.visible');
+    //cy.get('.v-icon.fa-plus').should('be.visible');
     // 새로고침 아이콘 확인 
     cy.get('.material-icons').filter(':visible').contains('autorenew').should('be.visible');
     // 돋보기 검색 아이콘 확인
@@ -152,10 +152,10 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('th').filter(':visible').contains('그룹').should('be.visible');
      cy.get('th').filter(':visible').contains('운영 체제 유형').should('be.visible');
      cy.get('th').filter(':visible').contains('IP').should('be.visible');
-     // 서버 목록 추가 버튼
+     //// 서버 목록 추가 버튼
      //cy.get('.material-icons').filter(':visible').contains('add').should('be.visible').and('have.class', 'theme--dark');
-     // 정책 추가버튼 확인
-     cy.get('.material-icons.theme--dark') .contains('add').should('be.visible');
+     //// 정책 추가버튼 확인
+     //cy.get('.material-icons.theme--dark') .contains('add').should('be.visible');
      cy.log('✅ 관리 - 시스템 - [서버]탭 출력 확인 완료 ');
 
 
@@ -183,7 +183,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('이름').should('be.visible');
     cy.get('th').filter(':visible').contains('그룹').should('be.visible');
     // 2.9.1.262_r35274  타입 -> 유형 문구수정
-    cy.get('th').filter(':visible').contains('유형').should('be.visible');
+    cy.get('th').filter(':visible').contains('타입').should('be.visible');
     cy.get('th').filter(':visible').contains('IP').should('be.visible');
     cy.log('✅ 관리 - 시스템 - [데이터베이스]탭 출력 확인 완료 ');
 
@@ -197,7 +197,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
     // 타이틀 확인
     //cy.contains('span', '인사정보(OFF)').filter(':visible').should('be.visible');
-    cy.get('span').filter(':visible').contains('인사정보(OFF)').should('be.visible');
+    cy.get('span').filter(':visible').contains('인사정보(ON)').should('be.visible');
     cy.get('span').filter(':visible').contains('데이터베이스').should('be.visible');
     cy.get('span').filter(':visible').contains('Log Tracer').should('be.visible');
     cy.get('span').filter(':visible').contains('이상행위정책').should('be.visible');
@@ -217,7 +217,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('접속기록 수집기').last().click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
-    cy.get('.tab-title').filter(':visible').contains('접속기록 수집기 관리').should('be.visible');
+    cy.contains('.v-btn__content', '접속기록 수집기').should('be.visible');
     cy.get('.subheading').filter(':visible').contains('Log Tracer 그룹').should('be.visible');
     // 그룹 + 버튼확인
     cy.get('.v-icon.fa-plus').should('be.visible');
@@ -229,26 +229,28 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.text-label').filter(':visible').contains('WEB Tracer').should('be.visible');
     cy.log('✅ 관리 - 시스템 - [접속기록 수집기]탭 출력 확인 완료 ');
 
-     // 관리 > 시스템 > 접속기록수집기탭 > 접속 기록 수집기 통합 조회 탭 화면 
-     cy.get('.tab-title').filter(':visible').contains('접속기록 수집기 통합 조회').click({ force: true });
-     cy.wait(3000);
-     cy.log('--- 화면 검증 시작 ---');
-     cy.contains('.c-headline', '검색 조건').should('exist');
-     // 검색 조건 이름 입력란 확인
-     cy.get('input[aria-label="접속기록 수집기"]').filter(':visible').should('be.visible');
-     // 2.9.1.262_r35274 상태 -> 조건 문구 변경
-     cy.get('input[aria-label="조건"]').should('exist').and('be.visible');
-     // 토글 문구 확인
-     cy.get('label').filter(':visible').contains('라이선스 사용 여부').should('be.visible');
-     // 검색 버튼 확인
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-     // 표 열 문구 확인 
-     cy.get('th').filter(':visible').contains('이름').should('be.visible');
-     // 2.9.1.262_r35274 상태 -> 조건 문구 변경
-     cy.get('th').filter(':visible').contains('조건').should('be.visible');
-     cy.get('th').filter(':visible').contains('사용건수').should('be.visible');
-     cy.get('th').filter(':visible').contains('라이선스 사용 여부').should('be.visible');
-     cy.log('✅ 관리 - 시스템 - [접속기록 수집기- 통합조회]탭 출력 확인 완료 ');
+
+
+    //  // 관리 > 시스템 > 접속기록수집기탭 > 접속 기록 수집기 통합 조회 탭 화면 
+    //  cy.get('.tab-title').filter(':visible').contains('접속기록 수집기 통합 조회').click({ force: true });
+    //  cy.wait(3000);
+    //  cy.log('--- 화면 검증 시작 ---');
+    //  cy.contains('.c-headline', '검색 조건').should('exist');
+    //  // 검색 조건 이름 입력란 확인
+    //  cy.get('input[aria-label="접속기록 수집기"]').filter(':visible').should('be.visible');
+    //  // 2.9.1.262_r35274 상태 -> 조건 문구 변경
+    //  cy.get('input[aria-label="조건"]').should('exist').and('be.visible');
+    //  // 토글 문구 확인
+    //  cy.get('label').filter(':visible').contains('라이선스 사용 여부').should('be.visible');
+    //  // 검색 버튼 확인
+    // cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+    //  // 표 열 문구 확인 
+    //  cy.get('th').filter(':visible').contains('이름').should('be.visible');
+    //  // 2.9.1.262_r35274 상태 -> 조건 문구 변경
+    //  cy.get('th').filter(':visible').contains('조건').should('be.visible');
+    //  cy.get('th').filter(':visible').contains('사용건수').should('be.visible');
+    //  cy.get('th').filter(':visible').contains('라이선스 사용 여부').should('be.visible');
+    //  cy.log('✅ 관리 - 시스템 - [접속기록 수집기- 통합조회]탭 출력 확인 완료 ');
 
  
      // 관리 > 시스템 > 차단 관리 탭  클릭
@@ -278,7 +280,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('th').filter(':visible').contains('차단 날짜').should('be.visible');
      cy.get('th').filter(':visible').contains('마지막 접속 날짜').should('be.visible');
      // 2.9.1.262_r35274 띄어쓰기 
-     cy.get('th').filter(':visible').contains('업무 시스템').should('be.visible');
+     cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
      cy.get('th').filter(':visible').contains('로그 수집기').should('be.visible');
      cy.get('th').filter(':visible').contains('사용자 아이피').should('be.visible');
      cy.get('th').filter(':visible').contains('계정').should('be.visible');
@@ -287,16 +289,16 @@ describe('로그캐치 사이트 테스트', () => {
 
   
 
-    // 관리 > 시스템 > 워커 노드 관리 탭  클릭
-    cy.get('.v-btn__content').filter(':visible').contains('워커 노드 관리').last().click({ force: true });
-    cy.wait(3000);
-    cy.log('--- 화면 검증 시작 ---');
-    cy.contains('.c-headline', '워커 노드 상세').should('exist');
-    // 검색 문구확인
-    cy.get('.vue-treeselect__input').should('be.visible');
-    // 기본그룹 폴더 문구 확인
-    cy.get('.text-label').filter(':visible').contains('기본 그룹').should('be.visible');
-    cy.log('✅ 관리 - 시스템 - [워커 노드 관리]탭 출력 확인 완료 ');
+    // // 관리 > 시스템 > 워커 노드 관리 탭  클릭
+    // cy.get('.v-btn__content').filter(':visible').contains('워커 노드 관리').last().click({ force: true });
+    // cy.wait(3000);
+    // cy.log('--- 화면 검증 시작 ---');
+    // cy.contains('.c-headline', '워커 노드 상세').should('exist');
+    // // 검색 문구확인
+    // cy.get('.vue-treeselect__input').should('be.visible');
+    // // 기본그룹 폴더 문구 확인
+    // cy.get('.text-label').filter(':visible').contains('기본 그룹').should('be.visible');
+    // cy.log('✅ 관리 - 시스템 - [워커 노드 관리]탭 출력 확인 완료 ');
 
 
 
@@ -329,18 +331,19 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '소속 (전체)').should('exist');
     // 플러스 + 아이콘 확인
-    cy.get('.v-icon.fa-plus').should('be.visible');
+    //cy.get('.v-icon.fa-plus').should('be.visible');
     // 새로고침 버튼확인 
     cy.get('.material-icons').filter(':visible').contains('autorenew').should('be.visible');
      // 돋보기 아이콘이 확인
      cy.get('.v-icon.fa-search').should('be.visible');
      // 검색 조건 입력란 
-     cy.get('input[aria-label="검색 조건"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="값"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="이름"]').filter(':visible').should('be.visible');
+  
      //2.9.1.262_r35274 상태 -> 조건으로 문구 변경
-     cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
      // 검색 버튼 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+
      // v버튼 아이콘 존재확인
     cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
     // 정책 추가버튼 확인
@@ -403,23 +406,23 @@ describe('로그캐치 사이트 테스트', () => {
     // 검색 조건 입력란 
     cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').should('be.visible');
     //2.9.1.262_r35274 상태 -> 조건 문구 변경
-    cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
+    cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
      // 검색 버튼 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 표 열 문구 확인 
     cy.get('th').filter(':visible').contains('파일 다운로드 그룹').should('be.visible');
     cy.get('th').filter(':visible').contains('제목').should('be.visible');
     // 2.9.1.262_r35274 띄워쓰기 
-    cy.get('th').filter(':visible').contains('파일 명').should('be.visible');
+    cy.get('th').filter(':visible').contains('파일명').should('be.visible');
     cy.get('th').filter(':visible').contains('시작 시간').should('be.visible');
     cy.get('th').filter(':visible').contains('종료 시간').should('be.visible');
     // 2.9.1.262_r35274 상태 -> 조건 문구 변경  
-    cy.get('th').filter(':visible').contains('조건').should('be.visible');
+    cy.get('th').filter(':visible').contains('상태').should('be.visible');
     cy.log('✅ 관리 - 내부 파일 다운로드 - [생성된 파일 목록 조회 / 다운로드]탭 출력 확인 완료 ');
 
 
     // 관리 > 메뉴 관리 서브메뉴 선택
-    cy.contains('button.side-menu', '관리').click({ force: true });
+    cy.get('button.side-menu').contains(/^\s*관리\s*$/).closest('button').click({ force: true });
     cy.wait(1000);
     cy.log('--- 서브메뉴 [메뉴 관리] 클릭 ---');
     cy.contains('.v-list__tile__title', '메뉴 관리').should('be.visible').click({ force: true });
@@ -434,7 +437,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 관리 - 메뉴 관리 출력 확인 완료 ');
 
     // 관리 > 메니저 메뉴 코드 관리 서브메뉴 선택
-    cy.contains('button.side-menu', '관리').click({ force: true });
+    cy.get('button.side-menu').contains(/^\s*관리\s*$/).closest('button').click({ force: true });
     cy.wait(1000);
     cy.log('--- 서브메뉴 [메니저 메뉴 코드 관리] 클릭 ---');
     cy.contains('.v-list__tile__title', '메니저 메뉴 코드 관리').should('be.visible').click({ force: true });
@@ -448,7 +451,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 검색 조건 입력란 
     cy.get('input[aria-label="이름"]').filter(':visible').should('be.visible');
     // // 2.9.1.262_r35274 상태 -> 조건 문구 변경
-    cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
+    cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
     // 검색 버튼 확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 동기화 버튼 확인 
@@ -460,7 +463,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('th').filter(':visible').contains('그룹').should('be.visible');
      cy.get('th').filter(':visible').contains('조회가능 업무시스템').should('be.visible');
      cy.get('th').filter(':visible').contains('조회가능 그룹').should('be.visible');
-     cy.get('th').filter(':visible').contains('개인정보 열람 권한').should('be.visible');
+    //cy.get('th').filter(':visible').contains('개인정보 열람 권한').should('be.visible');
      cy.get('th').filter(':visible').contains('저장').should('be.visible');
      cy.log('✅ 관리 > 메니저 메뉴 코드 관리 출력 확인 완료');
    

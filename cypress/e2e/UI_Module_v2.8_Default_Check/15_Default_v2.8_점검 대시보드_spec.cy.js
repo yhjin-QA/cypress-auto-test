@@ -169,8 +169,11 @@ cardTitles.forEach((title) => {
     .then((t) => cy.log(`[${title}] ${t.replace(/\s+/g, ' ').trim()}`));
 });
 
-const emptyMsg = /조회 결과가 존재하지 않습니다|아직 통계 테이블이 생성되지 않았습니다/;
-// 텍스트로 "데이터 없음"을 확인할 수 없는 카드 (문구가 이미지/CSS로 렌더링됨)
+// 카드 상태 판별: 데이터 차트 or 데이터 없음 문구 (둘 중 하나면 정상)
+const emptyMsg = /조회 결과가 존재하지 않습니다|검색 결과 없음|아직 통계 테이블이 생성되지 않았습니다/;
+// 데이터가 있을 때 ApexCharts가 그리는 시리즈 도형 (막대/파이/도넛 공통)
+const chartSelector = '.apexcharts-series path, .apexcharts-pie-series path';
+// 문구가 텍스트로 잡히지 않는 카드 → 표시 여부만 확인
 const noTextCards = ['IP주소별 개인정보 사용 TOP 10'];
 
 cardTitles.forEach((title) => {
@@ -178,14 +181,23 @@ cardTitles.forEach((title) => {
     .should('be.visible')
     .parents('.widget_content')
     .first({ timeout: 10000 })
-    .should(($el) => {
-      expect($el, title).to.be.visible;
-      if (!noTextCards.includes(title)) {
-        const text = $el.text().replace(/\s+/g, ' ');
-        expect(text, title).to.match(emptyMsg);
-      }
+    .should(($card) => {
+      expect($card, title).to.be.visible;
+      if (noTextCards.includes(title)) return;
+
+      const text = $card.text().replace(/\s+/g, ' ');
+      const hasEmpty = emptyMsg.test(text);
+      const hasChart = $card.find(chartSelector).length > 0;
+      expect(hasEmpty || hasChart, `${title}: 차트 또는 '데이터 없음' 표시`).to.be.true;
+    })
+    .then(($card) => {
+      // 어떤 상태였는지 로그로 남김 (리포트에서 확인용)
+      const state = $card.find(chartSelector).length > 0 ? '📊 데이터 차트' : '⬜ 데이터 없음';
+      cy.log(`[${title}] ${state}`);
     });
 });
+
+
 // [신규] "이상행위 유형별 현황" - ApexCharts 렌더링 + 데이터 없음 텍스트 확인
 cy.contains('.v-card__title', '이상행위 유형별 현황')
   .parents('.widget_content')

@@ -364,9 +364,9 @@ jobs:
           JOB_STATUS: ${{ needs.cypress-run.result }}
           # 👇 원하시는 버전명을 여기에 하드코딩 하세요!
           HARDCODED_VERSION: "2.8.0.139_r35236" 
-          MSG_SUCCESS: "*[성공]*[Auto-PC][.83]"
-          MSG_FAIL: "*[실패]*[Auto-PC][.83]"
-          MSG_TITLE: "확인결과"
+          MSG_SUCCESS: "*[성공]*[Auto-PC][v2.8][.83]"
+          MSG_FAIL: "*[실패]*[Auto-PC][v2.8][.83]"
+          MSG_TITLE: "Default 확인결과"
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
           NOW: ${{ env.NOW }}
