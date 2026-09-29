@@ -156,7 +156,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('행위 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 값').should('be.visible');
-    cy.get('th').filter(':visible').contains('선택').should('be.visible');
+    cy.get('th').filter(':visible').contains('조회').should('be.visible');
 
     //기능동작확인 ------------------------------------------------------------------
     // 클릭동작 
@@ -209,7 +209,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="시작 IP"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="종료 IP"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="파일 명"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="파일명"]').filter(':visible').should('be.visible');
      // v3.0.5.1191_r35135 제거됨.
      //cy.get('input[aria-label="파일 경로"]').filter(':visible').should('be.visible');
      // v3.0.5.0_r34908 추가
@@ -223,7 +223,7 @@ describe('로그캐치 사이트 테스트', () => {
      
      // 포함 버튼 확인 
      cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
-     cy.get('input[aria-label="파일 명"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
+     cy.get('input[aria-label="파일명"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      //v3.0.5.1191_r35135 제거됨.
      //cy.get('input[aria-label="파일 경로"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
      
@@ -236,15 +236,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
     cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
     cy.get('th').filter(':visible').contains('사용자 IP').should('be.visible');
-    cy.get('th').filter(':visible').contains('URL/메뉴 명').should('be.visible');
-    cy.get('th').filter(':visible').contains('업무 시스템').should('be.visible');
-    cy.get('th').filter(':visible').contains('파일 명').should('be.visible');
-    cy.get('th').filter(':visible').contains('파일 크기').should('be.visible');
+    cy.get('th').filter(':visible').contains('URL').should('be.visible');
+    cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
+    cy.get('th').filter(':visible').contains('파일명').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('건수').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 상세').should('be.visible');
-    cy.get('th').filter(':visible').contains('확정').should('be.visible');
-    cy.get('th').filter(':visible').contains('파일 다운로드').should('be.visible');
+    cy.get('th').filter(':visible').contains('확인').should('be.visible');
+    cy.get('th').filter(':visible').contains('파일 내려받기').should('be.visible');
 
     //기능동작
     //검색버튼 클릭
@@ -284,7 +282,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('개인정보 유무').should('be.visible');
     // 3.0.5.1191_r35135 소명대상여부 -> 소명 대상 문구변경 
     cy.get('th').filter(':visible').contains('소명 대상').should('be.visible');
-    cy.get('th').filter(':visible').contains('선택').should('be.visible'); 
+    cy.get('th').filter(':visible').contains('조회').should('be.visible'); 
 
 
     //  // 기간 - 시작 날짜 달력 지정하기 
@@ -666,8 +664,8 @@ cy.wait(1000);
     //업무시스템 클릭하는 코드 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    cy.get('.v-list__tile__title').contains('리눅스_배송관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // 업무시스템중 리눅스_CRM고객관리 클릭하는 코드
+    cy.get('.v-list__tile__title').contains('리눅스_CRM고객관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
@@ -800,7 +798,7 @@ cy.wait(1000);
 cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
 cy.wait(1000);
 // 업무시스템 - 리녹스_VIP고객 선택
-cy.get('.v-list__tile__title').contains('리눅스_VIP고객').scrollIntoView().should('be.visible').click({ force: true });
+cy.get('.v-list__tile__title').contains('리눅스_CRM고객관리').scrollIntoView().should('be.visible').click({ force: true });
 cy.get('body').type('{esc}');
 cy.wait(1000); // 상위 메뉴가 완전히 닫히고 내부 상태가 업데이트될 때까지 넉넉히 대기
 
@@ -853,7 +851,7 @@ cy.wait(1000);
 cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
 cy.wait(1000);
 // 업무시스템 - 전체 선택
-cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_VIP고객').scrollIntoView().should('be.visible').click({ force: true });
+cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_CRM고객관리').scrollIntoView().should('be.visible').click({ force: true });
 cy.wait(1000);
 cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'JEUS_CRM고객관리').scrollIntoView().should('be.visible').click({ force: true });
 cy.get('body').type('{esc}');
