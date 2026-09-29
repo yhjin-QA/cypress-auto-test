@@ -831,78 +831,126 @@ cy.wait(1000);
 
 
 
-// =====================================================
-// 통합 탭 - 날짜를 바꿔가며 검색 결과 탐색 (오늘 → 7일 전)
-// =====================================================
-const integratedDates = Array.from({ length: 8 }, (_, i) => getFormattedDate(-i)); // [오늘, 1일 전, ... 7일 전]
-cy.log(`🎯 통합 탭 탐색 날짜: ${integratedDates.join(', ')}`);
+// // =====================================================
+// // 통합 탭 - 날짜를 바꿔가며 검색 결과 탐색 (오늘 → 7일 전)
+// // =====================================================
+// const integratedDates = Array.from({ length: 8 }, (_, i) => getFormattedDate(-i)); // [오늘, 1일 전, ... 7일 전]
+// cy.log(`🎯 통합 탭 탐색 날짜: ${integratedDates.join(', ')}`);
 
-// 현재 표에 '리눅스_CRM고객관리' 행이 있는지
+// =====================================================
+// 통합 탭 - 선택 가능한 날짜를 최신순으로 순회하며 검색 결과 탐색
+// =====================================================
+
+// ---------- 헬퍼 ----------
+
+// 날짜 선택 드롭다운 (aria-label 기준 → 감싸는 .v-input)
+const getDateSelect = () =>
+  cy.get('input[aria-label="날짜 선택"]')
+    .filter(':visible')
+    .first()
+    .closest('.v-input');
+
+// 드롭다운 열기 (.v-input 이 아니라 .v-input__slot 을 클릭해야 열림)
+const openDateDropdown = () => {
+  getDateSelect().find('.v-input__slot').click({ force: true });
+  cy.wait(1000);
+};
+
+// 현재 표에 '리눅스_CRM고객관리' 데이터 행이 있는지
 const hasIntegratedRows = ($body) =>
   $body.find('tbody:visible tr:visible').filter((i, tr) =>
     Cypress.$(tr).find('a:contains("리눅스_CRM고객관리")').length > 0
   ).length > 0;
 
-const searchIntegratedByDate = (dateIndex, currentUIText) => {
-  if (dateIndex >= integratedDates.length) {
-    cy.log('❌ 오늘 ~ 7일 전 기간 내에 통합 검색 결과가 없습니다.');
+// 드롭다운을 열어 선택 가능한 날짜 목록을 최신순으로 반환
+const getAvailableDates = () => {
+  openDateDropdown();
+
+  return cy.get('body').then(($body) => {
+    const $menu = $body.find('.v-menu__content:visible');
+    if ($menu.length === 0) {
+      cy.log('❌ 날짜 드롭다운이 열리지 않았습니다.');
+      return cy.wrap([], { log: false });
+    }
+
+    const dates = [...$menu.first().find('.v-list__tile__title')]
+      .map(el => el.innerText.trim())
+      .filter(t => /^\d{4}-\d{2}-\d{2}$/.test(t));
+
+    const unique = [...new Set(dates)].sort().reverse(); // 최신 날짜 먼저
+    cy.log(`🎯 선택 가능한 날짜 (${unique.length}개): ${unique.join(', ')}`);
+    return cy.wrap(unique, { log: false });
+  });
+};
+
+const selectDate = (dateToFind) => {
+  cy.get('body').then(($body) => {
+    if ($body.find('.v-menu__content:visible').length === 0) {
+      openDateDropdown();
+    }
+  });
+
+  cy.get('.v-menu__content:visible')
+    .first()
+    .contains(dateToFind)
+    .click({ force: true });
+
+  getDateSelect().find('.v-select__selection').should('contain', dateToFind);
+  cy.wait(2000);
+};
+
+// 날짜 목록을 순회하며 결과가 있는 날짜를 찾음
+const searchIntegratedByDate = (dates, dateIndex) => {
+  if (dateIndex >= dates.length) {
+    cy.log('❌ 선택 가능한 모든 날짜에 통합 검색 결과가 없습니다.');
     // 의도적으로 실패 처리
     cy.get('tbody:visible a:contains("리눅스_CRM고객관리")').should('be.visible');
     return;
   }
 
-  const dateToFind = integratedDates[dateIndex];
-  cy.log(`▶️ [통합 탐색 ${dateIndex + 1}/${integratedDates.length}] ${dateToFind}`);
+  const dateToFind = dates[dateIndex];
+  cy.log(`▶️ [통합 탐색 ${dateIndex + 1}/${dates.length}] ${dateToFind}`);
 
-  // 1) 날짜 드롭다운 열기 → 2) 날짜 선택 (목록이 길어 스크롤 최대 40회)
-  cy.contains('.v-select__selection', currentUIText).filter(':visible').click({ force: true });
-  cy.wait(1000);
-  scrollAndFindDate(dateToFind, 0, 40);
+  selectDate(dateToFind);
 
-  // 3) 선택 반영 확인 + 로딩 대기
-  cy.contains('.v-select__selection', dateToFind).should('be.visible');
-  cy.wait(2000);
-
-  // 4) 결과 확인
   cy.get('body').then(($body) => {
     if (hasIntegratedRows($body)) {
       cy.log(`✅ [${dateToFind}] 통합 검색 결과 발견`);
     } else {
-      cy.log(`⚠️ [${dateToFind}] 결과 없음 → 하루 전으로 재탐색`);
-      searchIntegratedByDate(dateIndex + 1, dateToFind);
+      cy.log(`⚠️ [${dateToFind}] 결과 없음 → 다음 날짜로 재탐색`);
+      searchIntegratedByDate(dates, dateIndex + 1);
     }
   });
 };
 
-// 현재 드롭다운에 표시된 날짜(YYYY-MM-DD)를 읽어서 탐색 시작
-cy.get('.v-select__selection').filter(':visible')
-  .filter((i, el) => /^\d{4}-\d{2}-\d{2}$/.test(el.innerText.trim()))
-  .first()
-  .invoke('text')
-  .then((initialText) => {
-    const current = initialText.trim();
-    cy.log(`🎯 통합 탭 초기 날짜: ${current}`);
+// ---------- 탐색 시작 ----------
 
-    // 이미 오늘 날짜에 결과가 떠 있으면 바로 검증으로
-    cy.get('body').then(($body) => {
-      if (hasIntegratedRows($body)) {
-        cy.log(`✅ 초기 날짜 [${current}]에서 결과 발견`);
-      } else {
-        searchIntegratedByDate(0, current);
-      }
-    });
+cy.get('body').then(($body) => {
+  // 이미 결과가 떠 있으면 날짜를 건드리지 않고 바로 검증으로
+  if (hasIntegratedRows($body)) {
+    cy.log('✅ 현재 화면에 이미 결과가 있어 날짜 탐색을 생략합니다.');
+    return;
+  }
+
+  getAvailableDates().then((dates) => {
+    if (dates.length === 0) {
+      cy.log('❌ 날짜 드롭다운에 선택 가능한 날짜가 없습니다.');
+      cy.get('.v-menu__content:visible').should('exist'); // 실패 처리
+      return;
+    }
+    searchIntegratedByDate(dates, 0);
   });
+});
 
 // =====================================================
 // [검증] 모든 데이터 행에 '리눅스_CRM고객관리' 포함
 // =====================================================
-cy.get('tbody tr')
-  .filter(':visible')
+cy.get('tbody:visible tr:visible')
+  .filter((i, tr) => Cypress.$(tr).find('a').length > 0) // 'No data available' 행 제외
+  .should('have.length.greaterThan', 0)
   .each(($row, index) => {
-    cy.wrap($row).within(() => {
-      cy.get('a').contains('리눅스_CRM고객관리').should('exist').and('be.visible');
-      cy.log(`${index + 1}번째 줄 검증 완료!`);
-    });
+    cy.wrap($row).find('a').should('contain', '리눅스_CRM고객관리');
+    cy.log(`${index + 1}번째 줄 검증 완료!`);
   });
   
 /*

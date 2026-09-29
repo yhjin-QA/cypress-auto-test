@@ -134,7 +134,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('보고서 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('생성일').should('be.visible');
     cy.get('th').filter(':visible').contains('생성자').should('be.visible');
-    cy.get('th').filter(':visible').contains('조건').should('be.visible');
+    cy.get('th').filter(':visible').contains('상태').should('be.visible');
     cy.get('th').filter(':visible').contains('설명').should('be.visible');
     cy.get('th').filter(':visible').contains('삭제').should('be.visible');
 
@@ -242,15 +242,15 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('body').type('{esc}');
     cy.wait(1000);
 
-    // 보고서 추가화면에서 업무시스템 - 리눅스_배송관리 선택
+    // 보고서 추가화면에서 업무시스템 - 리눅스_CRM고객관리 선택
     //cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
     //cy.wait(1000);
     //cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
     cy.get('input[aria-label="업무시스템"]').closest('.v-input__slot').click({ force: true });
    
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    //cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
-    cy.get('.v-menu__content').filter(':visible').find('.v-list__tile__title').contains('리눅스_배송관리').scrollIntoView().click({ force: true });          
+    // 업무시스템중 리눅스_CRM고객관리 클릭하는 코드
+    //cy.contains('.v-list__tile__title', '리눅스_CRM고객관리').should('be.visible').click();
+    cy.get('.v-menu__content').filter(':visible').find('.v-list__tile__title').contains('리눅스_CRM고객관리').scrollIntoView().click({ force: true });          
     cy.wait(1000);
     // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');

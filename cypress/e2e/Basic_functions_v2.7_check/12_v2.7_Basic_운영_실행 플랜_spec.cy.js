@@ -142,9 +142,9 @@ describe('로그캐치 사이트 테스트', () => {
     // 헤더(th) 안에 있는 체크박스 아이콘(check_box_outline_blank) 확인
     cy.get('th').find('.v-icon:contains("check_box_outline_blank")').should('exist');
     cy.get('th').filter(':visible').contains('플랜 이름').should('be.visible');
-    cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('정책 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('조건').should('be.visible');
+    cy.get('th').filter(':visible').contains('상태').should('be.visible');
     cy.get('th').filter(':visible').contains('작업 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('시작 시간').should('be.visible');
     cy.get('th').filter(':visible').contains('종료 시간').should('be.visible');
@@ -160,7 +160,7 @@ describe('로그캐치 사이트 테스트', () => {
     //저장한 영역(@detailHeader) 안에서 컬럼명 확인
     cy.get('@detailHeader').contains('날짜').should('be.visible');
     cy.get('@detailHeader').contains('이름').should('be.visible'); 
-    cy.get('@detailHeader').contains('조건').should('be.visible');
+    cy.get('@detailHeader').contains('상태').should('be.visible');
     cy.get('@detailHeader').contains('플랜 삭제 여부').should('be.visible');
 
 
@@ -208,14 +208,14 @@ describe('로그캐치 사이트 테스트', () => {
      cy.log('✅ 무결성 검사 정책 언체크 완료');
      cy.wait(5000); 
 
-    // "인사연동 플랜" 텍스트가 포함된 행(tr)을 찾습니다.-----------------------------
-    cy.contains('tr', '인사연동 플랜').as('targetRow1')
+    // "인사연동정책" 텍스트가 포함된 행(tr)을 찾습니다.-----------------------------
+    cy.contains('tr', '인사연동정책').as('targetRow1')
     .within(() => {
       cy.get('.v-input--selection-controls__ripple').click({ force: true });
     });
 
     // (옵션) 체크가 실제로 되었는지 검증
-    cy.contains('tr', '인사연동 플랜').find('input[role="checkbox"]').should('have.attr', 'aria-checked', 'true');
+    cy.contains('tr', '인사연동정책').find('input[role="checkbox"]').should('have.attr', 'aria-checked', 'true');
 
     // '시작'이라는 버튼이 활성화 해당버튼을 클릭합니다.
     cy.wait(1000);

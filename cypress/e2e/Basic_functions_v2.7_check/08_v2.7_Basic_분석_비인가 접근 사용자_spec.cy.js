@@ -118,7 +118,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.c-headline', '정책 유형').should('exist');
     cy.contains('.c-headline', '개인정보 과다조회 정책 목록').should('exist');
     // 표 문구열 확인
-    cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
     cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
@@ -130,7 +130,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.v-chip__content', '비인가 접근 사용자').should('be.visible').click({ force: true });
     cy.contains('.c-headline', '비인가 접근 사용자 정책 목록').should('exist');
     // 표 문구열 확인
-    cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
     cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
@@ -142,7 +142,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('tr', 'test_auto_비인가 접근 사용자').find('.fa-trash').click({ force: true });
     cy.wait(1000);
     // 삭제 확인 알림창에서 확인 버튼 클릭 
-    cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확정').click({ force: true });
+    cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
 
     //추가한 정책 삭제 검증코드 
     cy.contains('tr', 'test_auto_비인가 접근 사용자').should('not.exist'); 
@@ -156,7 +156,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 열람 제한 개인정보 접근 정책 추가화면 진입----------------------------------------
     // 정책이름 입력 
-    cy.get('input[aria-label="정책명"]').filter(':visible').clear({ force: true }).type('test_auto_비인가 접근 사용자', { force: true });
+    cy.get('input[aria-label="정책 이름"]').filter(':visible').clear({ force: true }).type('test_auto_비인가 접근 사용자', { force: true });
 
     // 정책설정 부분
     // 정책 사용여부 토글 OFF-> ON
@@ -172,8 +172,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
     cy.get('input[aria-label="업무시스템"]').filter(':visible').first().parent().click({ force: true });
     cy.wait(1000);
-    // 업무시스템중 '리눅스_배송관리' 클릭하는 코드
-    cy.get('.v-menu__content').filter(':visible').first().contains('리눅스_배송관리').click({ force: true });
+    // 업무시스템중 '리눅스_CRM고객관리' 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').first().contains('리눅스_CRM고객관리').click({ force: true });
     cy.wait(1000);
     // 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
@@ -212,7 +212,7 @@ describe('로그캐치 사이트 테스트', () => {
    
     //기본정책 설정
     //기본 정책 설정 팝업창 확인 버튼 클릭 
-    cy.contains('기본정책으로 설정하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확정').click({ force: true });
+    cy.contains('기본정책으로 설정하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
     cy.wait(1000);
 
      // 기본 정책 설정확인 검증 코드 (초록색색상값 확인 )
@@ -227,7 +227,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     //기본 정책 철회 팝업창 확인 버튼 클릭
-    cy.contains('기본정책에서 철회하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확정').click({ force: true });
+    cy.contains('기본정책에서 철회하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
     cy.wait(1000);
 
     // 기본 정책 철회 검증
@@ -237,7 +237,7 @@ describe('로그캐치 사이트 테스트', () => {
      //---------------------------------------------------------------------------------------
 
     // 추가한 test_auto_비인가 접근 사용자 접근 정책 그룹 수정 1.--------------------------------------
-    // 추가된 정책명 : test_auto_비인가 접근 사용자  다시 재클릭 (휴가자 ON)
+    // 추가된 정책 이름 : test_auto_비인가 접근 사용자  다시 재클릭 (휴가자 ON)
     cy.contains('a', 'test_auto_비인가 접근 사용자').should('be.visible').click({ force: true });
     cy.wait(1000);
 
@@ -267,7 +267,7 @@ describe('로그캐치 사이트 테스트', () => {
 
 
      // 추가한 test_auto_비인가 접근 사용자 접근 정책 그룹 수정 2.--------------------------------------
-    // 추가된 정책명 : test_auto_비인가 접근 사용자  다시 재클릭 (휴가자 ON-> OFF)
+    // 추가된 정책 이름 : test_auto_비인가 접근 사용자  다시 재클릭 (휴가자 ON-> OFF)
     cy.contains('a', 'test_auto_비인가 접근 사용자').should('be.visible').click({ force: true });
     cy.wait(1000);
 

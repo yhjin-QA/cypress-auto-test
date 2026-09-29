@@ -118,7 +118,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.c-headline', '정책 유형').should('exist');
     cy.contains('.c-headline', '개인정보 과다조회 정책 목록').should('exist');
     // 표 문구열 확인
-    cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
     cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
@@ -130,7 +130,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
     cy.contains('.c-headline', '업무 시간 외 접속 정책 목록').should('exist');
     // 표 문구열 확인
-    cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+    cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
     cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
@@ -141,7 +141,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('tr', 'test_auto_업무 시간 외 접속').find('.fa-trash').click({ force: true });
     cy.wait(1000);
     // 삭제 확인 알림창에서 확인 버튼 클릭 
-    cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확정').click({ force: true });
+    cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
 
     //추가한 정책 삭제 검증코드 
     cy.contains('tr', 'test_auto_업무 시간 외 접속').should('not.exist'); 
@@ -155,7 +155,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 업무 시간 외 접속  정책 추가화면 진입----------------------------------------
     // 정책이름 입력 
-    cy.get('input[aria-label="정책명"]').filter(':visible').clear({ force: true }).type('test_auto_업무 시간 외 접속', { force: true });
+    cy.get('input[aria-label="정책 이름"]').filter(':visible').clear({ force: true }).type('test_auto_업무 시간 외 접속', { force: true });
 
     // 정책설정 부분
     // 정책 사용여부 토글 ON
@@ -196,7 +196,7 @@ describe('로그캐치 사이트 테스트', () => {
    
     //기본정책 설정
     //기본 정책 설정 팝업창 확인 버튼 클릭 
-    cy.contains('기본정책으로 설정하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확정').click({ force: true });
+    cy.contains('기본정책으로 설정하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
     cy.wait(1000);
 
      // 기본 정책 설정확인 검증 코드 (초록색색상값 확인 )
@@ -211,7 +211,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     //기본 정책 철회 팝업창 확인 버튼 클릭
-    cy.contains('기본정책에서 철회하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확정').click({ force: true });
+    cy.contains('기본정책에서 철회하시겠습니까?').should('be.visible').closest('.v-dialog').find('.v-btn').contains('확인').click({ force: true });
     cy.wait(1000);
 
     // 기본 정책 철회 검증
@@ -221,7 +221,7 @@ describe('로그캐치 사이트 테스트', () => {
 
 
     // 추가한 test_auto_'test_auto_업무 시간 외 접속 정책 수정--------------------------------------
-    // 추가된 정책명 : test_auto_'test_auto_업무 시간 외 접속 다시 재클릭 
+    // 추가된 정책 이름 : test_auto_'test_auto_업무 시간 외 접속 다시 재클릭 
     cy.contains('a', 'test_auto_업무 시간 외 접속').should('be.visible').click({ force: true });
     cy.wait(1000);
 
@@ -240,7 +240,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-dialog').filter(':visible').contains('자동 생성된 공휴일은 관련 법안 개정').should('be.visible');
 
     // 동기화 확인 알림창 - '확인'버튼클릭 하여 창닫기
-    cy.contains('.c-headline', '알림').closest('.v-dialog, .v-card').contains('.v-btn__content', '확정').click({ force: true });
+    cy.contains('.c-headline', '알림').closest('.v-dialog, .v-card').contains('.v-btn__content', '확인').click({ force: true });
     cy.wait(1000);
 
     // 동기화후 공휴일 동기화 확인하는 검증코드
@@ -264,7 +264,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 팝업창 확인
    cy.get('.v-dialog').filter(':visible').contains('이미 모든 업무시스템이 정책에 할당되어 있어').should('be.visible');
    cy.wait(1000); 
-   cy.get('.v-dialog').filter(':visible').should('contain', '이미 모든 업무시스템이 정책에 할당되어 있어').contains('.v-btn__content', '확정').click({ force: true });
+   cy.get('.v-dialog').filter(':visible').should('contain', '이미 모든 업무시스템이 정책에 할당되어 있어').contains('.v-btn__content', '확인').click({ force: true });
    cy.wait(1000);
     
 

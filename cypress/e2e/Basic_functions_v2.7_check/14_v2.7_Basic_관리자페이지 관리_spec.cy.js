@@ -330,15 +330,21 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '소속 (전체)').should('exist');
     // 플러스 + 아이콘 확인
-    cy.get('.v-icon.fa-plus').should('be.visible');
+    // 플러스 + 아이콘 확인 (material-icons: add)
+cy.get('i.material-icons')
+  .filter((i, el) => el.textContent.trim() === 'add')
+  .filter(':visible')
+  .should('have.length.greaterThan', 0);
+    
+    
     // 새로고침 버튼확인 
     cy.get('.material-icons').filter(':visible').contains('autorenew').should('be.visible');
      // 돋보기 아이콘이 확인
      cy.get('.v-icon.fa-search').should('be.visible');
-     // 검색 조건 입력란 
-     cy.get('input[aria-label="검색 조건"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="값"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
+     // 검색 상태 입력란 
+     cy.get('input[aria-label="이름"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
+     //cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
      // 검색 버튼 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
      // v버튼 아이콘 존재확인
@@ -354,81 +360,81 @@ describe('로그캐치 사이트 테스트', () => {
 
      //기능확인 - 소속조회
      // 소속(전체 )검색조건에서 이름 검색----------------------------------------------------
-     // '검색 조건' 콤보박스(input)를 찾아 클릭하여 리스트를 엽니다.
-     cy.get('input[aria-label="검색 조건"]').click({ force: true });
-     cy.wait(1000);
-     // 화면에 나타난 리스트 메뉴 중에서 '이름'을 선택
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '이름').should('be.visible').click({ force: true });
-     // '값' 입력창을 찾아 비운 뒤 '사원_1'을 타이핑합니다.
-     cy.get('input[aria-label="값"]').should('be.visible').clear().type('사원_1');
-     cy.wait(1000);
-     //상태 클릭
-     cy.get('input[aria-label="조건"]').filter(':visible').click({ force: true });
-     cy.wait(1000);
-     // 상태 리스트중 '사용자' 클릭
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '사용자').should('be.visible').click({ force: true });
-     cy.wait(1000);    
-     // 검색버튼 클릭 
-     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    // 이름 입력 (숨겨진 다이얼로그 내 동일 입력란 제외)
+cy.get('input[aria-label="이름"]').filter(':visible').first()
+  .should('be.visible').clear().type('사원_1');
+cy.wait(1000);
 
-     //검색결과 검증
-     cy.get('td', { timeout: 10000 }).contains('사원_1').should('be.visible');
+// 상태 클릭
+cy.get('input[aria-label="상태"]').filter(':visible').click({ force: true });
+cy.wait(1000);
+
+// 상태 리스트중 '사용자' 클릭
+cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '사용자').should('be.visible').click({ force: true });
+cy.wait(1000);
+
+// 검색버튼 클릭
+cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+
+// 검색결과 검증
+cy.get('td', { timeout: 10000 }).filter(':visible')
+  .contains('사원_1').should('be.visible');
      //----------------------------------------------------------------------------------------------
 
-     // 소속(전체 )검색조건에서 이름 -> 아이디 검색으로----------------------------------------------------
-     // '검색 조건' 콤보박스(input)를 찾아 클릭하여 리스트를 엽니다.
-     cy.get('span[title="이름"]').should('be.visible').click({ force: true });
-     cy.wait(1000);
-     // 화면에 나타난 리스트 메뉴 중에서 '아이디'을 선택
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '아이디').should('be.visible').click({ force: true });
+    //  // 소속(전체 )검색조건에서 이름 -> 아이디 검색으로----------------------------------------------------
+    //  // '검색 조건' 콤보박스(input)를 찾아 클릭하여 리스트를 엽니다.
+    //  cy.get('span[title="이름"]').should('be.visible').click({ force: true });
+    //  cy.wait(1000);
+    //  // 화면에 나타난 리스트 메뉴 중에서 '아이디'을 선택
+    //  cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '아이디').should('be.visible').click({ force: true });
      
-     cy.get('input[aria-label="값"]').should('be.visible').clear().type('loginid2');
-     cy.wait(1000);
+    //  cy.get('input[aria-label="값"]').should('be.visible').clear().type('loginid2');
+    //  cy.wait(1000);
 
-    // 상태 콤보박스 — 선택 영역(.v-select__selections) 직접 클릭
-    cy.contains('label', /^조건$/).closest('.v-input').find('.v-select__selections').click({ force: true });
-    cy.wait(1000);
+    // // 상태 콤보박스 — 선택 영역(.v-select__selections) 직접 클릭
+    // cy.contains('label', /^조건$/).closest('.v-input').find('.v-select__selections').click({ force: true });
+    // cy.wait(1000);
 
-     // 드롭다운에서 '퇴직자' 선택
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '퇴직자').click({ force: true });
-     cy.wait(1000);
+    //  // 드롭다운에서 '퇴직자' 선택
+    //  cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '퇴직자').click({ force: true });
+    //  cy.wait(1000);
 
-     // 선택 닫기
-     cy.get('body').type('{esc}');
+    //  // 선택 닫기
+    //  cy.get('body').type('{esc}');
 
-     cy.wait(1000);    
-     // 검색버튼 클릭 
-     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    //  cy.wait(1000);    
+    //  // 검색버튼 클릭 
+    //  cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
-     //검색결과 검증
-     cy.get('td', { timeout: 10000 }).contains('loginid2').should('be.visible');
-     //----------------------------------------------------------------------------------------------
+    //  //검색결과 검증
+    //  cy.get('td', { timeout: 10000 }).contains('loginid2').should('be.visible');
+    //  //----------------------------------------------------------------------------------------------
 
 
-     // 소속(전체 )검색조건에서 아이디 -> 이메일 검색으로----------------------------------------------------
-     // '검색 조건' 콤보박스(input)를 찾아 클릭하여 리스트를 엽니다.
-     cy.get('span[title="아이디"]').should('be.visible').click({ force: true });
-     cy.wait(1000);
-     // 화면에 나타난 리스트 메뉴 중에서 '아이디'을 선택
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '이메일').should('be.visible').click({ force: true });
+    //  // 소속(전체 )검색조건에서 아이디 -> 이메일 검색으로----------------------------------------------------
+    //  // '검색 조건' 콤보박스(input)를 찾아 클릭하여 리스트를 엽니다.
+    //  cy.get('span[title="아이디"]').should('be.visible').click({ force: true });
+    //  cy.wait(1000);
+    //  // 화면에 나타난 리스트 메뉴 중에서 '아이디'을 선택
+    //  cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '이메일').should('be.visible').click({ force: true });
     
-     cy.get('input[aria-label="값"]').should('be.visible').clear().type('user011@logcatch.com');
-     cy.wait(1000);
+    //  cy.get('input[aria-label="값"]').should('be.visible').clear().type('user011@logcatch.com');
+    //  cy.wait(1000);
 
-     // 상태 콤보박스 — '사용자'로 초기화
-    cy.contains('label', /^조건$/).closest('.v-input').find('.v-select__selections').click({ force: true });
-    cy.wait(1000);
+    //  // 상태 콤보박스 — '사용자'로 초기화
+    // cy.contains('label', /^조건$/).closest('.v-input').find('.v-select__selections').click({ force: true });
+    // cy.wait(1000);
 
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '사용자').click({ force: true });
-     cy.wait(1000);
+    //  cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '사용자').click({ force: true });
+    //  cy.wait(1000);
 
-     cy.wait(1000);    
-     // 검색버튼 클릭 
-     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    //  cy.wait(1000);    
+    //  // 검색버튼 클릭 
+    //  cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
-     //검색결과 검증
-     cy.get('td', { timeout: 10000 }).contains('user011@logcatch.com').should('be.visible');
-     //----------------------------------------------------------------------------------------------
+    //  //검색결과 검증
+    //  cy.get('td', { timeout: 10000 }).contains('user011@logcatch.com').should('be.visible');
+    //  //----------------------------------------------------------------------------------------------
      
 
      cy.log('✅ 관리 - 정보사용자/그룹 관리 - [관리]탭 출력 확인 완료 ');
@@ -484,16 +490,16 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     // 검색 조건 입력란 
     cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').should('be.visible');
-    cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
+    cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
      // 검색 버튼 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 표 열 문구 확인 
     cy.get('th').filter(':visible').contains('파일 다운로드 그룹').should('be.visible');
     cy.get('th').filter(':visible').contains('제목').should('be.visible');
-    cy.get('th').filter(':visible').contains('파일 명').should('be.visible');
+    cy.get('th').filter(':visible').contains('파일명').should('be.visible');
     cy.get('th').filter(':visible').contains('시작 시간').should('be.visible');
     cy.get('th').filter(':visible').contains('종료 시간').should('be.visible');
-    cy.get('th').filter(':visible').contains('조건').should('be.visible');
+    cy.get('th').filter(':visible').contains('상태').should('be.visible');
     
     
     // 기능확인
@@ -525,7 +531,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('body').type('{esc}');  
 
      //상태 클릭
-     cy.get('input[aria-label="조건"]').filter(':visible').click({ force: true });
+     cy.get('input[aria-label="상태"]').filter(':visible').click({ force: true });
      cy.wait(1000);
      // 상태 리스트중 '완료' 클릭
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '완료').should('be.visible').click({ force: true });

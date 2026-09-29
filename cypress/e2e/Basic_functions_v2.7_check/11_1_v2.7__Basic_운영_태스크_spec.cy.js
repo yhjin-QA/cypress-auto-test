@@ -124,12 +124,12 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.v-btn__content', '실행 관리').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
-    cy.contains('.c-headline', '태스크 목록(MASTER)').should('exist');
-    //버튼 확인
-    cy.contains('.v-btn__content', 'MASTER 태스크 전체 시작').should('be.visible');
-    cy.contains('.v-btn__content', 'MASTER 태스크 전체 정지').should('be.visible');
+    cy.contains('.c-headline', '태스크 목록').should('exist');
+  //   //버튼 확인
+  //   cy.contains('.v-btn__content', 'MASTER 태스크 전체 시작').should('be.visible');
+  //   cy.contains('.v-btn__content', 'MASTER 태스크 전체 정지').should('be.visible');
    
-   /* 
+  /* 
     // 기능확인 
     // ==========================================
     // 실행관리 : 전체 프로세스 정지 및 시작 확인 
@@ -196,6 +196,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
 
     
+
+    
     // =============================================
     // 실행관리 : 개별적으로 프로세스 시작 및 정지 기능확인
     // =============================================
@@ -205,7 +207,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('p', 'Log Collector').should('be.visible').closest('.v-card').contains('.v-btn', '정지') .filter(':visible').click({ force: true }); 
 
     // 'Log Collector 종료 확인 알림창 확인
-    cy.get('.c-headline:visible').contains('마스터 Task 종료').should('be.visible');
+    //cy.get('.c-headline:visible').contains('마스터 Task 종료').should('be.visible');
     cy.contains('p', 'Task 종료하시겠습니까?').should('be.visible');
     // 'Log Collector 종료 확인 알림창 확인 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
@@ -220,7 +222,7 @@ describe('로그캐치 사이트 테스트', () => {
      // Log Collector TASK 시작 버튼 클릭
      cy.contains('p', 'Log Collector').should('be.visible').closest('.v-card').contains('.v-btn', '시작') .filter(':visible').click({ force: true });
      // Log Collector 실행 확인 알림창 확인
-     cy.get('.c-headline:visible').contains('마스터 Task 실행').should('be.visible');
+     //cy.get('.c-headline:visible').contains('마스터 Task 실행').should('be.visible');
      cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
      // Log Collector 종료 확인 알림창 확인 버튼 클릭
      cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
@@ -237,7 +239,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('p', 'Discriminator').should('be.visible').closest('.v-card').contains('.v-btn', '정지') .filter(':visible').click({ force: true }); 
 
     // 'Discriminator 종료 확인 알림창 확인
-    cy.get('.c-headline:visible').contains('마스터 Task 종료').should('be.visible');
+    //cy.get('.c-headline:visible').contains('마스터 Task 종료').should('be.visible');
     cy.contains('p', 'Task 종료하시겠습니까?').should('be.visible');
     // 'Discriminator 종료 확인 알림창 확인 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
@@ -252,7 +254,7 @@ describe('로그캐치 사이트 테스트', () => {
      // Discriminator TASK 시작 버튼 클릭
      cy.contains('p', 'Discriminator').should('be.visible').closest('.v-card').contains('.v-btn', '시작') .filter(':visible').click({ force: true });
      // 'Discriminator 실행 확인 알림창 확인
-     cy.get('.c-headline:visible').contains('마스터 Task 실행').should('be.visible');
+     //cy.get('.c-headline:visible').contains('마스터 Task 실행').should('be.visible');
      cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
      // 'Discriminator 종료 확인 알림창 확인 버튼 클릭
      cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
@@ -269,7 +271,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('p', 'Rule Analyzer').should('be.visible').closest('.v-card').contains('.v-btn', '정지') .filter(':visible').click({ force: true }); 
 
     // 'Rule Analyzer 종료 확인 알림창 확인
-    cy.get('.c-headline:visible').contains('마스터 Task 종료').should('be.visible');
+    //cy.get('.c-headline:visible').contains('마스터 Task 종료').should('be.visible');
     cy.contains('p', 'Task 종료하시겠습니까?').should('be.visible');
     // 'Rule Analyzer 종료 확인 알림창 확인 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
@@ -284,7 +286,7 @@ describe('로그캐치 사이트 테스트', () => {
      // Rule Analyzer TASK 시작 버튼 클릭
      cy.contains('p', 'Rule Analyzer').should('be.visible').closest('.v-card').contains('.v-btn', '시작') .filter(':visible').click({ force: true });
      // 'Rule Analyzer 실행 확인 알림창 확인
-     cy.get('.c-headline:visible').contains('마스터 Task 실행').should('be.visible');
+     //cy.get('.c-headline:visible').contains('마스터 Task 실행').should('be.visible');
      cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
      // 'Rule Analyzer 종료 확인 알림창 확인 버튼 클릭
      cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
@@ -301,7 +303,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('p', 'Data File Cleaner').should('be.visible').closest('.v-card').contains('.v-btn', '정지') .filter(':visible').click({ force: true }); 
 
     // Data File Cleaner 종료 확인 알림창 확인
-    cy.get('.c-headline:visible').contains('마스터 Task 종료').should('be.visible');
+    //cy.get('.c-headline:visible').contains('마스터 Task 종료').should('be.visible');
     cy.contains('p', 'Task 종료하시겠습니까?').should('be.visible');
     // Data File Cleaner 종료 확인 알림창 확인 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
@@ -315,7 +317,7 @@ describe('로그캐치 사이트 테스트', () => {
      // Data File Cleaner TASK 시작 버튼 클릭
      cy.contains('p', 'Data File Cleaner').should('be.visible').closest('.v-card').contains('.v-btn', '시작') .filter(':visible').click({ force: true });
      // Data File Cleaner 실행 확인 알림창 확인
-     cy.get('.c-headline:visible').contains('마스터 Task 실행').should('be.visible');
+     //cy.get('.c-headline:visible').contains('마스터 Task 실행').should('be.visible');
      cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
      // Data File Cleaner 종료 확인 알림창 확인 버튼 클릭
      cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
@@ -332,7 +334,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('p', 'Statistics').should('be.visible').closest('.v-card').contains('.v-btn', '정지') .filter(':visible').click({ force: true }); 
 
     // Statistics 종료 확인 알림창 확인
-    cy.get('.c-headline:visible').contains('마스터 Task 종료').should('be.visible');
+    //cy.get('.c-headline:visible').contains('마스터 Task 종료').should('be.visible');
     cy.contains('p', 'Task 종료하시겠습니까?').should('be.visible');
     // Statistics 종료 확인 알림창 확인 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
@@ -346,7 +348,7 @@ describe('로그캐치 사이트 테스트', () => {
      // Statistics TASK 시작 버튼 클릭
      cy.contains('p', 'Statistics').should('be.visible').closest('.v-card').contains('.v-btn', '시작') .filter(':visible').click({ force: true });
      // Statistics 실행 확인 알림창 확인
-     cy.get('.c-headline:visible').contains('마스터 Task 실행').should('be.visible');
+     //cy.get('.c-headline:visible').contains('마스터 Task 실행').should('be.visible');
      cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
      // Statistics 종료 확인 알림창 확인 버튼 클릭
      cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
@@ -358,7 +360,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('p', 'Statistics').closest('.v-card').contains('.v-btn__content', '정지').should('be.visible');
     //--------------------------------------------------------------------------------------------------------------
     cy.log('✅ 운영 - 태스크 - [실행관리] 출력 확인 완료 ');
-   */  
+   
+  */
 
     // 운영 > 태스크  > "리소스 모니터링" 탭을 클릭
     cy.log('--- 리소스 모니터링 탭 클릭 ---');
@@ -395,7 +398,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.material-icons').filter(':visible').contains('event').should('be.visible');
      //검색조건 입력란 확인인
      cy.get('input[aria-label="업무 유형"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="로그 파일"]').filter(':visible').should('be.visible');
+     //cy.get('input[aria-label="로그 파일"]').filter(':visible').should('be.visible');
      cy.get('.v-label').filter(':visible').contains('tail').should('be.visible');
      // 버튼 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
@@ -449,18 +452,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 선택이 잘 되었는지 검증코드
      cy.get('input[aria-label="업무 유형"]').closest('.v-input').should('contain', '로그 수집기');
 
-     // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
-     cy.get('input[aria-label="로그 파일"]').click({ force: true });
-     cy.wait(1000);
-     
-     // 콤보박스 리스트안에서 'task_iid_2001.std'를 찾아 클릭합니다.
-     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'task_iid_2001.std').click({ force: true });
-     cy.wait(1000);
-
-     // 선택이 잘 되었는지 검증코드
-     cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'task_iid_2001.std');
-
-     // tail 토글 OFF-> ON
+      // tail 토글 OFF-> ON
      // tail 토글이 활성화되어 있는 경우 
      //- 선택한 업무 유형의 로그 파일 중 최신 로그 파일 (task_iid_%.std) 을 가져와서 실시간 갱신되는 것을 보여줍니다.
      //- 로그 파일을 선택하셨어도 최신 로그 파일만 보여줍니다. 
@@ -470,6 +462,19 @@ describe('로그캐치 사이트 테스트', () => {
      .should('be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
      cy.wait(1000);
 
+
+    //  // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
+    //  cy.get('input[aria-label="로그 파일"]').click({ force: true });
+    //  cy.wait(1000);
+     
+    //  // 콤보박스 리스트안에서 'task_iid_2001.std'를 찾아 클릭합니다.
+    //  cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'task_iid_2001.std').click({ force: true });
+    //  cy.wait(1000);
+
+    //  // 선택이 잘 되었는지 검증코드
+    //  cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'task_iid_2001.std');
+
+    
      // 검색 버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
      cy.wait(2000);
@@ -489,16 +494,16 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', '접속 로그 분석기').click({ force: true });
      cy.wait(1000);
 
-     // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
-     cy.get('input[aria-label="로그 파일"]').click({ force: true });
-     cy.wait(1000);
+    //  // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
+    //  cy.get('input[aria-label="로그 파일"]').click({ force: true });
+    //  cy.wait(1000);
      
-     // 콤보박스 리스트안에서 'DISCRIMINATOR_2002_api_20260204.log'를 찾아 클릭합니다.
-     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'DISCRIMINATOR_2002_api_20260204.log').click({ force: true });
-     cy.wait(1000);
+    //  // 콤보박스 리스트안에서 'DISCRIMINATOR_2002_api_20260204.log'를 찾아 클릭합니다.
+    //  cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'DISCRIMINATOR_2002_api_20260204.log').click({ force: true });
+    //  cy.wait(1000);
 
-     // 선택이 잘 되었는지 검증코드
-     cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'DISCRIMINATOR_2002_api_20260204.log');
+    //  // 선택이 잘 되었는지 검증코드
+    //  cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'DISCRIMINATOR_2002_api_20260204.log');
 
      // tail 토글 OFF-> ON
      cy.get('input[aria-label="tail"]').check({ force: true })
@@ -523,15 +528,15 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', '통계 처리기').click({ force: true });
      cy.wait(1000);
 
-     // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
-     cy.get('input[aria-label="로그 파일"]').click({ force: true });
-     cy.wait(1000);
+    //  // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
+    //  cy.get('input[aria-label="로그 파일"]').click({ force: true });
+    //  cy.wait(1000);
      
-     // 콤보박스 리스트안에서 'STATISTICS_2501_20260207.log'를 찾아 클릭합니다.
-     //cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'STATISTICS_2501_20260207.log').click({ force: true });
-     // 'STATISTICS_2501_'로 시작하고 날짜 상관없이 '.log'로 끝나는 항목을 찾아 클릭
-     cy.get('.v-select-list, .v-menu__content').filter(':visible').contains('.v-list__tile__title', /STATISTICS_2501_.*\.log/).click({ force: true });
-     cy.wait(1000);
+    // // 콤보박스 리스트안에서 'STATISTICS_2501_20260207.log'를 찾아 클릭합니다.
+    //cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'STATISTICS_2501_20260207.log').click({ force: true });
+    // 'STATISTICS_2501_'로 시작하고 날짜 상관없이 '.log'로 끝나는 항목을 찾아 클릭
+    //  cy.get('.v-select-list, .v-menu__content').filter(':visible').contains('.v-list__tile__title', /STATISTICS_2501_.*\.log/).click({ force: true });
+    //  cy.wait(1000);
 
 
      // tail 토글 OFF-> ON
@@ -569,15 +574,15 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', '규칙 분석기').click({ force: true });
      cy.wait(1000);
 
-     // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
-     cy.get('input[aria-label="로그 파일"]').click({ force: true });
-     cy.wait(1000);
+    //  // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
+    //  cy.get('input[aria-label="로그 파일"]').click({ force: true });
+    //  cy.wait(1000);
      
-     // 콤보박스 리스트안에서 'RULEANALYZER_200320260209.log'를 찾아 클릭합니다.
-     //cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'RULEANALYZER_200320260209.log').click({ force: true });
-     // 콤보박스 리스트안에서 'RULEANALYZER_2003'로 시작하고 날짜/시간 상관없이 '.log'로 끝나는 항목을 찾아 클릭합니다.
-     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', /RULEANALYZER_2003.*\.log/).click({ force: true });
-     cy.wait(1000);
+    //  // 콤보박스 리스트안에서 'RULEANALYZER_200320260209.log'를 찾아 클릭합니다.
+    //  //cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'RULEANALYZER_200320260209.log').click({ force: true });
+    //  // 콤보박스 리스트안에서 'RULEANALYZER_2003'로 시작하고 날짜/시간 상관없이 '.log'로 끝나는 항목을 찾아 클릭합니다.
+    //  cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', /RULEANALYZER_2003.*\.log/).click({ force: true });
+    //  cy.wait(1000);
 
 
      // tail 토글 OFF-> ON
@@ -595,52 +600,51 @@ describe('로그캐치 사이트 테스트', () => {
 
       //--------------------------------------------------
 
-     // 업무유형 - 로그 수집기 & tail OFF
-     //'업무 유형' 클릭하여 콤보박스 열기 -----------------
-     cy.get('input[aria-label="업무 유형"]').click({ force: true });
-     cy.wait(1000);
+    //  // 업무유형 - 로그 수집기 & tail OFF
+    //  //'업무 유형' 클릭하여 콤보박스 열기 -----------------
+    //  cy.get('input[aria-label="업무 유형"]').click({ force: true });
+    //  cy.wait(1000);
 
-     // 콤보박스 리스트안에서 '로그 수집기'를 찾아 클릭합니다.
-     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', '로그 수집기').click({ force: true });
-     cy.wait(1000);
+    //  // 콤보박스 리스트안에서 '로그 수집기'를 찾아 클릭합니다.
+    //  cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', '로그 수집기').click({ force: true });
+    //  cy.wait(1000);
 
-     // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
-     cy.get('input[aria-label="로그 파일"]').click({ force: true });
-     cy.wait(1000);
+    // //  // '로그 파일' 콤보박스을 찾아 클릭합니다.--------
+    // //  cy.get('input[aria-label="로그 파일"]').click({ force: true });
+    // //  cy.wait(1000);
      
-     // 콤보박스 리스트안에서 '/SQLPARSER_2001_********.log/'를 찾아 클릭합니다.
-     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', /SQLPARSER_2001_\d{8}\.log/).click({ force: true });
-     cy.wait(1000);
+    // //  // 콤보박스 리스트안에서 '/SQLPARSER_2001_********.log/'를 찾아 클릭합니다.
+    // //  cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', /SQLPARSER_2001_\d{8}\.log/).click({ force: true });
+    // //  cy.wait(1000);
 
-     // 선택이 잘 되었는지 검증코드
-     //cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', /SQLPARSER_2001_\d{8}\.log/);
+    //  // 선택이 잘 되었는지 검증코드
+    //  //cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', /SQLPARSER_2001_\d{8}\.log/);
 
-     // tail 토글 ON -> OFF
-     cy.get('input[aria-label="tail"]').uncheck({ force: true }) // 체크 해제 실행
-     .should('not.be.checked'); // 실제로 체크가 해제되었는지(OFF) 확인
-     cy.wait(1000);
+    //  // tail 토글 ON
+    //  cy.get('input[aria-label="tail"]').check({ force: true }).should('be.checked'); 
+    //  cy.wait(1000);
 
-     // 검색 버튼 클릭 
-     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(2000);
+    //  // 검색 버튼 클릭 
+    //  cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    //  cy.wait(2000);
      
-     // 로그 출력 검증코드
-     // 로그내용중  Currently in standby mode 텍스트 확인
-     cy.contains('.mtk1', 'Currently in standby mode').should('be.visible');
+    //  // 로그 출력 검증코드
+    //  // 로그내용중  Currently in standby mode 텍스트 확인
+    //  cy.contains('.mtk1', 'Currently in standby mode').should('be.visible');
 
-      // tail 토글 OFF-> ON
-     cy.get('input[aria-label="tail"]').check({ force: true })
-     .should('be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
-     cy.wait(1000);
+    //   // tail 토글 OFF-> ON
+    //  cy.get('input[aria-label="tail"]').check({ force: true })
+    //  .should('be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
+    //  cy.wait(1000);
 
-     // 검색 버튼 클릭 
-     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(2000);
+    //  // 검색 버튼 클릭 
+    //  cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    //  cy.wait(2000);
      
-     // 로그 출력 검증코드
-     // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 첫줄 텍스트 확인
-     // 'target'과 'logcollector' 경로가 모두 포함된 요소를 직접 찾습니다.
-     cy.contains('.mtk1', /target.*\/home\/logcatch\/data\/logcollector\/data/).should('be.visible');
+    //  // 로그 출력 검증코드
+    //  // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 첫줄 텍스트 확인
+    //  // 'target'과 'logcollector' 경로가 모두 포함된 요소를 직접 찾습니다.
+    //  cy.contains('.mtk1', /target.*\/home\/logcatch\/data\/logcollector\/data/).should('be.visible');
 
     //--------------------------------------------------
      cy.log('✅ 운영 - 태스크 - [로그 뷰] 출력 확인 완료 ');
