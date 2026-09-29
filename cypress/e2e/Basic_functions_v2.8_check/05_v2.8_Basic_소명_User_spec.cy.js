@@ -126,10 +126,9 @@ cy.get('body').then(($body) => {
     }
 });
     
-    //부서장 권한있는 유저가 로그인시 
-    //cy.log('--- 소명 > 나의 소명 서브메뉴 ---');
+    cy.log('--- 소명 > 나의 소명 서브메뉴 ---');
     //서브메뉴 관리 클릭 
-    //cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('나의 소명').click({ force: true });
+    cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('나의 소명').click({ force: true });
  
     
      
@@ -220,7 +219,7 @@ cy.wait(1000);
     // 소명 상태 클릭 (팝업창 다시띄우기) (소명상태 다중선택 취소 + 요청 )
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '요청' 클릭하는 코드
-    cy.get('.v-list__tile__title').filter(':visible').contains('신청').click({ force: true });
+    cy.get('.v-list__tile__title').filter(':visible').contains('요청').click({ force: true });
     cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
@@ -235,13 +234,13 @@ cy.get('body').then(($body) => {
     .filter((i, tr) => Cypress.$(tr).find('a').length > 0); // 'No data available' 행 제외
 
   if ($rows.length === 0) {
-    cy.log('ℹ️ [소명 상태: 취소 + 신청] 검색 결과 없음 → 검증 생략');
+    cy.log('ℹ️ [소명 상태: 취소 + 요청] 검색 결과 없음 → 검증 생략');
     return;
   }
 
-  cy.log(`✅ [소명 상태: 취소 + 신청] ${$rows.length}건 조회됨 → 행 검증 시작`);
+  cy.log(`✅ [소명 상태: 취소 + 요청] ${$rows.length}건 조회됨 → 행 검증 시작`);
   cy.wrap($rows).each(($row, index) => {
-    cy.wrap($row).invoke('text').should('match', /취소|신청/);
+    cy.wrap($row).invoke('text').should('match', /취소|요청/);
     cy.log(`${index + 1}번째 줄 검증 완료!`);
   });
 });
@@ -294,28 +293,28 @@ cy.wait(1000);
     // 소명 상태 클릭 (팝업창 다시띄우기)
     cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '요청' 클릭하는 코드
-    cy.get('.v-list__tile__title').filter(':visible').contains('신청').click({ force: true });
+    cy.get('.v-list__tile__title').filter(':visible').contains('요청').click({ force: true });
     cy.wait(1000);
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     // // '요청' 선택한 검색결과 검증코드
-    // cy.get('tbody').find('a').contains('신청').should('be.visible');
+    // cy.get('tbody').find('a').contains('요청').should('be.visible');
     cy.wait(1000);
-    // 결과 검증 - 데이터가 있으면 모든 행이 '신청', 없으면 통과
+    // 결과 검증 - 데이터가 있으면 모든 행이 '요청', 없으면 통과
 cy.get('body').then(($body) => {
   const $dataRows = $body.find('tbody:visible tr:visible')
     .filter((i, tr) => Cypress.$(tr).find('a').length > 0); // 'No data available' 행 제외
 
   if ($dataRows.length === 0) {
-    cy.log('ℹ️ [소명 상태: 신청] 검색 결과 없음 (No data available) → 검증 생략');
+    cy.log('ℹ️ [소명 상태: 요청] 검색 결과 없음 (No data available) → 검증 생략');
     return;
   }
 
-  cy.log(`✅ [소명 상태: 신청] ${$dataRows.length}건 조회됨 → 행 검증 시작`);
+  cy.log(`✅ [소명 상태: 요청] ${$dataRows.length}건 조회됨 → 행 검증 시작`);
   cy.wrap($dataRows).each(($row, index) => {
-    cy.wrap($row).should('contain', '신청');
+    cy.wrap($row).should('contain', '요청');
     cy.log(`${index + 1}번째 줄 검증 완료!`);
   });
 });
@@ -460,38 +459,38 @@ cy.wait(1000);
 
 
 
-//      // 선택한 소명 x버튼 클릭하여 초기화 
-//     cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-//     // 소명유형 클릭 (팝업창 다시 띄우기)
-//     cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
-//      // 소명유형중  '소명 필요' 클릭하는 코드
-//     cy.get('.v-list__tile__title').filter(':visible').contains('소명 필요').click({ force: true });
-//     cy.wait(1000);
-//     // 선택 후 메뉴 닫기
-//     cy.get('body').type('{esc}');
-//     // 검색 버튼 클릭
-//     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-//     cy.wait(1000);
-//     // '소명 필요' 선택한 검색결과 검증코드
-//     // 대기 &  소명필요 검색결과로 나오지  않는 이슈 ( 맨티스 이슈 : 37157)
-//     //cy.get('tbody').find('a').contains('소명 필요').should('be.visible');
-//     // 결과 검증 - 데이터가 있으면 모든 행이 '소명 필요', 없으면 통과
-// cy.get('body').then(($body) => {
-//   const $dataRows = $body.find('tbody:visible tr:visible')
-//     .filter((i, tr) => Cypress.$(tr).find('a').length > 0); // 'No data available' 행 제외
+     // 선택한 소명 x버튼 클릭하여 초기화 
+    cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    // 소명유형 클릭 (팝업창 다시 띄우기)
+    cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
+     // 소명유형중  '소명 필요' 클릭하는 코드
+    cy.get('.v-list__tile__title').filter(':visible').contains('소명 필요').click({ force: true });
+    cy.wait(1000);
+    // 선택 후 메뉴 닫기
+    cy.get('body').type('{esc}');
+    // 검색 버튼 클릭
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(1000);
+    // '소명 필요' 선택한 검색결과 검증코드
+    // 대기 &  소명필요 검색결과로 나오지  않는 이슈 ( 맨티스 이슈 : 37157)
+    //cy.get('tbody').find('a').contains('소명 필요').should('be.visible');
+    // 결과 검증 - 데이터가 있으면 모든 행이 '소명 필요', 없으면 통과
+cy.get('body').then(($body) => {
+  const $dataRows = $body.find('tbody:visible tr:visible')
+    .filter((i, tr) => Cypress.$(tr).find('a').length > 0); // 'No data available' 행 제외
 
-//   if ($dataRows.length === 0) {
-//     cy.log('ℹ️ [소명 유형: 소명 필요] 검색 결과 없음 (No data available) → 검증 생략');
-//     return;
-//   }
+  if ($dataRows.length === 0) {
+    cy.log('ℹ️ [소명 유형: 소명 필요] 검색 결과 없음 (No data available) → 검증 생략');
+    return;
+  }
 
-//   cy.log(`✅ [소명 유형: 소명 필요] ${$dataRows.length}건 조회됨 → 행 검증 시작`);
-//   cy.wrap($dataRows).each(($row, index) => {
-//     cy.wrap($row).should('contain', '소명 필요');
-//     cy.log(`${index + 1}번째 줄 검증 완료!`);
-//   });
-// });
-// cy.wait(1000);
+  cy.log(`✅ [소명 유형: 소명 필요] ${$dataRows.length}건 조회됨 → 행 검증 시작`);
+  cy.wrap($dataRows).each(($row, index) => {
+    cy.wrap($row).should('contain', '소명 필요');
+    cy.log(`${index + 1}번째 줄 검증 완료!`);
+  });
+});
+cy.wait(1000);
     cy.log('✅ 소명 - 나의소명 - [나의 소명 내역] 탭 진입 및 데이터 출력 확인 완료!');
 
 

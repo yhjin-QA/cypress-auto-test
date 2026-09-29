@@ -471,7 +471,8 @@ jobs:
               try {
                   $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
                   foreach ($r in @($content.results)) { $allTests += @(Get-AllTests $r $r.file) }
-              } catch { Write-Host "[WARN] JSON parse failed: $($file.Name)
+                            } catch { Write-Host "[WARN] JSON parse failed: $($file.Name)" }
+          } 
 
           $flakyCount = 0
           $groups = $allTests | Where-Object { $_.File } | Group-Object { "$($_.File)|$($_.Key)" }

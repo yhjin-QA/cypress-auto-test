@@ -249,8 +249,8 @@ navigateToSomyungManagement_1();
       // 소명상태 - 요청을  클릭하는 코드 
       cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
       cy.wait(1000);
-      // 소명상태중 '신청' 클릭하는 코드
-      cy.get('.v-list__tile__title').filter(':visible').contains('신청').click({ force: true });
+      // 소명상태중 '요청' 클릭하는 코드
+      cy.get('.v-list__tile__title').filter(':visible').contains('요청').click({ force: true });
       cy.wait(1000);
       // 선택 후 메뉴 닫기
       cy.get('body').type('{esc}');
@@ -280,7 +280,7 @@ navigateToSomyungManagement_1();
 
 //   cy.log(`✅ ${rowTexts.length}건 조회됨 → 행 검증 시작`);
 
-//   const expected = ['AI개발2팀', 'user001', '신청', '사후 소명'];
+//   const expected = ['AI개발2팀', 'user001', '요청', '사후 소명'];
 //   rowTexts.forEach((text, index) => {
 //     expected.forEach((word) => {
 //       expect(text, `${index + 1}번째 행에 '${word}' 포함`).to.include(word);
@@ -310,7 +310,7 @@ cy.contains(/전체:\s*\d+/).invoke('text').then((t) => {
       cy.log(`✅ ${rowTexts.length}건 조회됨 → 행 검증 시작`);
 
       rowTexts.forEach((text, index) => {
-        expect(text, `${index + 1}번째 행 소명 상태`).to.include('신청');
+        expect(text, `${index + 1}번째 행 소명 상태`).to.include('요청');
         expect(text, `${index + 1}번째 행 소명 유형`).to.include('사후 소명');
         cy.log(`${index + 1}번째 줄 검증 완료!`);
       });
@@ -318,7 +318,7 @@ cy.contains(/전체:\s*\d+/).invoke('text').then((t) => {
 });
 
       //-------------------------
-      // 소명상태 - 신청 + 반려 다중선택 클릭하는 코드 
+      // 소명상태 - 요청 + 반려 다중선택 클릭하는 코드 
       cy.get('input[aria-label="소명 상태"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
       cy.wait(1000);
       // 소명상태중 '취소' 클릭하는 코드
@@ -340,13 +340,13 @@ cy.contains(/전체:\s*\d+/).invoke('text').then((t) => {
       // 검색 버튼 클릭
       cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
-      // '신청 + 반려', '사후 소명' 검색결과 검증 (결과 없으면 통과)
+      // '요청 + 반려', '사후 소명' 검색결과 검증 (결과 없으면 통과)
 cy.get('body').then(($body) => {
   const $rows = $body.find('tbody:visible tr:visible')
     .filter((i, tr) => Cypress.$(tr).find('a').length > 0); // 'No data available' 행 제외
 
   if ($rows.length === 0) {
-    cy.log('ℹ️ [소명 상태: 신청 + 반려 / 유형: 사후 소명] 검색 결과 없음 → 검증 생략');
+    cy.log('ℹ️ [소명 상태: 요청 + 반려 / 유형: 사후 소명] 검색 결과 없음 → 검증 생략');
     return;
   }
 
@@ -356,8 +356,8 @@ cy.get('body').then(($body) => {
     // 모든 행 공통 조건
     cy.wrap($row).should('contain', 'AI개발2팀');
     cy.wrap($row).should('contain', '사후 소명');
-    // 소명 상태는 '신청' 또는 '반려' 중 하나 (OR 조건)
-    cy.wrap($row).invoke('text').should('match', /신청|반려/);
+    // 소명 상태는 '요청' 또는 '반려' 중 하나 (OR 조건)
+    cy.wrap($row).invoke('text').should('match', /요청|반려/);
     cy.log(`${index + 1}번째 줄 검증 완료!`);
   });
 });
@@ -478,7 +478,7 @@ cy.contains(/전체:\s*\d+/).invoke('text').then((t) => {
       //맨티스 이슈 : 0037197 수정필요
       // [소명] 소명 - 승인하기 탭 ' 승인이필요한 내역만 보기 클릭시' 초기화되어 검색결과 보여지지 않는 문제
       // 승인필요한 내역만 보기 표 검증
-      //cy.get('tbody').find('a').contains('신청').should('be.visible');
+      //cy.get('tbody').find('a').contains('요청').should('be.visible');
       //cy.get('tbody').find('a').contains('반려').should('not.exist');
       //cy.get('tbody').find('a').contains('승인').should('not.exist');
      
