@@ -111,13 +111,13 @@ describe('로그캐치 사이트 테스트', () => {
 
 
 // ==========================================
-// STEP 4: 상태 서브메뉴 
+// STEP 4: 현황 서브메뉴 
 // ==========================================
     
-cy.contains('button', '상태').click({ force: true });
+cy.contains('button', '현황').click({ force: true });
 cy.wait(2000);
 
-cy.log('--- 상태 > 정보사용자별 탭 클릭 ---');
+cy.log('--- 현황 > 정보사용자별 탭 클릭 ---');
 cy.get('.tab-btn').contains('정보사용자 별').should('be.visible').click({ force: true });
 cy.log('--- 화면 검증 시작 ---');
 cy.contains('.c-headline', '검색 조건').should('exist');
@@ -145,7 +145,7 @@ cy.get('span').filter(':visible').contains('정보 사용자').should('be.visibl
 
 ////////////////////////////
 // 기능확인 - 조건별로 검색
-// 업무 시스템 - 리눅스_배송관리 선택
+// 업무 시스템 - 리눅스_CRM고객관리 선택
 ////////////////////////////
 
 // 업무시스템 클릭하는 코드
@@ -159,8 +159,8 @@ cy.get('.v-menu__content').filter(':visible').should('be.visible');
 //cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '전체 선택').should('be.visible').click({ force: true });
 //cy.wait(1000);
 
-// 업무시스템중 리눅스_배송관리 클릭하는 코드
-cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_배송관리').scrollIntoView().should('be.visible').click({ force: true });
+// 업무시스템중 리눅스_CRM고객관리 클릭하는 코드
+cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_CRM고객관리').scrollIntoView().should('be.visible').click({ force: true });
 cy.wait(1000);
 
 // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
@@ -173,7 +173,7 @@ cy.get('body').type('{esc}');
     cy.get('span[title="정보 사용자"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     //cy.get('span[title="정보 사용자"]').should('be.visible').click();
     cy.wait(1000);
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    // 업무시스템중 리눅스_CRM고객관리 클릭하는 코드
     cy.get('.v-list__tile__title').contains('아이피').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
@@ -219,7 +219,7 @@ cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
 
 ////////////////////////////
 // 기능확인 - 조건별로 검색
-// 업무 시스템 - 리눅스_배송관리 선택
+// 업무 시스템 - 리눅스_CRM고객관리 선택
 ////////////////////////////
 
 // 업무시스템 클릭하는 코드
@@ -233,8 +233,8 @@ cy.get('.v-menu__content').filter(':visible').should('be.visible');
 //cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '전체 선택').should('be.visible').click({ force: true });
 //cy.wait(1000);
 
-// 업무시스템중 리눅스_배송관리 클릭하는 코드
-cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_배송관리').scrollIntoView().should('be.visible').click({ force: true });
+// 업무시스템중 리눅스_CRM고객관리 클릭하는 코드
+cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_CRM고객관리').scrollIntoView().should('be.visible').click({ force: true });
 cy.wait(1000);
 
 // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
@@ -245,7 +245,7 @@ cy.get('body').type('{esc}');
     cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     // 그룹별중 영업팀 클릭하는 코드
-    cy.get('.v-list__tile__title').contains('인사팀').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    cy.get('.v-list__tile__title').contains('AI개발2팀').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
@@ -287,7 +287,7 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
 
     ////////////////////////////
     // 기능확인 - 조건별로 검색 
-    //업무 시스템 - 리눅스_배송관리 선택
+    //업무 시스템 - 리눅스_CRM고객관리 선택
     // No data available 뜨는 이슈 발생 (맨티스 : 37152) 이로인해 두번클릭하게  우회코드 작성함. 
      //cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
 
@@ -295,8 +295,8 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
     cy.wait(1000);
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
    
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
+    // 업무시스템중 리눅스_CRM고객관리 클릭하는 코드
+    cy.contains('.v-list__tile__title', '리눅스_CRM고객관리').should('be.visible').click();
     cy.wait(1000);
     // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
@@ -337,7 +337,7 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
 
     ////////////////////////////
     // 기능확인 - 조건별로 검색 
-    //업무 시스템 - 리눅스_배송관리 선택
+    //업무 시스템 - 리눅스_CRM고객관리 선택
     // 조건 입력 
     //업무시스템 클릭하는 코드 
     //cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -345,15 +345,15 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
     cy.wait(1000);
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
    
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    //cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
+    // 업무시스템중 리눅스_CRM고객관리 클릭하는 코드
+    //cy.contains('.v-list__tile__title', '리눅스_CRM고객관리').should('be.visible').click();
     //cy.wait(1000);
     // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
     //cy.get('body').type('{esc}');
     
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    // 업무시스템중 리눅스_CRM고객관리 클릭하는 코드
     //cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').click({ force: true });
-    cy.get('.v-list__tile__title').filter(':visible').contains('리눅스_배송관리').click({ force: true });
+    cy.get('.v-list__tile__title').filter(':visible').contains('리눅스_CRM고객관리').click({ force: true });
     cy.wait(1000);
     // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
@@ -392,12 +392,12 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
 
     ////////////////////////////
     // 기능확인 - 조건별로 검색 
-    //업무 시스템 - 리눅스_배송관리 선택
+    //업무 시스템 - 리눅스_CRM고객관리 선택
     // 조건 입력 
     //업무시스템 클릭하는 코드 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
+    // 업무시스템중 리눅스_CRM고객관리 클릭하는 코드
     //cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.get('.v-list__tile__title').filter(':visible').contains('전체 선택').click({ force: true });
     cy.wait(1000);
@@ -443,7 +443,7 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
 
     ////////////////////////////
     // 기능확인 - 조건별로 검색 
-    //업무 시스템 - 리눅스_배송관리 선택
+    //업무 시스템 - 리눅스_CRM고객관리 선택
     // No data available 뜨는 이슈 발생 (맨티스 : 37152) 이로인해 두번클릭하게  우회코드 작성함. 
      //cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
 
@@ -451,8 +451,8 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
     cy.wait(1000);
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
    
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
+    // 업무시스템중 리눅스_CRM고객관리 클릭하는 코드
+    cy.contains('.v-list__tile__title', '리눅스_CRM고객관리').should('be.visible').click();
     cy.wait(1000);
     // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
@@ -473,7 +473,7 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 상태 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 현황 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 
