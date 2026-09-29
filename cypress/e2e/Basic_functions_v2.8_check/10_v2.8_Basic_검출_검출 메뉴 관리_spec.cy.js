@@ -152,12 +152,12 @@ describe('로그캐치 사이트 테스트', () => {
 
        //기능 확인 1-------------------------------------------------------
        // 메뉴 등록 필요 URI 검색 동작 
-       // 업무시스템 - 리눅스_배송관리 선택
+       // 업무시스템 - 리눅스_CRM고객관리 선택
        cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
        cy.wait(1000);
        cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
-       // 업무시스템중 리눅스_배송관리 클릭하는 코드
-       cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
+       // 업무시스템중 리눅스_CRM고객관리 클릭하는 코드
+       cy.contains('.v-list__tile__title', '리눅스_CRM고객관리').should('be.visible').click();
        cy.wait(1000);
        // 선택한 컨텍스트 메뉴 닫기
        cy.get('body').type('{esc}');
@@ -175,7 +175,7 @@ describe('로그캐치 사이트 테스트', () => {
 
 
        // URI 주소 입력하기 
-       cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/cop/logcatch/privacyFileDownloadAfter.do', { force: true });
+       cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/crm/api_tester.jsp', { force: true });
        cy.wait(1000);
 
        // 검색 버튼 클릭 
@@ -184,12 +184,12 @@ describe('로그캐치 사이트 테스트', () => {
        
 
        // 메뉴등록 필요 검색값 결과 검증코드  
-       // '/cop/logcatch/privacyFileDownloadAfter.do' 텍스트를 포함하고 있는 테이블 행(tr)을 찾습니다.
-       cy.contains('tr', '/cop/logcatch/privacyFileDownloadAfter.do')
+       // 텍스트를 포함하고 있는 테이블 행(tr)을 찾습니다.
+       cy.contains('tr', '/crm/api_tester.jsp')
        .scrollIntoView({ block: 'center' }) 
        .within(() => {
        // 2. 그 행(tr) 내부에서 텍스트와 주소가 모두 올바르게 존재하는지 확인합니다.
-       cy.contains('a', '리눅스_배송관리').should('be.visible'); 
+       cy.contains('a', '리눅스_CRM고객관리').should('be.visible'); 
        cy.contains('a', '메뉴 등록 필요').should('be.visible'); 
 
        });
@@ -207,7 +207,7 @@ describe('로그캐치 사이트 테스트', () => {
        cy.contains('label', '메뉴 등록 필요').closest('.v-input').find('input[type="checkbox"]').should('not.be.checked'); // 꺼져 있어야 정상!
 
        //배송관리 - 상품 배송 현황  URI 주소 입력하기 
-       cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/cop/logcatch/selectOrderList.do', { force: true });
+       cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/crm/soc_matrix.jsp', { force: true });
        cy.wait(1000);
 
        // 검색 버튼 클릭 
@@ -215,13 +215,12 @@ describe('로그캐치 사이트 테스트', () => {
        cy.wait(1000);
        
 
-       // 메뉴등록 필요 검색값 결과 검증코드  
-       // '/cop/logcatch/selectOrderList.do' 텍스트를 포함하고 있는 테이블 행(tr)을 찾습니다.
-       cy.contains('tr', '/cop/logcatch/selectOrderList.do')
+       // 메뉴등록된 검색값 결과 검증코드  
+       cy.contains('tr', '/crm/soc_matrix.jsp')
        .scrollIntoView({ block: 'center' }) 
        .within(() => {
        // 2. 그 행(tr) 내부에서 텍스트와 주소가 모두 올바르게 존재하는지 확인합니다.
-       cy.contains('a', '리눅스_배송관리').should('be.visible'); 
+       cy.contains('a', '리눅스_CRM고객관리').should('be.visible'); 
        cy.contains('a', '조회').should('be.visible'); 
 
        });
@@ -242,11 +241,11 @@ describe('로그캐치 사이트 테스트', () => {
        cy.contains('.v-input', '오탐/확정').find('input[type="checkbox"]').should('be.checked'); 
 
        // 오탐/확정 ON상태 검색값 결과 검증코드  
-      // 1. 중복이 많은 '리눅스_배송관리' 대신, 가장 고유한 값인 'URI 주소'를 기준으로 해당 줄(tr)을 정확히 짚어냅니다.
-      cy.contains('tr', '/cop/logcatch/searchUserInfoList.do')
+      // 1. 중복이 많은 '리눅스_CRM고객관리' 대신, 가장 고유한 값인 'URI 주소'를 기준으로 해당 줄(tr)을 정확히 짚어냅니다.
+      cy.contains('tr', '/crm/detail.jsp')
       .scrollIntoView({ block: 'center' }) 
       .within(() => {
-      cy.contains('a', '리눅스_배송관리').should('be.visible'); 
+      cy.contains('a', '리눅스_CRM고객관리').should('be.visible'); 
       cy.contains('a', '없음').should('be.visible'); 
          });
       
@@ -267,7 +266,7 @@ describe('로그캐치 사이트 테스트', () => {
        cy.wait(1000);
     
        // 엑셀 다운로드 팝업 확인창에서 AutoDetect1 파일명 입력 
-       cy.get('input[aria-label="파일 명"]').filter(':visible').first().type('AutoDetect1', { force: true });
+       cy.get('input[aria-label="파일명"]').filter(':visible').first().type('AutoDetect1', { force: true });
        cy.wait(1000);
     
        // 엑셀다운로드 팝업 확인창에서 확인 버튼 클릭
@@ -327,15 +326,12 @@ describe('로그캐치 사이트 테스트', () => {
        //기능 확인 1-------------------------------------------------------
        // 미등록 URI 검색 동작 
 
-       // 업무시스템 - 리눅스_배송관리 선택
+       // 업무시스템 - 리눅스_CRM고객관리 선택
        cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
        cy.wait(1000);
        cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
-       // 업무시스템중 리눅스_배송관리 클릭하는 코드
-       cy.contains('.v-list__tile__title', '리눅스_배송관리').scrollIntoView().should('be.visible').click();
-       cy.wait(1000);
-       // 업무시스템중 리눅스_배송관리 클릭하는 코드
-       cy.contains('.v-list__tile__title', '윈도우_배송관리').scrollIntoView().should('be.visible').click();
+       // 업무시스템중 리눅스_CRM고객관리 클릭하는 코드
+       cy.contains('.v-list__tile__title', '리눅스_CRM고객관리').scrollIntoView().should('be.visible').click();
        cy.wait(1000);
        // 선택한 컨텍스트 메뉴 닫기
        cy.get('body').type('{esc}');
@@ -352,8 +348,8 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('body').type('{esc}');
 
 
-       //배송관리 - 배송 담당자 조회  URI 주소 입력하기 
-       cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/cop/logcatch/selectDeliveryList.do', { force: true });
+       //URI 주소 입력하기 
+       cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/crm/api_tester.jsp', { force: true });
        cy.wait(1000);
 
        // 검색 버튼 클릭 
@@ -366,7 +362,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 텍스트를 가져와 앞뒤 공백을 제거한 결과가 빈 값인지 확인
         return $el.querySelectorAll('td')[3].innerText.trim() === '';
       })
-      .contains('/cop/logcatch/selectDeliveryList.do').parents('tr')
+      .contains('/crm/api_tester.jsp').parents('tr')
       .within(() => {
         // 4. '+' 버튼 노출 확인
         cy.get('.fa-plus').should('be.visible');
@@ -387,7 +383,7 @@ describe('로그캐치 사이트 테스트', () => {
        cy.contains('.v-input', '등록된 URI').find('input[type="checkbox"]').should('be.checked'); // 켜져 있어야 정상!
 
        //배송관리 - 배송 담당자 조회  URI 주소 입력하기 
-       cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/cop/logcatch/selectDeliveryList.do', { force: true });
+       cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/crm/soc_matrix.jsp', { force: true });
        cy.wait(1000);
 
        // 검색 버튼 클릭 
@@ -405,7 +401,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.wrap($el).find('td').eq(3).invoke('text').then((text) => {
           // 등록된 URI 칸이 비어있지 않아야 함 (이미 등록된 데이터들이므로)
           expect(text.trim()).to.not.be.empty;
-          expect(text.trim()).to.equal('/cop/logcatch/selectDeliveryList.do');
+          expect(text.trim()).to.equal('/crm/soc_matrix.jsp');
         });
       });
 
@@ -430,17 +426,16 @@ describe('로그캐치 사이트 테스트', () => {
        cy.wait(1000);
 
        //배송관리 - 상품 배송현황  URI 주소 입력하기 
-       cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/cop/logcatch/selectOrderList.do', { force: true });
+       cy.get('input[aria-label="URI 주소"]').filter(':visible').clear({ force: true }).type('/crm/soc_matrix.jsp', { force: true });
        cy.wait(1000);
 
        // 검색 버튼 클릭 
        cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
        cy.wait(1000);
 
-       // 미등록 URI 관리  검색값 결과 검증코드  
-       // '/cop/logcatch/selectOrderList.do' 텍스트를 포함하고 있는 테이블 행(tr)을 찾습니다.
+  
        // 1. 해당 URI 주소가 포함된 행(tr)을 찾습니다.
-       cy.contains('tr', '/cop/logcatch/selectOrderList.do')
+       cy.contains('tr', '/crm/soc_matrix.jsp')
        .scrollIntoView({ block: 'center' })
        .within(() => {
     
@@ -448,7 +443,7 @@ describe('로그캐치 사이트 테스트', () => {
        // eq(3)은 0부터 시작하므로 4번째 칸을 의미합니다. 
        // 수집된 URI(eq(2))와 섞이지 않도록 칸을 정확히 지정합니다.
       cy.get('td').eq(3).within(() => {
-      cy.contains('a', '/cop/logcatch/selectOrderList.do').should('be.visible');
+      cy.contains('a', '/crm/soc_matrix.jsp').should('be.visible');
        });
 
       // [해결 2] '+' 버튼 비활성화 상태 검증

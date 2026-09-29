@@ -313,8 +313,8 @@ describe('로그캐치 사이트 테스트', () => {
      // 선택한 컨텍스트 메뉴 닫기
      cy.get('body').type('{esc}'); 
 
-     // IP입력값  '10.10.54.5'을 타이핑합니다.
-     cy.get('input[aria-label="IP"][type="text"]').should('be.visible').clear().type('10.10.54.5');
+     // IP입력값  '10.10.0.12'을 타이핑합니다.
+     cy.get('input[aria-label="IP"][type="text"]').should('be.visible').clear().type('10.10.0.12');
      cy.wait(1000);
 
      //검색대상 클릭
@@ -327,12 +327,12 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
      //검색결과 검증
-     // 1. 검색한 IP('10.10.54.5')가 포함된 테이블 행(tr)을 먼저 찾습니다.
-     cy.contains('tbody tr', '10.10.54.5').should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
+     // 1. 검색한 IP('10.10.0.12')가 포함된 테이블 행(tr)을 먼저 찾습니다.
+     cy.contains('tbody tr', '10.10.0.12').should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
      .within(() => {
     
       cy.get('span.ellipsis').contains('Admin(admin)').should('be.visible');
-      cy.get('span.ellipsis').contains('10.10.54.5').should('be.visible');
+      cy.get('span.ellipsis').contains('10.10.0.12').should('be.visible');
      });
      //-------------------------------------------------------------------------------------------
 
@@ -358,12 +358,12 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
      //검색결과 검증
-     // 1. 검색한 IP('10.10.54.5')가 포함된 테이블 행(tr)을 먼저 찾습니다.
-     cy.contains('tbody tr', '10.10.54.5').should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
+     // 1. 검색한 IP('10.10.0.12')가 포함된 테이블 행(tr)을 먼저 찾습니다.
+     cy.contains('tbody tr', '10.10.0.12').should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
      .within(() => {
     
       cy.get('span.ellipsis').contains('로그인').should('be.visible');
-      cy.get('span.ellipsis').contains('10.10.54.5').should('be.visible');
+      cy.get('span.ellipsis').contains('10.10.0.12').should('be.visible');
      });
 
      // 이벤트 유형 : 로그인 -> 로그아웃로 변경하여 검색 클릭
@@ -382,18 +382,18 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
      //검색결과 검증
-     // 1. 검색한 IP('10.10.54.5')가 포함된 테이블 행(tr)을 먼저 찾습니다.
-     cy.contains('tbody tr', '10.10.54.5').should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
+     // 1. 검색한 IP('10.10.0.12')가 포함된 테이블 행(tr)을 먼저 찾습니다.
+     cy.contains('tbody tr', '10.10.0.12').should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
      .within(() => {
     
       cy.get('a.font-weight-bold').should('contain', '로그아웃').and('be.visible');
-      cy.get('span.ellipsis').contains('10.10.54.5').should('be.visible');
+      cy.get('span.ellipsis').contains('10.10.0.12').should('be.visible');
      });
 
      //-------------------------------------------------------------------------------------------
 
-     // IP입력값  '10.10.54.5'을 타이핑합니다.
-     cy.get('input[aria-label="IP"][type="text"]').should('be.visible').clear().type('10.10.0.210');
+     // IP입력값  '10.10.0.12'을 타이핑합니다.
+     cy.get('input[aria-label="IP"][type="text"]').should('be.visible').clear().type('10.10.0.12');
      cy.wait(1000);
 
      //검색조건에서  Administrators IP 검색고정하고 검색대상 시스템 이벤트 검색 조회 ---------------------------
@@ -428,8 +428,8 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
      //검색결과 검증
-     // 1. 검색한 IP('10.10.54.5')가 포함된 테이블 행(tr)을 먼저 찾습니다.
-     cy.contains('tbody tr', '10.10.0.210').should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
+     // 1. 검색한 IP('10.10.0.12')가 포함된 테이블 행(tr)을 먼저 찾습니다.
+     cy.contains('tbody tr', '10.10.0.12').should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
      .within(() => {
     
       cy.get('a.font-weight-bold').should('contain', '변경').and('be.visible');
@@ -469,7 +469,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="검색 대상"]').filter(':visible').click({ force: true });
      cy.wait(1000);
      // 검색대상 리스트중 '파일 내려받기' 클릭
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '파일 다운로드').should('be.visible').click({ force: true });
+     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '파일 내려받기').should('be.visible').click({ force: true });
      cy.wait(1000); 
 
      //이벤트 클릭

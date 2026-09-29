@@ -493,12 +493,12 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="로그 파일"]').click({ force: true });
      cy.wait(1000);
      
-     // 콤보박스 리스트안에서 'DISCRIMINATOR_2002_api_20260204.log'를 찾아 클릭합니다.
-     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'DISCRIMINATOR_2002_api_20260204.log').click({ force: true });
+     // 콤보박스 리스트안에서 'DISCRIMINATOR_2002_api_20260918.log'를 찾아 클릭합니다.
+     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'DISCRIMINATOR_2002_api_20260918.log').click({ force: true });
      cy.wait(1000);
 
      // 선택이 잘 되었는지 검증코드
-     cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'DISCRIMINATOR_2002_api_20260204.log');
+     cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'DISCRIMINATOR_2002_api_20260918.log');
 
      // tail 토글 OFF-> ON
      cy.get('input[aria-label="tail"]').check({ force: true })
