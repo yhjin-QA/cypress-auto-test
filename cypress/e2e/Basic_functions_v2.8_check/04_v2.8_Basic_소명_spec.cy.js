@@ -379,6 +379,7 @@ cy.wait(1000);
     cy.get('body').type('{esc}');
     // 검색 버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(1000);
     
 // 결과 검증 - 데이터가 있으면 모든 행이 '요청', 없으면 통과
 cy.get('body').then(($body) => {

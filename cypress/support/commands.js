@@ -30,7 +30,7 @@
 Cypress.Commands.add('login', (userId, password) => {
     cy.log(`🔑 [${userId}] 계정으로 로그인 진행`);
 
-    cy.visit('https://10.10.54.21:18443/logcatch/login');
+    cy.visit('/logcatch/login');
     cy.wait(3000);
 
     // 2. 새로고침 방어 및 세션 처리 통합 로직

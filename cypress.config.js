@@ -43,6 +43,12 @@ module.exports = defineConfig({
   },
 
   e2e: {
+    // 🌟 검증 대상 서버 (실행 시 --env TARGET_HOST=10.10.54.81 형태로 변경)
+    //    v2.9: 10.10.54.21 / v2.8: 10.10.54.81 / v2.7: 10.10.54.91
+    env: {
+      TARGET_HOST: '10.10.54.21',
+    },
+
     // 외부 사이트(WAS) 로딩 및 보안 이슈 해결을 위한 핵심 설정
     chromeWebSecurity: false, // 크로스 도메인 보안 정책 해제 (화면 깨짐 방지 도움)
     experimentalModifyObstructiveThirdPartyCode: true, // 외부 사이트의 방해 코드 수정 허용
@@ -66,6 +72,11 @@ module.exports = defineConfig({
     videoCompression: false,
     
     setupNodeEvents(on, config) {
+
+      // 🌟 대상 서버 (SSH / PostgreSQL / baseUrl 공통 적용)
+      const TARGET_HOST = config.env.TARGET_HOST || '10.10.54.21';
+      console.log(`\n🎯 검증 대상 서버: ${TARGET_HOST}\n`);
+
       // 브라우저 실행 전 Lighthouse 감사 준비
       on("before:browser:launch", (browser = {}, launchOptions) => {
         prepareAudit(launchOptions);
@@ -143,24 +154,13 @@ module.exports = defineConfig({
         // ==========================================
         // 👇 [신규 추가] SSH 원격 접속을 위한 태스크 (서버 검증용)
         // ==========================================
-        // async runSSH(command) {
-        //   const ssh = new NodeSSH();
-        //   try {
-        //     // 🚨 실제 로그캐치 서버 정보로 변경해 주세요!
-        //     await ssh.connect({
-        //       host: "10.10.54.21", // 대상 서버 IP
-        //       username: "root",    // 서버 접속 계정
-        //       password: "chakra", // 서버 접속 비밀번호
-        //       // port: 22 
-        //     });
-
        async runSSH(params) {
         
   let host, username, password, command;
 
-  // 1. 인자가 '문자열'인 경우 (기본 서버 54.21로 접속)
+  // 1. 인자가 '문자열'인 경우 (TARGET_HOST 서버로 접속)
   if (typeof params === 'string') {
-    host = "10.10.54.21";
+    host = TARGET_HOST;
     username = "root";
     // ✅ GitHub 환경변수가 있으면 쓰고, 없으면 로컬용 사용
     password = process.env.SSH_PASSWORD || "chakra";
@@ -168,7 +168,7 @@ module.exports = defineConfig({
   } 
   // 2. 인자가 '객체'인 경우 ({host, username, password, command})
   else {
-    host = params.host || "10.10.54.21";
+    host = params.host || TARGET_HOST;
     username = params.username || "root";
     // ✅ 파라미터로 받은 게 없으면 환경변수 확인 후 최후에 로컬용 사용
     password = params.password || process.env.SSH_PASSWORD || "chakra";
@@ -184,7 +184,7 @@ module.exports = defineConfig({
       // port: 22
     });
 
-            console.log(`\n📡 SSH 명령 실행 중: ${command}\n`);
+            console.log(`\n📡 SSH 명령 실행 중 (${host}): ${command}\n`);
             
             // 서버 터미널에 명령어를 입력하고 결과를 받아옵니다.
             const result = await ssh.execCommand(command);
@@ -255,10 +255,9 @@ module.exports = defineConfig({
                 // 👇 [신규 추가] PostgreSQL 직접 접속 및 쿼리 실행 태스크
                 // ==========================================
                 async queryPostgresDB(query) {
-                  // 🚨 아래 접속 정보는 실제 Postgres 환경에 맞게 수정이 필요합니다!
                   const client = new Client({
-                    host: "10.10.54.21", // Postgres 서버 IP
-                    port: 15432,            // Postgres 기본 포트 (보통 5432)
+                    host: TARGET_HOST,      // 🌟 대상 서버 (v2.9/.21, v2.8/.81, v2.7/.91 공통 계정)
+                    port: 15432,            // Postgres 포트
                     database: "logcatch",     // 대상 데이터베이스 이름
                     user: "logcatch",       // 접속 계정명
                     // ✅ GitHub 환경변수 처리 (로컬에서는 우측 비밀번호 사용)
@@ -266,7 +265,7 @@ module.exports = defineConfig({
                   });
                   try {
                     await client.connect();
-                    console.log(`\n🐘 PostgreSQL 쿼리 실행 중: ${query}\n`);
+                    console.log(`\n🐘 PostgreSQL 쿼리 실행 중 (${TARGET_HOST}): ${query}\n`);
                     // 쿼리 실행
                     const res = await client.query(query);
                     // 결과 반환 (오라클과 동일하게 [{컬럼: 값}, ...] 형태로 자동 반환됨)
@@ -287,6 +286,9 @@ module.exports = defineConfig({
 
 
       }); // task 블록 종료
+
+      // 🌟 TARGET_HOST에 맞춰 baseUrl 설정
+      config.baseUrl = `https://${TARGET_HOST}:18443`;
 
       return config;
     },

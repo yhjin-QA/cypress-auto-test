@@ -577,7 +577,8 @@ describe('로그캐치 사이트 테스트', () => {
      // 검색버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
      cy.wait(1000);
-     // 검색결과 검증 (결과가 없으면 스킵)
+
+// 검색결과 검증 (결과가 없으면 스킵)
 cy.get('body').then(($body) => {
   const $row = $body.find('tbody tr:visible').filter((i, tr) =>
     Cypress.$(tr).text().includes('접속이력 조회 화면 결과 파일')
