@@ -424,7 +424,7 @@ jobs:
   restart-task-run:
     needs: [deploy-qa, cypress-run]  # Job 2이 끝나야 시작
     # 👇 새 버전이 아닐 경우 이 Job 실행 안 함
-    if: needs.deploy-qa.outputs.skip_all != 'true'        
+    if: always() && needs.deploy-qa.result == 'success' && needs.deploy-qa.outputs.skip_all != 'true'    
     runs-on: [self-hosted, PC-Auto]
     # 👇 [추가] cy2 실행을 위한 환경 변수 복사
     env:
