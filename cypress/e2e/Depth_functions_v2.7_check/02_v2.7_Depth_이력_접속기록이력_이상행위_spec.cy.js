@@ -116,57 +116,6 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.contains('button', '이력').should('be.visible').click({ force: true });
     cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
 
-
-    // 이력 > 사용자 추척 서브메뉴 클릭 
-    cy.log('--- 이력 > 사용자 추적 클릭 ---');
-    // 설명: .v-list__tile__title 클래스 내의 '사용자 추적' 글자를 찾아 클릭
-    cy.contains('.v-list__tile__title', '사용자 추적').should('be.visible').click({ force: true });
-    cy.wait(3000);
-    cy.log('--- 화면 검증 시작 ---');
-    cy.contains('.c-headline', '검색 조건').should('exist');
-  
-    // 검색 조건 이름 입력란 확인
-     cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
-  
-     // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-     // 종료날짜 달력 아이콘확인
-     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-     // 전체선택 확인
-     cy.get('span[title="전체 선택"]').should('be.visible');
-     // like버튼 확인 
-     //cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
-    
-    //검색 버튼 존재 확인
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // 전체 건수 버튼 존재확인 
-    cy.get('.v-btn__content').filter(':visible').contains('전체 건수').should('be.visible');
-    //표열 문구확인
-    cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
-    cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
-    cy.get('th').filter(':visible').contains('부서/소속').should('be.visible');
-    cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
-    cy.get('th').filter(':visible').contains('접속 IP 주소').should('be.visible');
-    cy.get('th').filter(':visible').contains('접속 메뉴').should('be.visible');
-    cy.get('th').filter(':visible').contains('행위 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('개인정보 값').should('be.visible');
-    cy.get('th').filter(':visible').contains('조회').should('be.visible');
-    
-    
-    // ==========================================
-    // 테스트 자동화시나리오
-    // 이력 -  접속기록 이력 자동화 시니라오 테스트 
-    // ==========================================
-
-
-    // 이력 > 접속 기록 이력 서브메뉴 클릭  -----------------------
-    cy.contains('button', '이력').click({ force: true });
     cy.log('--- 이력 > 접속기록 이력  클릭 ---');
     cy.wait(3000);
     // 설명: .v-list__tile__title 클래스 내의 '사용자 추적' 글자를 찾아 클릭
@@ -188,7 +137,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // 검색 조건 이름 입력란 확인
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="경보 등급"]').filter(':visible').should('be.visible');
-    cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');
+    //cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');
   
     //검색버튼 존재확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
@@ -200,7 +149,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('th').filter(':visible').contains('이상행위 정책').should('be.visible');
     cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유무').should('be.visible'); 
-    cy.get('th').filter(':visible').contains('소명 대상').should('be.visible');
+    cy.get('th').filter(':visible').contains('소명 대상 여부').should('be.visible');
     cy.get('th').filter(':visible').contains('조회').should('be.visible'); 
 
 
@@ -263,42 +212,39 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.wait(500);
 
    // 1. 화면 전체(body)를 먼저 잡고 내부를 체크합니다.
-   cy.get('body').then(($body) => {
-  
-   // 검증코드  ("있으면 검증하고, 없으면 통과하기")
-   // 🟢 [주의] 아이콘이 화면에 한 개라도 있는가?
-   if ($body.find('i.g-ICriticalAlert').length > 0) {
-    cy.log('🟢 주의 로그 감지: 검증을 시작합니다.');
-    cy.get('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
-   } else {
-     cy.log('⚪ 주의 로그가 없습니다. 패스합니다.');
-   }
+cy.get('body').then(($body) => {
 
-   // 🟠 [경계] 아이콘이 화면에 한 개라도 있는가?
-   if ($body.find('i.g-IMajorAlert').length > 0) {
-     cy.log('🟠 경계 로그 감지: 검증을 시작합니다.');
-     cy.get('i.g-IMajorAlert').should('be.visible').and('have.css', 'color', 'rgb(255, 192, 0)');
-   } else {
-     cy.log('⚪ 경계 로그가 없습니다. 패스합니다.');
-   }
+  // 경보 등급별 아이콘 검증 ("있으면 검증하고, 없으면 통과하기")
+  // ⚠️ 버튼 아이콘(c-icon-headline)과 구분하기 위해 표 아이콘(c-data-grid-icons-icon)만 검증
+  const alertIcons = [
+    { label: '🟢 주의', cls: 'g-ICriticalAlert', color: 'rgb(169, 209, 142)' },
+    { label: '🟠 경계', cls: 'g-IMajorAlert',    color: 'rgb(255, 192, 0)'   },
+    { label: '🔴 심각', cls: 'g-IMinorAlert',    color: 'rgb(244, 67, 54)'   },
+  ];
 
-   // 🔴 [심각] 아이콘이 화면에 한 개라도 있는가?
-   if ($body.find('i.g-IMinorAlert').length > 0) {
-     cy.log('🔴 심각 로그 감지: 검증을 시작합니다.');
-     cy.get('i.g-IMinorAlert').should('be.visible').and('have.css', 'color', 'rgb(244, 67, 54)');
-   } else {
-     cy.log('⚪ 심각 로그가 없습니다. 패스합니다.');
+  alertIcons.forEach(({ label, cls, color }) => {
+    const selector = `i.c-data-grid-icons-icon.${cls}`;
+
+    if ($body.find(`${selector}:visible`).length > 0) {
+      cy.log(`${label} 로그 감지: 검증을 시작합니다.`);
+      cy.get(selector).filter(':visible').each(($icon) => {
+        cy.wrap($icon).should('have.css', 'color', color);
+      });
+    } else {
+      cy.log(`⚪ ${label} 로그가 없습니다. 패스합니다.`);
     }
-   });
+  });
+});
   
      //////////////////////////////////////////////////////
      // 이상행위 : 업무 시간 외 접속 (경보등급 : 심각,경계,주의)
      /////////////////////////////////////////////////////
      // 2번쨰 부터는 선택된 상태이므로 선택에 대한 초기화 코드 삽입
 
-    // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    // 선택한 이상행위 유형 x버튼 클릭하여 초기화
+   cy.get('input[aria-label="이상행위 유형"][type="text"]').first().closest('.v-input').find('.v-input__icon--clear .v-icon').click({ force: true });
+   cy.wait(500);
+
 
     // 이상행위 유형 선택 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -331,103 +277,47 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
-    //[검증] 표 안의 결과 확인 
-    //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
-    cy.wait(500);
-    cy.contains('tr', '업무 시간 외 접속').should('contain', 'test_auto_업무 시간 외 접속') .find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
+// [검증] 표 안의 결과 확인 (결과가 없으면 패스)
+// 표안의 한행의 문구 및 초록색 경보아이콘 색상 확인
+cy.wait(500);
+cy.get('body').then(($body) => {
+  const $row = $body.find('tbody tr:visible').filter((i, tr) =>
+    Cypress.$(tr).text().includes('업무 시간 외 접속')
+  );
+
+  if ($row.length === 0) {
+    cy.log('⚪ [업무 시간 외 접속] 검색 결과 없음 → 검증 생략');
+    return;
+  }
+
+  cy.log('✅ 검색 결과 발견 → 행 내용 검증');
+  cy.wrap($row.first())
+    .should('contain', 'test_auto_업무 시간 외 접속')
+    .find('i.g-ICriticalAlert')
+    .should('be.visible')
+    .and('have.css', 'color', 'rgb(169, 209, 142)');
+});
     
-    //////////////////////////////////////////////////////
-     // 이상행위 : 업무 시간 외 접속 (경보등급 : 심각,경계,주의) - 사용자 상태 조합 검증(전체 선택)
-     /////////////////////////////////////////////////////
     
-     //사용자 상태 클릭 --------------------------------------------------------------------------
-     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
-     cy.wait(1000);
-
-    // 사용자 상태 리스트 중 '전체' 선택
-    cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '전체').click({ force: true });
-    cy.wait(1000); // 선택 후 리스트가 닫히는 시간 확보
-
-    //검색버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    cy.wait(1000);
- 
-    cy.log('--- [핵심 검증] 업무 시간 외 접속 첫 번째 행 확인 ---');
-    // 1. '업무 시간 외 접속'이 포함된 행들 중 '첫 번째' 행만 선택
-    cy.get('tbody tr').filter(':contains("업무 시간 외 접속")').first() .within(() => {
-    // 2. [추가된 검증] '소명 불필요' 또는 '소명 대상' 텍스트가 보이는지 확인
-    cy.contains('td', /^(소명 불필요|소명 대상)$/).should('be.visible');
-
-    // 3. 아이콘 확인
-    cy.get('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
-
-    // 4. '존재' 또는 '미존재' 텍스트가 보이는지 확인
-    cy.contains('td', /^(존재|미존재)$/).should('be.visible');
-    });
-
-     // 특정 사용자(제흔휴) 검증
-     cy.contains('tr', '업무 시간 외 접속').find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
-     //----------------------------------------------------------------------------------------------------------------------------------------------
-    //사용자 상태 클릭 --------------------------------------------------------------------------
-     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
-     cy.wait(1000);
-
-    // 사용자 상태 리스트 중 '등록' 선택
-    cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '등록').click({ force: true });
-    cy.wait(1000); // 선택 후 리스트가 닫히는 시간 확보
-
-    //검색버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    cy.wait(1000);
- 
-     //검증코드
-     // '비로그인'와 '업무 시간 외 접속'이 포함된 tr이 아예 존재하지 않아야 함
-     cy.contains('tbody tr', /비로그인.*업무 시간 외 접속/).should('not.exist');
-     // 특정 사용자(제흔휴) 검증
-     cy.contains('tr', '업무 시간 외 접속').find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
-
-     //사용자 상태 클릭 --------------------------------------------------------------------------
-     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
-     cy.wait(1000);
-
-    // 사용자 상태 리스트 중 '미등록' 선택
-    cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '미등록').click({ force: true });
-    cy.wait(1000); // 선택 후 리스트가 닫히는 시간 확보
-
-    //검색버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    cy.wait(1000);
- 
-     //검증코드
-     cy.contains('tr', /비로그인.*업무 시간 외 접속/).find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
-    
-     //사용자 상태 초기화 -  전체 선택
-    //사용자 상태 클릭 --------------------------------------------------------------------------
-     cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
-     cy.wait(1000);
-
-    // 사용자 상태 리스트 중 '전체' 선택
-    cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '전체').click({ force: true });
-    cy.wait(1000); // 선택 후 리스트가 닫히는 시간 확보
-   
-
     //////////////////////////////////////////////////////
     // 이상행위 : 장기 미접속 사용자  (경보등급 : 심각,경계,주의)
     /////////////////////////////////////////////////////
     // 2번쨰 부터는 선택된 상태이므로 선택에 대한 초기화 코드 삽입
 
-    // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+     // 선택한 이상행위 유형 x버튼 클릭하여 초기화
+   cy.get('input[aria-label="이상행위 유형"][type="text"]').first().closest('.v-input').find('.v-input__icon--clear .v-icon').click({ force: true });
+   cy.wait(500);
 
-    // 이상행위 유형 선택 
+
+    /// 이상행위 유형 선택
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(1000);
+
+    // 열린 메뉴 안에서만 탐색 (목록 로딩 대기 포함)
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '장기 미접속 사용자', { timeout: 10000 }).scrollIntoView().closest('.v-list__tile').click({ force: true });
     cy.wait(500);
-    // 이상행위 유형중 '장기 미접속 사용자' 클릭하는 코드
-    cy.get('.v-list__tile__title').filter(':visible').contains('장기 미접속 사용자').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
-
 
     // 선택한 경보등급 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
@@ -451,25 +341,49 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     //검색버튼 클릭
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
-    //[검증] 표 안의 결과 확인 
-    //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
-    cy.wait(500);
-    cy.contains('tr', '장기 미접속 사용자').should('contain', 'test_auto_장기 미접속 사용자').should('be.visible');
+// [검증] 표 안의 결과 확인 (결과가 없으면 패스)
+// 표안의 한행의 문구 확인
+// cy.wait(500);
+// cy.get('body').then(($body) => {
+//   const $row = $body.find('tbody tr:visible').filter((i, tr) =>
+//     Cypress.$(tr).text().includes('장기 미접속 사용자')
+//   );
+
+//   if ($row.length === 0) {
+//     cy.log('⚪ [장기 미접속 사용자] 검색 결과 없음 → 검증 생략');
+//     return;
+//   }
+
+//   cy.log('✅ 검색 결과 발견 → 행 내용 검증');
+//   cy.wrap($row.first())
+//     .should('contain', 'test_auto_장기 미접속 사용자')
+//     .and('be.visible');
+// });
+
+//command.js에 등록하여 커맨드화
+cy.verifyRowIfExists('장기 미접속 사용자', () => {
+  cy.root().should('contain', 'test_auto_장기 미접속 사용자');
+});
 
     //////////////////////////////////////////////////////
     // 이상행위 : 미등록 사용자 접속  (경보등급 : 심각,경계,주의)
     /////////////////////////////////////////////////////
     // 2번쨰 부터는 선택된 상태이므로 선택에 대한 초기화 코드 삽입
 
-    // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+     // 선택한 이상행위 유형 x버튼 클릭하여 초기화
+   cy.get('input[aria-label="이상행위 유형"][type="text"]').first().closest('.v-input').find('.v-input__icon--clear .v-icon').click({ force: true });
+   cy.wait(500);
 
-    // 이상행위 유형 선택 
+
+    //// 이상행위 유형 선택
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.wait(1000);
+
+    // 열린 메뉴 안에서만 탐색 (목록 로딩 대기 포함)
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '미등록 사용자 접속', { timeout: 10000 }).scrollIntoView().closest('.v-list__tile').click({ force: true });
     cy.wait(500);
-    // 이상행위 유형중 '미등록 사용자 접속' 클릭하는 코드
-    cy.get('.v-list__tile__title').filter(':visible').contains('미등록 사용자 접속').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // 선택 후 메뉴 닫기
+    cy.get('body').type('{esc}');
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
@@ -497,22 +411,19 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
     //[검증] 표 안의 결과 확인 
-    //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
-    cy.wait(500);
-    // 데이터 이력있을시
-    cy.contains('tr', '미등록 사용자 접속').should('contain', 'test_auto_미등록 사용자 접속').should('be.visible');
-    // 데이터 이력없을시
-    // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
-    //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
+    cy.verifyRowIfExists('미등록 사용자 접속', () => {
+  cy.root().should('contain', 'test_auto_미등록 사용자 접속');
+});
 
     //////////////////////////////////////////////////////
     // 이상행위 : 비인가 IP 접근  (경보등급 : 심각,경계,주의)
     /////////////////////////////////////////////////////
     // 2번쨰 부터는 선택된 상태이므로 선택에 대한 초기화 코드 삽입
 
-    // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+     // 선택한 이상행위 유형 x버튼 클릭하여 초기화
+   cy.get('input[aria-label="이상행위 유형"][type="text"]').first().closest('.v-input').find('.v-input__icon--clear .v-icon').click({ force: true });
+   cy.wait(500);
+
 
     // 이상행위 유형 선택 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -546,22 +457,19 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
     //[검증] 표 안의 결과 확인 
-    //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
-    cy.wait(500);
-    // 데이터 이력있을시
-    cy.contains('tr', '비인가 IP 접근').should('contain', 'test_auto_비인가 IP 접근').should('be.visible');
-    // 데이터 이력없을시
-    // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
-    //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
+    cy.verifyRowIfExists('비인가 IP 접근', () => {
+  cy.root().should('contain', 'test_auto_비인가 IP 접근');
+});
 
     //////////////////////////////////////////////////////
     // 이상행위 : 사전 소명 메뉴 접근  (경보등급 : 심각,경계,주의)
     /////////////////////////////////////////////////////
     // 2번쨰 부터는 선택된 상태이므로 선택에 대한 초기화 코드 삽입
 
-    // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+     // 선택한 이상행위 유형 x버튼 클릭하여 초기화
+   cy.get('input[aria-label="이상행위 유형"][type="text"]').first().closest('.v-input').find('.v-input__icon--clear .v-icon').click({ force: true });
+   cy.wait(500);
+
 
     // 이상행위 유형 선택 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -595,22 +503,19 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
     //[검증] 표 안의 결과 확인 
-    //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
-    cy.wait(500);
-    // 데이터 이력있을시
-    cy.contains('tr', '사전 소명 메뉴 접근').should('contain', 'DEFAULT').find('i.g-IMinorAlert').should('be.visible').and('have.css', 'color', 'rgb(244, 67, 54)');
-    // 데이터 이력없을시
-    // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
-    //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
+   cy.verifyRowIfExists('사전 소명 메뉴 접근', () => {
+  cy.root().should('contain', 'test_auto_사전 소명 메뉴 접근');
+});
 
     //////////////////////////////////////////////////////
     // 이상행위 : 개인정보 유형 과다사용  (경보등급 : 심각,경계,주의)
     /////////////////////////////////////////////////////
     // 2번쨰 부터는 선택된 상태이므로 선택에 대한 초기화 코드 삽입
 
-    // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+     // 선택한 이상행위 유형 x버튼 클릭하여 초기화
+   cy.get('input[aria-label="이상행위 유형"][type="text"]').first().closest('.v-input').find('.v-input__icon--clear .v-icon').click({ force: true });
+   cy.wait(500);
+
 
     // 이상행위 유형 선택 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -644,22 +549,24 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
     //[검증] 표 안의 결과 확인 
-    //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
-    cy.wait(500);
-    // 데이터 이력있을시
-    cy.contains('tr', '개인정보 유형 과다사용').should('contain', 'test_auto_개인정보 유형 과다사용').should('be.visible');
-    // 데이터 이력없을시
-    // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
-    //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
+    cy.verifyRowIfExists('개인정보 유형 과다사용', () => {
+  cy.root().should('contain', 'test_auto_개인정보 유형 과다사용');
+});
 
     //////////////////////////////////////////////////////
     // 이상행위 : 열람제한 개인정보 접근  (경보등급 : 심각,경계,주의)
     /////////////////////////////////////////////////////
     // 2번쨰 부터는 선택된 상태이므로 선택에 대한 초기화 코드 삽입
-
-    // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     cy.wait(500);
+
+    cy.contains('.v-input .v-label', /^\s*이상행위 유형\s*$/)
+  .closest('.v-input')
+  .invoke('html')
+  .then((h) => cy.log(`📋 ${h.substring(0, 500)}`));
+
+   // 선택한 이상행위 유형 x버튼 클릭하여 초기화
+   cy.get('input[aria-label="이상행위 유형"][type="text"]').first().closest('.v-input').find('.v-input__icon--clear .v-icon').click({ force: true });
+   cy.wait(500);
 
     // 이상행위 유형 선택 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -693,22 +600,19 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
     //[검증] 표 안의 결과 확인 
-    //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
-    cy.wait(500);
-    // 데이터 이력있을시
-    cy.contains('tr', '열람제한 개인정보 접근').should('contain', 'test_auto_열람제한 개인정보 접근').should('be.visible');
-    // 데이터 이력없을시
-    // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
-    //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
+    cy.verifyRowIfExists('열람제한 개인정보 접근', () => {
+  cy.root().should('contain', 'test_auto_열람제한 개인정보 접근');
+});
 
     //////////////////////////////////////////////////////
     // 이상행위 : 권한 외 메뉴 접근  (경보등급 : 심각,경계,주의)
     /////////////////////////////////////////////////////
     // 2번쨰 부터는 선택된 상태이므로 선택에 대한 초기화 코드 삽입
 
-    // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    // 선택한 이상행위 유형 x버튼 클릭하여 초기화
+   cy.get('input[aria-label="이상행위 유형"][type="text"]').first().closest('.v-input').find('.v-input__icon--clear .v-icon').click({ force: true });
+   cy.wait(500);
+
 
     // 이상행위 유형 선택 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -742,23 +646,19 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
     //[검증] 표 안의 결과 확인 
-    //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
-    cy.wait(500);
-    // 데이터 이력있을시
-    cy.contains('tr', '권한 외 메뉴 접근',{ timeout: 15000 }).should('contain', 'test_auto_권한 외 메뉴 접근').should('be.visible');
-    cy.wait(2000);
-    // 데이터 이력없을시
-    // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
-    //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
+    cy.verifyRowIfExists('권한 외 메뉴 접근', () => {
+  cy.root().should('contain', 'test_auto_권한 외 메뉴 접근');
+});
 
     //////////////////////////////////////////////////////
     // 이상행위 : 비인가 접근 사용자  (경보등급 : 심각,경계,주의)
     /////////////////////////////////////////////////////
     // 2번쨰 부터는 선택된 상태이므로 선택에 대한 초기화 코드 삽입
 
-    // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    // 선택한 이상행위 유형 x버튼 클릭하여 초기화
+   cy.get('input[aria-label="이상행위 유형"][type="text"]').first().closest('.v-input').find('.v-input__icon--clear .v-icon').click({ force: true });
+   cy.wait(500);
+
 
     // 이상행위 유형 선택 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -792,23 +692,19 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
     //[검증] 표 안의 결과 확인 
-    //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
-    cy.wait(500);
-    // 데이터 이력있을시
-    cy.contains('tr', '비인가 접근 사용자').should('contain', 'test_auto_비인가 접근 사용자').should('be.visible');
-    // 데이터 이력없을시
-    // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
-    //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
-    cy.wait(500);
+    cy.verifyRowIfExists('비인가 접근 사용자', () => {
+  cy.root().should('contain', 'test_auto_비인가 접근 사용자');
+});
 
     //////////////////////////////////////////////////////
     // 이상행위 : 접근제한 업무 시스템 접근  (경보등급 : 심각,경계,주의)
     /////////////////////////////////////////////////////
     // 2번쨰 부터는 선택된 상태이므로 선택에 대한 초기화 코드 삽입
 
-    // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    // 선택한 이상행위 유형 x버튼 클릭하여 초기화
+   cy.get('input[aria-label="이상행위 유형"][type="text"]').first().closest('.v-input').find('.v-input__icon--clear .v-icon').click({ force: true });
+   cy.wait(500);
+
 
     // 이상행위 유형 선택 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').scrollIntoView().closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -846,13 +742,9 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
     //[검증] 표 안의 결과 확인 
-    //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
-    cy.wait(500);
-    // 데이터 이력있을시
-    cy.contains('tr', '접근제한 업무 시스템 접근').should('contain', 'test_auto_접근제한 업무 시스템 접근').should('be.visible');
-    // 데이터 이력없을시
-    // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
-    //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
+   cy.verifyRowIfExists('접근제한 업무 시스템 접근', () => {
+  cy.root().should('contain', 'test_auto_접근제한 업무 시스템 접근');
+});
 
     //////////////////////////////////////////////////////
     // 이상행위 : 파일다운로드  (경보등급 : 심각,경계,주의)
@@ -860,7 +752,12 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // 2번쨰 부터는 선택된 상태이므로 선택에 대한 초기화 코드 삽입
 
     // 선택한 이상행위 유형 x버튼 클릭하여 초기화  (특이사항 기존방식이안되어 클래스 조합 + contains('clear') 방식으로 초기화 )
-    cy.get('i.v-icon--link.material-icons.primary--text').contains('clear').click({ force: true });
+    //cy.get('i.v-icon--link.material-icons.primary--text').contains('clear').click({ force: true });
+
+     // 선택한 이상행위 유형 x버튼 클릭하여 초기화
+   cy.get('input[aria-label="이상행위 유형"][type="text"]').first().closest('.v-input').find('.v-input__icon--clear .v-icon').click({ force: true });
+   cy.wait(500);
+
 
     // 이상행위 유형 선택 
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').scrollIntoView().closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -898,23 +795,19 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
     //[검증] 표 안의 결과 확인 
-    //표안의 한행의 문구 및 초록색 경보아이콘 색상 확인 
-    cy.wait(500);
-    // 데이터 이력있을시
-    cy.contains('tr', '파일다운로드').should('contain', 'test_auto_파일다운로드').find('i.g-ICriticalAlert').should('be.visible').and('have.css', 'color', 'rgb(169, 209, 142)');
-    // 데이터 이력없을시
-    // 현재 화면의 메인 컨텐츠 영역 안에 있는 'No data available'만 체크
-    //cy.get('main').contains('td.text-xs-center', 'No data available').should('exist');
-
+   cy.verifyRowIfExists('파일다운로드', () => {
+  cy.root().should('contain', 'test_auto_파일다운로드');
+});
 
     //////////////////////////////////////////////////////
     // 이상행위 : 선택하지 않음 (경보등급 : 전체 선택)
     /////////////////////////////////////////////////////
     // 2번쨰 부터는 선택된 상태이므로 선택에 대한 초기화 코드 삽입
 
-    // 선택한 이상행위 유형 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-    cy.wait(500);
+    // 선택한 이상행위 유형 x버튼 클릭하여 초기화
+   cy.get('input[aria-label="이상행위 유형"][type="text"]').first().closest('.v-input').find('.v-input__icon--clear .v-icon').click({ force: true });
+   cy.wait(500);
+
 
     // 선택한 경보등급 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });

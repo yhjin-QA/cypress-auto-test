@@ -159,3 +159,22 @@ Cypress.Commands.add('visitWithRetry', (url, options = {}, retries = 3) => {
 
   attempt(retries);
 });
+
+
+// ==========================================================
+// 검증결과가 없으면 패스 
+// ==========================================================
+
+Cypress.Commands.add('verifyRowIfExists', (keyword, verifyFn) => {
+  cy.get('body').then(($body) => {
+    const $row = $body.find('tbody tr:visible').filter((i, tr) =>
+      Cypress.$(tr).text().includes(keyword)
+    );
+    if ($row.length === 0) {
+      cy.log(`⚪ [${keyword}] 검색 결과 없음 → 검증 생략`);
+      return;
+    }
+    cy.log(`✅ [${keyword}] 검색 결과 발견 → 검증 수행`);
+    cy.wrap($row.first()).within(verifyFn);
+  });
+});

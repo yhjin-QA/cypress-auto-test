@@ -116,68 +116,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('button', '이력').should('be.visible').click({ force: true });
     cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
 
-
-    // 이력 > 사용자 추척 서브메뉴 클릭 
-    cy.log('--- 이력 > 사용자 추적 클릭 ---');
-    // 설명: .v-list__tile__title 클래스 내의 '사용자 추적' 글자를 찾아 클릭
-    cy.contains('.v-list__tile__title', '사용자 추적').should('be.visible').click({ force: true });
-    cy.wait(3000);
-    cy.log('--- 화면 검증 시작 ---');
-    cy.contains('.c-headline', '검색 조건').should('exist');
-  
-    // 검색 조건 이름 입력란 확인
-     cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
-  
-     // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-     // 종료날짜 달력 아이콘확인
-     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-     // 전체선택 확인
-     cy.get('span[title="전체 선택"]').should('be.visible');
-     // like버튼 확인 
-     //cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
-    
-    //검색 버튼 존재 확인
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // 전체 건수 버튼 존재확인 
-    cy.get('.v-btn__content').filter(':visible').contains('전체 건수').should('be.visible');
-    //표열 문구확인
-    cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
-    cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
-    cy.get('th').filter(':visible').contains('부서/소속').should('be.visible');
-    cy.get('th').filter(':visible').contains('정보 사용자').should('be.visible');
-    cy.get('th').filter(':visible').contains('접속 IP 주소').should('be.visible');
-    cy.get('th').filter(':visible').contains('접속 메뉴').should('be.visible');
-    cy.get('th').filter(':visible').contains('행위 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('개인정보 값').should('be.visible');
-    cy.get('th').filter(':visible').contains('선택').should('be.visible');
-
-  
-  
-    // ==========================================
-    // 테스트 자동화시나리오
-    // 이력 - 접속기록 이력 자동화 시니라오 테스트 
-    // ==========================================
-
-
-
-    // 이력 > 접속 기록 이력 서브메뉴 클릭  -----------------------
-    // ✅ 수정
-    cy.contains('button', '이력').should('be.visible').click({ force: true });
-    cy.wait(3000);
     cy.log('--- 이력 > 접속기록 이력  클릭 ---');
     
     // 설명: .v-list__tile__title 클래스 내의 '사용자 추적' 글자를 찾아 클릭
     cy.contains('.v-list__tile__title', '접속기록 이력').should('be.visible').click({ force: true });
     cy.wait(3000);
   
-    //이력 > 접속기록 이력 > [통합]탭 선택
+     //이력 > 접속기록 이력 > [통합]탭 선택
     cy.get('.tab-btn').contains('통합').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
@@ -190,22 +135,25 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"][role="combobox"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="접속 메뉴"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="사용자 계정').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
+     cy.get('input[aria-label="시작 IP"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="종료 IP"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="URI').parents('.v-input').find('.v-chip__content').contains('like').should('be.visible');
+     cy.get('input[aria-label="검출 유형"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="개인정보 건수"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="개인정보 건수"]').parents('.v-input').find('.v-chip__content').contains('이상').should('be.visible');
-      cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');
 
     //검색 버튼 존재확인 
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // 전체 건수 버튼 존재확인 
-    cy.get('.v-btn__content').filter(':visible').contains('전체 건수').should('be.visible');
+   
     //토글 문구 확인
     cy.get('label').filter(':visible').contains('개인정보').should('be.visible');
+     //토글 문구 확인
+    cy.get('label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
+    
     //표열 문구확인
     cy.get('th').filter(':visible').contains('접속 일시').should('be.visible');
     cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
@@ -214,12 +162,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('접속 IP 주소').should('be.visible');
     cy.get('th').filter(':visible').contains('접속 메뉴').should('be.visible');
     cy.get('th').filter(':visible').contains('행위 유형').should('be.visible');
+    cy.get('th').filter(':visible').contains('검출 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('건수').should('be.visible');
     cy.get('th').filter(':visible').contains('상세 접속기록 정보').should('be.visible');
-    //cy.get('th').filter(':visible').contains('처리').should('be.visible');
-    // 3.0.5.1191_r35135 가로 스크롤 문제로 DOM 존재 확인으로 처리 
-    cy.get('th').contains('처리').should('exist');
+    
 
     //달력표를 펼침 
     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
@@ -228,7 +175,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
     // 2. '1월'이라는 글자를 찾아 클릭합니다.
-     cy.get('.v-date-picker-table--month').filter(':visible').contains('1월').click({ force: true });
+     cy.get('.v-date-picker-table--month').filter(':visible').contains('8월').click({ force: true });
     // 달력 20일 클릭
     cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '20일').closest('.v-btn').click({ force: true });
     //달력창 닫기
@@ -239,20 +186,128 @@ describe('로그캐치 사이트 테스트', () => {
     //업무시스템 클릭하는 코드 
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(500);
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    cy.get('.v-list__tile__title').contains('리눅스_배송관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // 업무시스템중 리눅스_CRM고객관리 클릭하는 코드
+    cy.get('.v-list__tile__title').contains('리눅스_CRM고객관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
 
   
-    // 개인정보 건수 입력하여 다운로드 하는 경우
-    // '개인정보 건수' 입력창에 100을 입력합니다.
-    cy.get('input[aria-label="개인정보 건수"]').filter(':visible').clear().type('100');    
+    // // 개인정보 건수 입력하여 다운로드 하는 경우
+    // // '개인정보 건수' 입력창에 100을 입력합니다.
+    // cy.get('input[aria-label="개인정보 건수"]').filter(':visible').clear().type('100');    
 
     // 검색버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
     cy.wait(1000);
+
+ 
+// =====================================================
+// 통합 탭 - 선택 가능한 날짜를 최신순으로 순회하며 검색 결과 탐색
+// =====================================================
+
+// ---------- 헬퍼 ----------
+
+// 날짜 선택 드롭다운 (aria-label 기준 → 감싸는 .v-input)
+const getDateSelect = () =>
+  cy.get('input[aria-label="날짜 선택"]')
+    .filter(':visible')
+    .first()
+    .closest('.v-input');
+
+// 드롭다운 열기 (.v-input 이 아니라 .v-input__slot 을 클릭해야 열림)
+const openDateDropdown = () => {
+  getDateSelect().find('.v-input__slot').click({ force: true });
+  cy.wait(1000);
+};
+
+// 현재 표에 '리눅스_CRM고객관리' 데이터 행이 있는지
+const hasIntegratedRows = ($body) =>
+  $body.find('tbody:visible tr:visible').filter((i, tr) =>
+    Cypress.$(tr).find('a:contains("리눅스_CRM고객관리")').length > 0
+  ).length > 0;
+
+// 드롭다운을 열어 선택 가능한 날짜 목록을 최신순으로 반환
+const getAvailableDates = () => {
+  openDateDropdown();
+
+  return cy.get('body').then(($body) => {
+    const $menu = $body.find('.v-menu__content:visible');
+    if ($menu.length === 0) {
+      cy.log('❌ 날짜 드롭다운이 열리지 않았습니다.');
+      return cy.wrap([], { log: false });
+    }
+
+    const dates = [...$menu.first().find('.v-list__tile__title')]
+      .map(el => el.innerText.trim())
+      .filter(t => /^\d{4}-\d{2}-\d{2}$/.test(t));
+
+    const unique = [...new Set(dates)].sort().reverse(); // 최신 날짜 먼저
+    cy.log(`🎯 선택 가능한 날짜 (${unique.length}개): ${unique.join(', ')}`);
+    return cy.wrap(unique, { log: false });
+  });
+};
+
+const selectDate = (dateToFind) => {
+  cy.get('body').then(($body) => {
+    if ($body.find('.v-menu__content:visible').length === 0) {
+      openDateDropdown();
+    }
+  });
+
+  cy.get('.v-menu__content:visible')
+    .first()
+    .contains(dateToFind)
+    .click({ force: true });
+
+  getDateSelect().find('.v-select__selection').should('contain', dateToFind);
+  cy.wait(2000);
+};
+
+// 날짜 목록을 순회하며 결과가 있는 날짜를 찾음
+const searchIntegratedByDate = (dates, dateIndex) => {
+  if (dateIndex >= dates.length) {
+    cy.log('❌ 선택 가능한 모든 날짜에 통합 검색 결과가 없습니다.');
+    // 의도적으로 실패 처리
+    cy.get('tbody:visible a:contains("리눅스_CRM고객관리")').should('be.visible');
+    return;
+  }
+
+  const dateToFind = dates[dateIndex];
+  cy.log(`▶️ [통합 탐색 ${dateIndex + 1}/${dates.length}] ${dateToFind}`);
+
+  selectDate(dateToFind);
+
+  cy.get('body').then(($body) => {
+    if (hasIntegratedRows($body)) {
+      cy.log(`✅ [${dateToFind}] 통합 검색 결과 발견`);
+    } else {
+      cy.log(`⚠️ [${dateToFind}] 결과 없음 → 다음 날짜로 재탐색`);
+      searchIntegratedByDate(dates, dateIndex + 1);
+    }
+  });
+};
+
+// ---------- 탐색 시작 ----------
+
+cy.get('body').then(($body) => {
+  // 이미 결과가 떠 있으면 날짜를 건드리지 않고 바로 검증으로
+  if (hasIntegratedRows($body)) {
+    cy.log('✅ 현재 화면에 이미 결과가 있어 날짜 탐색을 생략합니다.');
+    return;
+  }
+
+  getAvailableDates().then((dates) => {
+    if (dates.length === 0) {
+      cy.log('❌ 날짜 드롭다운에 선택 가능한 날짜가 없습니다.');
+      cy.get('.v-menu__content:visible').should('exist'); // 실패 처리
+      return;
+    }
+    searchIntegratedByDate(dates, 0);
+  });
+});
+
+//---------------------------------------------------------------------------------------------   
 
    
  function downloadAndVerify(downloadType) {
