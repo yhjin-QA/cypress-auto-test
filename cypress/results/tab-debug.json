@@ -1,0 +1,42 @@
+{
+  "url": "https://10.10.54.51:18443/logcatch/record/accessLog/comprehensiveLog",
+  "count": 3,
+  "results": [
+    {
+      "visible": false,
+      "chain": [
+        "span.display.node-lv3",
+        "div.v-treeview-node__label",
+        "div.v-treeview-node__content",
+        "div.v-treeview-node__root",
+        "div.v-treeview-node.v-treeview-node--leaf.v-treeview-node--click",
+        "div.v-treeview-node__children"
+      ],
+      "html": "<div class=\"v-treeview-node__root\"><i aria-hidden=\"true\" class=\"v-icon v-treeview-node__checkbox v-icon--link material-icons theme--light\">star_border</i><div class=\"v-treeview-node__content\"><div class=\"v-treeview-node__label\"><span class=\"display node-lv3\">통합</span></div></div></div>"
+    },
+    {
+      "visible": true,
+      "chain": [
+        "a.v-breadcrumbs__item.v-breadcrumbs__item--disabled",
+        "li",
+        "ul.v-breadcrumbs.theme--dark",
+        "div.layout.align-center.layout.px-4.app--page-header.row",
+        "div.v-toolbar__content",
+        "nav.app--toolbar.v-toolbar.v-toolbar--fixed.theme--dark.headPrimary"
+      ],
+      "html": "<div data-v-392f36da=\"\" class=\"layout align-center layout px-4 app--page-header row\" style=\"font-size: 18px !important;\"><ul class=\"v-breadcrumbs theme--dark\"><li><a disabled=\"disabled\" href=\"/record\" class=\"v-breadcrumbs__item v-breadcrumbs__item--disabled\">이력</a></li><li class=\"v-breadcrumbs__divider\"><i aria-hidden=\"true\" class=\"v-icon fas fa-caret-right theme--dark\"></i></li><li><a disabled=\"disabled\" href=\"/record/accessLog\" class=\"v-breadcrumbs__item v-breadcrumbs__item--disabled\">접속기록 이력</a></li><li class=\"v-breadcrumbs__divider\"><i aria-hidden=\"true\" class=\"v-icon fas fa-caret-right theme--dark\"></i></li><li><a disabled=\"disabled\" href=\"/record/accessLog/comprehensiveLog\" class=\"v-breadcrumbs__item v-breadcrumbs__item--disabled\">통합</a></li></ul><div class=\"spacer\"></div><div class=\"page-header-right\"></div></div>"
+    },
+    {
+      "visible": true,
+      "chain": [
+        "div.v-btn__content",
+        "button.tab-btn.style4.doc-help-host.v-btn.theme--light.active.display",
+        "div.layout.row.wrap.ml-3",
+        "div",
+        "div.page-wrapper",
+        "div.v-content__wrap"
+      ],
+      "html": "<div data-v-6614673d=\"\" data-v-46a00060=\"\"><div data-v-6614673d=\"\" class=\"layout row wrap ml-3\"><button data-v-6614673d=\"\" type=\"button\" class=\"tab-btn style4 doc-help-host v-btn theme--light active display\"><div class=\"v-btn__content\"><!---->통합\n\t\t\t</div></button><button data-v-6614673d=\"\" type=\"button\" class=\"tab-btn style4 doc-help-host v-btn theme--light inactive display\"><div class=\"v-btn__content\"><!---->파일 다운로드\n\t\t\t</div></button><button data-v-6614673d=\"\" type=\"button\" class=\"tab-btn style4 doc-help-host v-btn theme--light inactive display\"><div class=\"v-btn__content\"><!---->검출\n\t\t\t</div></button></div><div data-v-6614673d=\"\" class=\"tooltip-container desc\" style=\"z-index: 2147483647; position: absolute; display: none;\"><button data-v-6614673d=\"\" style=\"font-size: 20px; border: 3px dashed red; border-radius: 25px;\">❓</button><button data-v-6614673d=\"\" style=\"font-size: 20px; border: 3px dashed red; border-radius: 25px;\">⭐</button><span data-v-6614673d=\"\"><!----></span></div><div data-v-6614673d=\"\" class=\"tooltip-container desc\" style=\"z-index: 2147483647; position: absolute; display: none;\"></div></div>"
+    }
+  ]
+}

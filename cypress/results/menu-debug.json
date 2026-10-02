@@ -1,0 +1,53 @@
+{
+  "report": [
+    {
+      "selector": ".v-menu__content.menuable__content__active .v-list-item",
+      "total": 0,
+      "visible": 0,
+      "texts": []
+    },
+    {
+      "selector": ".v-menu__content.menuable__content__active",
+      "total": 1,
+      "visible": 0,
+      "texts": []
+    },
+    {
+      "selector": ".v-menu__content .v-list-item",
+      "total": 0,
+      "visible": 0,
+      "texts": []
+    },
+    {
+      "selector": "[role=\"menu\"]",
+      "total": 0,
+      "visible": 0,
+      "texts": []
+    },
+    {
+      "selector": "[role=\"menuitem\"]",
+      "total": 0,
+      "visible": 0,
+      "texts": []
+    },
+    {
+      "selector": "[role=\"listbox\"] [role=\"option\"]",
+      "total": 0,
+      "visible": 0,
+      "texts": []
+    },
+    {
+      "selector": ".v-navigation-drawer .v-list-item",
+      "total": 0,
+      "visible": 0,
+      "texts": []
+    },
+    {
+      "selector": ".v-list-group--active .v-list-item",
+      "total": 0,
+      "visible": 0,
+      "texts": []
+    }
+  ],
+  "activeMenuHtml": "<div data-v-5d16c996=\"\" class=\"v-menu__content theme--light v-menu__content--fixed menuable__content__active\" style=\"min-width: 80px; top: 106px; left: 80px; transform-origin: left top; z-index: 8;\"><div data-v-5d16c996=\"\" role=\"list\" class=\"v-list theme--light display inactive has-child\"><div data-v-5d16c996=\"\" role=\"listitem\" class=\"display inactive has-child\"><a class=\"v-list__tile v-list__tile--link theme--light\"><div data-v-5d16c996=\"\" class=\"v-list__tile__action\" style=\"min-width: 20px !important; width: 10px;\"><i data-v-5d16c996=\"\" aria-hidden=\"true\" class=\"v-icon fas fa-genderless theme--light cardFont--text\" style=\"font-size: 16px;\"></i></div><div data-v-5d16c996=\"\" class=\"v-list__tile__title font-weight-bold\">접속기록 이력</div></a></div><div data-v-5d16c996=\"\" role=\"listitem\" class=\"display inactive has-no-child\"><a class=\"v-list__tile v-list__tile--link theme--light\"><div data-v-5d16c996=\"\" class=\"v-list__tile__action\" style=\"min-width: 20px !important; width: 10px;\"><i data-v-5d16c996=\"\" aria-hidden=\"true\" class=\"v-icon fas fa-genderless theme--light cardFont--text\" style=\"font-size: 16px;\"></i></div><div data-v-5d16c996=\"\" class=\"v-list__tile__title font-weight-bold\">사용자 추적</div></a></div></div></div>"
+}

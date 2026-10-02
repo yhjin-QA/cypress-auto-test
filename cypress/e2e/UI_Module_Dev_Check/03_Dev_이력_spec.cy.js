@@ -229,7 +229,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('건수').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 상세').should('be.visible');
-    cy.get('th').filter(':visible').contains('확정').should('be.visible');
+    cy.get('th').filter(':visible').contains('확인').should('be.visible');
     cy.get('th').filter(':visible').contains('파일 다운로드').should('be.visible');
     cy.log('✅ 이력 - 파일 다운로드 탭 진입 및 데이터 출력 확인 완료!');
 
