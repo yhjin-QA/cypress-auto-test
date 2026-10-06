@@ -85,7 +85,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -289,7 +289,7 @@ cy.task('queryPostgresDB', accountRuleSql).then((rows) => {
     cy.contains('저장하시겠습니까?', { timeout: 10000 }).should('be.visible');
     
     // 확인 버튼 클릭
-    cy.contains('저장하시겠습니까?').should('be.visible').closest('.v-card').find('button').contains('확정').click({ force: true });
+    cy.contains('저장하시겠습니까?').should('be.visible').closest('.v-card').find('button').contains('확인').click({ force: true });
     
     // 4. [스마트 대기 실행] user-profile API 통신이 끝날 때까지 기다리고, 정상(200)인지 확인합니다.
     cy.wait('@saveRule').its('response.statusCode').should('eq', 200);

@@ -87,7 +87,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -141,10 +141,10 @@ cy.get('label').filter(':visible').contains('기간').should('be.visible');
 cy.get('label').filter(':visible').contains('추적 타입').should('be.visible');
 cy.get('span').filter(':visible').contains('정보 사용자').should('be.visible');
 
-
+  
 // 맨티스 이슈 : 38481
 // 상태 > 정보사용자 별 화면 - 상단 "개인정보 사용량" 카드 값이 실제 하단 표 데이터 합계와 불일치 (0건 vs 실제 610건) (맨티스 이슈 : 38481 )
-   /* 
+/*
     // ==========================================
     // 정보사용자 별 - 업무시스템 - 아이피 검색 검증하기 
     // ==========================================

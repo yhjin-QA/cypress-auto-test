@@ -86,7 +86,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -308,7 +308,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.contains('저장하시겠습니까?', { timeout: 10000 }).should('be.visible');
     
     // 확인 버튼 클릭
-    cy.contains('저장하시겠습니까?').should('be.visible').closest('.v-card').find('button').contains('확정').click({ force: true });
+    cy.contains('저장하시겠습니까?').should('be.visible').closest('.v-card').find('button').contains('확인').click({ force: true });
     
     // 서버 응답 대기 (API 처리가 완료될 때까지 자동으로 기다림)
     cy.wait('@saveRule').its('response.statusCode').should('eq', 200); // 실제 서버 처리가 끝날 때까지 대기

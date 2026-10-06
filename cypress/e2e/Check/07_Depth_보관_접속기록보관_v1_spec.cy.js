@@ -88,7 +88,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -366,7 +366,7 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
                 cy.get('body').then(($body) => {
                     if ($body.find('.v-card:contains("백업 요청")').length > 0) {
                         cy.contains('.v-card', /백업 요청/).within(() => {
-                            cy.contains('button', '확정').click({ force: true });
+                            cy.contains('button', '확인').click({ force: true });
                         });
                         cy.wait(2000); 
                     }

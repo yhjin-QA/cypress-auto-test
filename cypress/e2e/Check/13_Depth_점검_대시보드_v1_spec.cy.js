@@ -85,7 +85,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -125,8 +125,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.contains('.item-margin', '자동 갱신 안함').should('be.visible');
     // 데이터량 확인
     cy.contains('p', '개인정보 사용량').should('be.visible');
-    //cy.contains('p', '개인정보 대량 접근').should('be.visible');
-    //cy.contains('p', '업무시간 외 접근').should('be.visible');
+    cy.contains('p', '개인정보 대량 접근').should('be.visible');
+    cy.contains('p', '업무시간 외 접근').should('be.visible');
     cy.contains('p', '접근 IP 주소').should('be.visible');
     cy.contains('p', '정보 사용자').should('be.visible');
     cy.contains('p', '접근 부서').should('be.visible');
@@ -484,7 +484,7 @@ const clickChartAndVerifyPopup = (logLabel, clickAction) => {
   // 🌟 수정: p.mb-0 -> p.cc-msg 로 변경
   cy.contains('p.cc-msg:visible', '상세 페이지로 이동하시겠습니까?').should('be.visible');
   cy.wait(500);
-  cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
+  cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
   cy.wait(1000);
 
   cy.get('@windowOpen').should('have.been.called');

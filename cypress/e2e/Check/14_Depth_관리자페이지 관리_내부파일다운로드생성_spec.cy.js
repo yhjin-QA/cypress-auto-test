@@ -86,7 +86,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -165,7 +165,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
             cy.contains('삭제하시겠습니까?').should('be.visible');
             cy.wait(500); // 팝업 애니메이션 안정화 대기
        
-            cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
+            cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
             // 삭제 후 목록이 갱신될 시간을 잠깐 줍니다.
             cy.wait(1000);
 

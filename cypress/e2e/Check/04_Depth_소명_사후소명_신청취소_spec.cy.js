@@ -85,7 +85,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -523,7 +523,7 @@ cy.contains('p', '신청 상태의 소명 1건을 취소합니다.', { timeout: 
   .closest('.v-card') // 해당 문구가 들어있는 카드(팝업)를 찾습니다.
   .within(() => {
     // 2. 그 카드 안에 있는 '확인' 버튼만 정확히 클릭합니다.
-    cy.contains('button', '확정').click({ force: true });
+    cy.contains('button', '확인').click({ force: true });
   });
 
   //팝업창 사라짐 확인

@@ -87,7 +87,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -207,7 +207,7 @@ cy.get('body').then(($body) => {
       .should('be.visible')
       .closest('.v-card')
       .within(() => {
-        cy.contains('button', '확정').click({ force: true });
+        cy.contains('button', '확인').click({ force: true });
       });
 
     // 4. 삭제 완료 대기
@@ -248,7 +248,7 @@ reasonList.forEach((reason) => {
       cy.contains('td', reason).parent().find('i.fa-trash').click({ force: true });
 
       // [팝업 처리 1] 1차 확인 버튼
-      cy.contains('button', '확정').click({ force: true });
+      cy.contains('button', '확인').click({ force: true });
       cy.wait(500);
 
       // [팝업 처리 2] 삭제 경고 팝업
@@ -257,7 +257,7 @@ reasonList.forEach((reason) => {
         .should('be.visible')
         .closest('.v-card')
         .within(() => {
-          cy.contains('button', '확정').click({ force: true });
+          cy.contains('button', '확인').click({ force: true });
         });
 
       
