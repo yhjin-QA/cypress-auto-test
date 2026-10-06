@@ -87,7 +87,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -113,7 +113,8 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 11: 운영 서브메뉴 
     // ==========================================
     cy.log('🚀 운영 탭 클릭');
-    cy.contains('button', '운영').click({ force: true });
+    //2.9.1.262_r35274  운영이력 클릭방지 정규식으로 일치 보완 
+    cy.contains('button', /^운영$/).click({ force: true });
     cy.wait(1000);
     cy.log('---운영 - 태스크 서브메뉴 클릭 ---');
     cy.get('.v-list__tile__title').filter(':contains("태스크")').filter(':visible').click({ force: true });
@@ -374,11 +375,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.c-headline', 'Foreground Process').closest('.v-card').find('.material-icons').contains('keyboard_arrow_down').should('be.visible');
     cy.contains('.c-headline', 'Log Tracer').should('exist');
     cy.contains('.c-headline', 'Log Tracer').closest('.v-card').find('.material-icons').contains('keyboard_arrow_down').should('be.visible');
-
+    cy.wait(1000);
     cy.log('✅ 운영 - 태스크 - [리소스 모니터링 ] 출력 확인 완료 ');
-
+  
     
-   
+ 
 
     // =============================================
     // 운영 > 태스크  > "로그 뷰"
@@ -423,7 +424,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      //기능동작
     //달력표를 펼침 2월 1일 선택하기
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
     cy.wait(1000);
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
@@ -672,7 +673,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      //기능확인
      // 기간 - 시작 날짜 달력 지정하기 
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
      cy.wait(1000);
      // 5일 클릭
      cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });

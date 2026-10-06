@@ -87,7 +87,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -135,11 +135,19 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
   
      // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 전체선택 확인
      cy.get('span[title="전체 선택"]').should('be.visible');
+
+     //2.9.4.0 추가사항
+         // [UI 확인] 사용자 상태 콤보박스
+     cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible').and('have.attr', 'role', 'combobox');
+   
+  
+      // [UI 확인] 엑셀 다운로드 버튼
+    cy.get('.v-btn__content:visible').contains('엑셀 다운로드').should('be.visible').find('.material-icons').should('contain.text', 'get_app');
      
     
     //검색 버튼 존재 확인
@@ -172,7 +180,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 팝업 닫기 성공');
 
      // 기간 - 시작 날짜 달력 지정하기 
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+     // 시작날짜 달력 아이콘확인
+     cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
      cy.wait(1000);
      // 1일 클릭
      cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
@@ -201,7 +210,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 'c-headline' 클래스를 가진 요소 중에 '파일 다운로드' 글자가 존재하는지 확인
     cy.contains('.c-headline', '파일 다운로드').should('exist');
     // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 검색 조건 이름 입력란 확인
@@ -243,7 +252,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('건수').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 상세').should('be.visible');
-    cy.get('th').filter(':visible').contains('확정').should('be.visible');
+    cy.get('th').filter(':visible').contains('확인').should('be.visible');
     cy.get('th').filter(':visible').contains('파일 다운로드').should('be.visible');
 
     //기능동작
@@ -252,50 +261,6 @@ describe('로그캐치 사이트 테스트', () => {
 
     cy.log('✅ 이력 - 파일 다운로드 탭 진입 및 데이터 출력 확인 완료!');
 
- 
-
-    // 이력 > 접속기록 이력 > [이상행위] 탭 선택
-    cy.get('.tab-btn').contains('이상행위').should('be.visible').click({ force: true });
-    cy.wait(3000);
-    cy.log('--- 화면 검증 시작 ---');
-    cy.get('.tab-btn').contains('이상행위').closest('button').should('not.have.class', 'inactive');
-    // 설명: 'c-headline' 클래스를 가진 요소 중에 '이상행위' 글자가 보여야 한다.
-    cy.contains('.c-headline', '이상행위').should('exist');
-    // 시작날짜 달력 아이콘확인
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-    // 검색 조건 이름 입력란 확인
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
-    cy.get('input[aria-label="경보 등급"]').filter(':visible').should('be.visible');
-    cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');
-    // v3.0.5.0_r34908 추가
-    //v3.0.5.0_r34908 토글문구 제거
-    //cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
-    //검색버튼 존재확인
-    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    
-    //표열 문구확인
-    cy.get('th').filter(':visible').contains('접근이력 일시').should('be.visible');
-    cy.get('th').filter(':visible').contains('사용자').should('be.visible');
-    cy.get('th').filter(':visible').contains('이상행위 유형').should('be.visible');
-    cy.get('th').filter(':visible').contains('이상행위 정책').should('be.visible');
-    cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
-    cy.get('th').filter(':visible').contains('개인정보 유무').should('be.visible');
-    // 3.0.5.1191_r35135 소명대상여부 -> 소명 대상 문구변경 
-    cy.get('th').filter(':visible').contains('소명 대상').should('be.visible');
-    cy.get('th').filter(':visible').contains('선택').should('be.visible'); 
-
-
-    //  // 기간 - 시작 날짜 달력 지정하기 
-    //  cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    //  cy.wait(1000);
-    //  // 1일 클릭
-    //  cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
-    //  cy.wait(1000);
-    //  //달력창 닫기
-    //  cy.get('body').type('{esc}');
-    //  cy.log('✅ 시작 날짜 지정 성공');
 
  // ==========================================
 // 기간 - "기간" input 클릭하여 달력 오픈 (한 달 전 날짜 동적 지정)
@@ -308,75 +273,121 @@ const targetYear = targetDate.getFullYear();
 const targetMonth = targetDate.getMonth() + 1; // 0부터 시작하므로 +1
 const targetDay = targetDate.getDate();
 
-cy.log(`🎯 선택할 날짜: ${targetYear}년 ${targetMonth}월 ${targetDay}일`);
+cy.log(`🎯 선택할 날짜: ${targetYear}년 ${targetMonth}월 ${targetDay}일`);    
+ 
+// v2.9.4.0  이상행위 탭 삭제됨.
+//     // 이력 > 접속기록 이력 > [이상행위] 탭 선택
+//     cy.get('.tab-btn').contains('이상행위').should('be.visible').click({ force: true });
+//     cy.wait(3000);
+//     cy.log('--- 화면 검증 시작 ---');
+//     cy.get('.tab-btn').contains('이상행위').closest('button').should('not.have.class', 'inactive');
+//     // 설명: 'c-headline' 클래스를 가진 요소 중에 '이상행위' 글자가 보여야 한다.
+//     cy.contains('.c-headline', '이상행위').should('exist');
+//     // 시작날짜 달력 아이콘확인
+//      cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+//     // 종료날짜 달력 아이콘확인
+//     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+//     // 검색 조건 이름 입력란 확인
+//     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
+//     cy.get('input[aria-label="경보 등급"]').filter(':visible').should('be.visible');
+//     cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');
+//     // v3.0.5.0_r34908 추가
+//     //v3.0.5.0_r34908 토글문구 제거
+//     //cy.get('.v-label').filter(':visible').contains('미등록 사용자 제외').should('be.visible');
+//     //검색버튼 존재확인
+//     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+    
+//     //표열 문구확인
+//     cy.get('th').filter(':visible').contains('접근이력 일시').should('be.visible');
+//     cy.get('th').filter(':visible').contains('사용자').should('be.visible');
+//     cy.get('th').filter(':visible').contains('이상행위 유형').should('be.visible');
+//     cy.get('th').filter(':visible').contains('이상행위 정책').should('be.visible');
+//     cy.get('th').filter(':visible').contains('경보 등급').should('be.visible');
+//     cy.get('th').filter(':visible').contains('개인정보 유무').should('be.visible');
+//     // 3.0.5.1191_r35135 소명대상여부 -> 소명 대상 문구변경 
+//     cy.get('th').filter(':visible').contains('소명 대상').should('be.visible');
+//     cy.get('th').filter(':visible').contains('선택').should('be.visible'); 
 
-// 2. "기간" input 클릭하여 달력 오픈
-cy.get('input[aria-label="기간"]').filter(':visible').first().click({ force: true });
-cy.wait(1000);
 
-// 3. 🌟 달력 헤더의 연/월과 목표 연/월을 비교해서, 필요한 만큼 이전/다음 달 화살표 클릭
-cy.get('.v-date-picker-header__value').filter(':visible').invoke('text').then((headerText) => {
-  // 헤더 텍스트 예: "2026년 8월"
-  const match = headerText.match(/(\d{4})년\s*(\d{1,2})월/);
+//     //  // 기간 - 시작 날짜 달력 지정하기 
+//     //  cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+//     //  cy.wait(1000);
+//     //  // 1일 클릭
+//     //  cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
+//     //  cy.wait(1000);
+//     //  //달력창 닫기
+//     //  cy.get('body').type('{esc}');
+//     //  cy.log('✅ 시작 날짜 지정 성공');
 
-  if (match) {
-    const displayedYear = parseInt(match[1], 10);
-    const displayedMonth = parseInt(match[2], 10);
 
-    const diffMonths = (targetYear - displayedYear) * 12 + (targetMonth - displayedMonth);
 
-    if (diffMonths !== 0) {
-      const clicks = Math.abs(diffMonths);
-      // diffMonths < 0 이면 이전 달(chevron_left)로, > 0 이면 다음 달(chevron_right)로 이동
-      const iconName = diffMonths < 0 ? 'chevron_left' : 'chevron_right';
+// // 2. "기간" input 클릭하여 달력 오픈
+// cy.get('input[aria-label="기간"]').filter(':visible').first().click({ force: true });
+// cy.wait(1000);
 
-      cy.log(`📅 달력 이동: ${clicks}회 ${diffMonths < 0 ? '이전' : '다음'} 달로 이동`);
+// // 3. 🌟 달력 헤더의 연/월과 목표 연/월을 비교해서, 필요한 만큼 이전/다음 달 화살표 클릭
+// cy.get('.v-date-picker-header__value').filter(':visible').invoke('text').then((headerText) => {
+//   // 헤더 텍스트 예: "2026년 8월"
+//   const match = headerText.match(/(\d{4})년\s*(\d{1,2})월/);
 
-      for (let i = 0; i < clicks; i++) {
-        cy.get('.v-date-picker-header')
-          .filter(':visible')
-          .find('i.material-icons')
-          .contains(iconName)
-          .click({ force: true });
-        cy.wait(300);
-      }
-    }
-  }
-});
+//   if (match) {
+//     const displayedYear = parseInt(match[1], 10);
+//     const displayedMonth = parseInt(match[2], 10);
 
-// 4. 목표 일자 클릭 (예: "3일")
-cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', `${targetDay}일`).click({ force: true });
-cy.wait(1000);
-//달력창 닫기
-cy.get('body').type('{esc}');
+//     const diffMonths = (targetYear - displayedYear) * 12 + (targetMonth - displayedMonth);
 
-cy.log('✅ 시작 날짜 지정 성공');
-//-----------------------------------------------------------------
+//     if (diffMonths !== 0) {
+//       const clicks = Math.abs(diffMonths);
+//       // diffMonths < 0 이면 이전 달(chevron_left)로, > 0 이면 다음 달(chevron_right)로 이동
+//       const iconName = diffMonths < 0 ? 'chevron_left' : 'chevron_right';
+
+//       cy.log(`📅 달력 이동: ${clicks}회 ${diffMonths < 0 ? '이전' : '다음'} 달로 이동`);
+
+//       for (let i = 0; i < clicks; i++) {
+//         cy.get('.v-date-picker-header')
+//           .filter(':visible')
+//           .find('i.material-icons')
+//           .contains(iconName)
+//           .click({ force: true });
+//         cy.wait(300);
+//       }
+//     }
+//   }
+// });
+
+// // 4. 목표 일자 클릭 (예: "3일")
+// cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', `${targetDay}일`).click({ force: true });
+// cy.wait(1000);
+// //달력창 닫기
+// cy.get('body').type('{esc}');
+
+// cy.log('✅ 시작 날짜 지정 성공');
+// //-----------------------------------------------------------------
   
 
 
 
      
-    //조건입력 기능 동작 
-    //이상행위 유형 클릭하는 코드 
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(1000);
-    // 이상행위 유형중 개인정보 과다조회 클릭하는 코드
-    cy.get('.v-list__tile__title').filter(':visible').contains('개인정보 과다조회').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
-    // 선택 후 메뉴 닫기
-    cy.get('body').type('{esc}');
+//     //조건입력 기능 동작 
+//     //이상행위 유형 클릭하는 코드 
+//     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+//     cy.wait(1000);
+//     // 이상행위 유형중 개인정보 과다조회 클릭하는 코드
+//     cy.get('.v-list__tile__title').filter(':visible').contains('개인정보 과다조회').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+//     // 선택 후 메뉴 닫기
+//     cy.get('body').type('{esc}');
 
 
-    //검색버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    cy.wait(1000);
+//     //검색버튼 클릭
+//     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+//     cy.wait(1000);
     
-    //표 안의 결과 확인 
-    //표안의 소명 대상 문구확인 
-    cy.get('tbody').filter(':visible').contains('tr', '개인정보 과다조회').should('be.visible').invoke('text').should('match', /소명 대상|소명 불필요/);
+//     //표 안의 결과 확인 
+//     //표안의 소명 대상 문구확인 
+//     cy.get('tbody').filter(':visible').contains('tr', '개인정보 과다조회').should('be.visible').invoke('text').should('match', /소명 대상|소명 불필요/);
   
 
-    cy.log('✅ 이력 - 이상행위 탭 진입 및 데이터 출력 확인 완료!');
+//     cy.log('✅ 이력 - 이상행위 탭 진입 및 데이터 출력 확인 완료!');
 
 
     // 이력 > 접속기록 이력 > [검출] 탭 선택
@@ -387,10 +398,10 @@ cy.log('✅ 시작 날짜 지정 성공');
     // 설명: 'c-headline' 클래스를 가진 요소 중에 '이상행위' 글자가 보여야 한다.
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-     // 종료날짜 달력 아이콘확인
-     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-     // 검색 조건 이름 입력란 확인
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    // 종료날짜 달력 아이콘확인
+    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
@@ -609,7 +620,7 @@ cy.wait(1000);
     // 설명: 'c-headline' 클래스를 가진 요소 중에 '이상행위' 글자가 보여야 한다.
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 검색 조건 이름 입력란 확인
@@ -649,7 +660,9 @@ cy.wait(1000);
     cy.get('th').contains('처리').should('exist');
 
     //달력표를 펼침 
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    //cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+
     cy.wait(1000);
     // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });

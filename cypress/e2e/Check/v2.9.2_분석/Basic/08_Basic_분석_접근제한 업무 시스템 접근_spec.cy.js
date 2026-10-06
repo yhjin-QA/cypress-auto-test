@@ -87,7 +87,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -125,27 +125,27 @@ describe('로그캐치 사이트 테스트', () => {
 
 
     ///////////////////////////////////////////////
-    // 이상행위 정책 -  비인가 IP 접근 
+    // 이상행위 정책 - 접근제한 업무 시스템 접근
     ///////////////////////////////////////////////
-    cy.contains('.v-chip__content', '비인가 IP 접근').should('be.visible').click({ force: true });
-    cy.contains('.c-headline', '비인가 IP 접근 정책 목록').should('exist');
+    cy.contains('.v-chip__content', '접근제한 업무 시스템 접근').should('be.visible').click({ force: true });
+    cy.contains('.c-headline', '접근제한 업무 시스템 접근 정책 목록').should('exist');
     // 표 문구열 확인
     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
     cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
     cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
 
+    // 기능 확인
+       // 기능 확인 -------------------------------------------------
 
-    // 기능 확인 -------------------------------------------------
-
-    //추가된 test_auto_미등록 사용자 접속 삭제 --------------------------
-    cy.contains('tr', 'test_auto_비인가 IP 접근').find('.fa-trash').click({ force: true });
+    //추가된 test_auto_접근제한 업무 시스템 접근 삭제 --------------------------
+    cy.contains('tr', 'test_auto_접근제한 업무 시스템 접근').find('.fa-trash').click({ force: true });
     cy.wait(1000);
     // 삭제 확인 알림창에서 확인 버튼 클릭 
     cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확정').click({ force: true });
 
     //추가한 정책 삭제 검증코드 
-    cy.contains('tr', 'test_auto_비인가 IP 접근').should('not.exist'); 
+    cy.contains('tr', 'test_auto_접근제한 업무 시스템 접근').should('not.exist'); 
 
 
     // 우측 동그란 + 플러스 버튼 클릭-----------------------
@@ -154,9 +154,9 @@ describe('로그캐치 사이트 테스트', () => {
            });
     cy.wait(1000);
 
-    // 미등록 사용자 접속 정책 추가화면 진입----------------------------------------
+    // 열람 제한 개인정보 접근 정책 추가화면 진입----------------------------------------
     // 정책이름 입력 
-    cy.get('input[aria-label="정책명"]').filter(':visible').clear({ force: true }).type('test_auto_비인가 IP 접근', { force: true });
+    cy.get('input[aria-label="정책명"]').filter(':visible').first().clear({ force: true }).type('test_auto_접근제한 업무 시스템 접근', { force: true });
 
     // 정책설정 부분
     // 정책 사용여부 토글 OFF-> ON
@@ -167,62 +167,52 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="소명 여부"]').check({ force: true });
     cy.wait(1000); 
 
-    // 업무시스템 - 선택
-    cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    // 그룹별 클릭하는 코드 
+    cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
-    // 업무시스템중 '리눅스배송관리' 클릭하는 코드
-    cy.get('.v-menu__content').filter(':visible').contains('리눅스_배송관리').click({ force: true });
+    // 그룹별중 총무,인사팀 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').contains('총무팀').click({ force: true });
     cy.wait(1000);
-    // 선택한 컨텍스트 메뉴 닫기
+    cy.get('.v-menu__content').filter(':visible').contains('인사팀').click({ force: true });
+    cy.wait(1000);
+    // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
-    // 허용 IP설정-------
-    // 식별자 이름 tester 입력하기 
-    cy.get('input[aria-label="식별자 이름"]').filter(':visible').first().type('{selectall}{backspace}tester', { force: true });
+    // 접근 제한 업무시스템 등록-----------------------------------------------------------------------------
+    // 정책이름 입력하기
+    cy.get('input[aria-label="정책명"]').filter(':visible').last().clear({ force: true }).type('test_업무시스템 제한', { force: true });
+
+    // 업무시스템 - 선택
+    //cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    cy.wait(1000);
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').last().scrollIntoView({ block: 'center' }).parent().click({ force: true });
+    cy.wait(1000);
+    // 업무시스템중 '리눅스_배송관리' 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').last().contains('리눅스_배송관리').click({ force: true });
     cy.wait(1000);
 
-    //정보사용자 선택하기
-    cy.get('input[aria-label="정보 사용자"]').filter(':visible').first().click({ force: true });
+     // 추가버튼 클릭
+    cy.contains('button', '추가').filter(':visible').scrollIntoView({ block: 'center' }).click({ force: true });
     cy.wait(1000);
 
-    // 정보 사용자 팝업창에서 이름 검색 - 임솔 입력 
-    cy.get('.v-dialog').filter(':visible').find('input[aria-label="사용자"]').type('임솔', { force: true });
-    cy.wait(1000);
+    //추가된 표안의 잘추가되어있는지 검증코드 
+    cy.contains('tr', 'test_업무시스템 제한')
+     .scrollIntoView({ block: 'center' }) 
+     .within(() => {
+      cy.contains('리눅스_배송관리').should('be.visible'); 
+    });
+     cy.wait(1000); 
 
-    // 정보사용자 팝업창에서 유우종이라는 사람 그옆 체크박스 클릭
-    cy.contains('tr', '임솔').find('.v-icon').click({ force: true });
-    cy.wait(1000);
 
-    // 체크가 잘되어있는지 검증코드
-    cy.contains('tr', '임솔').find('.v-icon').should('contain', 'check_box');
-
-    //정보사용자 팝업창 '확인' 버튼 클릭
-    cy.get('.v-dialog__content--active').find('button').contains('확정').click({ force: true });
-    cy.wait(1000);
-
-    // 2. 접근 IP 주소 입력
-    cy.get('input[aria-label="접근 IP 주소"]').filter(':visible').clear({ force: true }).type('192.168.0.1');
-    cy.wait(1000);
-    // 3. 넷마스크 입력
-    cy.get('input[aria-label="넷마스크"]').filter(':visible').clear({ force: true }).type('255.255.255.0');
-    cy.wait(1000);
-    // 4. 우측 끝 '추가' 버튼 클릭
-    cy.contains('button', '추가').filter(':visible').click({ force: true });
-    cy.wait(1000);
-
-    // [검증] 아래 리스트(Grid)에 'tester'라는 식별자가 추가되었는지 확인
-    cy.contains('td', 'tester').should('be.visible');
-    cy.contains('tr', 'tester').find('.v-icon').should('exist');
-
-    // 저장버튼 클릭 
-    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(1000);
+     // 저장버튼 클릭 
+     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+     cy.wait(1000);
     
-    //비인가 IP 접근 정책 목록에 정책이 잘 추가되었는지 검증하는 코드 
-    cy.get('tbody').contains('tr', 'test_auto_비인가 IP 접근').should('be.visible');
+     //접근제한 업무 시스템 접근자 정책 목록에 정책이 잘 추가되었는지 검증하는 코드 
+     cy.get('tbody').contains('tr', 'test_auto_접근제한 업무 시스템 접근').should('be.visible');
 
-    //기본정책 설정 /철회 코드 -------------------------
+
+     //기본정책 설정 /철회 코드 ---------------------------------------------------------------
     //깃발 클릭 
     cy.get('.fa-flag').first().click({ force: true });
     cy.wait(1000);
@@ -233,14 +223,14 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
      // 기본 정책 설정확인 검증 코드 (초록색색상값 확인 )
-     cy.contains('tr', 'test_auto_비인가 IP 접근').find('.fa-flag').should('be.visible')
+     cy.contains('tr', 'test_auto_접근제한 업무 시스템 접근').find('.fa-flag').should('be.visible')
     .invoke('css', 'color') // 아이콘의 실제 색상(CSS color) 값을 가져옴
     .should('not.eq', 'rgba(0, 0, 0, 0.54)') // 기본 회색이 아니어야 함
     .and('not.eq', 'rgb(0, 0, 0)');
 
     //기본 정책 철회
     // 초록색 깃발아이콘 클릭 
-    cy.contains('tr', 'test_auto_비인가 IP 접근').find('.fa-flag').should('be.visible').click({ force: true });
+    cy.contains('tr', 'test_auto_접근제한 업무 시스템 접근').find('.fa-flag').should('be.visible').click({ force: true });
     cy.wait(1000);
 
     //기본 정책 철회 팝업창 확인 버튼 클릭
@@ -248,85 +238,80 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // 기본 정책 철회 검증
-    // ttest_auto_비인가 IP 접근 사용여부 false 상태로 되어있는지 검증 (철회시 사용여부 false로 변하기때문)
-    cy.contains('tr', 'test_auto_비인가 IP 접근').find('td').contains('false').should('be.visible');
+    // test_auto_접근제한 업무 시스템 접근 사용여부 false 상태로 되어있는지 검증 (철회시 사용여부 false로 변하기때문)
+    cy.contains('tr', 'test_auto_접근제한 업무 시스템 접근').find('td').contains('false').should('be.visible');
     cy.wait(1000);
+     //---------------------------------------------------------------------------------------
 
-     // 추가한 test_auto_미등록 사용자 접속 정책 그룹 수정1.--------------------------------------
-    // 추가된 정책명 : test_auto_비인가 IP 접근  다시 재클릭 
-    cy.contains('a', 'test_auto_비인가 IP 접근').should('be.visible').click({ force: true });
+    // 추가한 test_auto_접근제한 업무 시스템 접근 정책 그룹 수정1.-------------------------------------- 
+    // 추가된 정책명 : test_auto_접근제한 업무 시스템 접근  다시 재클릭 
+    cy.contains('a', 'test_auto_접근제한 업무 시스템 접근').should('be.visible').click({ force: true });
     cy.wait(1000);
 
     // 정책 사용여부 토글 OFF-> ON
     cy.get('input[aria-label="정책 사용 여부"]').check({ force: true });
     cy.wait(1000);
 
-    //경보등급 주의 -> 경계로 선택하기 
-    cy.contains('label', '경계').closest('div').find('.v-input--selection-controls__ripple').click({ force: true });
-    cy.wait(1000);
-    // 경보등급 경례 상태 확인 검증코드 
-    cy.contains('label', '경계').closest('div').find('input').should('have.attr', 'aria-checked', 'true');
-    cy.wait(1000);
+    // 접근 제한 업무시스템 등록-------
+    // 정책이름 입력하기
+    cy.get('input[aria-label="정책명"]').filter(':visible').last().clear({ force: true }).type('test_업무시스템 제한추가', { force: true });
 
-     // 허용 IP설정-------
-     // 허용/비허용 상태 ON->OFF상태로 변경
-     // 1. '허용/비허용' 라벨 옆의 버튼을 클릭 (ON -> OFF)
-     cy.get('input[aria-label="허용/비허용"]').uncheck({ force: true });
-     // [검증] aria-checked 속성이 'false'(꺼짐)로 변했는지 확인
-     cy.get('input[aria-label="허용/비허용"]').should('have.attr', 'aria-checked', 'false');
-
-     // 허용 IP설정-------
-    // 식별자 이름 Block 입력하기 
-    cy.get('input[aria-label="식별자 이름"]').filter(':visible').first().type('{selectall}{backspace}block', { force: true });
+    // 업무시스템 - 선택
+    //cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
+    cy.wait(1000);
+    cy.get('input[aria-label="업무시스템"]').filter(':visible').last().scrollIntoView({ block: 'center' }).parent().click({ force: true });
+    cy.wait(1000);
+    // 업무시스템중 '리눅스_배송관리' 클릭하는 코드
+    cy.get('.v-menu__content').filter(':visible').last().contains('윈도우_배송관리').click({ force: true });
     cy.wait(1000);
 
-    //정보사용자 선택하기
-    cy.get('input[aria-label="정보 사용자"]').filter(':visible').first().click({ force: true });
+     // 추가버튼 클릭
+    cy.contains('button', '추가').filter(':visible').scrollIntoView({ block: 'center' }).click({ force: true });
     cy.wait(1000);
 
-    // 정보 사용자 팝업창에서 이름 검색 - 임솔 입력 
-    cy.get('.v-dialog').filter(':visible').find('input[aria-label="사용자"]').type('차은우', { force: true });
-    cy.wait(1000);
+    //추가된 표안의 잘추가되어있는지 검증코드 
+    cy.contains('tr', 'test_업무시스템 제한추가')
+     .scrollIntoView({ block: 'center' }) 
+     .within(() => {
+      cy.contains('윈도우_배송관리').should('be.visible'); 
+    });
+     cy.wait(1000); 
 
-    // 정보사용자 팝업창에서 차은우이라는 사람 그옆 체크박스 클릭
-    cy.contains('tr', '차은우').find('.v-icon').click({ force: true });
-    cy.wait(1000);
-
-    // 체크가 잘되어있는지 검증코드
-    cy.contains('tr', '차은우').find('.v-icon').should('contain', 'check_box');
-
-    //정보사용자 팝업창 '확인' 버튼 클릭
-    cy.get('.v-dialog__content--active').find('button').contains('확정').click({ force: true });
-    cy.wait(1000);
-
-    // 2. 접근 IP 주소 입력
-    cy.get('input[aria-label="접근 IP 주소"]').filter(':visible').clear({ force: true }).type('192.168.0.2');
+     // 저장버튼 클릭 
+     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
      cy.wait(1000);
-    // 3. 넷마스크 입력
-    cy.get('input[aria-label="넷마스크"]').filter(':visible').clear({ force: true }).type('255.255.0.0');
-     cy.wait(1000);
-    // 4. 우측 끝 '추가' 버튼 클릭
-    cy.contains('button', '추가').filter(':visible').click({ force: true });
+
+    // 추가한 test_auto_접근제한 업무 시스템 접근 정책 그룹 수정2.-------------------------------------- 
+    // 추가된 정책명 : test_auto_접근제한 업무 시스템 접근  다시 재클릭 
+    cy.contains('a', 'test_auto_접근제한 업무 시스템 접근').should('be.visible').click({ force: true });
     cy.wait(1000);
 
-    // [검증] 아래 리스트(Grid)에 'block'라는 식별자가 추가되었는지 확인
-    cy.contains('td', 'block').should('be.visible');
-    cy.contains('tr', 'block').find('.v-icon').should('exist');
+    //추가된 표안의 잘추가되어있는지 검증코드 
+    cy.contains('tr', 'test_업무시스템 제한추가')
+     .scrollIntoView({ block: 'center' }) 
+     .within(() => {
+      cy.contains('윈도우_배송관리').should('be.visible');
+      // 휴지통 아이콘 클릭 (fa-trash 클래스 사용)
+      cy.get('.fa-trash').click(); 
+    });
+     cy.wait(1000); 
 
-    // 저장버튼 클릭 
-    cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
-    cy.wait(1000);
-
+     cy.contains('tr', 'test_업무시스템 제한추가').should('not.exist');
+     cy.contains('tr', 'test_업무시스템 제한').should('exist');
   
-    cy.log('✅  분석 탭 - 비인가 IP 접근 및 데이터 출력 확인 완료!');
-    cy.wait(2000);
+     // 저장버튼 클릭 
+     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+     cy.wait(1000);
 
+
+    cy.log('✅  분석 탭 - 접근제한 업무 시스템 접근 및 데이터 출력 확인 완료!');
+    cy.wait(2000);
 
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
-    cy.log('🎉 분석 - 비인가 IP접근 테스트 시나리오 성공적으로 완료!');
+    cy.log('🎉 분석 - 접근제한 업무 시스템 접근 테스트 시나리오 성공적으로 완료!');
     cy.get('body').type('{esc}');
     cy.get('body').click('center', { force: true });
 

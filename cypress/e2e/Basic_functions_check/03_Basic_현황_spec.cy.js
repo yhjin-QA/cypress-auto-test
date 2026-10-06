@@ -88,7 +88,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -109,12 +109,89 @@ describe('로그캐치 사이트 테스트', () => {
     
     //로그인 성공
 
+// ==========================================
+// [공통] 기간 - 시작 날짜를 오늘 기준 N일 전으로 선택
+// ==========================================
+const selectStartDateDaysAgo = (daysAgo) => {
+  // 1. 목표 날짜 계산
+  const today = new Date();
+  const target = new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysAgo);
+  const pad = (n) => String(n).padStart(2, '0');
+  const targetStr = `${target.getFullYear()}-${pad(target.getMonth() + 1)}-${pad(target.getDate())}`;
+  cy.log(`📅 시작 날짜 목표: ${targetStr} (오늘 기준 ${daysAgo}일 전)`);
+
+  // 화면에 보이는 "기간" 입력창(시작 날짜)만 (숨겨진 다른 탭의 기간 입력창 제외)
+  const getStartDateInput = () =>
+    cy.get('label').filter(':visible')
+      .filter((i, el) => el.textContent.trim() === '기간')
+      .first()
+      .closest('.v-input')
+      .find('input');
+
+  // 화면에 보이는 달력만 (숨겨진 다른 달력 메뉴 제외)
+  const getVisiblePicker = () =>
+    cy.get('.menuable__content__active').filter(':visible')
+      .find('.v-picker--date').filter(':visible');
+
+  // 2. 달력 열기
+  getStartDateInput().click({ force: true });
+  getVisiblePicker().should('have.length', 1).and('be.visible');
+
+  // 3. 목표 월까지 이동
+  const goToTargetMonth = (attempt = 0) => {
+    getVisiblePicker()
+      .find('.v-date-picker-header__value')
+      .invoke('text')
+      .then((headerText) => {
+        const m = headerText.match(/(\d{4})\D+(\d{1,2})/);
+        expect(m, `달력 헤더 형식: "${headerText.trim()}"`).to.not.be.null;
+
+        const shownIndex = parseInt(m[1], 10) * 12 + (parseInt(m[2], 10) - 1);
+        const targetIndex = target.getFullYear() * 12 + target.getMonth();
+        const diff = targetIndex - shownIndex;
+
+        if (diff === 0) return;
+        if (attempt > 24) throw new Error('목표 월로 이동하지 못했습니다.');
+
+        getVisiblePicker()
+          .find('.v-date-picker-header button')
+          .then(($btns) => (diff < 0 ? $btns.first() : $btns.last()))
+          .click({ force: true });
+        cy.wait(300);
+        goToTargetMonth(attempt + 1);
+      });
+  };
+  goToTargetMonth();
+
+  // 4. 날짜 클릭 ("22일" → 숫자만 비교)
+  getVisiblePicker()
+    .find('.v-date-picker-table--date button')
+    .filter(':visible')
+    .filter((i, el) => el.textContent.replace(/\D/g, '') === String(target.getDate()))
+    .not('.v-btn--disabled')
+    .should('have.length', 1)
+    .click();
+  cy.wait(500);
+
+  // 5. 선택 결과 확인
+  getStartDateInput().should('have.value', targetStr);
+
+  // 6. 달력 닫기
+  cy.get('body').type('{esc}');
+  cy.wait(300);
+
+  cy.log(`✅ 시작 날짜 ${targetStr} 선택 완료`);
+
+  // 7. 기간 변경 후 업무시스템 목록 다시 불러오기 대기
+  cy.wait(1500);
+};    
+
 
 // ==========================================
-// STEP 4: 상태 서브메뉴 
+// STEP 4: 현황 서브메뉴 
 // ==========================================
     
-cy.contains('button', '상태').click({ force: true });
+cy.contains('button', '현황').click({ force: true });
 cy.wait(2000);
 
 cy.log('--- 상태 > 정보사용자별 탭 클릭 ---');
@@ -143,28 +220,85 @@ cy.get('label').filter(':visible').contains('기간').should('be.visible');
 cy.get('label').filter(':visible').contains('추적 타입').should('be.visible');
 cy.get('span').filter(':visible').contains('정보 사용자').should('be.visible');
 
+
+// 기간 - 시작 날짜를 오늘 기준 60일 전으로 선택
+selectStartDateDaysAgo(60);
+
+
 ////////////////////////////
 // 기능확인 - 조건별로 검색
 // 업무 시스템 - 리눅스_배송관리 선택
 ////////////////////////////
+const TARGET_SYSTEM = '리눅스_배송관리';
 
-// 업무시스템 클릭하는 코드
-cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-cy.wait(500);
+// 업무시스템 드롭다운 열기
+const openSystemDropdown = () => {
+  cy.get('input[aria-label="업무시스템"]').filter(':visible')
+    .closest('.v-input').find('.v-input__slot').click({ force: true });
+  cy.wait(500);
+};
 
-// 🌟 드롭다운이 실제로 열렸는지 (menuable__content__active 클래스로) 확인
-cy.get('.v-menu__content').filter(':visible').should('be.visible');
+// [수정] 목록이 채워질 때까지 재시도 (기간 변경 직후 목록을 다시 불러오는 동안 비어 있을 수 있음)
+const waitForSystemList = (attempt = 1) => {
+  openSystemDropdown();
 
-// 전체 선택 클릭
-//cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '전체 선택').should('be.visible').click({ force: true });
-//cy.wait(1000);
+  cy.get('.menuable__content__active').should('be.visible').then(($menu) => {
+    const items = [...$menu.find('.v-list__tile__title')].map((el) => el.textContent.trim());
+    const hasTarget = items.includes(TARGET_SYSTEM);
 
-// 업무시스템중 리눅스_배송관리 클릭하는 코드
-cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_배송관리').scrollIntoView().should('be.visible').click({ force: true });
+    if (hasTarget) return;
+
+    if (attempt >= 5) {
+      // 원인 구분용 에러 메시지: 목록이 비었는지 / 다른 항목만 있는지
+      throw new Error(
+        items.length === 0 || $menu.text().includes('No data available')
+          ? `업무시스템 목록이 비어 있음 (No data available) - 이 서버의 해당 기간에 데이터가 없는지 확인 필요`
+          : `"${TARGET_SYSTEM}" 없음 - 현재 목록: ${items.join(', ')}`
+      );
+    }
+
+    cy.log(`🔁 업무시스템 목록 대기 중 (${attempt}회) - 현재 ${items.length}개`);
+    cy.get('body').type('{esc}');   // 닫았다가
+    cy.wait(1500);                  // 목록 로딩 대기
+    waitForSystemList(attempt + 1); // 다시 열기
+  });
+};
+waitForSystemList();
+
+// 업무시스템 중 리눅스_배송관리 클릭
+cy.get('.menuable__content__active')
+  .contains('.v-list__tile__title', TARGET_SYSTEM)
+  .scrollIntoView()
+  .should('be.visible')
+  .click({ force: true });
 cy.wait(1000);
 
-// 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+// 선택한 컨텍스트 메뉴 닫기
 cy.get('body').type('{esc}');
+
+
+// ////////////////////////////
+// // 기능확인 - 조건별로 검색
+// // 업무 시스템 - 리눅스_배송관리 선택
+// ////////////////////////////
+
+// // 업무시스템 클릭하는 코드
+// cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+// cy.wait(500);
+
+// // 🌟 드롭다운이 실제로 열렸는지 (menuable__content__active 클래스로) 확인
+// cy.get('.v-menu__content').filter(':visible').should('be.visible');
+
+// // 전체 선택 클릭
+// //cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '전체 선택').should('be.visible').click({ force: true });
+// //cy.wait(1000);
+
+// // 업무시스템중 리눅스_배송관리 클릭하는 코드
+// cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_배송관리').scrollIntoView().should('be.visible').click({ force: true });
+// cy.wait(1000);
+
+// // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
+// cy.get('body').type('{esc}');
 
 
     
@@ -239,6 +373,13 @@ cy.wait(1000);
 
 // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
 cy.get('body').type('{esc}');
+
+
+
+cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
+
+// 기간 - 시작 날짜를 오늘 기준 60일 전으로 선택
+selectStartDateDaysAgo(60);
     
     // 조건 입력 
     // 그룹별 클릭하는 코드 

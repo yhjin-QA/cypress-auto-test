@@ -86,7 +86,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -111,7 +111,7 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 5: 소명 서브메뉴 
     // ==========================================
     
-    cy.contains('button', '소명').click({ force: true });
+    cy.contains('button', '소명하기').click({ force: true });
     cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
     cy.log('--- 소명 > 관리 서브메뉴 클릭 ---');
     //서브메뉴 관리 클릭 (정교하게)
@@ -486,282 +486,282 @@ cy.get('tbody').find('a').then(($links) => {
       cy.get('th').filter(':visible').contains('소명 유형').should('be.visible');
       cy.log('✅ 소명 - 나의 소명 - [승인하기]탭 진입 및 데이터 출력 확인 완료!');
 
-      
-      // // 소명 > 결재 서브메뉴 클릭
-      // cy.contains('.side-menu', '소명').should('be.visible').click({ force: true });
-      // cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
-      // cy.log('--- 소명 > 결재 서브메뉴 클릭 ---');
-      // cy.get('.v-list__tile__title').filter(':contains("결재")').filter(':visible').click({ force: true });
-      // cy.wait(3000);
-      //   // 소명 > 결재 > 결재라인 탭 클릭
-      // cy.get('.v-btn__content').filter(':visible').contains('결재 라인').click();
+// v2.9.4.0  에서 소명하기 > 결재 서브메뉴 삭제됨.      
+//       // // 소명 > 결재 서브메뉴 클릭
+//       // cy.contains('.side-menu', '소명').should('be.visible').click({ force: true });
+//       // cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
+//       // cy.log('--- 소명 > 결재 서브메뉴 클릭 ---');
+//       // cy.get('.v-list__tile__title').filter(':contains("결재")').filter(':visible').click({ force: true });
+//       // cy.wait(3000);
+//       //   // 소명 > 결재 > 결재라인 탭 클릭
+//       // cy.get('.v-btn__content').filter(':visible').contains('결재 라인').click();
 
-      // 3.0.5.1191_r35135 버전에서 변경
-      // ==========================================
-      // STEP : 결재 서브메뉴 - 정책
-      // ==========================================
-      cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', '결재').click({ force: true });
-      cy.wait(1000);
+//       // 3.0.5.1191_r35135 버전에서 변경
+//       // ==========================================
+//       // STEP : 결재 서브메뉴 - 정책
+//       // ==========================================
+//       cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', '결재').click({ force: true });
+//       cy.wait(1000);
 
-      // 서브메뉴 정책 클릭
-      cy.get('div[role="listitem"]').filter(':visible').contains('.v-list__tile__title', '정책').click({ force: true });
-      cy.wait(2000);
+//       // 서브메뉴 정책 클릭
+//       cy.get('div[role="listitem"]').filter(':visible').contains('.v-list__tile__title', '정책').click({ force: true });
+//       cy.wait(2000);
           
-      cy.log('--- 화면 검증 시작 ---');
-      cy.contains('.c-headline', '결재 정책 목록').should('exist');
-      //토글 문구 확인인
-      cy.get('label').filter(':visible').contains('지난 정책 보기').should('be.visible');
-       // 표 문구열 확인
-       cy.get('th').filter(':visible').contains('결재 유형').should('be.visible');
-       cy.get('th').filter(':visible').contains('정책명').should('be.visible');
-       cy.get('th').filter(':visible').contains('설명').should('be.visible');
-       cy.get('th').filter(':visible').contains('등록').should('be.visible');
-       cy.get('th').filter(':visible').contains('수정').should('be.visible');
-       cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-       // cy.get('th').filter(':visible').contains('..').should('be.visible');
-       // 정책 추가 + 버튼
-       cy.get('.material-icons').filter(':visible').contains('add').should('be.visible');
+//       cy.log('--- 화면 검증 시작 ---');
+//       cy.contains('.c-headline', '결재 정책 목록').should('exist');
+//       //토글 문구 확인인
+//       cy.get('label').filter(':visible').contains('지난 정책 보기').should('be.visible');
+//        // 표 문구열 확인
+//        cy.get('th').filter(':visible').contains('결재 유형').should('be.visible');
+//        cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+//        cy.get('th').filter(':visible').contains('설명').should('be.visible');
+//        cy.get('th').filter(':visible').contains('등록').should('be.visible');
+//        cy.get('th').filter(':visible').contains('수정').should('be.visible');
+//        cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+//        // cy.get('th').filter(':visible').contains('..').should('be.visible');
+//        // 정책 추가 + 버튼
+//        cy.get('.material-icons').filter(':visible').contains('add').should('be.visible');
         
 
-       /////// 결재 정책  기능확인//////
-       //v2.9.1.125_r35234 에서 + 아이콘 추가에서 정책 추가 버튼으로 변경됨.
-       cy.contains('.v-btn__content', '정책 추가').click({ force: true });    
+//        /////// 결재 정책  기능확인//////
+//        //v2.9.1.125_r35234 에서 + 아이콘 추가에서 정책 추가 버튼으로 변경됨.
+//        cy.contains('.v-btn__content', '정책 추가').click({ force: true });    
 
-       // 결재 정책등록창이 떴는지 확인
-       cy.wait(1000);
-       cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 등록');
-       // 정책이름 입력하기
-       cy.get('input[aria-label="정책명"]').filter(':visible').clear().type('auto_add_test 결재정책');
+//        // 결재 정책등록창이 떴는지 확인
+//        cy.wait(1000);
+//        cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 등록');
+//        // 정책이름 입력하기
+//        cy.get('input[aria-label="정책명"]').filter(':visible').clear().type('auto_add_test 결재정책');
        
-       // 정책 설명 입력하기
-       cy.get('textarea[aria-label="정책 설명"]').filter(':visible').clear().type('테스트로 추가하는 결재라인입니다');
-       // 사용여부 OFF -> ON 상태로 바꾸기 
-       cy.get('input[aria-label="사용 여부"]').check({ force: true }).should('be.checked');
+//        // 정책 설명 입력하기
+//        cy.get('textarea[aria-label="정책 설명"]').filter(':visible').clear().type('테스트로 추가하는 결재라인입니다');
+//        // 사용여부 OFF -> ON 상태로 바꾸기 
+//        cy.get('input[aria-label="사용 여부"]').check({ force: true }).should('be.checked');
        
-       // 권한 유형 클릭하여 콤보박스 열기 
-       cy.get('input[aria-label="권한 유형"]').filter(':visible').click({ force: true });
-       // 권한유형중 [일반] 선택
-       cy.get('.v-list__tile__title').filter(':visible').contains('일반').click();
+//        // 권한 유형 클릭하여 콤보박스 열기 
+//        cy.get('input[aria-label="권한 유형"]').filter(':visible').click({ force: true });
+//        // 권한유형중 [일반] 선택
+//        cy.get('.v-list__tile__title').filter(':visible').contains('일반').click();
        
-       //3.0.5.1191_r35135 결재 적용 대상 ->  결재 라인으로 문구 변경됨.
-      //  // 결재 적용대상 클릭하여 콤보박스 열기 
-      //  cy.get('input[aria-label="결재 적용 대상"]').filter(':visible').click({ force: true });
-      //  // 🌟 정확히 "소명"과 일치하는 항목만 선택 (정규식으로 exact match)
-      //  cy.get('.v-list__tile__title').filter(':visible').contains(/^소명$/).click();
+//        //3.0.5.1191_r35135 결재 적용 대상 ->  결재 라인으로 문구 변경됨.
+//       //  // 결재 적용대상 클릭하여 콤보박스 열기 
+//       //  cy.get('input[aria-label="결재 적용 대상"]').filter(':visible').click({ force: true });
+//       //  // 🌟 정확히 "소명"과 일치하는 항목만 선택 (정규식으로 exact match)
+//       //  cy.get('.v-list__tile__title').filter(':visible').contains(/^소명$/).click();
 
-       // 결재 적용대상 클릭하여 콤보박스 열기 
-       cy.get('input[aria-label="결재 적용 대상"]').filter(':visible').click({ force: true });
-       // 🌟 정확히 "소명"과 일치하는 항목만 선택 (정규식으로 exact match)
-       cy.get('.v-list__tile__title').filter(':visible').contains(/^소명하기$/).click();
+//        // 결재 적용대상 클릭하여 콤보박스 열기 
+//        cy.get('input[aria-label="결재 적용 대상"]').filter(':visible').click({ force: true });
+//        // 🌟 정확히 "소명"과 일치하는 항목만 선택 (정규식으로 exact match)
+//        cy.get('.v-list__tile__title').filter(':visible').contains(/^소명하기$/).click();
 
-       // 결재자 유형 클릭하여 콤보박스 열기 
-       cy.get('input[aria-label="결재자 유형"]').filter(':visible').click({ force: true });
-       // 결재자 유형 클릭하여 소명 선택 
-       cy.get('.v-list__tile__title').filter(':visible').contains('부서장').click();
+//        // 결재자 유형 클릭하여 콤보박스 열기 
+//        cy.get('input[aria-label="결재자 유형"]').filter(':visible').click({ force: true });
+//        // 결재자 유형 클릭하여 소명 선택 
+//        cy.get('.v-list__tile__title').filter(':visible').contains('부서장').click();
 
-       // 결재자 콤보박스 열기 
-       cy.get('input[aria-label="결재자"]').filter(':visible').click({ force: true });
-       // 결재자 클릭하여 각 부서장 선택 
-       cy.get('.v-list__tile__title').filter(':visible').contains('각 사용자의 부서장이 결재 라인으로 지정됩니다.').click();
+//        // 결재자 콤보박스 열기 
+//        cy.get('input[aria-label="결재자"]').filter(':visible').click({ force: true });
+//        // 결재자 클릭하여 각 부서장 선택 
+//        cy.get('.v-list__tile__title').filter(':visible').contains('각 사용자의 부서장이 결재 라인으로 지정됩니다.').click();
 
-       //결재정책 추가 버튼 클릭
-       cy.get('.v-dialog').contains('button', '추가') .click({ force: true });
+//        //결재정책 추가 버튼 클릭
+//        cy.get('.v-dialog').contains('button', '추가') .click({ force: true });
 
-       //결재정책 저장 버튼 클릭
-       cy.get('.v-dialog').contains('button', '저장') .click({ force: true }); 
+//        //결재정책 저장 버튼 클릭
+//        cy.get('.v-dialog').contains('button', '저장') .click({ force: true }); 
 
-       // -----------------------------------------------------------
-       // "기본 결재정채추가된경우"  중복 알림창 처리 (조건부 로직)
-       // -----------------------------------------------------------
-       cy.wait(1000);
-       cy.get('body').then(($body) => {
-         // '중복 알림'이라는 글자가 포함된 헤드라인이 존재하는지 확인 (length > 0 이면 존재)
-         if ($body.find('.c-headline:contains("중복 알림")').length > 0) {
+//        // -----------------------------------------------------------
+//        // "기본 결재정채추가된경우"  중복 알림창 처리 (조건부 로직)
+//        // -----------------------------------------------------------
+//        cy.wait(1000);
+//        cy.get('body').then(($body) => {
+//          // '중복 알림'이라는 글자가 포함된 헤드라인이 존재하는지 확인 (length > 0 이면 존재)
+//          if ($body.find('.c-headline:contains("중복 알림")').length > 0) {
     
-           cy.log('🚨 중복 알림 팝업 발견! 확인 버튼을 클릭합니다.');
-           // '확인' 버튼을 찾아서 클릭 (버튼 텍스트가 '확인'이라고 가정)
-           cy.get('button.success--text').filter(':visible').contains('확정').click({ force: true });
-          } else {
-            cy.log('✅ 중복 알림 없음. 다음 단계로 진행합니다.');
-           }
-        });
-       //----------------------------------------------------------------
+//            cy.log('🚨 중복 알림 팝업 발견! 확인 버튼을 클릭합니다.');
+//            // '확인' 버튼을 찾아서 클릭 (버튼 텍스트가 '확인'이라고 가정)
+//            cy.get('button.success--text').filter(':visible').contains('확정').click({ force: true });
+//           } else {
+//             cy.log('✅ 중복 알림 없음. 다음 단계로 진행합니다.');
+//            }
+//         });
+//        //----------------------------------------------------------------
        
-       //v2.9.1.125_r35234 UI변경으로수정함.
-       // 추가한 결재 정책 검증코드
-       cy.get('tbody').filter(':visible').contains('tr', 'auto_add_test 결재정책').should('be.visible').within(() => {
-        cy.get('.ag-name').should('contain.text', 'auto_add_test 결재정책');
-        cy.contains('사용').should('be.visible'); // "사용 여부" 배지 확인
-      });
+//        //v2.9.1.125_r35234 UI변경으로수정함.
+//        // 추가한 결재 정책 검증코드
+//        cy.get('tbody').filter(':visible').contains('tr', 'auto_add_test 결재정책').should('be.visible').within(() => {
+//         cy.get('.ag-name').should('contain.text', 'auto_add_test 결재정책');
+//         cy.contains('사용').should('be.visible'); // "사용 여부" 배지 확인
+//       });
 
-      //v2.9.1.125_r35234 UI변경으로수정됨.
-       // 추가된 결재 정책  수정하는 기능 (권한 유형 : 참조 추가 )--------------------------------------------------------------------------
-       cy.wait(1000);
-       cy.get('tbody').filter(':visible').contains('td.ag-name', 'auto_add_test 결재정책').should('be.visible').click({ force: true });
+//       //v2.9.1.125_r35234 UI변경으로수정됨.
+//        // 추가된 결재 정책  수정하는 기능 (권한 유형 : 참조 추가 )--------------------------------------------------------------------------
+//        cy.wait(1000);
+//        cy.get('tbody').filter(':visible').contains('td.ag-name', 'auto_add_test 결재정책').should('be.visible').click({ force: true });
 
-       // 1. "+ 참조" 버튼 클릭하여 참조 영역 열기
-       cy.get('.line-add-mini').filter(':visible').contains('참조').click({ force: true });
-       cy.wait(1000);
+//        // 1. "+ 참조" 버튼 클릭하여 참조 영역 열기
+//        cy.get('.line-add-mini').filter(':visible').contains('참조').click({ force: true });
+//        cy.wait(1000);
 
-       // 🌟 참조 영역이 열린 뒤, 다이얼로그 내부 스크롤 컨테이너를 끝까지 내려서
-       // 새로 나타난 입력 영역(결재자 유형/결재자/추가 버튼)이 뷰포트 안에 들어오도록 함
-       cy.get('.scrollable-detail-content').filter(':visible').scrollTo('bottom', { ensureScrollable: false, duration: 500 });
-       cy.wait(1000);
+//        // 🌟 참조 영역이 열린 뒤, 다이얼로그 내부 스크롤 컨테이너를 끝까지 내려서
+//        // 새로 나타난 입력 영역(결재자 유형/결재자/추가 버튼)이 뷰포트 안에 들어오도록 함
+//        cy.get('.scrollable-detail-content').filter(':visible').scrollTo('bottom', { ensureScrollable: false, duration: 500 });
+//        cy.wait(1000);
 
-       // 2. 결재자 유형 콤보박스 클릭 → "사용자" 선택
-       cy.get('input[aria-label="결재자 유형"]').filter(':visible').last().click({ force: true });
-       cy.wait(1000);
-       cy.get('.v-list__tile__title').filter(':visible').contains(/^부서$/).click({ force: true });
+//        // 2. 결재자 유형 콤보박스 클릭 → "사용자" 선택
+//        cy.get('input[aria-label="결재자 유형"]').filter(':visible').last().click({ force: true });
+//        cy.wait(1000);
+//        cy.get('.v-list__tile__title').filter(':visible').contains(/^부서$/).click({ force: true });
        
-       // 3. 결재자 콤보박스 클릭 → "인사팀" 검색 후 선택
+//        // 3. 결재자 콤보박스 클릭 → "인사팀" 검색 후 선택
 
-       cy.get('input[aria-label="결재자"]').filter(':visible').last().click({ force: true });
-       cy.wait(1000);
+//        cy.get('input[aria-label="결재자"]').filter(':visible').last().click({ force: true });
+//        cy.wait(1000);
 
-       cy.get('input[aria-label="결재자"]').filter(':visible').last().type('인사팀', { force: true });
-       cy.wait(1000);
-       cy.get('.v-list__tile__title').filter(':visible').contains(/^인사팀$/).click({ force: true });
+//        cy.get('input[aria-label="결재자"]').filter(':visible').last().type('인사팀', { force: true });
+//        cy.wait(1000);
+//        cy.get('.v-list__tile__title').filter(':visible').contains(/^인사팀$/).click({ force: true });
 
-       // 🌟 결재자 선택 완료 후, 다시 한 번 스크롤을 끝까지 내려서 "추가" 버튼이 확실히 보이게 함
-       cy.get('.scrollable-detail-content').filter(':visible').scrollTo('bottom', { ensureScrollable: false, duration: 500 });
-       cy.wait(1000);
+//        // 🌟 결재자 선택 완료 후, 다시 한 번 스크롤을 끝까지 내려서 "추가" 버튼이 확실히 보이게 함
+//        cy.get('.scrollable-detail-content').filter(':visible').scrollTo('bottom', { ensureScrollable: false, duration: 500 });
+//        cy.wait(1000);
 
-       // 4. 추가 버튼 클릭
-       // 4. 추가 버튼 클릭 (line-picker-ok 클래스로 정확히 타겟팅)
-       cy.get('.v-dialog').filter(':visible').find('button.line-picker-ok').filter(':visible').should('be.visible').scrollIntoView().click({ force: true });
-       cy.wait(1000);
+//        // 4. 추가 버튼 클릭
+//        // 4. 추가 버튼 클릭 (line-picker-ok 클래스로 정확히 타겟팅)
+//        cy.get('.v-dialog').filter(':visible').find('button.line-picker-ok').filter(':visible').should('be.visible').scrollIntoView().click({ force: true });
+//        cy.wait(1000);
 
-       // 5. 저장 버튼 클릭
-       cy.get('.v-dialog').filter(':visible').contains('.v-btn__content', '저장').click({ force: true });
-       cy.wait(1000);
-       cy.log('✅ 결재 정책 - 참조(부서: 인사팀) 결재라인 추가 완료!');
+//        // 5. 저장 버튼 클릭
+//        cy.get('.v-dialog').filter(':visible').contains('.v-btn__content', '저장').click({ force: true });
+//        cy.wait(1000);
+//        cy.log('✅ 결재 정책 - 참조(부서: 인사팀) 결재라인 추가 완료!');
 
-       // 참조 추가 확인 검증코드
-       // 추가된 결재 정책창 팝업창 띄우기 (a 태그 → td.ag-name)
-       cy.get('tbody').filter(':visible').contains('td.ag-name', 'auto_add_test 결재정책').should('be.visible').click({ force: true });
-       cy.wait(1000);
+//        // 참조 추가 확인 검증코드
+//        // 추가된 결재 정책창 팝업창 띄우기 (a 태그 → td.ag-name)
+//        cy.get('tbody').filter(':visible').contains('td.ag-name', 'auto_add_test 결재정책').should('be.visible').click({ force: true });
+//        cy.wait(1000);
 
-       // 🌟 "인사팀" 참조 결재라인이 추가되었는지 확인 (a 태그 가정 제거)
-       cy.contains(/^인사팀$/).should('be.visible');
+//        // 🌟 "인사팀" 참조 결재라인이 추가되었는지 확인 (a 태그 가정 제거)
+//        cy.contains(/^인사팀$/).should('be.visible');
 
-       // 🌟 "참조" 유형 뱃지가 표시되는지 확인
-       cy.contains('참조').should('be.visible');
+//        // 🌟 "참조" 유형 뱃지가 표시되는지 확인
+//        cy.contains('참조').should('be.visible');
 
-       // 결재 정책 팝업창 취소 버튼 클릭하기
-       cy.get('.v-dialog').filter(':visible').contains('button', '취소').click({ force: true });
-       cy.wait(500);
+//        // 결재 정책 팝업창 취소 버튼 클릭하기
+//        cy.get('.v-dialog').filter(':visible').contains('button', '취소').click({ force: true });
+//        cy.wait(500);
 
        
-      //  // 권한유형중 [참조] 선택
-      //  cy.get('.v-list__tile__title').filter(':visible').contains('참조').click();
-      //  // 결재자 유형 클릭하여 콤보박스 열기 
-      //  cy.get('input[aria-label="결재자 유형"]').filter(':visible').click({ force: true });
-      //  // 결재자 유형 클릭하여 소명 선택 
-      //  cy.get('.v-list__tile__title').filter(':visible').contains('부서').click();
-      //  // 결재자 콤보박스 열기 
-      //  cy.get('input[aria-label="결재자"]').filter(':visible').click({ force: true });
-      //  // 결재자 클릭하여 각 부서장 선택 
-      //  cy.get('.v-list__tile__title').filter(':visible').contains('인사팀').click();
-      //  //결재정책 추가 버튼 클릭
-      //  cy.get('.v-dialog').contains('button', '추가') .click({ force: true });
-      //  //결재정책 저장 버튼 클릭
-      //  cy.get('.v-dialog').contains('button', '저장') .click({ force: true });
-      //  cy.wait(1000); 
+//       //  // 권한유형중 [참조] 선택
+//       //  cy.get('.v-list__tile__title').filter(':visible').contains('참조').click();
+//       //  // 결재자 유형 클릭하여 콤보박스 열기 
+//       //  cy.get('input[aria-label="결재자 유형"]').filter(':visible').click({ force: true });
+//       //  // 결재자 유형 클릭하여 소명 선택 
+//       //  cy.get('.v-list__tile__title').filter(':visible').contains('부서').click();
+//       //  // 결재자 콤보박스 열기 
+//       //  cy.get('input[aria-label="결재자"]').filter(':visible').click({ force: true });
+//       //  // 결재자 클릭하여 각 부서장 선택 
+//       //  cy.get('.v-list__tile__title').filter(':visible').contains('인사팀').click();
+//       //  //결재정책 추가 버튼 클릭
+//       //  cy.get('.v-dialog').contains('button', '추가') .click({ force: true });
+//       //  //결재정책 저장 버튼 클릭
+//       //  cy.get('.v-dialog').contains('button', '저장') .click({ force: true });
+//       //  cy.wait(1000); 
 
-      //  // 결재라인 추가한 정책 삭제하는 시나리오
-      //  cy.contains('tr', 'auto_add_test 결재정책').find('.fa-trash').click({ force: true });
-      //  cy.wait(1000); 
-      //  cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 삭제');
-      //  cy.wait(1000); 
-      //  cy.get('.v-dialog').find('button.success--text').contains('확인').click({ force: true });
-      //  // 결재 정책 모두 다 삭제된 상태
-      //  // 결제정책모두 삭제되었을때 문구 확인
-      //  //cy.contains('td', 'No data available').should('be.visible');
-      //  cy.contains('tr', 'auto_add_test 결재정책').should('not.exist');
+//       //  // 결재라인 추가한 정책 삭제하는 시나리오
+//       //  cy.contains('tr', 'auto_add_test 결재정책').find('.fa-trash').click({ force: true });
+//       //  cy.wait(1000); 
+//       //  cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 삭제');
+//       //  cy.wait(1000); 
+//       //  cy.get('.v-dialog').find('button.success--text').contains('확인').click({ force: true });
+//       //  // 결재 정책 모두 다 삭제된 상태
+//       //  // 결제정책모두 삭제되었을때 문구 확인
+//       //  //cy.contains('td', 'No data available').should('be.visible');
+//       //  cy.contains('tr', 'auto_add_test 결재정책').should('not.exist');
 
-      //  //지난 정책보기 확인하는 코드
-      //  //지난 정책 보기 OFF -> ON상태로 바꾸기
-      //  cy.contains('.v-input', '지난 정책 보기').find('.v-input--selection-controls__ripple').click({ force: true });
-      //  cy.wait(1000);
-      //  cy.get('tbody').find('a.font-weight-bold').contains('auto_add_test 결재정책').should('be.visible');
-      //  cy.get('tbody').find('a').contains(/^X$/).should('be.visible');
-      //  cy.wait(1000);
-      //  //지난 정책보기 ON -> OFF로 상태 바꾸기
-      //  cy.contains('.v-input', '지난 정책 보기').find('.v-input--selection-controls__ripple').click({ force: true });
-      //  cy.wait(1000);
-      //  //결제정책모두 삭제되었을때 문구 확인
-      //  //cy.contains('td', 'No data available').should('be.visible');
-      //  // [핵심] 'auto_add_test 결재정책'을 포함한 행(tr)이 아예 사라졌는지 확인
-      //  cy.contains('tr', 'auto_add_test 결재정책').should('not.exist');
-
-
-      //  cy.log('✅ 소명 - 결재 - [결재라인] 탭 진입 및 데이터 출력 확인 완료!');
+//       //  //지난 정책보기 확인하는 코드
+//       //  //지난 정책 보기 OFF -> ON상태로 바꾸기
+//       //  cy.contains('.v-input', '지난 정책 보기').find('.v-input--selection-controls__ripple').click({ force: true });
+//       //  cy.wait(1000);
+//       //  cy.get('tbody').find('a.font-weight-bold').contains('auto_add_test 결재정책').should('be.visible');
+//       //  cy.get('tbody').find('a').contains(/^X$/).should('be.visible');
+//       //  cy.wait(1000);
+//       //  //지난 정책보기 ON -> OFF로 상태 바꾸기
+//       //  cy.contains('.v-input', '지난 정책 보기').find('.v-input--selection-controls__ripple').click({ force: true });
+//       //  cy.wait(1000);
+//       //  //결제정책모두 삭제되었을때 문구 확인
+//       //  //cy.contains('td', 'No data available').should('be.visible');
+//       //  // [핵심] 'auto_add_test 결재정책'을 포함한 행(tr)이 아예 사라졌는지 확인
+//       //  cy.contains('tr', 'auto_add_test 결재정책').should('not.exist');
 
 
-// 2.9.1.125_r35234 버전에서 변경코드
-// ==========================================
-// 결재라인 추가한 정책 삭제하는 시나리오 (결재 유형까지 포함해서 정확히 특정)
-// ==========================================
+//       //  cy.log('✅ 소명 - 결재 - [결재라인] 탭 진입 및 데이터 출력 확인 완료!');
 
-// 🌟 결재 유형이 정확히 "소명"이면서 정책명이 "auto_add_test 결재정책"인 행을 특정하여 삭제
-cy.get('tbody').filter(':visible').find('tr').filter((i, el) => {
-  const typeText = Cypress.$(el).find('td').first().text().trim();
-  const nameText = Cypress.$(el).text();
-  return typeText === '소명하기' && nameText.includes('auto_add_test 결재정책');
-}).first().within(() => {
-  cy.get('i.material-icons').contains('delete').click({ force: true });
-});
 
-cy.wait(1000);
-cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 삭제');
-cy.wait(1000);
-cy.get('.v-dialog').find('button.success--text').contains('확정').click({ force: true });
-cy.wait(1000);
+// // 2.9.1.125_r35234 버전에서 변경코드
+// // ==========================================
+// // 결재라인 추가한 정책 삭제하는 시나리오 (결재 유형까지 포함해서 정확히 특정)
+// // ==========================================
 
-// 🌟 삭제 후, "소명" + "auto_add_test 결재정책" 조합의 행이 더 이상 없는지 확인
-cy.get('tbody').filter(':visible').find('tr').should(($rows) => {
-  const stillExists = $rows.filter((i, el) => {
-    const typeText = Cypress.$(el).find('td').first().text().trim();
-    const nameText = Cypress.$(el).text();
-    return typeText === '소명하기' && nameText.includes('auto_add_test 결재정책');
-  }).length;
-  expect(stillExists).to.equal(0);
-});
+// // 🌟 결재 유형이 정확히 "소명"이면서 정책명이 "auto_add_test 결재정책"인 행을 특정하여 삭제
+// cy.get('tbody').filter(':visible').find('tr').filter((i, el) => {
+//   const typeText = Cypress.$(el).find('td').first().text().trim();
+//   const nameText = Cypress.$(el).text();
+//   return typeText === '소명하기' && nameText.includes('auto_add_test 결재정책');
+// }).first().within(() => {
+//   cy.get('i.material-icons').contains('delete').click({ force: true });
+// });
 
-cy.log('✅ 결재 정책 - "소명" 유형 auto_add_test 결재정책 삭제 완료!');
+// cy.wait(1000);
+// cy.get('.v-dialog').should('be.visible').find('.c-headline').contains('결재 정책 삭제');
+// cy.wait(1000);
+// cy.get('.v-dialog').find('button.success--text').contains('확정').click({ force: true });
+// cy.wait(1000);
+
+// // 🌟 삭제 후, "소명" + "auto_add_test 결재정책" 조합의 행이 더 이상 없는지 확인
+// cy.get('tbody').filter(':visible').find('tr').should(($rows) => {
+//   const stillExists = $rows.filter((i, el) => {
+//     const typeText = Cypress.$(el).find('td').first().text().trim();
+//     const nameText = Cypress.$(el).text();
+//     return typeText === '소명하기' && nameText.includes('auto_add_test 결재정책');
+//   }).length;
+//   expect(stillExists).to.equal(0);
+// });
+
+// cy.log('✅ 결재 정책 - "소명" 유형 auto_add_test 결재정책 삭제 완료!');
 
       
-// ==========================================
-// 지난 정책보기 확인하는 코드 (UI 변경 반영)
-// ==========================================
+// // ==========================================
+// // 지난 정책보기 확인하는 코드 (UI 변경 반영)
+// // ==========================================
 
-// 지난 정책 보기 OFF -> ON 상태로 바꾸기
-cy.contains('.v-input', '지난 정책 보기').find('.v-input--selection-controls__ripple').click({ force: true });
-cy.wait(1000);
+// // 지난 정책 보기 OFF -> ON 상태로 바꾸기
+// cy.contains('.v-input', '지난 정책 보기').find('.v-input--selection-controls__ripple').click({ force: true });
+// cy.wait(1000);
 
-// 정책명 확인
-cy.get('tbody').filter(':visible').contains('td.ag-name', 'auto_add_test 결재정책').should('be.visible');
+// // 정책명 확인
+// cy.get('tbody').filter(':visible').contains('td.ag-name', 'auto_add_test 결재정책').should('be.visible');
 
-// 🌟 "미사용" 상태 배지 확인 (.ag-status 클래스로 정확히 타겟팅)
-cy.get('.ag-status').filter(':visible').contains('미사용').should('be.visible');
+// // 🌟 "미사용" 상태 배지 확인 (.ag-status 클래스로 정확히 타겟팅)
+// cy.get('.ag-status').filter(':visible').contains('미사용').should('be.visible');
 
-cy.wait(1000);
+// cy.wait(1000);
 
-// 지난 정책보기 ON -> OFF로 상태 바꾸기
-cy.contains('.v-input', '지난 정책 보기').find('.v-input--selection-controls__ripple').click({ force: true });
-cy.wait(1000);
+// // 지난 정책보기 ON -> OFF로 상태 바꾸기
+// cy.contains('.v-input', '지난 정책 보기').find('.v-input--selection-controls__ripple').click({ force: true });
+// cy.wait(1000);
 
-// 🌟 [수정] "소명" 유형만 정확히 없어졌는지 확인 (전체 이름 기준 not.exist는 잘못됨)
-cy.get('tbody').filter(':visible').find('tr').should(($rows) => {
-  const stillExists = $rows.filter((i, el) => {
-    const typeText = Cypress.$(el).find('td').first().text().trim();
-    const nameText = Cypress.$(el).text();
-    return typeText === '소명하기' && nameText.includes('auto_add_test 결재정책');
-  }).length;
-  expect(stillExists).to.equal(0);
-});
+// // 🌟 [수정] "소명" 유형만 정확히 없어졌는지 확인 (전체 이름 기준 not.exist는 잘못됨)
+// cy.get('tbody').filter(':visible').find('tr').should(($rows) => {
+//   const stillExists = $rows.filter((i, el) => {
+//     const typeText = Cypress.$(el).find('td').first().text().trim();
+//     const nameText = Cypress.$(el).text();
+//     return typeText === '소명하기' && nameText.includes('auto_add_test 결재정책');
+//   }).length;
+//   expect(stillExists).to.equal(0);
+// });
 
-cy.log('✅ 소명 - 결재 - [결재라인] 탭 진입 및 데이터 출력 확인 완료!');
+// cy.log('✅ 소명 - 결재 - [결재라인] 탭 진입 및 데이터 출력 확인 완료!');
 
 // ==========================================
 // [FINAL] 테스트 종료 및 메뉴 닫기

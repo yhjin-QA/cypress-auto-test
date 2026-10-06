@@ -83,7 +83,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -111,7 +111,7 @@ describe('로그캐치 사이트 테스트', () => {
     // cy.contains('button', '소명').click({ force: true });
     // cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
 
-cy.contains('button', '소명').click({ force: true });
+cy.contains('button', '소명하기').click({ force: true });
 cy.wait(2000);
 
 // 소명 클릭 후 로딩 감지 → 새로고침 후 재진입
@@ -124,6 +124,10 @@ cy.get('body').then(($body) => {
         cy.wait(2000);
     }
 });
+    
+    cy.log('--- 소명 > 나의 소명 서브메뉴 ---');
+    //서브메뉴 관리 클릭 
+    cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').contains('나의 소명').click({ force: true });
     
     //부서장 권한있는 유저가 로그인시 
     //cy.log('--- 소명 > 나의 소명 서브메뉴 ---');
@@ -217,13 +221,13 @@ cy.get('body').then(($body) => {
 
     //한페이지에 취소만 보이는 경우 예외처리 코드보완
     // ==========================================================================
-    // 페이지당 표시 개수 25 -> 1000으로 변경 (더 많은 데이터를 한 페이지에서 확인)
+    // 페이지당 표시 개수 25 -> 500으로 변경 (더 많은 데이터를 한 페이지에서 확인)
     // ==========================================================================
-
+    //v2.9.4.0 에서 max 1000개에서 500로 변경됨.
     cy.get('.v-select__selection--comma').filter(':visible').contains('25').click({ force: true });
     cy.wait(500);
 
-    cy.get('.v-list__tile__title, .v-menu__content').filter(':visible').contains('1,000').click({ force: true });
+    cy.get('.v-list__tile__title, .v-menu__content').filter(':visible').contains('500').click({ force: true });
     cy.wait(1000);
      // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');

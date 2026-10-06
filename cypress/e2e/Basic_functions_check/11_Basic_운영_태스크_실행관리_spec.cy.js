@@ -86,7 +86,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -112,7 +112,8 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 11: 운영 서브메뉴 
     // ==========================================
     cy.log('🚀 운영 탭 클릭');
-    cy.contains('button', '운영').click({ force: true });
+    //2.9.1.262_r35274  운영이력 클릭방지 정규식으로 일치 보완 
+    cy.contains('button', /^운영$/).click({ force: true });
     cy.wait(1000);
     cy.log('---운영 - 태스크 서브메뉴 클릭 ---');
     cy.get('.v-list__tile__title').filter(':contains("태스크")').filter(':visible').click({ force: true });
@@ -142,7 +143,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     cy.contains('p', 'Task 종료하시겠습니까?').should('be.visible');
     // 'MASTER 태스크 전체 종료 확인 알림창 확인 버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
+    cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
     
 
     //프로세스 정지확인 검증(프로세스 정지상태라면 시작문구로 버튼 변경되어있는상태 ) 
@@ -164,7 +165,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
     // 'MASTER 태스크 전체 종료 확인 알림창 확인 버튼 클릭
-    cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
+    cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
     
     
     //프로세스 실행확인 검증코드 (프로세스 실행상태라면  정지 문구로 버튼 변경되어있는상태 ) 

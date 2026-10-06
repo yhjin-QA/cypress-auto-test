@@ -87,7 +87,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -192,7 +192,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // 저장 확인 창에서 문구를 확인하고 확인버튼 클릭
-    cy.contains('선택된 기간에대해 무결성 검사를 진행합니다.').should('be.visible').closest('.v-card').find('button').contains('확정').click({ force: true });
+    cy.contains('선택된 기간에대해 무결성 검사를 진행합니다.').should('be.visible').closest('.v-card').find('button').contains('확인').click({ force: true });
     cy.wait(1000);
     
     // 날짜 수정 - 시작기간 -> 특정기간으로 수정 -------------------------------------------------
@@ -219,7 +219,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // 저장 확인 창에서 문구를 확인하고 확인버튼 클릭
-    cy.contains('선택된 기간에대해 무결성 검사를 진행합니다.').should('be.visible').closest('.v-card').find('button').contains('확정').click({ force: true });
+    cy.contains('선택된 기간에대해 무결성 검사를 진행합니다.').should('be.visible').closest('.v-card').find('button').contains('확인').click({ force: true });
     cy.wait(1000);
 
     // 변경사항 검증확인
@@ -250,7 +250,7 @@ describe('로그캐치 사이트 테스트', () => {
            cy.contains('삭제하시겠습니까?').should('be.visible');
            cy.wait(1000); // 팝업 애니메이션 안정화 대기
       
-           cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
+           cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
            // 삭제 후 목록이 갱신될 시간을 잠깐 줍니다.
            cy.wait(1000);
 
@@ -297,7 +297,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 검색 기능 확인 -------------------
      //시작기간 지정후 검색
     //달력표를 펼침  월/일 지정  
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
     cy.wait(1000);
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
