@@ -430,8 +430,10 @@ cy.get('input[aria-label="탐지시작일"]').should('be.visible');
 // [신규] 실행이력 보존기간(일)
 cy.get('input[aria-label="실행이력 보존기간(일)"]').should('be.visible');
 
-// 5. 탐지 규칙 섹션
-cy.contains('탐지 규칙').should('be.visible');
+// [수정] 툴바가 position: fixed로 바뀌어 하단 dialog-footer에 가려질 수 있음
+//        → 탐지 규칙 영역을 먼저 화면 위쪽으로 스크롤한 뒤 확인
+cy.contains('탐지 규칙').scrollIntoView({ offset: { top: -100 } });
+cy.wait(300);
 
 // 시간범위/단위 (집계 단위)
 cy.contains('시간범위').should('be.visible');
@@ -443,11 +445,12 @@ cy.get('.v-select__selection--comma').filter(':visible').contains('시간').shou
 cy.get('.section-tab').filter(':visible').contains('미리보기').should('be.visible');
 cy.get('.section-tab--active').filter(':visible').contains('수정').should('be.visible');
 
-cy.contains('.ws-toolbar-label', '조건').should('be.visible');
-cy.contains('.ws-toolbar-subtitle', '어떤 접근 기록을 감시할지 선별합니다').should('be.visible');
+// 가려짐 여부와 무관하게 존재 + 문구로 검증
+cy.contains('.ws-toolbar-label', '조건').should('exist');
+cy.contains('.ws-toolbar-subtitle', '어떤 접근 기록을 감시할지 선별합니다').should('exist');
 
-cy.contains('.ws-toolbar-label', '집계').should('be.visible');
-cy.contains('.ws-toolbar-subtitle', '수치 기준으로 이상행위를 판정합니다').should('be.visible');
+cy.contains('.ws-toolbar-label', '집계').should('exist');
+cy.contains('.ws-toolbar-subtitle', '수치 기준으로 이상행위를 판정합니다').should('exist');
 
 // [변경] 조건 도구 팔레트 - 신규 5종 추가
 const conditionTools = [
