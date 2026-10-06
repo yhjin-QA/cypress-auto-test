@@ -81,7 +81,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -394,7 +394,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘확인
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
     // 종료날짜 달력 아이콘확인
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     // 검색 조건 입력란 
@@ -525,6 +525,156 @@ describe('로그캐치 사이트 테스트', () => {
     //열린 폴더 아이콘 확인
     cy.get('.v-icon.fa-folder-open').should('be.visible');
     cy.log('✅ 관리 - 데이터 시각화 관리 - [통계 모듈 관리] 출력 확인 완료');
+
+
+//HTML 구조 추출용 코드
+// // ==========================================
+// // 관리 > 데이터 시각화 관리 > 통계 정책 관리 (신규 화면)
+// // ==========================================
+// cy.log('--- 통계 정책 관리 탭 클릭 ---');
+// // 탭 이름 띄어쓰기("통계정책관리" / "통계 정책 관리") 차이 대응 - 정확 일치
+// cy.get('.v-btn__content').filter(':visible')
+//   .filter((i, el) => /^\s*통계\s*정책\s*관리\s*$/.test(Cypress.$(el).text()))
+//   .should('have.length', 1)
+//   .click({ force: true });
+// cy.wait(3000);
+
+// // [진단용] 화면 HTML을 파일로 저장 (검증 코드 작성 후 삭제)
+// cy.get('main.v-content').then(($main) => {
+//   cy.writeFile('cypress/debug/stat-policy.html', $main[0].outerHTML);
+// });
+// cy.screenshot('stat-policy', { capture: 'fullPage' });
+
+// cy.log('✅ 관리 - 데이터 시각화 관리 - [통계 정책 관리] 진입 확인');
+
+
+// ==========================================
+// 관리 > 데이터 시각화 관리 > 통계 정책 관리 (신규 화면)
+// ==========================================
+cy.log('--- 통계 정책 관리 탭 클릭 ---');
+cy.contains('button.tab-btn', /^\s*통계 정책 관리\s*$/).click({ force: true });
+cy.wait(3000);
+
+cy.log('--- 화면 검증 시작 ---');
+
+// ------------------------------------------
+// 1. 탭 - 5개, "통계 정책 관리" 활성
+// ------------------------------------------
+const vizTabs = ['대시보드 관리', '위젯 관리', '차트 관리', '통계 모듈 관리', '통계 정책 관리'];
+cy.get('button.tab-btn').filter(':visible').should('have.length', vizTabs.length).each(($tab, i) => {
+  expect($tab.text().trim(), `탭 ${i + 1}`).to.eq(vizTabs[i]);
+});
+cy.contains('button.tab-btn', '통계 정책 관리').should('have.class', 'active');
+
+// ------------------------------------------
+// 2. 상단 필터 영역
+// ------------------------------------------
+cy.get('.filter-panel').should('be.visible').within(() => {
+  // 검색창
+  cy.get('input[placeholder="정책명, 테이블명, 분류 검색"]').should('be.visible')
+    .closest('.v-input__slot').find('.material-icons').first().should('contain.text', 'search');
+
+  // 분류 필터 콤보박스
+  cy.get('input[placeholder="분류 필터"]').should('exist')
+    .closest('.v-input__slot').find('.material-icons').first().should('contain.text', 'filter_list');
+
+  // 활성 여부 필터 - 기본값 "전체"
+  cy.get('.severity-filter-group button.sev-filter-btn').should('have.length', 3).then(($btns) => {
+    expect([...$btns].map((b) => b.textContent.trim())).to.deep.equal(['전체', '활성', '비활성']);
+  });
+  cy.get('.severity-filter-group .sev-filter-btn--active').should('have.text', '전체');
+
+  // 버튼 - 정책 등록 / 날짜 재구축 / 새로고침
+  cy.contains('button.action-btn', '정책 등록').should('be.visible')
+    .find('.material-icons').should('contain.text', 'add');
+  cy.contains('button.action-btn', '날짜 재구축').should('be.visible')
+    .find('.material-icons').should('contain.text', 'date_range');
+  cy.get('button.v-btn--icon .material-icons').filter(':contains("refresh")').should('be.visible');
+});
+
+// ------------------------------------------
+// 3. 정책 목록 테이블 - 헤더
+// ------------------------------------------
+const policyHeaders = ['ID', '정책명', '적재 테이블', '분류', '활성', '당일 집계', '마지막 실행', '실행 시각', '적재 건수', '액션'];
+cy.get('.policy-table thead tr').first().find('th').then(($ths) => {
+  // 첫 번째 th는 전체 선택 체크박스
+  expect($ths.eq(0).find('input[role="checkbox"]'), '전체 선택 체크박스').to.have.length(1);
+  const labels = [...$ths].slice(1).map((th) => th.textContent.trim());
+  expect(labels, '테이블 헤더').to.deep.equal(policyHeaders);
+});
+
+// ------------------------------------------
+// 4. 정책 목록 테이블 - 행 (동적 데이터 대응)
+// ------------------------------------------
+const POLICY_CLASSES = ['전체 기본', '전체 메뉴', '상세 기본', '상세 메뉴', '개인정보 기본', '이상행위 기본', '소명 기본', 'RequestGrouping'];
+const ACTION_TITLES = ['수정', '실행 이력', '즉시 실행', '삭제'];
+
+cy.get('body').then(($body) => {
+  const $rows = $body.find('.policy-table tbody tr:visible');
+
+  if ($rows.length === 0) {
+    cy.log('ℹ️ 등록된 통계 정책 없음');
+    cy.get('.table-footer').should('contain.text', '총 0건');
+    return;
+  }
+
+  cy.log(`📋 통계 정책 ${$rows.length}건 검증`);
+
+  // 하단 "총 N건"과 행 수 일치
+  cy.get('.table-footer .caption').invoke('text').then((text) => {
+    const m = text.trim().match(/^총 (\d+)건$/);
+    expect(m, '총 건수 표기').to.not.be.null;
+    expect(parseInt(m[1], 10), '총 건수 = 행 수').to.eq($rows.length);
+  });
+
+  // 행별 검증 (jQuery로 한 번에 검사 → 36건도 빠르게 처리)
+  cy.wrap($rows).each(($row) => {
+    const id = $row.find('.policy-id-cell').text().trim();
+    const tag = `[ID ${id}]`;
+
+    // 선택 체크박스
+    expect($row.find('td').eq(0).find('input[role="checkbox"]'), `${tag} 체크박스`).to.have.length(1);
+
+    // ID - 숫자
+    expect(id, `${tag} ID`).to.match(/^\d+$/);
+
+    // 정책명 - 비어있지 않음
+    expect($row.find('.policy-name-cell').text().trim().length, `${tag} 정책명`).to.be.greaterThan(0);
+
+    // 적재 테이블 - code 태그, 테이블명 형식
+    expect($row.find('.policy-table-cell code.table-code').text().trim(), `${tag} 적재 테이블`)
+      .to.match(/^[a-z][a-z0-9_]*$/);
+
+    // 분류 - 정해진 값 중 하나
+    expect(POLICY_CLASSES, `${tag} 분류`).to.include($row.find('.policy-class-cell').text().trim());
+
+    // 활성 / 당일 집계 - 아이콘 존재 (td 6, 7번째)
+    [5, 6].forEach((idx) => {
+      expect($row.find('td').eq(idx).find('.material-icons').text().trim().length, `${tag} 아이콘(${idx})`)
+        .to.be.greaterThan(0);
+    });
+
+    // 마지막 실행 - 상태 표시 (성공 시 exec-ok)
+    const $exec = $row.find('.policy-exec-cell > span');
+    expect($exec.attr('class'), `${tag} 실행 상태 클래스`).to.match(/^exec-/);
+    if ($exec.hasClass('exec-ok')) {
+      expect($exec.text().replace('check_circle_outline', '').trim(), `${tag} 실행 결과`).to.eq('성공');
+    }
+
+    // 실행 시각 - yyyy-MM-dd HH:mm
+    expect($row.find('.policy-date-cell').text().trim(), `${tag} 실행 시각`)
+      .to.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
+
+    // 적재 건수 - 천 단위 콤마 숫자
+    expect($row.find('.policy-rows-cell').text().trim(), `${tag} 적재 건수`).to.match(/^\d{1,3}(,\d{3})*$/);
+
+    // 액션 버튼 4종 (title 순서까지 확인)
+    const titles = [...$row.find('.policy-action-cell button')].map((b) => b.getAttribute('title'));
+    expect(titles, `${tag} 액션 버튼`).to.deep.equal(ACTION_TITLES);
+  });
+});
+
+cy.log('✅ 관리 - 데이터 시각화 관리 - [통계 정책 관리] 출력 확인 완료');
 
 
 

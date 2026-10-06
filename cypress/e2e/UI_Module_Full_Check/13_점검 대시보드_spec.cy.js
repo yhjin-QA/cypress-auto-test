@@ -79,7 +79,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -155,15 +155,25 @@ cy.contains('이상행위 발생 건수')
     expect(text.trim()).to.match(/^\d+\s*건$/);
   });
 
-// [신규] 데이터 없음 상태 위젯 검증 (최초 설치 시 - 통계 테이블 미생성 5종)
-cy.get('.dynamic_chart')
-  .filter(':visible')
-  .contains('아직 통계 테이블이 생성되지 않았습니다')
-  .should('have.length.at.least', 0);
+// [수정] 데이터 없음 상태 위젯 검증 - 환경에 따라 0개일 수 있음
+//  - 최초 설치(통계 테이블 미생성): 경고 아이콘 + 안내 문구 노출
+//  - 통계 테이블 생성 후: 경고 위젯 없음
+cy.get('body').then(($body) => {
+  const $noStatWidgets = $body
+    .find('.dynamic_chart:visible')
+    .filter(':contains("아직 통계 테이블이 생성되지 않았습니다")');
 
-cy.get('.fa-exclamation-triangle')
-  .filter(':visible')
-  .should('have.length.at.least', 0);
+  if ($noStatWidgets.length > 0) {
+    cy.log(`ℹ️ 통계 테이블 미생성 위젯 ${$noStatWidgets.length}개 - 경고 아이콘 확인`);
+    cy.wrap($noStatWidgets).each(($widget) => {
+      cy.wrap($widget).find('.fa-exclamation-triangle').should('be.visible');
+    });
+  } else {
+    cy.log('✅ 통계 테이블 생성됨 - 미생성 경고 위젯 없음');
+    // 경고 아이콘이 화면에 남아 있지 않은지 확인
+    expect($body.find('.dynamic_chart .fa-exclamation-triangle:visible'), '경고 아이콘').to.have.length(0);
+  }
+});
 
 // [신규] "이상행위 유형별 현황" - ApexCharts 렌더링 + 데이터 없음 텍스트 확인
 cy.contains('.v-card__title', '이상행위 유형별 현황')

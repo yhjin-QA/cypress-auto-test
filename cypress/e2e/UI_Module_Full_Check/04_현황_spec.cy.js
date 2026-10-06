@@ -81,7 +81,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -104,11 +104,11 @@ describe('로그캐치 사이트 테스트', () => {
 
 
     // ==========================================
-    // STEP 4: 현황서브메뉴 
+    // STEP 4: 현황 서브메뉴 
     // ==========================================
-    cy.contains('button', '상태').click({ force: true });
+    cy.contains('button', '현황').click({ force: true });
     cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기
-    cy.log('--- 상태 > 정보사용자별 탭(디폴트 화면) ---');
+    cy.log('--- 현황 > 정보사용자별 탭(디폴트 화면) ---');
     
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');

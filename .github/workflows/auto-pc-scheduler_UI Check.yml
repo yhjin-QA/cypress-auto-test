@@ -6,10 +6,10 @@ env:
   TZ: Asia/Seoul
 
 on:
-  #push:
-  # branches: [ "master" ]
-  #schedule:
-  #  - cron: '5 2 * * *'
+  push:
+   branches: [ "master" ]
+  schedule:
+    - cron: '5 2 * * *'
   workflow_dispatch:
 
 jobs:

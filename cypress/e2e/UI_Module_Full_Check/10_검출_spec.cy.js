@@ -86,7 +86,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -563,8 +563,15 @@ describe('로그캐치 사이트 테스트', () => {
         });
       });
 
-      // 우측 - "메뉴 하이브리드 일괄등록" 상단 헤더 영역
-      cy.contains('h2', '메뉴 하이브리드 일괄등록').should('be.visible');
+    
+    // 우측 - 상단 헤더 영역
+    // v2.9.4.0
+    // [변경] "메뉴 하이브리드 일괄등록" → "메뉴 복합 일괄 등록"
+    // 앞부분("0 {0}")은 선택된 업무시스템 정보가 들어가는 자리로 보여 끝부분만 검증
+    cy.get('h2.title').filter(':visible')
+      .invoke('text')
+      .should('match', /메뉴 복합 일괄 등록\s*$/);
+    cy.get('h2.title').filter(':visible').find('.fa-file-upload').should('exist');
       // 표준 템플릿 다운로드 버튼
       cy.contains('.v-btn__content', '표준 템플릿 다운로드').should('be.visible');
       // 엑셀 업로드 버튼
@@ -577,7 +584,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.contains('[규칙설정] 메뉴에서 먼저 해당 시스템의 정책을 설정해 주세요.').should('be.visible');
       });
       // 안내 문구 (caption)
-      cy.contains('업로드(또는 붙여넣기) 시 엑셀 헤더와 선택한 시스템 규칙을 자동으로 매핑합니다. 불일치하는 경우 아래에서 수동으로 매핑할 수 있습니다.').should('be.visible');
+      cy.contains('업로드 시 엑셀 헤더와 선택한 시스템 규칙을 자동으로 매핑합니다. 불일치하는 경우 아래에서 수동으로 매핑할 수 있습니다.').should('be.visible');
 
 
       cy.contains('h3', '이미 등록되어 있는 메뉴 목록').should('be.visible');
@@ -598,7 +605,7 @@ describe('로그캐치 사이트 테스트', () => {
       cy.contains('.v-btn__content', '일괄 저장').closest('button').should('be.disabled');
 
       // 초기 상태 - 데이터 없음 안내 확인
-      cy.contains('업로드된 데이터가 없습니다. 엑셀 파일을 업로드하거나 내용을 붙여넣어 주세요.').should('be.visible');
+      cy.contains('업로드된 데이터가 없습니다. 엑셀 파일을 업로드 해주세요.').should('be.visible');
       
       cy.log('✅ 검출 - 검출 메뉴 관리 - [URI 관리 일괄 등록] 화면 확인 완료!');
 
@@ -712,7 +719,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="개인정보 유형"]').should('be.visible');
     
     // 라디오 버튼 그룹 (적용 대상)
-    cy.contains('적용 대상').should('be.visible');
+    cy.contains('대상 (Target)').should('be.visible');
     cy.contains('label.v-label', '전역').should('be.visible');
     cy.contains('label.v-label', '업무시스템 지정').should('be.visible');
     

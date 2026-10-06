@@ -82,7 +82,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -107,7 +107,7 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // STEP 5: 소명 서브메뉴 
     // ==========================================
-    cy.contains('button', '소명').click({ force: true });
+    cy.contains('button', '소명하기').click({ force: true });
     cy.wait(1000); // 서브 메뉴가 펼쳐질 시간 대기
     cy.log('--- 소명 > 관리 서브메뉴 클릭 ---');
     //서브메뉴 관리 클릭 (정교하게)
@@ -247,31 +247,32 @@ describe('로그캐치 사이트 테스트', () => {
       // cy.get('.v-btn__content').filter(':visible').contains('결재 라인').click();
       
       
-      // 3.0.5.1191_r35135 버전에서 변경
-      // ==========================================
-      // STEP : 결재 서브메뉴 - 정책
-      // ==========================================
-      cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', '결재').click({ force: true });
-      cy.wait(1000);
+      // // 3.0.5.1191_r35135 버전에서 변경
+      // // v2.9.4.0 에서 결제 -  정책 삭제됨. 
+      // // ==========================================
+      // // STEP : 결재 서브메뉴 - 정책
+      // // ==========================================
+      // cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', '결재').click({ force: true });
+      // cy.wait(1000);
 
-      // 서브메뉴 정책 클릭
-      cy.get('div[role="listitem"]').filter(':visible').contains('.v-list__tile__title', '정책').click({ force: true });
-      cy.wait(2000);
-      cy.log('--- 화면 검증 시작 ---');
-      cy.contains('.c-headline', '결재 정책 목록').should('exist');
-      //토글 문구 확인인
-      cy.get('label').filter(':visible').contains('지난 정책 보기').should('be.visible');
-       // 표 문구열 확인
-       cy.get('th').filter(':visible').contains('유형').should('be.visible');
-       cy.get('th').filter(':visible').contains('정책명').should('be.visible');
-       cy.get('th').filter(':visible').contains('설명').should('be.visible');
-       cy.get('th').filter(':visible').contains('등록').should('be.visible');
-       cy.get('th').filter(':visible').contains('수정').should('be.visible');
-       cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+      // // 서브메뉴 정책 클릭
+      // cy.get('div[role="listitem"]').filter(':visible').contains('.v-list__tile__title', '정책').click({ force: true });
+      // cy.wait(2000);
+      // cy.log('--- 화면 검증 시작 ---');
+      // cy.contains('.c-headline', '결재 정책 목록').should('exist');
+      // //토글 문구 확인인
+      // cy.get('label').filter(':visible').contains('지난 정책 보기').should('be.visible');
+      //  // 표 문구열 확인
+      //  cy.get('th').filter(':visible').contains('유형').should('be.visible');
+      //  cy.get('th').filter(':visible').contains('정책명').should('be.visible');
+      //  cy.get('th').filter(':visible').contains('설명').should('be.visible');
+      //  cy.get('th').filter(':visible').contains('등록').should('be.visible');
+      //  cy.get('th').filter(':visible').contains('수정').should('be.visible');
+      //  cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
        
-       // 정책 추가 + 버튼
-       cy.get('.material-icons').filter(':visible').contains('add').should('be.visible');
-       cy.log('✅ 소명 - 결재 - [결재라인] 탭 진입 및 데이터 출력 확인 완료!');
+      //  // 정책 추가 + 버튼
+      //  cy.get('.material-icons').filter(':visible').contains('add').should('be.visible');
+      //  cy.log('✅ 소명 - 결재 - [결재라인] 탭 진입 및 데이터 출력 확인 완료!');
   
     
 

@@ -79,7 +79,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.log('⚠️ 알림창 발견! 확인 버튼을 클릭합니다.');
 
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
-        cy.contains('.v-card__title', '이미 접속 중인 계정입니다.').closest('.v-card').contains('확정').click(); // 여기서 force: true를 주면 더 안전합니다.
+        cy.contains('.v-card__title', '이미 접속 중인 계정입니다.').closest('.v-card').contains('확인').click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
     } else {
@@ -105,6 +105,16 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     cy.contains('button.has-child', '분석').click({ force: true });
     cy.wait(2000); // 메뉴 펼쳐짐 대기
+
+    // 이력 > 사용자 추척 서브메뉴 클릭 
+    cy.log('--- 분석 > 이상행위 ---');
+    cy.contains('.v-list__tile__title', '이상행위').should('be.visible').click({ force: true });
+    cy.wait(2000); 
+
+    
+
+
+  
     
     //2.9.1.125_r35234 에서 제거됨.
     // cy.log('--- 화면 검증 시작 ---');
@@ -221,158 +231,6 @@ describe('로그캐치 사이트 테스트', () => {
     // cy.wait(2000);
     
 
-// ==========================================
-// STEP : 분석 - 사용자 이상행위 대시보드
-// ==========================================
-cy.get('.v-btn__content').filter(':visible').contains('사용자 이상행위 대시보드').click({ force: true });
-cy.wait(1000);
-
-cy.log('--- 사용자 이상행위 대시보드 화면 검증 시작 ---');
-cy.url().should('include', '/analyze/customAnomalyBehaviorPolicyDashboard');
-
-cy.get('body').then(($body) => {
-  const hiddenBtns = $body.find('button[title="숨긴 항목 보기(관리)"]:visible');
-  if (hiddenBtns.length > 0) {
-    cy.log(`숨긴 항목 보기 버튼 ${hiddenBtns.length}개 발견`);
-    hiddenBtns.each((i, el) => {
-      // 아이콘(<i class="material-icons">) 텍스트를 제외하고 라벨만 추출
-      const clone = Cypress.$(el).clone();
-      clone.find('.material-icons').remove();
-      const labelText = clone.text().trim();
-      expect(labelText).to.match(/^숨김 \d+개 보기$/);
-    });
-  } else {
-    cy.log('숨긴 항목 보기 버튼 없음 (숨긴 카드 0개) - 스킵');
-  }
-});
-
-// [신규] "빈 카드 숨김" 토글 버튼 확인
-cy.get('button.anomaly-dashboard__vis-btn')
-  .filter(':visible')
-  .contains('빈 카드 숨김')
-  .should('be.visible')
-  .and('have.attr', 'title')
-  .and('include', '데이터 없는 카드 자동 숨김');
-
-// [신규] "레이아웃 편집" 버튼 확인
-// opacity:0로 평소엔 숨겨져 있다가 hover 시 나타나는 버튼이라 :visible 필터 없이 존재만 확인
-cy.get('.anomaly-dashboard__edit-btn').should('have.length.greaterThan', 0);
-cy.contains('.anomaly-dashboard__edit-btn .v-btn__content', '레이아웃 편집').should('exist');
-
-// 탭 확인
-cy.get('.v-btn__content').filter(':visible').contains('이상행위 정책').should('be.visible');
-cy.get('.v-btn__content').filter(':visible').contains('사용자 이상행위 대시보드').should('be.visible');
-cy.get('.v-btn__content').filter(':visible').contains('사용자 이상행위 정책').should('be.visible');
-cy.get('.v-btn__content').filter(':visible').contains('사용자 이상행위 결과').should('be.visible');
-
-// 기간 버튼 확인
-cy.get('i.material-icons').filter(':visible').contains('event').should('exist');
-cy.get('.pcpf__btn-label').filter(':visible').contains('기간').should('be.visible');
-
-
-// 전체 현황 섹션
-cy.contains('.anomaly-dashboard__section-title', '전체 현황').should('be.visible');
-
-// [수정] "빈 카드 숨김" - 화면에 있는 모든 섹션의 버튼을 순회하며 켜져 있으면 끄기
-cy.get('.anomaly-dashboard__vis-btn:visible').filter((i, el) => {
-  return Cypress.$(el).text().includes('빈 카드 숨김');
-}).each(($btn) => {
-  cy.wrap($btn).then(($el) => {
-    const isActive = $el.hasClass('anomaly-dashboard__vis-btn--active') ||
-                      $el.css('background-color') !== 'rgba(0, 0, 0, 0)';
-    if (isActive) {
-      cy.wrap($el).click({ force: true });
-      cy.wait(500);
-    }
-  });
-});
-
-// 위젯 카드 확인
-// [확인 필요] "클러스터 토폴로지" 위젯이 이번 DOM 스니펫에 없었음 - 실제 존재 여부 재확인 필요
-cy.get('.anomaly-widget-card__title').filter(':visible').contains('개인정보 유형별 사용자').should('be.visible');
-
-// [신규] 카드별 숨기기 버튼 확인
-cy.get('.anomaly-widget-card__hide')
-  .should('have.length.greaterThan', 0)
-  .first()
-  .should('have.attr', 'title', '이 카드 숨기기');
-
-// 정책별 분석 섹션
-cy.contains('.anomaly-dashboard__section-title', '정책별 분석').should('be.visible');
-
-// [수정] .parents() 제거 - cy.contains가 이미 section-bar 요소 자체를 반환함
-cy.contains('.anomaly-dashboard__section-bar', '정책별 분석').within(() => {
-  cy.contains('.anomaly-dashboard__vis-btn', '중지된 정책')
-    .should('be.visible')
-    .find('.material-icons').should('contain.text', 'visibility_off');
-
-  cy.contains('.anomaly-dashboard__vis-btn', '지난 버전')
-    .should('be.visible')
-    .find('.material-icons').should('contain.text', 'history');
-});
-
-// ==========================================
-// 기간 드롭다운 - 30일 변경
-// ==========================================
-// 드롭다운 버튼 자체를 클릭 (텍스트 매칭 없이)
-cy.get('.pcpf__btn-value').filter(':visible').should('be.visible').click({ force: true });
-cy.wait(500);
-
-cy.get('.v-list__tile__title').filter(':visible').contains('30일').click({ force: true });
-cy.wait(1000);
-
-cy.get('.pcpf__btn-value').filter(':visible').contains('30일').should('be.visible');
-cy.wait(1000);
-
-// ======================================================
-// 정책별 분석 - 위젯 카드 (ApexCharts) 동적 데이터 대응 검증
-// ======================================================
-cy.get('.anomaly-widget-card__title').filter(':visible').should('have.length.greaterThan', 0).each(($title) => {
-  cy.wrap($title).invoke('attr', 'title').then((title) => {
-    expect(title.trim().length).to.be.greaterThan(0);
-  });
-
-  cy.wrap($title).invoke('text').then((text) => {
-    expect(text.trim().length).to.be.greaterThan(0);
-  });
-
-  cy.wrap($title)
-    .closest('.anomaly-widget-card')
-    .then(($card) => {
-      const isHidden = $card.hasClass('anomaly-widget-card--hidden');
-      const isTopologyIdle = $card.find('.topology-idle').length > 0;
-      // [변경] 데이터 없음 상태 클래스 확정 - .bucketized-dynamic-chart__nodata
-      const isNoData = $card.find('.bucketized-dynamic-chart__nodata').length > 0;
-
-      if (isHidden) {
-        cy.log('👁️‍🗨️ 숨김 처리된 카드 - 콘텐츠 검증 스킵, "숨김" 태그만 확인');
-        cy.wrap($card).find('.anomaly-widget-card__hidden-tag').should('be.visible').and('contain.text', '숨김');
-      } else if (isTopologyIdle) {
-        cy.log('ℹ️ 토폴로지 카드 - 시작 전(idle) 상태 확인');
-        cy.wrap($card).find('.topology-idle').should('be.visible');
-        cy.wrap($card).find('.topology-toggle').should('be.visible').and('contain.text', '시작');
-      } else if (isNoData) {
-        // [신규] 데이터 없음 카드 - svg 대신 nodata 안내 확인
-        cy.log('ℹ️ 데이터 없음 카드 확인');
-        cy.wrap($card).find('.bucketized-dynamic-chart__nodata')
-          .should('be.visible')
-          .and('contain.text', '데이터 없음')
-          .find('.material-icons').should('contain.text', 'bar_chart');
-      } else {
-        cy.wrap($card).find('svg').should('exist');
-
-        const legendCount = $card.find('.apexcharts-legend').length;
-        if (legendCount > 0) {
-          cy.wrap($card).find('.apexcharts-legend').should('exist');
-        }
-      }
-
-      // [신규] 카드마다 "이 카드 숨기기" 버튼 존재 확인
-      cy.wrap($card).find('.anomaly-widget-card__hide').should('exist');
-    });
-});
-
-cy.log('✅ 분석 - [사용자 이상행위 대시보드] 화면 확인 완료!');
 
 
 
@@ -1038,6 +896,162 @@ cy.get('.sev-filter-btn').filter(':visible').contains('오늘').click({ force: t
 cy.get('.basic-filter-panel__clear-all', { timeout: 10000 }).filter(':visible').should('be.visible').and('contain.text', '전체 비우기');
 
 cy.log('✅ 분석 - [사용자 이상행위 결과] 화면 확인 완료!');
+
+
+// v2.9.4.0 대시보드 위젯추가 없어서 진행하지 못함.
+// ==========================================
+// STEP : 분석 - 사용자 이상행위 대시보드
+// ==========================================
+// cy.get('.v-btn__content').filter(':visible').contains('사용자 이상행위 대시보드').click({ force: true });
+// cy.wait(1000);
+
+// cy.log('--- 사용자 이상행위 대시보드 화면 검증 시작 ---');
+// cy.url().should('include', '/analyze/customAnomalyBehaviorPolicyDashboard');
+
+// cy.get('body').then(($body) => {
+//   const hiddenBtns = $body.find('button[title="숨긴 항목 보기(관리)"]:visible');
+//   if (hiddenBtns.length > 0) {
+//     cy.log(`숨긴 항목 보기 버튼 ${hiddenBtns.length}개 발견`);
+//     hiddenBtns.each((i, el) => {
+//       // 아이콘(<i class="material-icons">) 텍스트를 제외하고 라벨만 추출
+//       const clone = Cypress.$(el).clone();
+//       clone.find('.material-icons').remove();
+//       const labelText = clone.text().trim();
+//       expect(labelText).to.match(/^숨김 \d+개 보기$/);
+//     });
+//   } else {
+//     cy.log('숨긴 항목 보기 버튼 없음 (숨긴 카드 0개) - 스킵');
+//   }
+// });
+
+// // [신규] "빈 카드 숨김" 토글 버튼 확인
+// cy.get('button.anomaly-dashboard__vis-btn')
+//   .filter(':visible')
+//   .contains('빈 카드 숨김')
+//   .should('be.visible')
+//   .and('have.attr', 'title')
+//   .and('include', '데이터 없는 카드 자동 숨김');
+
+// // [신규] "레이아웃 편집" 버튼 확인
+// // opacity:0로 평소엔 숨겨져 있다가 hover 시 나타나는 버튼이라 :visible 필터 없이 존재만 확인
+// cy.get('.anomaly-dashboard__edit-btn').should('have.length.greaterThan', 0);
+// cy.contains('.anomaly-dashboard__edit-btn .v-btn__content', '레이아웃 편집').should('exist');
+
+// // 탭 확인
+// cy.get('.v-btn__content').filter(':visible').contains('이상행위 정책').should('be.visible');
+// cy.get('.v-btn__content').filter(':visible').contains('사용자 이상행위 대시보드').should('be.visible');
+// cy.get('.v-btn__content').filter(':visible').contains('사용자 이상행위 정책').should('be.visible');
+// cy.get('.v-btn__content').filter(':visible').contains('사용자 이상행위 결과').should('be.visible');
+
+// // 기간 버튼 확인
+// cy.get('i.material-icons').filter(':visible').contains('event').should('exist');
+// cy.get('.pcpf__btn-label').filter(':visible').contains('기간').should('be.visible');
+
+
+// // 전체 현황 섹션
+// cy.contains('.anomaly-dashboard__section-title', '전체 현황').should('be.visible');
+
+// // [수정] "빈 카드 숨김" - 화면에 있는 모든 섹션의 버튼을 순회하며 켜져 있으면 끄기
+// cy.get('.anomaly-dashboard__vis-btn:visible').filter((i, el) => {
+//   return Cypress.$(el).text().includes('빈 카드 숨김');
+// }).each(($btn) => {
+//   cy.wrap($btn).then(($el) => {
+//     const isActive = $el.hasClass('anomaly-dashboard__vis-btn--active') ||
+//                       $el.css('background-color') !== 'rgba(0, 0, 0, 0)';
+//     if (isActive) {
+//       cy.wrap($el).click({ force: true });
+//       cy.wait(500);
+//     }
+//   });
+// });
+
+// // 위젯 카드 확인
+// // [확인 필요] "클러스터 토폴로지" 위젯이 이번 DOM 스니펫에 없었음 - 실제 존재 여부 재확인 필요
+// cy.get('.anomaly-widget-card__title').filter(':visible').contains('개인정보 유형별 사용자').should('be.visible');
+
+// // [신규] 카드별 숨기기 버튼 확인
+// cy.get('.anomaly-widget-card__hide')
+//   .should('have.length.greaterThan', 0)
+//   .first()
+//   .should('have.attr', 'title', '이 카드 숨기기');
+
+// // 정책별 분석 섹션
+// cy.contains('.anomaly-dashboard__section-title', '정책별 분석').should('be.visible');
+
+// // [수정] .parents() 제거 - cy.contains가 이미 section-bar 요소 자체를 반환함
+// cy.contains('.anomaly-dashboard__section-bar', '정책별 분석').within(() => {
+//   cy.contains('.anomaly-dashboard__vis-btn', '중지된 정책')
+//     .should('be.visible')
+//     .find('.material-icons').should('contain.text', 'visibility_off');
+
+//   cy.contains('.anomaly-dashboard__vis-btn', '지난 버전')
+//     .should('be.visible')
+//     .find('.material-icons').should('contain.text', 'history');
+// });
+
+// // ==========================================
+// // 기간 드롭다운 - 30일 변경
+// // ==========================================
+// // 드롭다운 버튼 자체를 클릭 (텍스트 매칭 없이)
+// cy.get('.pcpf__btn-value').filter(':visible').should('be.visible').click({ force: true });
+// cy.wait(500);
+
+// cy.get('.v-list__tile__title').filter(':visible').contains('30일').click({ force: true });
+// cy.wait(1000);
+
+// cy.get('.pcpf__btn-value').filter(':visible').contains('30일').should('be.visible');
+// cy.wait(1000);
+
+// // ======================================================
+// // 정책별 분석 - 위젯 카드 (ApexCharts) 동적 데이터 대응 검증
+// // ======================================================
+// cy.get('.anomaly-widget-card__title').filter(':visible').should('have.length.greaterThan', 0).each(($title) => {
+//   cy.wrap($title).invoke('attr', 'title').then((title) => {
+//     expect(title.trim().length).to.be.greaterThan(0);
+//   });
+
+//   cy.wrap($title).invoke('text').then((text) => {
+//     expect(text.trim().length).to.be.greaterThan(0);
+//   });
+
+//   cy.wrap($title)
+//     .closest('.anomaly-widget-card')
+//     .then(($card) => {
+//       const isHidden = $card.hasClass('anomaly-widget-card--hidden');
+//       const isTopologyIdle = $card.find('.topology-idle').length > 0;
+//       // [변경] 데이터 없음 상태 클래스 확정 - .bucketized-dynamic-chart__nodata
+//       const isNoData = $card.find('.bucketized-dynamic-chart__nodata').length > 0;
+
+//       if (isHidden) {
+//         cy.log('👁️‍🗨️ 숨김 처리된 카드 - 콘텐츠 검증 스킵, "숨김" 태그만 확인');
+//         cy.wrap($card).find('.anomaly-widget-card__hidden-tag').should('be.visible').and('contain.text', '숨김');
+//       } else if (isTopologyIdle) {
+//         cy.log('ℹ️ 토폴로지 카드 - 시작 전(idle) 상태 확인');
+//         cy.wrap($card).find('.topology-idle').should('be.visible');
+//         cy.wrap($card).find('.topology-toggle').should('be.visible').and('contain.text', '시작');
+//       } else if (isNoData) {
+//         // [신규] 데이터 없음 카드 - svg 대신 nodata 안내 확인
+//         cy.log('ℹ️ 데이터 없음 카드 확인');
+//         cy.wrap($card).find('.bucketized-dynamic-chart__nodata')
+//           .should('be.visible')
+//           .and('contain.text', '데이터 없음')
+//           .find('.material-icons').should('contain.text', 'bar_chart');
+//       } else {
+//         cy.wrap($card).find('svg').should('exist');
+
+//         const legendCount = $card.find('.apexcharts-legend').length;
+//         if (legendCount > 0) {
+//           cy.wrap($card).find('.apexcharts-legend').should('exist');
+//         }
+//       }
+
+//       // [신규] 카드마다 "이 카드 숨기기" 버튼 존재 확인
+//       cy.wrap($card).find('.anomaly-widget-card__hide').should('exist');
+//     });
+// });
+
+// cy.log('✅ 분석 - [사용자 이상행위 대시보드] 화면 확인 완료!');
+
 
 // ================================
 // [FINAL] 테스트 종료 및 메뉴 닫기

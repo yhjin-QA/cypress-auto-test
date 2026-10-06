@@ -89,7 +89,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -114,8 +114,8 @@ describe('로그캐치 사이트 테스트', () => {
    // ==========================================
    // STEP : 결재 서브메뉴 - 정책
    // ==========================================
-   // 수정: side-menu 클래스로 정확히 타겟팅
-   cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', '결재').click({ force: true });
+   //v2.9.4.0 결재 -> 소명
+   cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', /^\s*소명\s*$/).click({ force: true });
    cy.wait(1000);
 
    // 서브메뉴 정책 클릭
@@ -149,7 +149,8 @@ describe('로그캐치 사이트 테스트', () => {
 // ==========================================
 // STEP : 결재 서브메뉴 - 결재함
 // ==========================================
-cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', '결재').click({ force: true });   
+ //v2.9.4.0 결재 -> 소명
+cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', /^\s*소명\s*$/).click({ force: true });
 cy.wait(1000);
 
 // 서브메뉴 정책 클릭
@@ -303,7 +304,8 @@ cy.log('✅ 결재함 - [참조 결재] 탭 화면 확인 완료!');
 // ==========================================
 // STEP : 결재 서브메뉴 - 신청 > 이상행위 경보
 // ==========================================
-cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', '결재').click({ force: true });
+ //v2.9.4.0 결재 -> 소명
+cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', /^\s*소명\s*$/).click({ force: true });
 cy.wait(1000);
 
 cy.get('div[role="listitem"]').filter(':visible').contains('.v-list__tile__title', '신청').click({ force: true });
@@ -316,7 +318,7 @@ cy.url().should('include', '/approval/submit/anomaly-alerts');
 cy.get('.v-btn__content').filter(':visible').contains('이상행위 경보').should('be.visible');
 
 // [신규] 상단 안내 배너
-cy.contains('탐지된 본인 이상행위 경보를 선택해 사유를 작성하고 결재로 소명을 상신합니다').should('be.visible');
+cy.contains('탐지된 이상행위 경보의 대상자를 골라 소명을 요청합니다.').should('be.visible');
 
 // 검색 조건 요소 확인
 // [변경] aria-label 없음 → placeholder 기반
@@ -351,6 +353,7 @@ cy.get('button.sev-filter-btn').contains('1년').should('be.visible');
 // 결과 영역 확인
 cy.contains('.v-toolbar__title', '경보').should('be.visible');
 
+
 // ==========================================
 // 이상행위 경보 결과 (동적 데이터 대응)
 // ==========================================
@@ -366,13 +369,19 @@ cy.get('body').then(($body) => {
     cy.wrap($incidents).each(($row) => {
       cy.wrap($row).within(() => {
 
+        // 0. [신규] 펼침 아이콘 / 선택 체크박스
+        cy.root().children('i.material-icons').first().should('contain.text', 'chevron_right');
+        cy.get('.explreq-check').should('be.visible')
+          .invoke('text').should('match', /check_box(_outline_blank)?/);
+
         // 1. 위험도 칩 - "높음/보통/낮음" 중 하나인지 확인
-        cy.get('.v-chip--label').first().invoke('text').then((text) => {
+        // [변경] .v-chip--label → 클래스 없는 span.mr-2 (인라인 스타일)
+        cy.root().children('span.mr-2').first().invoke('text').then((text) => {
           expect(['높음', '보통', '낮음']).to.include(text.trim());
         });
 
         // 2. 사용자 뱃지 - "person" 아이콘 + 이름 확인
-        cy.get('.lookup-badge-group').should('be.visible').within(() => {
+        cy.get('.incident-policy-name .lookup-badge-group').should('be.visible').within(() => {
           cy.get('.material-icons').should('contain.text', 'person');
         });
 
@@ -380,7 +389,7 @@ cy.get('body').then(($body) => {
         cy.get('.lookup-badge-group').then(($el) => {
           const clone = $el.clone();
           clone.find('.material-icons').remove();
-          const labelText = clone.text().trim();
+          const labelText = clone.text().trim();   // 예: "배혜택 (loginid208)"
           expect(labelText.length).to.be.greaterThan(0);
         });
 
@@ -390,11 +399,18 @@ cy.get('body').then(($body) => {
           expect(isNaN(num)).to.be.false;
         });
 
-        // 4. 연관 정책명 - 비어있지 않은지 확인
-        cy.get('.incident-window.truncate-cell').invoke('text').then((text) => {
+        // 4. 연관 정책명 - 비어있지 않은지 + title 속성과 일치하는지 확인
+        cy.get('.incident-window.truncate-cell').then(($el) => {
+          const text = $el.text().trim();
           const policies = text.split(',').map((p) => p.trim()).filter((p) => p.length > 0);
           expect(policies.length).to.be.greaterThan(0);
+          expect($el.attr('title')).to.eq(text);
         });
+
+        // 5. [신규] 소명 요청 버튼
+        cy.get('button.explreq-open-btn').should('be.visible')
+          .and('contain.text', '소명 요청')
+          .find('.material-icons').should('contain.text', 'mail_outline');
 
       });
     });
@@ -459,8 +475,18 @@ cy.get('body').then(($body) => {
     cy.get('button.explreq-send').should('be.visible').and('contain.text', '소명 요청 발송');
 
     // 8. 팝업 닫기
-    cy.get('button.explreq-cancel').should('be.visible').click();
-    cy.contains('.c-headline', '소명 요청').should('not.exist');
+cy.get('button.explreq-cancel').should('be.visible').click();
+
+// [수정] v-dialog는 닫혀도 DOM에 남고 숨김 처리만 됨 → "화면에 보이는 것이 없어야" 통과
+// (DOM에 남아 있든, 아예 제거되든 둘 다 통과)
+cy.get('body').should(($body) => {
+  const $visibleHeadline = $body.find('.c-headline:contains("소명 요청")').filter(':visible');
+  expect($visibleHeadline, '소명 요청 팝업 제목').to.have.length(0);
+});
+// 선택 상태 정리
+cy.contains('선택 해제').click({ force: true });
+cy.contains('1명 일괄 소명 요청').should('not.exist');
+
   }
 });
 
@@ -491,7 +517,7 @@ cy.log('✅ 결재 - 신청 - [이상행위 경보] 화면 확인 완료!');
       cy.get('.ers-desc').should('contain.text', '일정 시각마다 일정 기간 미소명한 이상행위 사용자에게 자동으로 소명 요청 메일을 발송합니다.');
     });
 
-    // ------------------------------------------
+     // ------------------------------------------
     // 3. [섹션 1] 자동 발송 설정
     // ------------------------------------------
     // 카드 헤더 검증
@@ -505,10 +531,12 @@ cy.log('✅ 결재 - 신청 - [이상행위 경보] 화면 확인 완료!');
     cy.contains('.ers-label-main', '미소명 임계 기간').should('be.visible');
     cy.get('.ers-num').eq(0).should('be.visible').within(($input) => {
       expect($input).to.have.attr('type', 'number');
-      expect($input).to.have.attr('min', '0');
+      // [변경] 최솟값 0 → 1
+      expect($input).to.have.attr('min', '1');
       expect($input).to.have.attr('max', '365');
     });
-    cy.contains('.ers-unit', '일').should('be.visible');
+    // [수정] "일마다"에도 "일"이 포함되므로 정확히 "일"인 단위만 확인
+    cy.contains('.ers-unit', /^\s*일\s*$/).should('be.visible');
 
     // [설정 3] 재발송 주기 (숫자 입력 & 단위)
     cy.contains('.ers-label-main', '재발송 주기').should('be.visible');
@@ -517,21 +545,29 @@ cy.log('✅ 결재 - 신청 - [이상행위 경보] 화면 확인 완료!');
       expect($input).to.have.attr('min', '1');
       expect($input).to.have.attr('max', '365');
     });
-    cy.contains('.ers-unit', '일마다').should('be.visible');
+    cy.contains('.ers-unit', /^\s*일마다\s*$/).should('be.visible');
 
-    // [설정 4] 발송 시각 (숫자 입력 & 단위)
+    // [설정 4] 발송 시각
+    // [변경] 숫자 입력(input type=number, 0~23) → 드롭다운(select.ers-hour)
     cy.contains('.ers-label-main', '발송 시각').should('be.visible');
-    cy.get('.ers-num').eq(2).should('be.visible').within(($input) => {
-      expect($input).to.have.attr('type', 'number');
-      expect($input).to.have.attr('min', '0');
-      expect($input).to.have.attr('max', '23');
+    cy.get('select.ers-num.ers-hour').should('be.visible').within(() => {
+      // 0시 ~ 23시, 24개 옵션
+      cy.get('option').should('have.length', 24).then(($options) => {
+        const values = [...$options].map((o) => parseInt(o.value, 10));
+        expect(values, '발송 시각 옵션 값').to.deep.equal([...Array(24).keys()]);
+      });
     });
-    cy.contains('.ers-unit', '시').should('be.visible');
+    // 선택된 값도 0~23 범위인지 확인
+    cy.get('select.ers-num.ers-hour').invoke('val').then((val) => {
+      const hour = parseInt(val, 10);
+      expect(hour, '현재 발송 시각').to.be.within(0, 23);
+    });
+    // [확인 필요] 단위 "시" - 드롭다운 옵션 안에 "시"가 포함되었다면 별도 단위 표시가 없어졌을 수 있음
+    cy.contains('.ers-unit', /^\s*시\s*$/).should('be.visible');
 
     // [설정 5] 이상행위 이력 엑셀 첨부 (스위치/체크박스)
     cy.contains('.ers-label-main', '이상행위 이력 엑셀 첨부').should('be.visible');
     cy.contains('.ers-label-sub', '자동 발송 메일에 대상자의 미소명 이상행위 이력 엑셀 파일을 첨부합니다.').should('be.visible');
-
 
     // [버튼] 저장 버튼
     cy.get('button.ers-btn.ers-save').should('be.visible').and('contain.text', '저장');
