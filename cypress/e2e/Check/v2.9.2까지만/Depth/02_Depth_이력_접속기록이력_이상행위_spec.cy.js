@@ -86,7 +86,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -134,7 +134,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
   
      // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 전체선택 확인
@@ -156,7 +156,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('th').filter(':visible').contains('행위 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 값').should('be.visible');
-    cy.get('th').filter(':visible').contains('조회').should('be.visible');
+    cy.get('th').filter(':visible').contains('선택').should('be.visible');
     
     
     // ==========================================
@@ -182,7 +182,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // 설명: 'c-headline' 클래스를 가진 요소 중에 '이상행위' 글자가 보여야 한다.
     cy.contains('.c-headline', '이상행위').should('exist');
     // 시작날짜 달력 아이콘확인
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
     // 종료날짜 달력 아이콘확인
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     // 검색 조건 이름 입력란 확인

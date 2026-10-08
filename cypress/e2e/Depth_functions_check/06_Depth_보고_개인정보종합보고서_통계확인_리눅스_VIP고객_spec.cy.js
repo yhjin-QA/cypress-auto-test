@@ -86,7 +86,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -356,7 +356,8 @@ cy.get('.apexcharts-legend').eq(2).find('.apexcharts-legend-text').each(($legend
     cy.get('th').filter(':visible').contains('보고서 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('생성일').should('be.visible');
     cy.get('th').filter(':visible').contains('생성자').should('be.visible');
-    cy.get('th').filter(':visible').contains('상태').should('be.visible');
+    //v2.9.4.0 상태 -> 조건 문구
+    cy.get('th').filter(':visible').contains('조건').should('be.visible');
     cy.get('th').filter(':visible').contains('설명').should('be.visible');
     cy.get('th').filter(':visible').contains('삭제').should('be.visible');
 
@@ -589,42 +590,71 @@ cy.get('@dynamicChartData').then((chartData1) => {
                       });
                   });
 
+
                   // =====================================================
-                  // 📄 [13페이지 진입] 2번 차트 검증 (이상행위 유형별 현황)
+                  // 📄 2번 차트 검증 (이상행위 유형별 현황) - [보류]
+                  // 정책 변경: 기존 "이상행위 정책" 탭 삭제 → "사용자 이상행위 정책" 단위로 일원화
+                  //  - 현황 차트: 사용자 이상행위 정책별 항목 (정책명 기준)
+                  //  - 보고서: 정책별 표 없음 (월별 합계만 노출) → 항목별 1:1 비교 불가
+                  // 보고서 정책별 현황 반영 여부 확정 후 재작성
                   // =====================================================
-                  cy.log('➡️ [13페이지] 2번 차트 검증을 위해 이동합니다. (7번 클릭)');
-                  
-                  // 🌟 6페이지에서 14페이지까지 8번 연속 클릭!
-                  for (let i = 0; i < 7; i++) {
-                      cy.get('input.btnNEXT[title="한 페이지 다음으로 이동"]').click({ force: true });
-                      cy.wait(1500); 
-                  }
+                  cy.log(`⏸️ [2번 차트 검증 보류] 현황 차트 항목 ${Object.keys(chartData2).length}개 (사용자 이상행위 정책 단위) - 보고서에 정책별 표 없음`);
 
-                  cy.log('🔎 14페이지 텍스트를 분석하여 2번 차트 데이터를 검증합니다.');
-                  cy.root().invoke('text').then((bodyText14) => {
-                      const cleanText14 = bodyText14.replace(/\s+/g, ' ');
+                  cy.log('🎉 [최종 통과] 3번(5p) -> 1번(6p) 차트의 보고서 데이터 정합성 검증 완료! (2번 차트는 보류)');  
+                //   // =====================================================
+                //   // 📄 2번 차트 검증 (이상행위 유형별 현황)
+                //   // [수정] 페이지 번호 고정 X → 6페이지 이후로 넘기며 유형별 표가 있는 페이지를 찾음
+                //   // =====================================================
+                //   const typeNames2 = Object.keys(chartData2);
+                //   const MAX_SEARCH_PAGES = 15;   // 6페이지 이후 최대 몇 페이지까지 찾을지
 
-                      cy.log('🟦 [검증 시작] 2번 차트: 이상행위 유형별 현황');
-                      Object.keys(chartData2).forEach((typeName) => {
-                          const expectedCount = chartData2[typeName];
-                          const safeTypeName = typeName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                          
-                          // 14페이지 구조: 항목명 + [접속 횟수] 건 + [사용량] 건
-                          const regex = new RegExp(`(?:^|\\s)${safeTypeName}\\s+([0-9,]+)\\s*건\\s+([0-9,]+)\\s*건`);
-                          const match = cleanText14.match(regex);
+                //   // "항목명 + N 건 + N 건" 형식의 정규식
+                //   const makeRegex2 = (name) => {
+                //       const safe = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                //       return new RegExp(`(?:^|\\s)${safe}\\s+([0-9,]+)\\s*건\\s+([0-9,]+)\\s*건`);
+                //   };
 
-                          if (match && match[1]) {
-                              // 💡 match[1]은 '이상행위 접속 횟수'를 가리킵니다.
-                              const reportCount = parseInt(match[1].replace(/,/g, ''), 10);
-                              expect(expectedCount, ` [2번 차트: ${typeName}] 비교확인중!`).to.equal(reportCount);
-                              cy.log(`✅ [2번 차트 통과] ${typeName}: ${reportCount}건 일치!`);
-                          } else {
-                              throw new Error(`❌ 13페이지에서 2번 차트의 "${typeName}" 항목을 찾을 수 없습니다.`);
-                          }
-                      });
-                  });
+                //   const findAnomalyTypePage = (pageOffset = 1) => {
+                //       cy.get('input.btnNEXT[title="한 페이지 다음으로 이동"]').click({ force: true });
+                //       cy.wait(1500);
 
-                  cy.log('🎉 [최종 통과] 3번(5p) -> 1번(6p) -> 2번(13p) 차트의 모든 보고서 데이터 정합성 검증이 완벽하게 완료되었습니다!');
+                //       cy.root().invoke('text').then((bodyText) => {
+                //           const cleanText = bodyText.replace(/\s+/g, ' ');
+                //           const pageNo = 6 + pageOffset;
+
+                //           // 차트의 모든 항목이 이 페이지에 "항목명 N 건 N 건" 형태로 있으면 이 페이지로 확정
+                //           const allFound = typeNames2.every((name) => makeRegex2(name).test(cleanText));
+
+                //           if (!allFound) {
+                //               if (pageOffset >= MAX_SEARCH_PAGES) {
+                //                   const missing = typeNames2.filter((name) => !makeRegex2(name).test(cleanText));
+                //                   throw new Error(
+                //                       `❌ 6~${pageNo}페이지에서 2번 차트 유형별 표를 찾지 못했습니다. ` +
+                //                       `못 찾은 항목: ${missing.join(', ')} ` +
+                //                       `(사용자 이상행위 정책이 보고서에 포함되지 않는지 확인 필요)`
+                //                   );
+                //               }
+                //               return findAnomalyTypePage(pageOffset + 1);
+                //           }
+
+                //           cy.log(`🔎 ${pageNo}페이지에서 2번 차트(이상행위 유형별) 표 발견`);
+                //           cy.log('🟦 [검증 시작] 2번 차트: 이상행위 유형별 현황');
+
+                //           typeNames2.forEach((typeName) => {
+                //               const expectedCount = chartData2[typeName];
+                //               const match = cleanText.match(makeRegex2(typeName));
+                //               // 💡 match[1] = 이상행위 접속 횟수
+                //               const reportCount = parseInt(match[1].replace(/,/g, ''), 10);
+                //               expect(expectedCount, ` [2번 차트: ${typeName}] 비교확인중!`).to.equal(reportCount);
+                //               cy.log(`✅ [2번 차트 통과] ${typeName}: ${reportCount}건 일치!`);
+                //           });
+                //       });
+                //   };
+
+                //   cy.log('➡️ 2번 차트 검증을 위해 유형별 표가 있는 페이지를 찾습니다.');
+                //   findAnomalyTypePage();
+
+                 // cy.log('🎉 [최종 통과] 3번 -> 1번 -> 2번 차트의 모든 보고서 데이터 정합성 검증이 완료되었습니다!');
               }); // end within
         });
     });

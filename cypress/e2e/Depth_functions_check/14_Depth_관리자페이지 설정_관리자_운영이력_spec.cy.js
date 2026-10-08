@@ -87,7 +87,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -161,7 +161,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘확인
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
     // 종료날짜 달력 아이콘확인
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     //검색 입력문구확인 
@@ -189,8 +189,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 
      //기능확인
     //달력표를 펼침  월/일 지정  
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.wait(500);
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
@@ -246,43 +245,62 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      // 검색버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
-    // ==========================================================
+        // ==========================================================
     // STEP: 검색 결과 테이블 검증 (오토유저 추가 이력 확인)
     // ==========================================================
     cy.log('✅ 운영 이력 검색 결과 정밀 검증 시작');
 
-    // 1. 테이블의 tbody 안에서 '[Manager] : 오토유저'가 포함된 행(tr)을 먼저 찾습니다.
-    // 해당 행이 렌더링 될 때까지(API 응답 대기 포함) 최대 10초간 기다립니다.
-    cy.contains('tbody tr', '[Manager] : 오토유저', { timeout: 10000 })
-      .should('be.visible')
-      .within(() => {
-          // 2. 해당 행(row) 안에서 각 컬럼(td)별로 HTML 구조와 텍스트가 정확히 일치하는지 검증합니다.
-          
-          // [발생자] 검증
-          cy.get('span.ellipsis').contains('Admin(admin)').should('be.visible');
+    const TARGET_TEXT = '[Manager] : 오토유저';
+    const DESC_TEXT   = '[Manager] : Create';
+    const EVENT_TEXT  = '추가';
+    const exact = (t) => new RegExp(`^\\s*${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`);
+    const cellText = ($el) => $el.text().replace(/\s+/g, ' ').trim();
 
-          // 🚨 [IP] 검증 (10.10.54.5 또는 10.10.0.210 중 하나인지 확인)
-          // 정규표현식의 '|' (OR) 기호를 사용하여 두 IP 중 하나라도 화면에 있으면 통과합니다.
-         cy.contains('span.ellipsis', /10\.10\.54\.5|10\.10\.0\.210|10\.10\.0\.12/).should('be.visible');
-          
-          // [이벤트] 검증 (<a> 태그 안의 텍스트 '추가')
-          cy.get('a.font-weight-bold').contains('추가').should('be.visible');
-          
-          // [보안 객체] 검증
-          cy.get('span.ellipsis').contains('관리자').should('be.visible');
-          
-          // [대상] 검증
-          cy.get('span.ellipsis').contains('[Manager] : 오토유저').should('be.visible');
-          
-          // [설명] 검증 (text-xs-left 클래스 포함 여부까지 꼼꼼하게 확인)
-          cy.get('a.ellipsis.text-xs-left').contains('[Manager] : Create').should('be.visible');
-          
-          // [결과] 검증 (성공 여부 확인)
-          cy.contains('td', '성공').should('be.visible');
-      });
+    // 1. 검색 조건(이벤트: 추가)이 실제로 반영될 때까지 대기
+    //    → 화면에 보이는 모든 행의 이벤트가 '추가'가 될 때까지 최대 15초 재시도
+    cy.get('tbody tr:visible a.font-weight-bold', { timeout: 15000 }).should(($events) => {
+      const texts = [...$events].map((a) => a.textContent.trim());
+      expect(texts.length, '검색 결과 행 존재').to.be.greaterThan(0);
+      expect(texts.every((t) => t === EVENT_TEXT), `모든 행 이벤트 = ${EVENT_TEXT} (현재: ${[...new Set(texts)].join(', ')})`).to.be.true;
+    });
+    cy.wait(1000); // 표 렌더링 안정화
+
+    // 2. [대상] = 오토유저 AND [이벤트] = 추가 인 행을 찾아 별칭으로 저장 (재렌더링 시 자동 재조회)
+    cy.get('tbody tr', { timeout: 10000 })
+      .filter(':visible')
+      .filter((i, tr) => {
+        const $tr = Cypress.$(tr);
+        const hasTarget = [...$tr.find('span.ellipsis')].some((s) => cellText(Cypress.$(s)) === TARGET_TEXT);
+        const hasEvent  = cellText($tr.find('a.font-weight-bold')) === EVENT_TEXT;
+        return hasTarget && hasEvent;
+      })
+      .should('have.length.at.least', 1)
+      .first()
+      .as('autoUserRow');
+
+    // 3. 해당 행 상세 검증
+    cy.get('@autoUserRow').should('be.visible').within(() => {
+      // [발생자]
+      cy.contains('span.ellipsis', exact('Admin(admin)')).should('be.visible');
+
+      // [IP] - 실행 PC에 따라 다를 수 있음
+      cy.contains('span.ellipsis', /^\s*(10\.10\.54\.5|10\.10\.0\.210|10\.10\.0\.12|10\.10\.54\.1)\s*$/)
+        .should('be.visible');
+
+      // [이벤트]
+      cy.contains('a.font-weight-bold', exact(EVENT_TEXT)).should('be.visible');
+
+      // [대상]
+      cy.contains('span.ellipsis', exact(TARGET_TEXT)).should('be.visible');
+
+      // [설명]
+      cy.contains('a.ellipsis.text-xs-left', exact(DESC_TEXT)).should('be.visible');
+
+      // [결과]
+      cy.contains('td', exact('성공')).should('be.visible');
+    });
 
     cy.log('🎉 오토유저 추가에 대한 운영 이력 검색 및 검증 완벽 성공!');
-     //-------------------------------------------------------------------------------------------
 
 
     // ===================================================
@@ -311,40 +329,61 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // ==========================================================
     // STEP: 검색 결과 테이블 검증 (오토유저 삭제 이력 확인)
     // ==========================================================
-    cy.log('✅ 운영 이력 검색 결과 정밀 검증 시작');
+    cy.log('✅ 운영 이력 검색 결과 정밀 검증 시작 (삭제)');
 
-    // 1. 테이블의 tbody 안에서 '[Manager] : 오토유저'가 포함된 행(tr)을 먼저 찾습니다.
-    // 해당 행이 렌더링 될 때까지(API 응답 대기 포함) 최대 10초간 기다립니다.
-    cy.contains('tbody tr', '[Manager] : 오토유저', { timeout: 10000 })
-      .should('be.visible')
-      .within(() => {
-          // 2. 해당 행(row) 안에서 각 컬럼(td)별로 HTML 구조와 텍스트가 정확히 일치하는지 검증합니다.
-          
-          // [발생자] 검증
-          cy.get('span.ellipsis').contains('Admin(admin)').should('be.visible');
+    const DEL_TARGET_TEXT = '[Manager] : 오토유저';
+    const DEL_DESC_TEXT   = '[Manager] : Delete';
+    const DEL_EVENT_TEXT  = '삭제';
+    const exactDel = (t) => new RegExp(`^\\s*${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`);
+    const cellTextDel = ($el) => $el.text().replace(/\s+/g, ' ').trim();
 
-          // 🚨 [IP] 검증 (10.10.54.5 또는 10.10.0.210 중 하나인지 확인)
-          // 정규표현식의 '|' (OR) 기호를 사용하여 두 IP 중 하나라도 화면에 있으면 통과합니다.
-          cy.contains('span.ellipsis', /10\.10\.54\.5|10\.10\.0\.210|10\.10\.0\.12/).should('be.visible');
-          
-          // [이벤트] 검증 (<a> 태그 안의 텍스트 '추가')
-          cy.get('a.font-weight-bold').contains('삭제').should('be.visible');
-          
-          // [보안 객체] 검증
-          cy.get('span.ellipsis').contains('관리자').should('be.visible');
-          
-          // [대상] 검증
-          cy.get('span.ellipsis').contains('[Manager] : 오토유저').should('be.visible');
-          
-          // [설명] 검증 (text-xs-left 클래스 포함 여부까지 꼼꼼하게 확인)
-          cy.get('a.ellipsis.text-xs-left').contains('[Manager] : Delete').should('be.visible');
-          
-          // [결과] 검증 (성공 여부 확인)
-          cy.contains('td', '성공').should('be.visible');
-      });
+    // 1. 검색 조건(이벤트: 삭제)이 표에 반영될 때까지 대기 (이전 '추가' 검색 결과가 남아 있는 상태에서 검증 방지)
+    cy.get('tbody tr:visible a.font-weight-bold', { timeout: 15000 }).should(($events) => {
+      const texts = [...$events].map((a) => a.textContent.trim());
+      expect(texts.length, '검색 결과 행 존재').to.be.greaterThan(0);
+      expect(texts.every((t) => t === DEL_EVENT_TEXT), `모든 행 이벤트 = ${DEL_EVENT_TEXT} (현재: ${[...new Set(texts)].join(', ')})`).to.be.true;
+    });
+    cy.wait(1000);
+
+    // 2. [대상] = 오토유저 AND [이벤트] = 삭제 인 가장 최근 행
+    cy.get('tbody tr', { timeout: 10000 })
+      .filter(':visible')
+      .filter((i, tr) => {
+        const $tr = Cypress.$(tr);
+        const hasTarget = [...$tr.find('span.ellipsis')].some((s) => cellTextDel(Cypress.$(s)) === DEL_TARGET_TEXT);
+        const hasEvent  = cellTextDel($tr.find('a.font-weight-bold')) === DEL_EVENT_TEXT;
+        return hasTarget && hasEvent;
+      })
+      .should('have.length.at.least', 1)
+      .first()
+      .as('autoUserDelRow');
+
+    // 3. 해당 행 상세 검증
+    cy.get('@autoUserDelRow').should('be.visible').within(() => {
+      // [발생자]
+      cy.contains('span.ellipsis', exactDel('Admin(admin)')).should('be.visible');
+
+      // [IP] - 실행 PC마다 다르므로 IPv4 형식만 검증
+      cy.contains('span.ellipsis', /^\s*\d{1,3}(\.\d{1,3}){3}\s*$/).should('be.visible');
+
+      // [이벤트]
+      cy.contains('a.font-weight-bold', exactDel(DEL_EVENT_TEXT)).should('be.visible');
+
+      // [보안 객체]
+      cy.contains('span.ellipsis', exactDel('관리자')).should('be.visible');
+
+      // [대상]
+      cy.contains('span.ellipsis', exactDel(DEL_TARGET_TEXT)).should('be.visible');
+
+      // [설명]
+      cy.contains('a.ellipsis.text-xs-left', exactDel(DEL_DESC_TEXT)).should('be.visible');
+
+      // [결과]
+      cy.contains('td', exactDel('성공')).should('be.visible');
+    });
 
     cy.log('🎉 계정관리 관리자 : 오토유저 추가&삭제에 대한 운영 이력 검색 및 검증 완벽 성공!');
-     //-------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------------------------
      
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기

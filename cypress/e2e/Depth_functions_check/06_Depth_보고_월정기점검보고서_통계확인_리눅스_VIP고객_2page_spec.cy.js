@@ -86,7 +86,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -134,7 +134,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
   
      // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 전체선택 확인
@@ -156,7 +156,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('th').filter(':visible').contains('행위 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 값').should('be.visible');
-    cy.get('th').filter(':visible').contains('조회').should('be.visible');
+    // v2.9.4.0 조회 -> 선택 문구변경
+    cy.get('th').filter(':visible').contains('선택').should('be.visible');
 
   
   
@@ -183,7 +184,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 설명: 'c-headline' 클래스를 가진 요소 중에 '이상행위' 글자가 보여야 한다.
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 검색 조건 이름 입력란 확인
@@ -535,7 +536,8 @@ cy.get('.apexcharts-legend').eq(0).find('.apexcharts-legend-text').each(($legend
     cy.get('th').filter(':visible').contains('보고서 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('생성일').should('be.visible');
     cy.get('th').filter(':visible').contains('생성자').should('be.visible');
-    cy.get('th').filter(':visible').contains('상태').should('be.visible');
+    // v2.9.4.0  상태 -> 조건 문구변경
+    cy.get('th').filter(':visible').contains('조건').should('be.visible');
     cy.get('th').filter(':visible').contains('설명').should('be.visible');
     cy.get('th').filter(':visible').contains('삭제').should('be.visible');
 
@@ -727,28 +729,34 @@ cy.get('@savedCount').then((uiCount) => {
           // 띄어쓰기, 줄바꿈 등을 하나의 공백으로 깔끔하게 정리합니다.
           const cleanText = bodyText.replace(/\s+/g, ' ');
 
-          // 정규식(Regex)을 이용해 '이번 달' 건수 추출
-          const regex = /전체 접속기록\s*\(\s*총\s*건수\s*\)\s+[0-9,]+\s+([0-9,]+)/;
+           // [변경] 보고서 항목명 "전체 접속기록 (총 건수)" → "접속기록 이력 (건)"
+          //        "개인정보 접속기록 이력 (건)"과 혼동하지 않도록 앞에 "개인정보"가 붙은 줄은 제외
+          //        구조: 접속기록 이력 (건) [지난 달] [이번 달]
+          const regex = /(?<!개인정보\s?)접속기록\s*이력\s*\(\s*건\s*\)\s+([0-9,]+)\s+([0-9,]+)/;
           const match = cleanText.match(regex);
 
-          if (match && match[1]) {
-              const extractedReportCount = parseInt(match[1].replace(/,/g, ''), 10);
-              cy.log(`📊 [데이터 추출 성공] 오즈 뷰어 이번 달 전체 접속기록: ${extractedReportCount}건`);
-
-              // =====================================================
+          if (match && match[2]) {
+              const lastMonthCount = parseInt(match[1].replace(/,/g, ''), 10);
+              const extractedReportCount = parseInt(match[2].replace(/,/g, ''), 10);   // 이번 달(대상 기간)
+              cy.log(`📊 [데이터 추출 성공] 보고서 접속기록 이력 - 지난 달: ${lastMonthCount}건 / 이번 달: ${extractedReportCount}건`);
+              
+             // =====================================================
               // 🌟 3. 최종 정합성 비교 검증
               // =====================================================
               cy.get('@savedCount').then((uiCount) => {
                   expect(
-                      uiCount, 
+                      uiCount,
                       `데이터 일치 조회중! (이력 건수: ${uiCount}건 vs 보고서: ${extractedReportCount}건)`
                   ).to.equal(extractedReportCount);
-                  
+
                   cy.log('🎉 데이터 직접 추출 및 정합성 검증 완벽 일치 통과!');
               });
 
           } else {
-              throw new Error('❌ 보고서에서 "전체 접속기록" 데이터를 추출하지 못했습니다.');
+              // [추가] 실패 시 보고서에서 "접속기록" 주변 텍스트를 함께 보여줘서 원인 파악
+              const idx = cleanText.indexOf('접속기록');
+              const snippet = idx >= 0 ? cleanText.slice(Math.max(0, idx - 30), idx + 120) : '(접속기록 문구 없음)';
+              throw new Error(`❌ 보고서에서 "접속기록 이력 (건)" 데이터를 추출하지 못했습니다. 주변 텍스트: ${snippet}`);
           }
       });
   });

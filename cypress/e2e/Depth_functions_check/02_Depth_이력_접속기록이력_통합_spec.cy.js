@@ -86,7 +86,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -134,7 +134,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
   
      // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     // 시작날짜 달력 아이콘확인
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 전체선택 확인
@@ -156,7 +157,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('th').filter(':visible').contains('행위 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 유형').should('be.visible');
     cy.get('th').filter(':visible').contains('개인정보 값').should('be.visible');
-    cy.get('th').filter(':visible').contains('조회').should('be.visible');
+    cy.get('th').filter(':visible').contains('선택').should('be.visible');
 
   
   
@@ -182,8 +183,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.get('.tab-btn').contains('통합').closest('button').should('not.have.class', 'inactive');
     // 설명: 'c-headline' 클래스를 가진 요소 중에 '이상행위' 글자가 보여야 한다.
     cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     // 시작날짜 달력 아이콘확인
+     cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 검색 조건 이름 입력란 확인
@@ -392,7 +393,8 @@ cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
 
      //기능확인
     //달력표를 펼침  월/일 지정  
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    // 시작날짜 달력 
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
     cy.wait(1000);
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
@@ -546,8 +548,11 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
    
 //오탐확정----------------------------------------------------------------------------------------------
 // 1. [전체 확정 선택] 클릭 및 검증
-// 스크롤 올려서 버튼 선택 
-cy.get('.scrollable-content').filter(':visible').scrollTo('top');
+// 스크롤 올려서 버튼 선택
+// [수정] 내용이 짧아 스크롤바가 없을 때도 실패하지 않도록 ensureScrollable: false
+//        .scrollable-content가 여러 개 잡힐 수 있어 팝업 안의 첫 번째 영역만 대상
+cy.get('.v-dialog--active .scrollable-content').filter(':visible').first()
+  .scrollTo('top', { ensureScrollable: false });
 cy.wait(1000);
 cy.contains('button.v-btn', '전체 확정 선택').should('be.visible').click({ force: true });
 
@@ -827,8 +832,9 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
            });
 
      // 불용 데이터 상세 팝업창
-     // 불용 데이터 상세 팝업창에서 '타입' 입력창(콤보박스)을 클릭하여 목록을 펼칩니다.
-     cy.get('input[aria-label="타입"]').filter(':visible').first().invoke('val', '주민등록번호').trigger('input').trigger('change');
+     // 불용 데이터 상세 팝업창에서 '유형' 입력창(콤보박스)을 클릭하여 목록을 펼칩니다.
+     // v2.9.4.0 유형 -> 유형 문구 변경
+     cy.get('input[aria-label="유형"]').filter(':visible').first().invoke('val', '주민등록번호').trigger('input').trigger('change');
      cy.wait(1000); 
 
      // 2. [추가] 이제 시스템에게 "이 글자에 해당하는 목록을 선택했어"라고 알려줘야 합니다.
@@ -876,8 +882,9 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      cy.contains('tr', '주민등록번호_키워드').should('be.visible').last().find('i.material-icons:contains("edit")').click({ force: true });
      cy.wait(1000);
 
-     // 불용 데이터 상세 팝업창에서 '타입' 입력창선택하여 주민등록번호-> 외국인등록번호로 수정
-     cy.get('input[aria-label="타입"]').filter(':visible').first().invoke('val', '외국인등록번호').trigger('input').trigger('change');
+     // 불용 데이터 상세 팝업창에서 '유형' 입력창선택하여 주민등록번호-> 외국인등록번호로 수정
+     // v2.9.4.0 타입 -> 유형 문구 변경
+     cy.get('input[aria-label="유형"]').filter(':visible').first().invoke('val', '외국인등록번호').trigger('input').trigger('change');
      cy.wait(1000); 
 
      // 2. [추가] 이제 시스템에게 "이 글자에 해당하는 목록을 선택했어"라고 알려줘야 합니다.
@@ -967,8 +974,8 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      cy.contains('.v-window-item', '불용 데이터 - 값').filter(':visible').find('.grid-add-button').should('be.visible').click({ force: true });
 
      // 불용 데이터 상세 팝업창
-     // 불용 데이터 상세 팝업창에서 '타입' 입력창(콤보박스)을 클릭하여 목록을 펼칩니다.
-     cy.get('input[aria-label="타입"]').filter(':visible').first().invoke('val', '신용카드번호').trigger('input').trigger('change');
+     // 불용 데이터 상세 팝업창에서 '유형' 입력창(콤보박스)을 클릭하여 목록을 펼칩니다.
+     cy.get('input[aria-label="유형"]').filter(':visible').first().invoke('val', '신용카드번호').trigger('input').trigger('change');
      cy.wait(1000); 
 
      // 2. [추가] 이제 시스템에게 "이 글자에 해당하는 목록을 선택했어"라고 알려줘야 합니다.
@@ -1017,8 +1024,8 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      cy.contains('tr', 'Depth_test_신용카드번호').should('be.visible').last().find('i.material-icons:contains("edit")').click({ force: true });
      cy.wait(1000);
 
-     // 불용 데이터 상세 팝업창에서 '타입' 입력창선택하여 신용카드번호-> 계좌번호 수정
-     cy.get('input[aria-label="타입"]').filter(':visible').first().invoke('val', '계좌 번호').trigger('input').trigger('change');
+     // 불용 데이터 상세 팝업창에서 '유형' 입력창선택하여 신용카드번호-> 계좌번호 수정
+     cy.get('input[aria-label="유형"]').filter(':visible').first().invoke('val', '계좌 번호').trigger('input').trigger('change');
      cy.wait(1000); 
 
      // 2. [추가] 이제 시스템에게 "이 글자에 해당하는 목록을 선택했어"라고 알려줘야 합니다.

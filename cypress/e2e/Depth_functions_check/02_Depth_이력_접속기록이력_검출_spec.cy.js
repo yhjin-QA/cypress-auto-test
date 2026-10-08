@@ -86,7 +86,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -134,7 +134,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
   
      // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 전체선택 확인
@@ -180,7 +181,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // 설명: 'c-headline' 클래스를 가진 요소 중에 '이상행위' 글자가 보여야 한다.
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 검색 조건 이름 입력란 확인
@@ -218,19 +219,129 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     //3.0.5.1191_r35135  가로스크롤 영향으로 존재로 확인 
     cy.get('th').contains('검출 건수').should('exist'); 
 
-    //기능동작
-    //달력표를 펼침 
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.wait(500);
-    // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
-    cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
 
-    // 2. '4월'이라는 글자를 찾아 클릭합니다.
-     cy.get('.v-date-picker-table--month').filter(':visible').contains('4월').click({ force: true });
-    // 달력 20일 클릭
-    cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '20일').closest('.v-btn').click({ force: true });
-    //달력창 닫기
-    cy.get('body').type('{esc}');
+//=============================
+// 한달전 선택하기 or 특정날짜
+//=============================
+
+// 1. 목표 날짜 - FIXED_DATE에 날짜를 넣으면 그 날짜, null이면 오늘 기준 한 달 전
+//const FIXED_DATE = null;            // 예: '2026-08-20'
+const FIXED_DATE = '2026-08-20';
+
+let target;
+if (FIXED_DATE) {
+  const [y, m, d] = FIXED_DATE.split('-').map(Number);
+  target = new Date(y, m - 1, d);
+} else {
+  const today = new Date();
+  target = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+  target.setDate(Math.min(today.getDate(), lastDay));
+}
+
+const targetYear = target.getFullYear();
+const targetMonth = target.getMonth() + 1;   // 1~12
+const targetDay = target.getDate();
+
+const pad = (n) => String(n).padStart(2, '0');
+const targetStr = `${targetYear}-${pad(targetMonth)}-${pad(targetDay)}`;
+cy.log(`📅 시작 날짜 목표: ${targetStr}`);
+
+// 시작 날짜 입력창 (기간 영역의 첫 번째 입력창)
+const getStartDateInput = () =>
+  cy.get('#item_dateRange input[aria-label="기간"]').filter(':visible').first();
+
+// 2. 달력 오픈
+// 기간 영역(#item_dateRange)의 첫 번째 메뉴 = 시작 날짜
+// Vuetify 메뉴가 Cypress 가상 클릭을 무시하므로 실제 마우스 클릭(realClick) 사용
+cy.get('#item_dateRange .v-menu__activator').filter(':visible').first()
+  .find('i.material-icons')
+  .filter((i, el) => el.textContent.trim() === 'event')
+  .scrollIntoView()
+  .realClick();
+cy.wait(1000);
+
+// 안 열렸으면 한 번 더: 열기 담당 영역 자체에 클릭 이벤트 직접 전달
+cy.get('body').then(($body) => {
+  if ($body.find('.v-date-picker-header__value:visible').length === 0) {
+    cy.log('🔁 아이콘 클릭으로 안 열림 → 메뉴 활성 영역에 click 이벤트 직접 전달');
+    cy.get('#item_dateRange .v-menu__activator').filter(':visible').first().trigger('click');
+    cy.wait(1000);
+  }
+});
+
+// 달력이 실제로 열렸는지 확인
+cy.get('.v-date-picker-header__value').filter(':visible').should('have.length', 1);
+
+// 3. 달력 헤더의 연/월과 목표 연/월을 비교해서, 필요한 만큼 이전/다음 달 화살표 클릭
+cy.get('.v-date-picker-header__value').filter(':visible').invoke('text').then((headerText) => {
+  // 헤더 텍스트 예: "2026년 10월"
+  const match = headerText.match(/(\d{4})년\s*(\d{1,2})월/);
+
+  if (match) {
+    const displayedYear = parseInt(match[1], 10);
+    const displayedMonth = parseInt(match[2], 10);
+
+    const diffMonths = (targetYear - displayedYear) * 12 + (targetMonth - displayedMonth);
+
+    if (diffMonths !== 0) {
+      const clicks = Math.abs(diffMonths);
+      // diffMonths < 0 이면 이전 달(chevron_left)로, > 0 이면 다음 달(chevron_right)로 이동
+      const iconName = diffMonths < 0 ? 'chevron_left' : 'chevron_right';
+
+      cy.log(`📅 달력 이동: ${clicks}회 ${diffMonths < 0 ? '이전' : '다음'} 달로 이동`);
+
+      for (let i = 0; i < clicks; i++) {
+        cy.get('.v-date-picker-header')
+          .filter(':visible')
+          .find('i.material-icons')
+          .contains(iconName)
+          .click({ force: true });
+        cy.wait(300);
+      }
+    }
+  } else {
+    // 헤더를 못 읽으면 엉뚱한 달을 누르지 않도록 바로 실패 처리
+    throw new Error(`달력 헤더 형식을 읽지 못했습니다: "${headerText.trim()}"`);
+  }
+});
+
+// 4. 목표 일자 클릭 (숫자만 비교 - "20일" 형식 대응)
+cy.get('.v-date-picker-table--date').filter(':visible')
+  .find('button')
+  .filter((i, el) => el.textContent.replace(/\D/g, '') === String(targetDay))
+  .not('.v-btn--disabled')
+  .should('have.length', 1)
+  .click({ force: true });
+cy.wait(1000);
+
+// 5. 선택 결과 확인 - "2026-08-20 09:48:55"처럼 시간이 붙으므로 날짜로 시작하는지 확인
+getStartDateInput().invoke('val').should('match', new RegExp(`^${targetStr}`));
+
+// 6. 달력창 닫기
+cy.get('body').type('{esc}');
+cy.wait(300);
+
+// 닫은 뒤에도 값이 유지되는지 재확인
+// (여기서 실패하면 Esc가 선택을 취소하는 방식 → 위 Esc 대신 아래 줄 사용)
+// cy.contains('.c-headline', '검색 조건').click({ force: true });
+getStartDateInput().invoke('val').should('match', new RegExp(`^${targetStr}`));
+
+cy.log(`✅ 시작 날짜 ${targetStr} 지정 성공`);
+
+    // //기능동작
+    // //달력표를 펼침 
+    // cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    // cy.wait(500);
+    // // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
+    // cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
+
+    // // 2. '4월'이라는 글자를 찾아 클릭합니다.
+    //  cy.get('.v-date-picker-table--month').filter(':visible').contains('4월').click({ force: true });
+    // // 달력 20일 클릭
+    // cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '20일').closest('.v-btn').click({ force: true });
+    // //달력창 닫기
+    // cy.get('body').type('{esc}');
 
     //사용자 상태 클릭
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
@@ -318,7 +429,7 @@ const searchSequential = (dateIndex, currentUIText) => {
 };
 
 // 🌟 4. 함수 최초 실행
-searchSequential(0, '2026-04-20');
+searchSequential(0, '2026-08-20');
 
 // (맨 아래에 있던 닫기 로직은 삭제합니다!)
 

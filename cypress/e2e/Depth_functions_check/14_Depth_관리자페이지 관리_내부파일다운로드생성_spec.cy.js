@@ -86,7 +86,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -165,7 +165,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
             cy.contains('삭제하시겠습니까?').should('be.visible');
             cy.wait(500); // 팝업 애니메이션 안정화 대기
        
-            cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
+            cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
             // 삭제 후 목록이 갱신될 시간을 잠깐 줍니다.
             cy.wait(1000);
 
@@ -275,26 +275,29 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘확인
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
     // 종료날짜 달력 아이콘확인
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     // 검색 조건 입력란 
     cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').should('be.visible');
-    cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
+    //v2.9.4.0 상태 -> 조건 문구 변경 
+    cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
      // 검색 버튼 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 표 열 문구 확인 
     cy.get('th').filter(':visible').contains('파일 다운로드 그룹').should('be.visible');
     cy.get('th').filter(':visible').contains('제목').should('be.visible');
-    cy.get('th').filter(':visible').contains('파일명').should('be.visible');
+    //  v2.9.4.0 파일명 -> 파일 명
+    cy.get('th').filter(':visible').contains('파일 명').should('be.visible');
     cy.get('th').filter(':visible').contains('시작 시간').should('be.visible');
     cy.get('th').filter(':visible').contains('종료 시간').should('be.visible');
-    cy.get('th').filter(':visible').contains('상태').should('be.visible');
+    // v2.9.4.0 상태 -> 조건 문구 변경 
+    cy.get('th').filter(':visible').contains('조건').should('be.visible');
     
     
     // 기능확인
     //달력표를 펼침  월/일 지정  
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
     cy.wait(500);
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
@@ -320,8 +323,9 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      // 선택한 컨텍스트 메뉴 닫기
      cy.get('body').type('{esc}');  
 
-     //상태 클릭
-     cy.get('input[aria-label="상태"]').filter(':visible').click({ force: true });
+     //v2.9.4.0 상태 -> 조건
+     //조건 클릭
+     cy.get('input[aria-label="조건"]').filter(':visible').click({ force: true });
      cy.wait(500);
      // 상태 리스트중 '완료' 클릭
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '완료').should('be.visible').click({ force: true });

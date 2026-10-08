@@ -85,7 +85,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -113,7 +113,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('🚀 운영 탭 클릭');
     
     // 운영 > 실행플랜 서브메뉴 
-    cy.contains('button', '운영').click({ force: true });
+     cy.contains('button', /^운영$/).click({ force: true });
     cy.wait(2000);
     cy.log('---운영 - 실행 플랜 서브메뉴 클릭 ---');
     cy.get('.v-list__tile__title').filter(':contains("실행 플랜")').filter(':visible').click({ force: true });
@@ -196,7 +196,7 @@ describe('로그캐치 사이트 테스트', () => {
       cy.wait(500);
     
       // 삭제 확인 팝업에서 '확인' 클릭
-      cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확정').click({ force: true });
+      cy.get('.v-dialog').filter(':visible').should('contain', '삭제하시겠습니까?').find('.v-btn').contains('확인').click({ force: true });
       cy.wait(1000); // 삭제 처리가 서버에 반영될 시간 대기
 
       // 추가한 정책 삭제 검증코드 
@@ -393,7 +393,7 @@ cy.wait(3000);
       cy.wait(500); // 애니메이션이 끝날 때까지 0.5초만 숨고르기
     
       // 2. 삭제 확인 팝업에서 '확인' 클릭 (강제 클릭 대신 일반 클릭으로 정상 작동 확인)
-      cy.get('.v-dialog').filter(':visible').find('.v-btn').contains('확정').click();
+      cy.get('.v-dialog').filter(':visible').find('.v-btn').contains('확인').click();
       cy.wait(2000);
       // 팝업창 글자가 화면에서 '안 보이게' 숨겨졌는지 확인합니다.
       cy.contains('삭제하시겠습니까?').should('not.be.visible');

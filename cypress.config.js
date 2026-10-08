@@ -222,7 +222,7 @@ module.exports = defineConfig({
                       user: "WVADMIN",
                       // ✅ GitHub 환경변수가 있으면 쓰고, 없으면 로컬용 사용
                       password: process.env.DB_PASSWORD || "qwert123",
-                      connectString: "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=172.16.200.10)(PORT=1521))(CONNECT_DATA=(SID=xe)))"
+                      connectString: "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=172.16.200.16)(PORT=1522))(CONNECT_DATA=(SID=xe)))"
                     });
         
                     console.log(`\n🛢️ Oracle DB 쿼리 실행 중: ${query}\n`);

@@ -130,13 +130,11 @@ describe('로그캐치 Depth Jar 라이브러리 정합성 검증', () => {
                                     'wv-commons-process-code',
                                     'wv-commons-process-message',
                                     'wv-commons-process-properties',
-
-
                                 ];
 
                                 const allTempPassList = [...tomcatTempPassList, ...wvInputParamTempPassList];
 
-                                // 2. 🌟 기존 tomcatTempPassList 대신 allTempPassList에서 검색하도록 수정
+                                //2. 🌟 기존 tomcatTempPassList 대신 allTempPassList에서 검색하도록 수정
                                 const matchedLibrary = allTempPassList.find(baseName => pluginName.startsWith(baseName));
                                 if (matchedLibrary) {
                                     const hasAnyVersion = existingFiles.some(f => f.startsWith(matchedLibrary));

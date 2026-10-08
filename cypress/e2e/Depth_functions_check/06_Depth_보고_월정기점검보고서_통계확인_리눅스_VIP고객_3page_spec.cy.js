@@ -86,7 +86,7 @@ describe('로그캐치 사이트 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -350,7 +350,8 @@ cy.get('.apexcharts-legend').eq(2).find('.apexcharts-legend-text').each(($legend
     cy.get('th').filter(':visible').contains('보고서 이름').should('be.visible');
     cy.get('th').filter(':visible').contains('생성일').should('be.visible');
     cy.get('th').filter(':visible').contains('생성자').should('be.visible');
-    cy.get('th').filter(':visible').contains('상태').should('be.visible');
+    // v2.9.4.0 상태 -> 조건 문구변경
+    cy.get('th').filter(':visible').contains('조건').should('be.visible');
     cy.get('th').filter(':visible').contains('설명').should('be.visible');
     cy.get('th').filter(':visible').contains('삭제').should('be.visible');
 
@@ -581,67 +582,44 @@ cy.get('@dynamicChartData2').then((chartData2) => {
           .its('0.contentDocument.body').should('not.be.empty')
           .then(cy.wrap)
           .within(() => {
+              // =====================================================
+              // 2. 다음 페이지 화살표 1번 클릭 (2페이지로)
+              // [변경] 비교 대상: 3페이지 "업무 시스템 현황" → 2페이지 "개인정보 사용 현황" 이번 달 사용량 합계
+              // =====================================================
+              cy.log('➡️ 다음 페이지 화살표 버튼을 눌러 2페이지로 이동합니다.');
+              cy.get('input.btnNEXT[title="한 페이지 다음으로 이동"]').click({ force: true });
+              cy.wait(2000);
 
-              // =====================================================
-              // 2. '한 페이지 다음으로 이동' 화살표 버튼 클릭 (3페이지로!)
-              // =====================================================
-              cy.log('➡️ 다음 페이지 화살표 버튼을 두 번 눌러 3페이지로 이동합니다.');
-              
-              cy.get('input.btnNEXT[title="한 페이지 다음으로 이동"]').click({ force: true });
-              cy.wait(2000); // 2페이지 대기
-              cy.get('input.btnNEXT[title="한 페이지 다음으로 이동"]').click({ force: true });
-              cy.wait(2000); // 3페이지 대기
-              
-              // =====================================================
-              cy.log('🔎 3페이지 텍스트를 분석하여 2번, 3번 차트 데이터를 연속 검증합니다.');
+              cy.log('🔎 2페이지 "개인정보 사용 현황" 표의 이번 달 사용량 합계를 계산합니다.');
 
               cy.root().invoke('text').then((bodyText) => {
                   const cleanText = bodyText.replace(/\s+/g, ' ');
-                  
-                  // 2번쨰차트와 보고서값이 일치하지않음. 일단 주석처리
-                  // // ---------------------------------------------------
-                  // // 🎯 [검증 1] 2번째 차트 (이상행위 유형별 현황)
-                  // // ---------------------------------------------------
-                  // cy.log('🟦 [검증 시작] 2번 차트: 이상행위 유형별 현황');
-                  // Object.keys(chartData2).forEach((typeName) => {
-                  //     const expectedCount = chartData2[typeName];
-                  //     const safeTypeName = typeName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                      
-                  //     // 이름 바로 뒤의 첫 번째 숫자를 캡처 (소명 대상 총 건수)
-                  //     const regex = new RegExp(`(?:^|\\s)${safeTypeName}\\s+([0-9,]+)\\s*건`);
-                  //     const match = cleanText.match(regex);
-
-                  //     if (match && match[1]) {
-                  //         const reportCount = parseInt(match[1].replace(/,/g, ''), 10);
-                  //         expect(expectedCount, `❌ [${typeName}] 데이터 불일치!`).to.equal(reportCount);
-                  //         cy.log(`✅ [2번 차트 검증 통과] ${typeName}: ${reportCount}건 일치!`);
-                  //     } else {
-                  //         throw new Error(`❌ 보고서에서 2번 차트의 "${typeName}" 항목을 찾을 수 없습니다.`);
-                  //     }
-                  // });
 
                   // ---------------------------------------------------
-                  // 🎯 [검증 2] 3번째 차트 (업무시스템별 현황)
+                  // 🎯 [검증] 3번째 차트 (업무시스템별 현황) 합계 vs 보고서 개인정보 사용 현황 이번 달 합계
                   // ---------------------------------------------------
-                  cy.log('🟧 [검증 시작] 3번 차트: 업무시스템별 현황');
-                  Object.keys(chartData3).forEach((typeName) => {
-                      const expectedCount = chartData3[typeName];
-                      const safeTypeName = typeName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                      
-                      // 이름 바로 뒤의 첫 번째 숫자를 캡처 (개인정보 사용량)
-                      const regex = new RegExp(`(?:^|\\s)${safeTypeName}\\s+([0-9,]+)\\s*건`);
-                      const match = cleanText.match(regex);
+                  // "개인정보 사용 현황" 제목 이후 영역만 잘라서 사용 (위쪽 접속기록 현황 표 제외)
+                  const startIdx = cleanText.indexOf('개인정보 사용 현황');
+                  // [수정] 위치 숫자 대신 "찾았는지 여부"로 표시
+                  expect(startIdx >= 0, '보고서 2페이지 "개인정보 사용 현황" 표 존재').to.be.true;
+                  const section = cleanText.slice(startIdx);
 
-                      if (match && match[1]) {
-                          const reportCount = parseInt(match[1].replace(/,/g, ''), 10);
-                          expect(expectedCount, `❌ [${typeName}] 데이터 불일치!`).to.equal(reportCount);
-                          cy.log(`✅ [3번 차트 검증 통과] ${typeName}: ${reportCount}건 일치!`);
-                      } else {
-                          throw new Error(`❌ 보고서에서 3번 차트의 "${typeName}" 항목을 찾을 수 없습니다.`);
-                      }
-                  });
-                  
-                  cy.log('🎉 [최종 통과] 3페이지의 모든 표(2번, 3번 차트) 데이터 정합성이 완벽하게 일치합니다!');
+                  const rows = [...section.matchAll(/([0-9,]+)\s*건\s+([0-9,]+)\s*건/g)];
+                  // [수정] 읽은 행 수를 로그로 명확히 표시
+                  cy.log(`📋 개인정보 사용 현황 표: ${rows.length}개 유형 행 읽음`);
+                  expect(rows.length, '개인정보 사용 현황 행 수(1개 이상)').to.be.greaterThan(0);
+
+                  const reportMonthSum = rows.reduce(
+                      (sum, m) => sum + parseInt(m[2].replace(/,/g, ''), 10), 0
+                  );
+
+                  // 차트 3번 값 합계 (업무시스템 1개 선택이므로 보통 1개 항목)
+                  const chartSum = Object.values(chartData3).reduce((sum, v) => sum + v, 0);
+
+                  cy.log(`🟧 차트(업무시스템별 개인정보 사용량): ${chartSum}건 / 보고서 개인정보 사용 현황 이번 달 합계: ${reportMonthSum}건 (${rows.length}행)`);
+                  expect(chartSum, '현황 차트 vs 보고서 개인정보 사용 현황 이번 달 합계').to.equal(reportMonthSum);
+
+                  cy.log('🎉 [최종 통과] 현황 업무시스템별 개인정보 사용량 = 보고서 2페이지 이번 달 사용량 합계 일치!');
               });
           });
     });

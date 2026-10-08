@@ -85,7 +85,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -125,8 +125,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.contains('.item-margin', '자동 갱신 안함').should('be.visible');
     // 데이터량 확인
     cy.contains('p', '개인정보 사용량').should('be.visible');
-    cy.contains('p', '개인정보 대량 접근').should('be.visible');
-    cy.contains('p', '업무시간 외 접근').should('be.visible');
+    cy.contains('p', '발생 이력 수').should('be.visible');
+    cy.contains('p', '이상행위 발생 건수').should('be.visible');
     cy.contains('p', '접근 IP 주소').should('be.visible');
     cy.contains('p', '정보 사용자').should('be.visible');
     cy.contains('p', '접근 부서').should('be.visible');

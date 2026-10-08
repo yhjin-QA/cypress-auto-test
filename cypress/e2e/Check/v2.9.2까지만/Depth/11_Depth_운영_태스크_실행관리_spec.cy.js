@@ -112,7 +112,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // STEP 11: 운영 서브메뉴 
     // ==========================================
     cy.log('🚀 운영 탭 클릭');
-    cy.contains('button', '운영').click({ force: true });
+    cy.contains('button', /^운영$/).click({ force: true });
     cy.wait(1000);
     cy.log('---운영 - 태스크 서브메뉴 클릭 ---');
     cy.get('.v-list__tile__title').filter(':contains("태스크")').filter(':visible').click({ force: true });

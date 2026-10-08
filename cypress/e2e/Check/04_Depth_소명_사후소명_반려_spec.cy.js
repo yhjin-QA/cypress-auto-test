@@ -123,7 +123,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 // STEP : 결재 서브메뉴 - 정책
 // ==========================================
 // 수정: side-menu 클래스로 정확히 타겟팅
-cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', '결재').click({ force: true });
+// v2.9.4.0 결재 -> 소명
+cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', /^소명$/).click({ force: true });
 cy.wait(1000);
 
 // 서브메뉴 정책 클릭
@@ -138,7 +139,7 @@ cy.get('body').then(($body) => {
     if ($body.find('.c-headline:contains("결재 정책 목록")').length === 0) {
         cy.log('🔄 화면 전환 미감지, 다시 클릭 시도');
         cy.contains('button', '소명').click({ force: true });
-        cy.contains('.v-list__tile__title', '결재').click({ force: true });
+        cy.contains('.v-list__tile__title', /^소명$/).click({ force: true });
         cy.wait(3000);
     }
 });
@@ -153,7 +154,7 @@ cy.log('🔍 "소명" 유형의 "auto_add_test 결재정책" 존재 여부 확�
 
 cy.wait(1000);
 
-const TARGET_TYPE = '소명하기'; // 필요 시 '사전소명'으로 변경해서 재사용
+const TARGET_TYPE = '소명'; // 필요 시 '사전소명'으로 변경해서 재사용
 
 cy.get('body').then(($body) => {
 
@@ -325,61 +326,57 @@ cy.log('🚀 원래 사이트(LogCatch) 진입 및 인사팀사원 로그인 무
 
 
 // ==========================================
-// STEP : 소명 서브메뉴 
+// STEP : 소명하기 > 나의 소명 진입
 // ==========================================
-cy.log('🧹 소명메뉴 클릭 ');
-// cy.contains('button', '소명').click({ force: true });
-// cy.wait(2000); // 서브 메뉴가 펼쳐질 시간 대기 
 
-// cy.contains('.v-btn__content', '소명하기').should('be.visible').click({ force: true });
-// cy.wait(2000);
-cy.log('--- 소명 > 소명하기 탭 진입완료---');
-const navigateToSomyungManagement_1 = () => {
-  cy.log('--- 좌측 사이드바에서 "소명하기" 메뉴 클릭 ---');
-  cy.contains('button', '소명하기').click({ force: true });
+/**
+ * 좌측 사이드바 "소명하기" 클릭 → 서브메뉴 "나의 소명" 클릭
+ * - 클릭 후 로딩 스피너가 남아 있거나 서브메뉴가 안 뜨면 새로고침 후 재시도 (최대 3회)
+ */
+const goToMyExplanation = (attempt = 1) => {
+  cy.log(`--- [${attempt}회차] 사이드바 "소명하기" 클릭 ---`);
+
+  // 사이드바 "소명하기" 버튼 (정확히 일치 → "소명" 메뉴와 구분)
+  cy.get('button.side-menu').filter(':visible')
+    .contains('span', /^\s*소명하기\s*$/)
+    .click({ force: true });
   cy.wait(1000);
 
   cy.get('body').then(($body) => {
-    if ($body.find('.v-progress-circular:visible').length > 0) {
-      cy.log('🔄 소명 클릭 후 로딩 감지! 새로고침합니다.');
+    const isLoading = $body.find('.v-progress-circular:visible').length > 0;
+    const $menu = $body.find('.menuable__content__active:visible')
+      .filter((i, el) => Cypress.$(el).find('.v-list__tile__title').toArray()
+        .some((t) => t.textContent.trim() === '나의 소명'));
+
+    // 로딩 중이거나 서브메뉴가 안 열렸으면 → 새로고침 후 재시도
+    if (isLoading || $menu.length === 0) {
+      if (attempt >= 3) {
+        throw new Error(`소명하기 서브메뉴가 열리지 않음 (${attempt}회 시도, 로딩중: ${isLoading})`);
+      }
+      cy.log(`🔄 ${isLoading ? '로딩 감지' : '서브메뉴 미표시'} → 새로고침 후 재시도`);
       cy.reload();
       cy.wait(3000);
-      cy.contains('button', '소명하기').click({ force: true });
-      cy.wait(1000);
+      goToMyExplanation(attempt + 1);
+      return;
     }
-  });
 
-  cy.log('--- 소명 > 소명하기 서브메뉴(탭) 클릭 ---');
-
-  // [수정] 사이드바 메뉴와 구분하기 위해 button.tab-btn 클래스로 정확히 좁힘
-  cy.get('button.tab-btn')
-    .contains('소명하기')
-    .should('be.visible')
-    .click({ force: true });
-  cy.wait(3000);
-
-  // URL로 실제 소명하기 탭으로 이동했는지 검증
-  cy.url().should('include', '/my-explanations/submit');
- 
-
-  cy.get('body').then(($body) => {
-    if ($body.find('.v-progress-circular:visible').length > 0) {
-      cy.log('🔄 소명하기 클릭 후 로딩 감지! 새로고침합니다.');
-      cy.reload();
-      cy.wait(3000);
-
-      cy.get('body').then(($reloadedBody) => {
-        if ($reloadedBody.find('.v-btn__content:contains("소명하기")').length > 0) {
-          cy.log('✅ 소명하기 탭 확인! 재진입 생략합니다.');
-        } else {
-          navigateToSomyungManagement_1();
-        }
-      });
-    }
+    // 서브메뉴 "나의 소명" 클릭 (정확히 일치)
+    cy.log('--- 서브메뉴 "나의 소명" 클릭 ---');
+    cy.wrap($menu.first())
+      .find('.v-list__tile__title')
+      .filter((i, el) => el.textContent.trim() === '나의 소명')
+      .first()
+      .click({ force: true });
   });
 };
 
-navigateToSomyungManagement_1();
+goToMyExplanation();
+cy.wait(2000);
+
+// 진입 확인 - "나의 소명 내역" 탭 표시
+cy.contains('button.tab-btn', /^\s*나의 소명 내역\s*$/, { timeout: 10000 }).should('be.visible');
+cy.log('✅ 소명하기 > 나의 소명 진입 완료');
+    
 
 //3.0.5.1191_r35135  버전부터 소명건이 디폴트값으로 바로 보이지않음. 해당하는 유형 선택해서검색해야함.
 // ==========================================================

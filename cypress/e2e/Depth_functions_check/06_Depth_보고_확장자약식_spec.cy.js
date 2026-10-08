@@ -1,8 +1,3 @@
-/******/ (() => { // webpackBootstrap
-/******/ 	"use strict";
-/*!********************************!*\
-  !*** ./cypress/e2e/spec.cy.js ***!
-  \********************************/
   // ▼ 1. 모든 에러 무시 설정 (강력한 방어막) ▼
   Cypress.on('uncaught:exception', (err, runnable) => {
     // 무시할 에러 메시지 목록
@@ -34,6 +29,51 @@
 describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
   
   it('06_Depth_보고_확장자약식 자동화 시나리오', () => {
+
+    // ==========================================
+    // [신규] 콤보박스 항목 선택 공통 헬퍼 (보고서 종류 / 확장자)
+    //  - 보고서를 다시 연 직후나 내보내기 다운로드가 진행 중일 때는 첫 클릭이 무시될 수 있어
+    //    메뉴(.menuable__content__active)가 실제로 열렸는지 확인하고, 안 열렸으면 최대 3회 재시도
+    //  - 항목은 "정확히 일치"로 선택
+    //    ('월 정기점검 보고서' ↔ '(행위)', 'xls' ↔ 'xlsx', 'doc' ↔ 'docx' 오선택 방지)
+    // ==========================================
+    const selectComboItem = (label, name, attempt = 1) => {
+      cy.get(`input[aria-label="${label}"]`).filter(':visible').first()
+        .closest('.v-input').find('.v-input__slot').first()
+        .scrollIntoView().click({ force: true });
+      cy.wait(1000);
+
+      cy.get('body').then(($body) => {
+        const $menu = $body.find('.menuable__content__active:visible');
+
+        if ($menu.length === 0) {
+          if (attempt >= 3) {
+            throw new Error(`[${label}] 메뉴가 열리지 않음 (${attempt}회 시도) - 선택 대상: ${name}`);
+          }
+          cy.log(`🔁 [${label}] 메뉴 미표시 → 재시도 ${attempt + 1}회차`);
+          cy.get('body').type('{esc}');
+          cy.wait(1500);
+          selectComboItem(label, name, attempt + 1);
+          return;
+        }
+
+        // 메뉴에 있는 항목 목록 (실패 시 원인 파악용)
+        const options = [...$menu.find('.v-list__tile__title')].map((el) => el.textContent.trim());
+        expect(options, `[${label}] 목록에 '${name}' 존재`).to.include(name);
+
+        cy.get('.menuable__content__active').filter(':visible')
+          .find('.v-list__tile__title')
+          .filter((i, el) => el.textContent.trim() === name)
+          .first()
+          .scrollIntoView()
+          .click({ force: true });
+      });
+      cy.wait(1000);
+    };
+
+    const selectReportType = (name) => selectComboItem('보고서 종류', name);
+    const selectExtension  = (ext)  => selectComboItem('확장자', ext);
+
 
 
     // ==========================================
@@ -86,7 +126,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -203,10 +243,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     
     // 보고서 추가화면에서 보고서 종류 선택 - 월 정기점검 보고서
     //보고서 종류 콤보박스 열기 
-    cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(1000);
-    // 보고서 종류 콤보박스에서  '월 정기점검 보고서' 선택하는 코드
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월 정기점검 보고서').should('be.visible').click({ force: true });
+    // [수정] 보고서 종류 '월 정기점검 보고서' 선택 (정확히 일치)
+    selectReportType('월 정기점검 보고서');
     cy.wait(1000);
     cy.get('body').type('{esc}');
     cy.wait(500);
@@ -279,10 +317,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // ===========================================================
     
     //보고서 종류 콤보박스 열기 
-    cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(1000);
-    // 보고서 종류중 월 정기점검 보고서 (행위) 선택하는 코드
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월 정기점검 보고서 (행위)').should('be.visible').click({ force: true });
+    // [수정] 보고서 종류 '월 정기점검 보고서 (행위)' 선택
+    selectReportType('월 정기점검 보고서 (행위)');
     cy.wait(1000);
 
     // 저장버튼 클릭 
@@ -334,10 +370,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      cy.intercept('POST', '**/logcatch/pams/ozreport').as('saveReportApi');
       
     //보고서 종류 콤보박스 열기 
-    cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(1000);
-    // 보고서 종류중 월 정기점검 보고서 (행위) 선택하는 코드
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '개인정보접속 종합 보고서').should('be.visible').click({ force: true });
+    // [수정] 보고서 종류 '개인정보접속 종합 보고서' 선택 (메뉴 열림 재시도)
+    selectReportType('개인정보접속 종합 보고서');
     cy.wait(1000);
 
     // 저장버튼 클릭 
@@ -375,10 +409,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // 보고서 디폴트상태  - 개인정보접속 종합 보고서-> 월 정기점검 보고서 (초기화)
     // ====================================================================
     //보고서 종류 콤보박스 열기 
-    cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-    cy.wait(500);
-    // 보고서 종류중 월 정기점검 보고서 (행위) 선택하는 코드
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '월 정기점검 보고서').should('be.visible').click({ force: true });
+    // [수정] 보고서 종류 '월 정기점검 보고서' 선택 (정확히 일치 → '(행위)' 오선택 방지)
+    selectReportType('월 정기점검 보고서');
     cy.wait(500);
 
     // 저장버튼 클릭 
@@ -411,11 +443,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
       cy.log(`=========================================`);
 
       // 보고서 종류 콤보박스 열기 
-      cy.get('input[aria-label="보고서 종류"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-      cy.wait(1000);
-      
-      // 배열에서 꺼낸 보고서 종류(reportType) 선택
-      cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', reportType).should('be.visible').click({ force: true });
+      // [수정] 보고서 종류 선택 (메뉴 열림 재시도 + 정확히 일치하는 항목만 클릭)
+      selectReportType(reportType);
       cy.wait(1000);
 
       // 보고서 종류 변경 사항 1차 저장
@@ -433,20 +462,9 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         cy.log(`▶▶▶ 테스트 중: [${reportType}] - [${ext}] 확장자 ◀◀◀`);
         cy.wait(1000);
 
-        // 확장자 콤보박스 열기 
-        cy.get('input[aria-label="확장자"]').closest('.v-input').find('.v-input__slot').click({ force: true });
-        cy.wait(1000);
-        
-        // // Vuetify 특성상 콤보박스 메뉴가 누적될 수 있으므로 :visible 필터로 정확히 잡아서 클릭
-        // cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', ext).click({ force: true });
-        // cy.wait(1000);
-
-        // 2. 🌟 [핵심] 수십 개의 찌꺼기 메뉴를 무시하고, 현재 '활성화'된 메뉴창만 정확히 찝어냅니다.
-        cy.get('.menuable__content__active').within(() => {
-        // 3. 🌟 [핵심] 찾으려는 확장자 글자로 스크롤을 쫙 끌어내린 뒤 클릭합니다!
-        cy.contains('.v-list__tile__title', ext).scrollIntoView().should('be.visible').click({ force: true });
-        cy.wait(1000);
-         });
+        // [수정] 확장자 선택 (메뉴 열림 재시도 + 정확히 일치하는 항목만 클릭)
+        //  - 직전 확장자(jpg 등) 내보내기 다운로드가 계속 진행 중이면 첫 클릭이 무시될 수 있음
+        selectExtension(ext);
 
          cy.wait(1000); // 팝업 닫힘 대기
 
@@ -625,7 +643,3 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 });  
 
 //코드마지막
-
-
- })()
-;

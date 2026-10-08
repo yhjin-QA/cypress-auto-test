@@ -154,7 +154,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
             cy.get('body').then(($body) => {
                 if ($body.find('.v-card:contains("삭제")').length > 0) {
                     cy.contains('.v-card', '삭제')
-                      .contains('button', '확정')
+                      .contains('button', '확인')
                       .click({ force: true });
                 }
             });
@@ -278,7 +278,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // STEP 11: 운영 서브메뉴 
     // ==========================================
     cy.log('🚀 운영 탭 클릭');
-    cy.contains('button', '운영').click({ force: true });
+    cy.contains('button', /^운영$/).click({ force: true });
     cy.wait(1000);
     cy.log('---운영 - 태스크 서브메뉴 클릭 ---');
     cy.get('.v-list__tile__title').filter(':contains("태스크")').filter(':visible').click({ force: true });
@@ -315,7 +315,7 @@ processList.forEach((process) => {
   cy.get('.c-headline').filter(':visible').contains('마스터 Task 종료').should('be.visible');
   cy.wait(1000);
   cy.contains('p', 'Task 종료하시겠습니까?').should('be.visible');
-  cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
+  cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
   cy.wait(1000);
 
   // 2. [UI 검증] 상태가 '정지'로 변했는지
@@ -347,7 +347,7 @@ processList.forEach((process) => {
   cy.get('.c-headline').filter(':visible').contains('마스터 Task 실행').should('be.visible');
   cy.wait(1000);
   cy.contains('p', 'Task 실행하시겠습니까?').should('be.visible');
-  cy.get('.v-btn__content').filter(':visible').contains('확정').click({ force: true });
+  cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
   cy.wait(1000);
 
   // 5. [UI 검증] 상태가 '실행'으로 변했는지

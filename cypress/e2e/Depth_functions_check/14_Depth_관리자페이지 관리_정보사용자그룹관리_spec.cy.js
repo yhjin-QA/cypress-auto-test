@@ -86,7 +86,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
         cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
           .closest('.v-card')
-          .contains('확정')
+          .contains('확인')
           .click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
@@ -205,7 +205,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     cy.log('🚀 운영 탭 클릭');
     
     // 운영 > 실행플랜 서브메뉴 
-    cy.contains('button', '운영').click({ force: true });
+    cy.contains('button', /^운영$/).click({ force: true });
     cy.wait(2000);
     cy.log('---운영 - 실행 플랜 서브메뉴 클릭 ---');
     cy.get('.v-list__tile__title').filter(':contains("실행 플랜")').filter(':visible').click({ force: true });
