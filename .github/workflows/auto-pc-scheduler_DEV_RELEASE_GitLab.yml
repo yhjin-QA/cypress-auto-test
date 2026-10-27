@@ -664,7 +664,7 @@ jobs:
           RESTART_STATUS: "${{ needs.restart-task-run.result }}"
           VERSION_NAME: ${{ needs.deploy-qa.outputs.version }}
           PRODUCT_NAME: "로그캐치"
-          TEST_TYPE: "Dev_RELEASE"
+          TEST_TYPE: "GitLab_RELEASE(.71)"
           MSG_SUCCESS: "*[성공]*[Auto-PC]"
           MSG_FAIL: "*[실패]*[Auto-PC]"
           MSG_TITLE: "확인결과"
