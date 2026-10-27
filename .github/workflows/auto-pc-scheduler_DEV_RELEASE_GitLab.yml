@@ -1,0 +1,801 @@
+name: Auto-PC Work (Dev_RELEASE_GitLab)
+
+env:
+  PRODUCT_NAME: "로그캐치"
+  TEST_TYPE: Dev_RELEASE
+  TZ: Asia/Seoul
+   # 👇 여기에 추가하세요! (GitHub Actions가 내부적으로 Node.js 24를 사용하도록 강제함)
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: '5 2 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  # ===========================================================
+  # [Job 1] QA 리눅스 서버(Hyper-V)에 최신 버전 배포 (딱 1번만 실행)
+  # ===========================================================
+  deploy-qa:
+    runs-on: [self-hosted, PC-Auto]
+    outputs:
+      # 👇 다음 Job들이 읽을 수 있도록 변수를 밖으로 빼줍니다.
+      skip_all: ${{ steps.check_version.outputs.skip_all }}
+      # 👇 [추가] 버전명을 외부로 내보냅니다.
+      version: ${{ steps.check_version.outputs.version }}
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: 🔍 Find Latest QA Build from GitLab Package Registry
+        id: check_version # ID 추가
+        env:
+          SSH_KEY_DATA: ${{ secrets.SSH_PRIVATE_KEY }}
+          # 👇 [GitLab] 인증 정보 (Personal Access Token 권장, 없으면 ID/PW로 토큰 발급)
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_USER_ID: ${{ secrets.GITLAB_USER_ID }}
+          GITLAB_PW: ${{ secrets.GITLAB_PW }}
+          # 👇 [GitLab] 패키지 레지스트리 위치
+          GITLAB_URL: "https://gitlab.dev14.external"
+          GITLAB_PROJECT: "logcatch/product-release"
+          PACKAGE_NAME: "logcatch"
+          # 👇 QA 대상 버전 필터: 4번째 자리가 0인 버전만 (예: 2.9.4.0, 2.9.5.0)
+          QA_VERSION_PATTERN: '^2\.9\.[0-9]+\.0$'
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          # 💡 SSH 키 준비
+          $keyPath = "$env:TEMP\id_auto"
+          if (Test-Path $keyPath) { Remove-Item -Path $keyPath -Force -ErrorAction SilentlyContinue }
+          $env:SSH_KEY_DATA.Trim() | Out-File -FilePath $keyPath -Encoding ASCII -Force
+
+          $target = "${{ secrets.QA_RELEASE_SERVER_USER }}@${{ secrets.QA_RELEASE_SERVER_IP }}"
+          $remotePath = "/home/${{ secrets.QA_RELEASE_SERVER_USER }}/deploy"   # .71: /home/root/deploy
+
+          $apiBase = "$env:GITLAB_URL/api/v4"
+          $projId  = [uri]::EscapeDataString($env:GITLAB_PROJECT)   # logcatch%2Fproduct-release
+
+          # ---------------------------------------------------------
+          # 1️⃣ GitLab 인증 토큰 준비
+          # ---------------------------------------------------------
+          Write-Host "1️⃣ GitLab authenticating..."
+          $glToken = "$env:GITLAB_TOKEN".Trim()
+          if (-not $glToken) {
+              Write-Host "   GITLAB_TOKEN 없음 → ID/PW로 OAuth 토큰 발급 시도"
+              $oauthRaw = (curl.exe -k -s -X POST "$env:GITLAB_URL/oauth/token" `
+                           --data-urlencode "grant_type=password" `
+                           --data-urlencode "username=$env:GITLAB_USER_ID" `
+                           --data-urlencode "password=$env:GITLAB_PW") -join "`n"
+              try { $glToken = ($oauthRaw | ConvertFrom-Json).access_token } catch { $glToken = "" }
+              if (-not $glToken) {
+                  Write-Error "❌ GitLab 토큰 발급 실패. (2FA 사용 계정이거나 password grant가 막혀 있으면 GITLAB_TOKEN 시크릿을 등록하세요)"
+                  exit 1
+              }
+          }
+          Write-Host "::add-mask::$glToken"
+          $authHeader = "Authorization: Bearer $glToken"
+
+          function Invoke-GitLabApi($url) {
+              for ($retry = 1; $retry -le 3; $retry++) {
+                  $raw = (curl.exe -k -s -f -H $authHeader $url) -join "`n"
+                  if ($LASTEXITCODE -eq 0 -and $raw) {
+                      try { return ($raw | ConvertFrom-Json) } catch { }
+                  }
+                  Write-Host "   Retry $retry/3: API call failed ($url)"
+                  Start-Sleep -Seconds 5
+              }
+              return $null
+          }
+
+          # ---------------------------------------------------------
+          # 2️⃣ 패키지 목록 조회 → QA 대상 버전(x.x.x.0) 중 최신 선택
+          # ---------------------------------------------------------
+          Write-Host "2️⃣ New Version Searching (GitLab Package Registry)..."
+          $allPkgs = @()
+          for ($page = 1; $page -le 20; $page++) {
+              $url = "$apiBase/projects/$projId/packages?package_type=generic&package_name=$($env:PACKAGE_NAME)&per_page=100&page=$page"
+              $res = Invoke-GitLabApi $url
+              if ($null -eq $res) {
+                  if ($page -eq 1) { Write-Error "❌ 패키지 목록 조회 실패 (URL/권한/토큰 확인)"; exit 1 }
+                  break
+              }
+              $items = @($res)
+              if ($items.Count -eq 0) { break }
+              $allPkgs += $items
+              if ($items.Count -lt 100) { break }
+          }
+
+          # 이름이 정확히 logcatch 이고, 버전이 x.x.x.0 형식인 것만 (2.9.5.6 / 2.9.4.666_455-... 제외)
+          $qaPkgs = $allPkgs | Where-Object {
+              $_.name -eq $env:PACKAGE_NAME -and
+              $_.version -match $env:QA_VERSION_PATTERN -and
+              ($null -eq $_.status -or $_.status -eq 'default')
+          }
+
+          Write-Host "All logcatch versions : $((@($allPkgs | Where-Object { $_.name -eq $env:PACKAGE_NAME }) | ForEach-Object { $_.version }) -join ', ')"
+          Write-Host "QA candidate versions : $((@($qaPkgs) | ForEach-Object { $_.version } | Select-Object -Unique) -join ', ')"
+
+          if (@($qaPkgs).Count -eq 0) { Write-Error "❌ QA 대상 버전(x.x.x.0)을 찾을 수 없습니다."; exit 1 }
+
+          # 버전 오름차순 → 같은 버전이 여러 번 올라왔으면 id(최근 업로드)가 큰 것
+          $latestPkg = $qaPkgs | Sort-Object { [version]$_.version }, { [long]$_.id } | Select-Object -Last 1
+          $latestVersion = $latestPkg.version
+          Write-Host "Selected latest: $latestVersion (package id: $($latestPkg.id))"
+
+          # ---------------------------------------------------------
+          # 3️⃣ QA 서버에 설치된 버전과 비교
+          # ---------------------------------------------------------
+          Write-Host "3️⃣ Server Version install checking..."
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "mkdir -p $remotePath"
+          $installedVersion = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "cat $remotePath/last_installed_version.txt 2>/dev/null || echo none"
+          if ($null -eq $installedVersion) { $installedVersion = "none" }
+          $installedVersion = $installedVersion.ToString().Trim()
+          Write-Host "Installed: $installedVersion"
+
+          if ($installedVersion -eq $latestVersion) {
+            Write-Host "[SKIP] The currently installed version ($installedVersion) is the latest. Stopping all operations."
+            echo "skip_all=true" >> $env:GITHUB_OUTPUT
+            echo "version=$installedVersion" >> $env:GITHUB_OUTPUT
+            echo "SKIP_INSTALL=true" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            exit 0
+          }
+
+          Write-Host "🚀 [NEW] New version found : $latestVersion"
+
+          # ---------------------------------------------------------
+          # 4️⃣ 패키지 안의 .bin 파일명 추출
+          # ---------------------------------------------------------
+          $files = Invoke-GitLabApi "$apiBase/projects/$projId/packages/$($latestPkg.id)/package_files?per_page=100"
+          $fileNames = @($files) | Sort-Object { [long]$_.id } | ForEach-Object { $_.file_name }
+          Write-Host "Package files: $($fileNames -join ', ')"
+
+          $mainFileName  = $fileNames | Where-Object { $_ -match '^logcatch_linux_x86-64_.+\.bin$' } | Select-Object -Last 1
+          $partyFileName = $fileNames | Where-Object { $_ -match '^logcatch_3rdparty_linux_x86-64_.+\.bin$' } | Select-Object -Last 1
+
+          if (-not $mainFileName -or -not $partyFileName) {
+              Write-Error "❌ 패키지($latestVersion)에서 설치 파일(.bin)을 찾지 못했습니다. main='$mainFileName' / 3rdparty='$partyFileName'"
+              exit 1
+          }
+
+          echo "skip_all=false" >> $env:GITHUB_OUTPUT
+          echo "version=$latestVersion" >> $env:GITHUB_OUTPUT
+
+          echo "SKIP_INSTALL=false" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "LATEST_VERSION=$latestVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "MAIN_FILE_NAME=$mainFileName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "PARTY_FILE_NAME=$partyFileName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          # 다음 스텝(다운로드)에서 사용할 토큰 (로그에는 마스킹됨)
+          echo "GL_TOKEN=$glToken" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: 🚀 Native SSH Deploy (GitLab Package Registry Download)
+        env:
+          SSH_KEY_DATA: ${{ secrets.SSH_PRIVATE_KEY }}
+          GITLAB_URL: "https://gitlab.dev14.external"
+          GITLAB_PROJECT: "logcatch/product-release"
+          PACKAGE_NAME: "logcatch"
+        if: env.SKIP_INSTALL != 'true'
+        run: |
+          # SSH 접속 준비
+          $keyPath = "$env:TEMP\id_auto"
+          $env:SSH_KEY_DATA.Trim() | Out-File -FilePath $keyPath -Encoding ASCII
+          $target = "${{ secrets.QA_RELEASE_SERVER_USER }}@${{ secrets.QA_RELEASE_SERVER_IP }}"
+          $remotePath = "/home/${{ secrets.QA_RELEASE_SERVER_USER }}/deploy"   # .71: /home/root/deploy
+          $mainName = "${env:MAIN_FILE_NAME}"
+          $partyName = "${env:PARTY_FILE_NAME}"
+
+          Write-Host " [Step 1] Initialize existing installation environment and clean previous installation files (.bin)...."
+          $cleanup = "sudo rm -f /etc/profile.d/logcatch.sh; sudo pkill -9 -u logcatch || true; sudo pkill -9 postgres || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch /var/lib/pgsql; rm -f $remotePath/*.bin"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $cleanup"
+
+          Write-Host " [Step 2] Deliver GitLab auth header to the QA server and download files..."
+          # 토큰을 명령줄에 노출하지 않도록 curl 설정 파일(-K)로 전달
+          $authCfg = "gitlab_auth.cfg"
+          "header = `"Authorization: Bearer $env:GL_TOKEN`"" | Out-File -FilePath $authCfg -Encoding ASCII -Force
+          scp -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $authCfg "${target}:${remotePath}/gitlab_auth.cfg"
+          Remove-Item $authCfg -Force -ErrorAction SilentlyContinue
+
+          # GitLab Generic Package 다운로드 URL
+          $projId = [uri]::EscapeDataString($env:GITLAB_PROJECT)
+          $pkgBaseUrl = "$env:GITLAB_URL/api/v4/projects/$projId/packages/generic/$($env:PACKAGE_NAME)/${env:LATEST_VERSION}"
+
+          #  [네트워크 끊김 완벽 방어]
+          # -f : 다운로드 실패 시 가짜 파일(HTML/JSON) 생성 방지
+          # --retry 3 / --retry-delay 2 : 실패 시 최대 3번 재시도
+          $downloadCmd = "chmod 600 $remotePath/gitlab_auth.cfg; curl -k -f -L --retry 3 --retry-delay 2 -K $remotePath/gitlab_auth.cfg -o $remotePath/$mainName '$pkgBaseUrl/$mainName' && curl -k -f -L --retry 3 --retry-delay 2 -K $remotePath/gitlab_auth.cfg -o $remotePath/$partyName '$pkgBaseUrl/$partyName'; rc=`$?; rm -f $remotePath/gitlab_auth.cfg; exit `$rc"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$downloadCmd"
+
+          # 💡 다운로드 검증
+          $verifyCmd = "test -s $remotePath/$mainName && test -s $remotePath/$partyName && echo OK || echo MISSING"
+          $verifyResult = (ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$verifyCmd").Trim()
+          if ($verifyResult -ne "OK") {
+          Write-Error "❌ 설치 파일 다운로드 실패 - 파일이 비어있거나 없습니다 (GitLab 경로/토큰 권한/QA서버→GitLab 접근 확인 필요)"
+          exit 1
+          }
+          Write-Host "✅ 다운로드 파일 검증 완료"
+
+
+          
+          Write-Host "[Step 3] Run installation script (Background Job with 120s Timeout)...."
+          
+          # [Step 3] 수정 부분
+          $install = "sudo chmod 755 $remotePath/$mainName $remotePath/$partyName; sudo LANG=C LC_ALL=C $remotePath/$mainName -b -f"
+          
+          # 프로필 수정 후 권한 보강
+          $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
+          
+          # 서비스 제어: 비동기(&) 보다는 직접 restart 명령어를 순차적으로 실행 (직관적 에러 확인을 위해)
+          $svcControl = "sudo systemctl daemon-reload; sudo systemctl restart logcatch_redis; sleep 3; sudo systemctl restart logcatch_server; sleep 3; sudo systemctl restart logcatch_taskmgr"
+
+          $fullCmd = "export TERM=linux; $install && $fixProfile && $svcControl"
+
+          $job = Start-Job -ScriptBlock {
+              param($keyPath, $target, $cmd)
+              $ErrorActionPreference = "Continue" 
+              ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$cmd 2>&1"
+          } -ArgumentList $keyPath, $target, $fullCmd
+
+          # 💡 타임아웃을 120초(2분)로 늘려 서비스 안착 시간을 확보합니다.
+          if (-not (Wait-Job $job -Timeout 120)) {
+              Write-Host "[TIMEOUT] 120s elapsed. Next step Port Check"
+              Stop-Job $job
+          } else {
+              Write-Host " Installation job finished naturally."
+          }
+          
+          # 4. 💡 로그 출력 (에러 방지 처리가 추가된 버전)
+          Write-Host "================= [ Install Log Summary ] ================="
+          try {
+              # -ErrorAction SilentlyContinue 를 추가하여 로그 내부의 경고가 에러를 유발하지 않게 함
+              $logData = Receive-Job $job -ErrorAction SilentlyContinue
+              if ($logData) {
+                  # 텍스트로 변환하여 출력 (에러 객체가 아닌 단순 문자열로 취급)
+                  $logData | Out-String | Write-Host
+              }
+          } catch {
+              Write-Host " There were some warnings while retrieving the logs, but we ignored them and proceeded."
+          }
+          Write-Host "=============================================================="
+          
+          Remove-Job $job
+
+          # 5. 💡 강제 성공 처리 및 즉시 다음 단계 진행
+          $env:LASTEXITCODE = 0
+          Write-Host " Installation step finished. Moving to Port Polling..."
+
+          
+          Write-Host " [Step 4] Port (18443) waiting to start..."
+          $success = $false
+          for ($i = 1; $i -le 30; $i++) {
+              Write-Host " Attempt $i/30: Polling Port 18443..."
+              $check = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "sudo netstat -tpln | grep -i listen | grep -c :18443"
+              if ($check.Trim() -match '^[1-9][0-9]*$') {
+                  Write-Host " Port open detected! Installation complete. Proceeding to Cypress test."
+                  $success = $true
+                  break
+              }
+              Start-Sleep -Seconds 15
+          }
+          
+          # 💡 포트가 끝내 안 열리면 워크플로우를 실패 처리하여 원인을 바로 알 수 있게 합니다.
+          
+          if ($success) {
+              Write-Host " Port open detected! Installation complete."
+              Write-Host " [Step 5] Record successful installation version on server: $env:LATEST_VERSION"
+              # 리눅스 서버에 텍스트 파일로 버전 저장
+             ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "echo $env:LATEST_VERSION > $remotePath/last_installed_version.txt"
+          } else {
+              Write-Error "❌ 18443 The port is not open. Please check the installation log."
+              exit 1
+          }
+
+
+  # ====================================================
+  # [Job 2] 테스트 실행 (Runner 5개 병렬 구동)
+  # ====================================================
+  cypress-run:
+    needs: deploy-qa # 👇 [핵심] deploy-qa 작업이 완전히 끝난 후에만 실행되도록 설정
+    # 👇 새 버전이 아닐 경우 이 Job 실행 안 함
+    if: needs.deploy-qa.outputs.skip_all != 'true'
+    runs-on: [self-hosted, PC-Auto]
+    strategy:
+      fail-fast: false
+      matrix:
+        containers: [1, 2, 3, 4, 5]
+
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Clean Previous Reports
+        run: |
+          Remove-Item -Path "cypress/reports" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "cypress/screenshots" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "cypress/videos" -Recurse -Force -ErrorAction SilentlyContinue
+
+      - name: Get Current Time
+        run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Create Dummy Report File
+        run: |
+          $dir = "cypress/reports/json_logs"
+          if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir }
+          $suiteUUID = [guid]::NewGuid().ToString()
+          $testUUID  = [guid]::NewGuid().ToString()
+          
+          $dummyContent = @"
+          {
+            "stats": { "suites": 1, "tests": 1, "passes": 1, "pending": 0, "failures": 0, "start": "2024-01-01T00:00:00.000Z", "end": "2024-01-01T00:00:01.000Z", "duration": 100, "testsRegistered": 1, "passPercent": 100, "pendingPercent": 0, "other": 0, "hasOther": false, "skipped": 0, "hasSkipped": false },
+            "results": [ { "uuid": "$suiteUUID", "title": "System Check", "fullFile": "", "file": "", "beforeHooks": [], "afterHooks": [], "tests": [ { "title": "Report Placeholder", "fullTitle": "System Check Report Placeholder", "timedOut": false, "duration": 100, "state": "passed", "speed": "fast", "pass": true, "fail": false, "pending": false, "context": null, "code": "true", "err": {}, "uuid": "$testUUID", "parentUUID": "$suiteUUID", "isHook": false, "skipped": false } ], "suites": [], "passes": ["$testUUID"], "failures": [], "pending": [], "skipped": [], "duration": 100, "root": false, "rootEmpty": false, "_timeout": 2000 } ],
+            "meta": { "mocha": { "version": "7.0.0" }, "mochawesome": { "options": { "quiet": false, "reportFilename": "mochawesome", "saveHtml": false, "saveJson": true, "consoleReporter": "spec", "useInlineDiffs": false, "code": true }, "version": "7.1.3" }, "marge": { "options": { "reportDir": "cypress/reports/json_logs", "overwrite": false, "html": false, "json": true }, "version": "6.2.0" } }
+          }
+          "@
+          $dummyContent | Out-File -FilePath "$dir/dummy.json" -Encoding UTF8
+
+      - name: Cypress Run
+        id: cypress
+        env:
+          CYPRESS_BASE_URL: "https://10.10.54.71:18443/logcatch"
+          CYPRESS_API_URL: "http://10.10.54.5:1234/"
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 👇 [추가] 보안 인증서 경고를 무시하고 접속을 허용합니다.
+          NODE_TLS_REJECT_UNAUTHORIZED: 0
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          # 2. 11번 파일을 찾아서 아예 삭제 ("*11_Dev_Basic*" 시작하는 파일들 이 러너 환경에서만 삭제됨 )
+          Get-ChildItem -Path "cypress/e2e/Basic_functions_Dev_check" -Recurse | Where-Object { $_.Name -like "*11_Dev_Basic*" } | Remove-Item -Force
+          Write-Host "✅ 11_Basic 운영 태스크 파일을 물리적으로 제거하여 실행에서 제외했습니다."
+
+          # 2. 필수 패키지 설치 (node-ssh 포함) 🌟 중요
+          Write-Host "📦 패키지 설치 시작 (npm ci)..."
+          npm ci 
+
+          # 3. Cypress 바이너리 준비
+          Write-Host "🚀 Cypress 바이너리 확인 및 설치..."
+          npx cypress install
+          
+          npm install cy2 mochawesome mochawesome-merge mochawesome-report-generator --save-dev
+        
+
+          # 스펙 경로를 Dev_Check 폴더로 변경하고 따옴표 처리를 안전하게 수정했습니다.
+          # $specPath = "cypress/e2e/UI_Module_Dev_Check/**/*.cy.js"
+          # 수정된 부분: 중괄호를 사용하여 두 폴더의 모든 .cy.js 파일을 실행 대상으로 잡습니다.
+          $specPath = "cypress/e2e/{UI_Module_Dev_Check,Basic_functions_Dev_check}/**/*.cy.js"
+
+          # 💡 Cypress 실행 결과를 cypress.log에 저장하고, 에러가 나더라도 다음 줄로 넘어가도록 처리합니다.
+          $ErrorActionPreference = "Continue"
+          cmd /c "chcp 65001 & npx cy2 run --record --spec $specPath --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          # 로그 출력
+          Get-Content cypress.log
+
+          # 💡 [핵심 예외 처리] 실행이 끝난 후 로그를 분석하여 '깡통 에러'인지 진짜 에러인지 판별합니다.
+          $logContent = Get-Content cypress.log -Raw -Encoding UTF8
+
+
+          if ($LASTEXITCODE -ne 0) {
+          $hasHookError   = $logContent -match "matched no report files"
+          $hasTestFailure = $logContent -match "\d+ failing"
+          if ($hasHookError -and -not $hasTestFailure) {
+          Write-Host "[INFO] Hook error only - normal exit"
+          exit 0
+            } else {
+            Write-Host "[FAIL] Test failure detected"
+           exit 1
+          }
+          }
+
+      - name: Extract Dashboard URL
+        if: always()
+        run: |
+          $logPath = "cypress.log"
+          if (Test-Path $logPath) {
+            $content = Get-Content $logPath -Raw -Encoding UTF8
+            if ($content -match "(/run/[a-zA-Z0-9-]+)") {
+                $runPath = $matches[1]
+                $realUrl = "http://10.10.54.5:8080$runPath"
+                Write-Host "✅ 대시보드 URL 생성 완료: $realUrl"
+                echo $realUrl | Out-File -FilePath run_url.txt -Encoding UTF8
+            } else {
+                Write-Host "⚠️ 로그에서 Run ID를 찾을 수 없습니다."
+                echo "http://10.10.54.5:8080/projects" | Out-File -FilePath run_url.txt -Encoding UTF8
+            }
+          } else { Write-Host "❌ cypress.log 파일이 없습니다." }
+
+      - name: Upload URL File
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: dashboard-url-${{ matrix.containers }}
+          path: run_url.txt
+          retention-days: 1
+          if-no-files-found: ignore
+
+      - name: Copy JSON to visible directory
+        if: always()
+        run: |
+            $src = "cypress/reports/json_logs/.jsons"
+            $dst = "cypress/reports/json_logs"
+            if (Test-Path $src) {
+            Get-ChildItem -Path $src -Force -Filter "*.json" | Copy-Item -Destination $dst
+            Write-Host "Copied: $((Get-ChildItem -Path $dst -Filter '*.json').Count) files"
+            } else {
+            Write-Host "Source not found: $src"
+            }    
+
+       # 💡 [추가] 업로드 전 JSON 파일명에 컨테이너 번호를 붙여 중복 방지
+      - name: Rename Reports for Parallel Sync
+        if: always()
+        run: |
+          $dir = "cypress/reports/json_logs"
+          Get-ChildItem -Path "$dir/*.json" | ForEach-Object { 
+            Rename-Item $_.FullName -NewName "runner-${{ matrix.containers }}-$($_.Name)" 
+          }   
+
+      - name: 📂 리포트 데이터 업로드
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: Dev-Raw-Data-${{ matrix.containers }}
+          path: |
+            cypress/reports/json_logs
+            cypress/screenshots
+          retention-days: 1
+          if-no-files-found: ignore
+
+  # ====================================================
+  # [Job 2-1] 태스크 재시작 테스트 (단독 실행)
+  # ====================================================
+  restart-task-run:
+    needs: [deploy-qa, cypress-run]  # Job 2이 끝나야 시작
+    # 👇 새 버전이 아닐 경우 이 Job 실행 안 함
+    if: always() && needs.deploy-qa.result == 'success' && needs.deploy-qa.outputs.skip_all != 'true'    
+    runs-on: [self-hosted, PC-Auto]
+    # 👇 [추가] cy2 실행을 위한 환경 변수 복사
+    env:
+      CYPRESS_BASE_URL: "https://10.10.54.71:18443/logcatch" # 💡 필수 추가
+      CYPRESS_API_URL: "http://10.10.54.5:1234/"
+      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      COMMIT_INFO_MESSAGE: ${{ github.event.head_commit.message }}
+      NODE_TLS_REJECT_UNAUTHORIZED: 0                       # 💡 보안 경고 무시
+      NO_COLOR: 1
+      CI: true
+    # continue-on-error: true # 에러가 나도 업로드는 해야 함
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Cypress Run (Restart Task Spec)
+        run: |
+          # 1. 초기 설정 및 설치
+          $ErrorActionPreference = "Continue" 
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          # 2. 필수 패키지 설치 (node-ssh 포함) 🌟 중요
+          Write-Host "📦 패키지 설치 시작 (npm ci)..."
+          npm ci 
+
+          # 3. Cypress 바이너리 준비
+          Write-Host "🚀 Cypress 바이너리 확인 및 설치..."
+          npx cypress install
+
+
+          # 2. 💡 파일 존재 여부 체크 및 예외 처리
+          $targetFile = Get-ChildItem -Path "cypress/e2e/Basic_functions_Dev_check" -Recurse | 
+                        Where-Object { $_.Name -like "*11_Dev_Basic*" } | 
+                        Select-Object -First 1
+
+          if (-not $targetFile) {
+              # 💡 에러(Write-Error) 대신 정보성 메시지 출력 후 종료
+              Write-Host "⚠️ [SKIP] 실행할 테스트 파일(*11_Dev_Basic*)이 존재하지 않습니다. 작업을 건너뜁니다."
+              exit 0  # 🚀 성공 코드를 반환하여 파이프라인 중단을 막음
+          }
+
+          $targetSpec = $targetFile.FullName
+          Write-Host "🚀 [Job 2] 단독 실행 파일: $targetSpec"
+
+          # 실행 시 변수를 따옴표로 감싸서 공백/한글 이슈 방지
+          cmd /c "chcp 65001 & npx cy2 run --record --spec `"$targetSpec`" --browser chrome --group 'Restart-Job' --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress_restart.log -Encoding UTF8
+         
+          Get-Content cypress_restart.log
+
+          $logContent = Get-Content cypress_restart.log -Raw -Encoding UTF8
+           if ($LASTEXITCODE -ne 0) {
+            $hasHookError   = $logContent -match "matched no report files"
+            $hasTestFailure = $logContent -match "\d+ failing"
+           if ($hasHookError -and -not $hasTestFailure) {
+                Write-Host "[INFO] Hook error only - normal exit"
+                exit 0
+              } else {
+                 Write-Host "[FAIL] Test failure detected"
+                exit 1
+             }
+           }
+      - name: Copy JSON to visible directory
+        if: always()
+        run: |
+             $src = "cypress/reports/json_logs/.jsons"
+             $dst = "cypress/reports/json_logs"
+             if (Test-Path $src) {
+             Get-ChildItem -Path $src -Force -Filter "*.json" | Copy-Item -Destination $dst
+             Write-Host "Copied: $((Get-ChildItem -Path $dst -Filter '*.json').Count) files"
+             } else {
+              Write-Host "Source not found: $src"
+             }
+
+      # 💡 [추가] 재시작 테스트 리포트 명칭 고유화
+      - name: Rename Restart Reports
+        if: always()
+        run: |
+          $dir = "cypress/reports/json_logs"
+          Get-ChildItem -Path "$dir/*.json" -ErrorAction SilentlyContinue | ForEach-Object { 
+            Rename-Item $_.FullName -NewName "restart-$($_.Name)" 
+          }    
+          
+      - name: 📂 리포트 데이터 업로드
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          # 💡 패턴 매칭을 위해 이름을 맞춥니다.
+          name: Dev-Raw-Data-Restart 
+          path: |
+            cypress/reports/json_logs/*.json
+            cypress/screenshots/**
+          retention-days: 1
+          if-no-files-found: ignore
+
+  # ====================================================
+  # [Job 3] 종합 알림 (데이터 통합 & 리포트 생성)
+  # ====================================================
+  notify-result:
+    needs: [deploy-qa, cypress-run, restart-task-run] # 💡 두 Job이 모두 끝나야 실행
+    if: always() && needs.deploy-qa.outputs.skip_all != 'true'
+    runs-on: [self-hosted, PC-Auto]
+    env:
+      DEPLOY_STATUS: ${{ needs.deploy-qa.result }}
+      CYPRESS_STATUS: ${{ needs.cypress-run.result }}
+      # 👇 [수정] outputs에서 버전명을 가져옵니다.
+      VERSION_NAME: ${{ needs.deploy-qa.outputs.version }}
+
+    
+    defaults:
+      run:
+        shell: powershell -ExecutionPolicy Bypass -Command "{0}"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      
+      - name: 🧹 기존 데이터 청소 (Clean Workspace)
+        run: |
+          Write-Host "이전 작업의 잔여 데이터를 삭제합니다..."
+          Remove-Item -Path "all_raw_data" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "final_report_Dev" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "downloaded_url" -Recurse -Force -ErrorAction SilentlyContinue
+          Write-Host "Clear Finish!"
+
+      - name: Get Current Time
+        run: echo "NOW=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Download Dashboard URL
+        uses: actions/download-artifact@v7
+        continue-on-error: true
+        with:
+          pattern: dashboard-url-*
+          merge-multiple: true
+          path: downloaded_url
+
+      - name: Download All Raw Data
+        uses: actions/download-artifact@v7
+        with:
+          pattern: "*-Raw-Data*" # 💡 Dev-Raw-* 와 Restart-Raw-Data를 모두 통합 다운로드
+          path: all_raw_data
+          merge-multiple: true
+          
+      - name: 🔍 파일 구조 확인
+        run: Get-ChildItem -Path all_raw_data -Recurse       
+
+      - name: 🔄 리포트 하나로 통합하기
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+          # 💡 [핵심 보완] JSON 파일이 있는지 먼저 확인 (설치 실패 시 대응)
+          $reportDir = "all_raw_data"
+          if (-not (Test-Path $reportDir) -or (Get-ChildItem -Path "$reportDir\**\*.json" -ErrorAction SilentlyContinue).Count -eq 0) {
+              Write-Host "⚠️ [INFO] No JSON report file to integrate. (Test not executed due to installation step error)"
+              # 빈 배열을 가진 더미 JSON 생성하여 이후 단계 에러 방지
+              "[]" | Out-File -FilePath "merged_report.json" -Encoding UTF8
+              exit 0
+          }
+
+          npm install mochawesome-merge mochawesome-report-generator --no-save
+    
+          $jsonFiles = (Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" |
+          Select-Object -ExpandProperty FullName |
+          ForEach-Object { "`"$_`"" }) -join " "
+          cmd /c "npx mochawesome-merge $jsonFiles > merged_report.json"
+          
+          if (Test-Path "merged_report.json") {
+              npx marge merged_report.json --reportDir ./final_report_Dev --inline --charts --reportTitle "Dev Report" --reportFilename "LogCatch_Dev_Report"
+          }
+
+              # 스크린샷 base64 임베딩
+              $htmlPath = "final_report_Dev/LogCatch_Dev_Report.html"
+               if (Test-Path $htmlPath) {
+               $html = Get-Content $htmlPath -Raw -Encoding UTF8
+               $pattern = [regex]'<img[^>]+src="([^"]*\.png)"[^>]*>'
+               $html = $pattern.Replace($html, {
+               param($m)
+               $relPath = $m.Groups[1].Value
+               $absPath = Join-Path (Get-Location) $relPath
+               if (Test-Path $absPath) {
+               $b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($absPath))
+               $m.Value -replace [regex]::Escape($relPath), "data:image/png;base64,$b64"
+               } else { $m.Value }
+               })
+               $html | Out-File -FilePath $htmlPath -Encoding UTF8
+               Write-Host "Screenshot embedding complete"
+               }
+
+      - name: Send Google Chat (Depth "Flaky 차단 + 레이아웃 통일 + 버전명 동적/정적 할당 )
+        if: always() 
+        env:
+          WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
+          DEPLOY_STATUS: ${{ needs.deploy-qa.result }}
+          CYPRESS_STATUS: "${{ needs.cypress-run.result }}"
+          RESTART_STATUS: "${{ needs.restart-task-run.result }}"
+          VERSION_NAME: ${{ needs.deploy-qa.outputs.version }}
+          PRODUCT_NAME: "로그캐치"
+          TEST_TYPE: "Dev_RELEASE"
+          MSG_SUCCESS: "*[성공]*[Auto-PC]"
+          MSG_FAIL: "*[실패]*[Auto-PC]"
+          MSG_TITLE: "확인결과"
+          LABEL_DASH: "대시보드"
+          LABEL_GIT: "GitHub(Report)"
+          NOW: ${{ env.NOW }}
+        run: |
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          
+          $failedSpecNames = @()
+          $isActuallyFailed = $false
+          $totalFailCount = 0
+
+          Write-Host "============= [🔍 데이터 정밀 분석 시작 (핀셋 추출 & Flaky 완벽 방어)] ============="
+          
+          # [Step 1] 배포 단계 에러 확인 (Dev_Release/ALPHA 전용)
+          if ("${{ env.DEPLOY_STATUS }}".ToLower() -eq "failure") {
+              $isActuallyFailed = $true
+              $failedSpecNames += "Deployment Stage Error"
+          }
+
+                   # [Step 2] 테스트 단위 최종 상태 판정 (재시도 후 성공 = 통과/Flaky)
+          function Get-AllTests($suite, $specFile) {
+              $f = if ($suite.file) { $suite.file } else { $specFile }
+              foreach ($t in @($suite.tests)) {
+                  if ($null -eq $t) { continue }
+                  # 'before/after each' 훅 실패는 해당 테스트와 같은 키로 묶음 (재시도 대상이므로)
+                  $key = $t.fullTitle -replace '"(before|after) each" hook for "(.+)"$', '$2'
+                  [pscustomobject]@{ File = $f; Key = $key; State = $t.state }
+              }
+              foreach ($s in @($suite.suites)) { if ($s) { Get-AllTests $s $f } }
+          }
+
+          $allTests = @()
+          $jsonFiles = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*.json" -ErrorAction SilentlyContinue |
+                       Where-Object { $_.Name -ne "merged_report.json" -and $_.Name -notlike "*dummy.json" }
+          foreach ($file in $jsonFiles) {
+              try {
+                  $content = Get-Content $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+                  foreach ($r in @($content.results)) { $allTests += @(Get-AllTests $r $r.file) }
+              } catch { Write-Host "[WARN] JSON parse failed: $($file.Name)" }
+          }
+
+          $flakyCount = 0
+          $groups = $allTests | Where-Object { $_.File } | Group-Object { "$($_.File)|$($_.Key)" }
+          foreach ($g in $groups) {
+              $states = @($g.Group | ForEach-Object { $_.State })
+              if ($states -contains 'failed') {
+                  if ($states -contains 'passed') {
+                      $flakyCount++
+                      Write-Host "[FLAKY] passed on retry: $($g.Name)"
+                  } else {
+                      $isActuallyFailed = $true
+                      $totalFailCount++
+                      $failedSpecNames += Split-Path ($g.Group[0].File -replace '\\', '/') -Leaf
+                      Write-Host "[FAIL] final failure: $($g.Name)"
+                  }
+              }
+          }
+          Write-Host "Result: FAIL=$totalFailCount / FLAKY=$flakyCount"
+
+          # [Step 3] Job 자체 상태 확인 (시스템 크래시 대비)
+          $cyStatus = "${{ env.CYPRESS_STATUS }}".ToLower()
+          $restartStatus = "${{ env.RESTART_STATUS }}".ToLower()
+          if ($cyStatus -eq "failure" -or $cyStatus -eq "cancelled" -or $restartStatus -eq "failure" -or $restartStatus -eq "cancelled") {
+              $isActuallyFailed = $true
+          }
+
+          # 중복 제거 및 1차 필터링
+          $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" -or $_ -eq "Deployment Stage Error" } | Select-Object -Unique
+
+          # [Step 4] 스크린샷 물리 경로 추적 (최후의 보루)
+          # JSON에서 진짜 실패한 파일명을 이미 찾았다면 스크린샷은 뒤지지 않음 (Flaky 찌꺼기 방지)
+          if ($isActuallyFailed -and $uniqueFailures.Count -eq 0) {
+              $failedScreenshots = Get-ChildItem -Path "all_raw_data" -Recurse -Filter "*failed*.png" -ErrorAction SilentlyContinue
+              if ($failedScreenshots.Count -gt 0) {
+                  foreach ($shot in $failedScreenshots) {
+                      $shotMatches = [regex]::Matches($shot.FullName, '([^\\/":*?<>|]+\.cy\.js)')
+                      foreach ($m in $shotMatches) { $failedSpecNames += $m.Value.Trim() }
+                  }
+                  $uniqueFailures = $failedSpecNames | Where-Object { $_ -match "\.cy\.js$" -or $_ -eq "Deployment Stage Error" } | Select-Object -Unique
+              }
+          }
+
+          # [Step 5] 대시보드 URL 탐색
+          $dashUrl = "http://10.10.54.5:8080/projects"
+          $urlFiles = Get-ChildItem -Path "all_raw_data", "downloaded_url" -Recurse -Filter "run_url.txt" -ErrorAction SilentlyContinue
+          foreach ($uFile in $urlFiles) {
+              $tempUrl = (Get-Content $uFile.FullName -Raw -Encoding UTF8).Trim()
+              if ($tempUrl -match "http" -and $tempUrl -notmatch "projects$") {
+                  $dashUrl = $tempUrl
+                  break
+              }
+          }
+
+          # [Step 6] 메시지 조립
+          $vName = if ($env:VERSION_NAME) { $env:VERSION_NAME } else { "Unknown" }
+          $time  = "$env:NOW"
+          
+          if ($isActuallyFailed) {
+              "FINAL_STATUS=FAIL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              $title = $env:MSG_FAIL.Replace("[실패]", "*[실패]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$vName)"
+              
+              $count = if ($totalFailCount -gt 0) { $totalFailCount } elseif ($uniqueFailures.Count -gt 0) { $uniqueFailures.Count } else { 1 }
+              $specListString = if ($uniqueFailures.Count -gt 0) { $uniqueFailures -join ", " } else { "System Error or Crash" }
+              
+              $statusDetail = "FAIL: $count script ( $specListString )"
+          } else {
+              "FINAL_STATUS=PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              $title = $env:MSG_SUCCESS.Replace("[성공]", "*[성공]*") + " $($env:PRODUCT_NAME) $($env:TEST_TYPE) $($env:MSG_TITLE) (v$vName)"
+              $statusDetail = "" 
+          }
+
+          $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          # 메시지 라인 생성
+          $msgLines = @()
+          if ($isActuallyFailed) {
+              $msgLines += "$title"
+              $msgLines += "($time)"
+              $msgLines += "$statusDetail"
+          } else {
+              $msgLines += "$title"
+              $msgLines += "($time)"
+          }
+          $msgLines += ""
+          $msgLines += "$($env:LABEL_DASH) : $dashUrl"
+          $msgLines += "$($env:LABEL_GIT) : $runUrl"
+          
+          # 전송
+          $payload = @{ text = ($msgLines -join "`n") } | ConvertTo-Json -Compress
+          $utf8Bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
+          Invoke-RestMethod -Uri "$env:WEBHOOK_URL" -Method Post -ContentType "application/json; charset=utf-8" -Body $utf8Bytes
