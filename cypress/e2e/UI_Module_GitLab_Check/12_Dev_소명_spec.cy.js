@@ -112,7 +112,7 @@ describe('로그캐치 사이트 테스트', () => {
 
 
    // ==========================================
-   // STEP : 결재 서브메뉴 - 정책
+   // STEP : 결재 서브메뉴 - 소명
    // ==========================================
    // 수정: side-menu 클래스로 정확히 타겟팅
   //  cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', '소명').click({ force: true });
@@ -171,10 +171,28 @@ cy.get('.v-btn__content').filter(':visible').contains('신청 결재').should('b
 cy.get('.v-btn__content').filter(':visible').contains('담당 결재').should('be.visible');
 cy.get('.v-btn__content').filter(':visible').contains('참조 결재').should('be.visible');
 
-// 기간 달력 아이콘 
-cy.get('i.v-icon.material-icons').filter(':visible').contains('event').should('exist');
-// 기간 입력 필드
-cy.get('input[aria-label="기간"]').should('exist');
+// // 기간 달력 아이콘 
+// cy.get('i.v-icon.material-icons').filter(':visible').contains('event').should('exist');
+// // 기간 입력 필드
+// cy.get('input[aria-label="기간"]').should('exist');
+
+ // 기간 입력칸: 달력 아이콘(event)이 있는 v-input만 수집
+ // ※ 2.9.5.0부터 aria-label="기간" 이 빈 값으로 바뀌어 아이콘 기준으로 찾음
+     const dateInputs = () =>
+      cy.get('.v-input__icon--prepend-inner i.material-icons')
+        .filter(':visible')
+        .filter((i, el) => el.innerText.trim() === 'event')
+        .closest('.v-input');
+
+    // 시작/종료 날짜 달력 아이콘 확인 (화면마다 호출)
+    const checkDateIcons = () => {
+      dateInputs().should('have.length', 2); // 시작 ~ 종료
+      dateInputs().eq(0).find('i.material-icons').should('be.visible').and('contain', 'event');
+      dateInputs().eq(1).find('i.material-icons').should('be.visible').and('contain', 'event');
+    };
+
+    // 시작/종료 날짜 달력 아이콘 확인
+    checkDateIcons();
 
 // 부서 콤보박스
 cy.get('input[aria-label="부서"]').should('exist');
@@ -224,7 +242,11 @@ cy.contains('.v-btn__content', '신청 결재')
 
 // 검색 조건 영역 확인
 cy.contains('.c-headline', '검색 조건').should('exist');
-cy.get('input[aria-label="기간"]').should('exist');
+
+//cy.get('input[aria-label="기간"]').should('exist');
+// 시작/종료 날짜 달력 아이콘 확인
+checkDateIcons();
+
 cy.get('i.v-icon.material-icons').filter(':visible').contains('event').should('exist');
 cy.get('input[aria-label="결재 상태"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('settings').should('exist');
@@ -254,7 +276,11 @@ cy.url().should('include', '/approval/document/my-pending-approvals');
 
 // 검색 조건 영역 확인
 cy.contains('.c-headline', '검색 조건').should('exist');
-cy.get('input[aria-label="기간"]').should('exist');
+
+//cy.get('input[aria-label="기간"]').should('exist');
+// 시작/종료 날짜 달력 아이콘 확인
+checkDateIcons();
+
 cy.get('i.v-icon.material-icons').filter(':visible').contains('event').should('exist');
 cy.get('input[aria-label="부서"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('settings').should('exist');
@@ -289,7 +315,11 @@ cy.url().should('include', '/approval/document/references');
 
 // 검색 조건 영역 확인
 cy.contains('.c-headline', '검색 조건').should('exist');
-cy.get('input[aria-label="기간"]').should('exist');
+
+//cy.get('input[aria-label="기간"]').should('exist');
+// 시작/종료 날짜 달력 아이콘 확인
+checkDateIcons();
+
 cy.get('i.v-icon.material-icons').filter(':visible').contains('event').should('exist');
 cy.get('input[aria-label="부서"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('settings').should('exist');
@@ -377,9 +407,9 @@ cy.get('button.btn-search').should('be.visible').and('contain.text', '검색');
 // 위험도 필터 - 기본값 "전체"
 cy.contains('.filter-label', '위험도').parent().within(() => {
   cy.get('button.sev-filter-btn--active').should('have.text', '전체');
-  cy.get('button.sev-filter-btn--1').should('have.text', '높음');
-  cy.get('button.sev-filter-btn--2').should('have.text', '보통');
-  cy.get('button.sev-filter-btn--3').should('have.text', '낮음');
+  cy.get('button.sev-filter-btn--1').should('have.text', '심각');
+  cy.get('button.sev-filter-btn--2').should('have.text', '경계');
+  cy.get('button.sev-filter-btn--3').should('have.text', '주의');
 });
 
 // 기간 필터
@@ -414,7 +444,7 @@ cy.get('body').then(($body) => {
       cy.wrap($row).within(() => {
         // 1. 위험도 칩
         cy.get('.v-chip--label').first().invoke('text').then((text) => {
-          expect(['높음', '보통', '낮음']).to.include(text.trim());
+          expect(['심각', '경계', '주의']).to.include(text.trim());
         });
 
         // 2. 사용자 뱃지 - "person" 아이콘 + 이름

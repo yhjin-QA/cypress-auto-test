@@ -304,29 +304,30 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 검출 - 필터 - [전처리 인코더 설정] 화면 출력 확인 완료 ');
 
 
-    // v3.0.4.0_R34865 추가 메뉴
-    // 검출탭 > 필터 > 식별자 패턴 관리 탭 클릭
-    cy.log('--- 식별자 패턴 관리 탭 클릭 ---');
-    cy.contains('.v-btn__content', '식별자 패턴 관리').should('be.visible').click({ force: true });
-    cy.wait(2000);
-    cy.log('--- 화면 검증 시작 ---');
-    cy.get('.v-icon.fa-plus').filter(':visible').should('be.visible');
-    cy.get('.material-icons').filter(':visible').contains('autorenew').should('be.visible');
-    cy.get('.v-icon.fa-search').filter(':visible').should('be.visible');
+    // // v3.0.4.0_R34865 추가 메뉴
+    // v2.9.5.0 에서 삭제됨. 검출 > 개인정보 유형 정의 로 메뉴정리됨.
+    // // 검출탭 > 필터 > 식별자 패턴 관리 탭 클릭
+    // cy.log('--- 식별자 패턴 관리 탭 클릭 ---');
+    // cy.contains('.v-btn__content', '식별자 패턴 관리').should('be.visible').click({ force: true });
+    // cy.wait(2000);
+    // cy.log('--- 화면 검증 시작 ---');
+    // cy.get('.v-icon.fa-plus').filter(':visible').should('be.visible');
+    // cy.get('.material-icons').filter(':visible').contains('autorenew').should('be.visible');
+    // cy.get('.v-icon.fa-search').filter(':visible').should('be.visible');
 
-    // 타이틀 문구확인
-    cy.contains('span.title', '식별자').should('be.visible').and('have.class', 'font-weight-bold');
+    // // 타이틀 문구확인
+    // cy.contains('span.title', '식별자').should('be.visible').and('have.class', 'font-weight-bold');
 
-    // 트리영역 폴더 문구확인
-    cy.contains('label.text-label', '식별자 패턴 그룹').should('exist');
-    cy.contains('label.text-label', 'Pattern Korea').should('exist');
-    cy.contains('label.text-label', 'Pattern Korea2').should('exist');
+    // // 트리영역 폴더 문구확인
+    // cy.contains('label.text-label', '식별자 패턴 그룹').should('exist');
+    // cy.contains('label.text-label', 'Pattern Korea').should('exist');
+    // cy.contains('label.text-label', 'Pattern Korea2').should('exist');
 
-    // 컬럼 정렬 상태 확인
-    cy.contains('th.column.sortable', '개인정보 유형').should('be.visible').and('have.class', 'asc');
-    cy.contains('th.column.sortable', '식별자 패턴').should('be.visible').and('have.class', 'asc');
+    // // 컬럼 정렬 상태 확인
+    // cy.contains('th.column.sortable', '개인정보 유형').should('be.visible').and('have.class', 'asc');
+    // cy.contains('th.column.sortable', '식별자 패턴').should('be.visible').and('have.class', 'asc');
 
-    cy.log('✅ 검출 - 필터 - [식별자 패턴관리] 화면 출력 확인 완료 ');
+    // cy.log('✅ 검출 - 필터 - [식별자 패턴관리] 화면 출력 확인 완료 ');
 
 
     ////////////////////////////////////////

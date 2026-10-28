@@ -109,30 +109,68 @@ cy.contains('button', '점검').click({ force: true });
 cy.wait(2000);
 cy.log('--- 화면 검증 시작 ---');
 
-// [수정] 검색 버튼 - 숨겨진 중복 요소 방지를 위해 :visible 필터 우선 적용
+// 검색 조건 헤더 + 검색 버튼 (숨겨진 중복 요소 방지 → :visible)
+cy.get('.c-headline').filter(':visible').contains('검색 조건').should('be.visible');
 cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
 
-// [수정] 날짜 선택 입력란 - aria-label로 직접 확인 (끝에 공백 포함 주의)
-cy.get('input[aria-label="날짜 선택 "]').filter(':visible').should('be.visible');
-cy.get('.material-icons').filter(':visible').contains('event').should('be.visible');
+// 기간 입력칸: 달력 아이콘(event)이 있는 v-input만 수집
+// ※ 2.9.5.0부터 aria-label="기간" 이 빈 값으로 바뀌어 아이콘 기준으로 찾음
+// 기간 입력칸: 달력 아이콘(event)이 있는 v-input만 수집
+const dateInputs = () =>
+  cy.get('.v-input__icon--prepend-inner i.material-icons')
+    .filter(':visible')
+    .filter((i, el) => el.innerText.trim() === 'event')
+    .closest('.v-input');
 
-// [신규] 업무시스템 콤보박스
+// 기간 범위 1칸 확인 (예: 점검 대시보드 - '2026-10-21 - 2026-10-28')
+const checkDateRange = () => {
+  dateInputs().should('have.length', 1);
+  dateInputs().find('i.material-icons').should('be.visible').and('contain', 'event');
+
+  // placeholder 끝에 공백이 있음('날짜 선택 ') → 공백 무시하고 비교
+  dateInputs().find('input[readonly]')
+    .should('have.attr', 'placeholder')
+    .and('match', /^날짜 선택\s*$/);
+
+  // 기본값 형식: YYYY-MM-DD - YYYY-MM-DD
+  dateInputs().find('input[readonly]').invoke('val')
+    .should('match', /^\d{4}-\d{2}-\d{2} - \d{4}-\d{2}-\d{2}$/);
+};
+
+checkDateRange();
+
+
+// 업무시스템 콤보박스
 cy.get('input[aria-label="업무시스템"]')
   .filter(':visible')
   .should('be.visible')
   .and('have.attr', 'role', 'combobox');
 
-// 자동갱신안함 문구 및 슬라이더 확인
-cy.contains('.item-margin', '자동 갱신 안함').should('be.visible');
-cy.get('input[role="slider"]')
-  .should('exist')
-  .and('have.attr', 'aria-valuenow', '0')
-  .and('have.attr', 'aria-valuemax', '30');
+// 자동 갱신 문구 + 슬라이더 (기본값 0 = 갱신 안함, 최대 30)
+cy.get('.c-interval-progress-bar').filter(':visible').within(() => {
+  cy.get('.c-interval-icon').should('contain.text', 'autorenew');
+  cy.contains('.c-interval-label span', '자동 갱신 안함').should('be.visible');
+  cy.get('input[role="slider"]')
+    .should('have.attr', 'aria-valuenow', '0')
+    .and('have.attr', 'aria-valuemin', '0')
+    .and('have.attr', 'aria-valuemax', '30');
+  cy.get('.v-slider').should('be.visible');
+});
 
-// 시각적으로 보이는 슬라이더 트랙 확인이 필요하면 별도로
-cy.get('.v-slider').filter(':visible').should('be.visible');
+// ------------------------------------------
+// 요약 위젯 (상단 작은 카드 6개)
+// ------------------------------------------
+// 이상행위 발생 건수 KPI 카드
+cy.contains('.kpi-card-caption', '이상행위 발생 건수').should('be.visible')
+  .closest('.box-basic-chart-container').within(() => {
+    cy.get('.kpi-icon-wrapper .fa-bell').should('exist');
+    cy.get('.kpi-card-value b').invoke('text').should('match', /^\d+$/);
+    cy.get('.kpi-card-unit').should('have.text', '건');
+  });
 
-// 카드 제목 확인
+// ------------------------------------------
+// 차트 카드 제목 (6종)
+// ------------------------------------------
 const cardTitles = [
   '개인정보 유형별 현황',
   '부서별 개인정보 사용 TOP 10',
@@ -142,38 +180,55 @@ const cardTitles = [
   '이상행위 유형별 현황',
 ];
 cardTitles.forEach((title) => {
-  cy.contains('.v-card__title', title).should('be.visible');
+  cy.contains('.v-card__title', title)
+    .should('be.visible')
+    .and('have.attr', 'title', title);
 });
 
-// [신규] "이상행위 발생 건수" 요약 위젯 확인 (카드 제목이 아닌 별도 텍스트 위젯)
-cy.contains('이상행위 발생 건수').should('be.visible');
-cy.contains('이상행위 발생 건수')
-  .parents('.dynamic_chart')
-  .find('h3')
-  .invoke('text')
-  .then((text) => {
-    expect(text.trim()).to.match(/^\d+\s*건$/);
-  });
+// ------------------------------------------
+// 위젯 본문 상태 검증 (환경별 데이터 차이 대응)
+// - 통계 테이블 미생성: 경고 아이콘 + '아직 통계 테이블이 생성되지 않았습니다.'
+// - 생성됨: ApexCharts 차트 (데이터 없으면 '조회 결과가 존재하지 않습니다')
+// - KPI 카드: 건수 표시
+// ------------------------------------------
+cy.get('#customDashboard .eslee-widget-card').filter(':visible').each(($card) => {
+  // 검색 조건 위젯(INDEX 1)은 건너뜀
+  if ($card.find('.c-daterange-period-field').length) return;
 
-// [신규] 데이터 없음 상태 위젯 검증 (최초 설치 시 - 통계 테이블 미생성 5종)
-cy.get('.dynamic_chart')
-  .filter(':visible')
-  .contains('아직 통계 테이블이 생성되지 않았습니다')
-  .should('have.length.at.least', 1);
+  const name = $card.find('.v-card__title').text().trim()
+    || $card.find('.kpi-card-caption').text().trim()
+    || '(제목 없는 요약 카드)';
 
-cy.get('.fa-exclamation-triangle')
-  .filter(':visible')
-  .should('have.length.at.least', 5);
+  const notCreated = $card.find('p:contains("아직 통계 테이블이 생성되지 않았습니다")').length > 0;
+  const hasChart = $card.find('svg.apexcharts-svg').length > 0;
+  const isKpi = $card.find('.kpi-card-value').length > 0;
 
-// [신규] "이상행위 유형별 현황" - ApexCharts 렌더링 + 데이터 없음 텍스트 확인
+  if (notCreated) {
+    cy.log(`⚠️ [${name}] 통계 테이블 미생성`);
+    expect($card.find('.fa-exclamation-triangle').length, `[${name}] 경고 아이콘`).to.eq(1);
+  } else if (hasChart) {
+    cy.log(`📊 [${name}] 차트`);
+  } else if (isKpi) {
+    cy.log(`🔔 [${name}] KPI`);
+  } else {
+    throw new Error(`[${name}] 위젯 본문이 비어 있음 (미생성 안내 / 차트 / KPI 모두 아님)`);
+  }
+});
+
+// 이상행위 유형별 현황 - 차트가 그려졌는지 + 데이터 없을 때 안내 문구
 cy.contains('.v-card__title', '이상행위 유형별 현황')
   .parents('.widget_content')
   .within(() => {
-    cy.get('#apex-chart svg').should('exist');
-    cy.get('svg').contains('조회 결과가 존재하지 않습니다').should('exist');
+    cy.get('#apex-chart svg.apexcharts-svg').should('exist');
+    cy.get('svg').then(($svg) => {
+      // 데이터가 있으면 문구가 없으므로 조건부 확인
+      if ($svg.text().includes('조회 결과가 존재하지 않습니다')) {
+        cy.log('ℹ️ [이상행위 유형별 현황] 조회 결과 없음');
+      }
+    });
   });
 
-cy.log('✅ 점검 대시보드 출력 및 차트 타이틀 확인 완료 ');
+cy.log('✅ 점검 대시보드 출력 및 차트 타이틀 확인 완료');
 
 
 

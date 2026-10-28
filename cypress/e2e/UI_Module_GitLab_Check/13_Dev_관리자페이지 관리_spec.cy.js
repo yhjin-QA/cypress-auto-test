@@ -259,10 +259,31 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.c-headline', '검색 조건').should('exist');
      
     //달력 아이콘 확인
-     // 시작날짜 달력 아이콘확인
-     cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-     // 종료날짜 달력 아이콘확인
-     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    //  // 시작날짜 달력 아이콘확인
+    //  cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    //  // 종료날짜 달력 아이콘확인
+    //  cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+
+     // 기간 입력칸: 달력 아이콘(event)이 있는 v-input만 수집
+     // ※ 2.9.5.0부터 aria-label="기간" 이 빈 값으로 바뀌어 아이콘 기준으로 찾음
+     const dateInputs = () =>
+      cy.get('.v-input__icon--prepend-inner i.material-icons')
+        .filter(':visible')
+        .filter((i, el) => el.innerText.trim() === 'event')
+        .closest('.v-input');
+
+    // 시작/종료 날짜 달력 아이콘 확인 (화면마다 호출)
+    const checkDateIcons = () => {
+      dateInputs().should('have.length', 2); // 시작 ~ 종료
+      dateInputs().eq(0).find('i.material-icons').should('be.visible').and('contain', 'event');
+      dateInputs().eq(1).find('i.material-icons').should('be.visible').and('contain', 'event');
+    };
+
+    // 시작/종료 날짜 달력 아이콘 확인
+    checkDateIcons();
+
+
+
      // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="Log Tracer"]').filter(':visible').should('be.visible');
@@ -396,10 +417,16 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+
+    // // 시작날짜 달력 아이콘확인
+    // cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    // // 종료날짜 달력 아이콘확인
+    // cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+     
+    // 시작/종료 날짜 달력 아이콘 확인
+    checkDateIcons();
+    
+    
     // 검색 조건 입력란 
     cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').should('be.visible');
     //2.9.1.262_r35274 상태 -> 조건 문구 변경

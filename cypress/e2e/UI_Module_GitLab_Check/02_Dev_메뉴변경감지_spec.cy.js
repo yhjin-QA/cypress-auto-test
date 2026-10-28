@@ -410,7 +410,7 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 1: 로그인
     // ==========================================
     // 대상 서버: 실행 시 --env HOST=10.10.54.21 로 바꿀 수 있음 (기본 51)
-    const HOST = Cypress.env('HOST') || '10.10.54.51';
+    const HOST = Cypress.env('TARGET_HOST') || Cypress.env('HOST') || '10.10.54.71';
     cy.log(`🖥 대상 서버: ${HOST}`);
     cy.visit(`https://${HOST}:18443/logcatch/login`);
     cy.wait(4000); // 로딩 대기
