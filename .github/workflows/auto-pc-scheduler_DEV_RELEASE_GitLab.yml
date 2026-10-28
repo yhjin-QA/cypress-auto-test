@@ -688,9 +688,9 @@ jobs:
           RESTART_STATUS: "${{ needs.restart-task-run.result }}"
           VERSION_NAME: ${{ needs.deploy-qa.outputs.version }}
           PRODUCT_NAME: "로그캐치"
-          TEST_TYPE: "Dev_RELEASE"
-          MSG_SUCCESS: "*[성공]*[Auto-PC]"
-          MSG_FAIL: "*[실패]*[Auto-PC]"
+          TEST_TYPE: "GitLab_RELEASE"
+          MSG_SUCCESS: "*[성공]*[Auto-PC][.71]"
+          MSG_FAIL: "*[실패]*[Auto-PC][.71]"
           MSG_TITLE: "확인결과"
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"
