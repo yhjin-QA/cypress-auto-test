@@ -255,7 +255,8 @@ cy.get('input[aria-label="압축 보관 경로"]')
 
 cy.contains('압축 일자가 지난 운영 이력을 일 단위로 최대 비율 압축(csv.gz)하여 백업 경로(work-history)에 보관합니다')
   .should('be.visible');
-cy.contains('비우면 [보관>접속기록 보관]의 백업 경로 하위 work-history 에 저장합니다. 지정 시 절대 경로(/ 로 시작, .. 금지)만 허용됩니다.')
+//v2.9.7.0 에서 문장문구 변경됨.  
+cy.contains('.caption', '경로를 입력하지 않으면 [보관 > 접속기록 보관]의 백업 경로 하위 work-history 폴더에 기본으로 저장됩니다.')
   .should('be.visible');
 
 // 원격 전송 토글 (v-switch: :visible 필터 제외)

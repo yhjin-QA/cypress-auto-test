@@ -286,7 +286,14 @@ jobs:
 
           # 재시작 전 상태 기록 (3rdparty 설치만으로 LOGSERVER 가 뜨는지 판단용, 0038907)
           Write-Host "[Step 3-0] pscheck BEFORE restart"
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "bash -lc pscheck 2>&1 | head -12" | Out-String | Write-Host
+          $psBefore = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "bash -lc pscheck 2>&1 | head -12" | Out-String
+          Write-Host $psBefore
+          # 0038907 추적 : 신규 설치 직후 LOGSERVER 미기동 여부 (아래 [Step 3-1] 에서 logserver 를 시작하므로 결함이 가려지지 않도록 표시)
+          if ($psBefore -match 'DOWN\s+-\s+LOGSERVER') {
+              Write-Host "[WARN] LOGSERVER DOWN after fresh install (0038907) - started by Step 3-1"
+          } else {
+              Write-Host "[INFO] LOGSERVER already running after fresh install - check 0038907 fix"
+          }
 
           # ---------------------------------------------------------
           # [Step 3-1] 업데이트 후 정지/재시작 절차 (수동 절차와 동일 순서)

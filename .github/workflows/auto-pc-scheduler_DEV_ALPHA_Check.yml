@@ -1,4 +1,4 @@
-name: Auto-PC Work (Dev_ALPHA_UI)
+name: Auto-PC Work (Dev_ALPHA_UI)(폐기_Gitlab 릴리즈 .yml로 대체)
 
 env:
   PRODUCT_NAME: "로그캐치"
