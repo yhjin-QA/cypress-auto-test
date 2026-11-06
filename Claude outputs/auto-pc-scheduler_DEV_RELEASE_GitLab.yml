@@ -298,11 +298,21 @@ jobs:
           #  - 기존에는 내려받고 chmod 만 하고 실행하지 않았음
           #  - ※ 옵션(-b -f)은 main 과 같게 둠 : 설치 가이드의 3rdparty 실행 옵션과 다르면 맞춰 주세요
           # ---------------------------------------------------------
+          # [추가] main 설치가 120초 제한으로 끊겨도 서버에서는 계속 돌 수 있음
+          #        → main 설치 프로세스가 끝날 때까지 기다린 뒤 3rdparty 실행 (임시 폴더 ~/temp 충돌 방지, 최대 20분)
+          Write-Host "[Step 3-0] Waiting for main installer to finish..."
+          $waitMain = "for i in `$(seq 1 240); do pgrep -f '[l]ogcatch_linux_x86-64_' >/dev/null || { echo MAIN_DONE_AFTER=`$((i*5))s; exit 0; }; sleep 5; done; echo MAIN_STILL_RUNNING; exit 1"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$waitMain" | Out-String | Write-Host
+
           Write-Host "[Step 3-0] 3rdparty package install: $partyName"
-          $partyInstall = "export TERM=linux; . /etc/profile; sudo LANG=C LC_ALL=C $remotePath/$partyName -b -f 2>&1; echo 3RDPARTY_EXIT=`$?"
+          $partyInstall = "export TERM=linux; . /etc/profile; cd $remotePath && sudo LANG=C LC_ALL=C ./$partyName -b -f < /dev/null 2>&1; echo 3RDPARTY_EXIT=`$?"
           $partyLog = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$partyInstall" | Out-String
           Write-Host $partyLog
           if ($partyLog -notmatch '3RDPARTY_EXIT=0') { Write-Host "[WARN][Step 3-0] 3rdparty install exit code is not 0 - check log above" }
+
+          # 재시작 전 상태 기록 (3rdparty 설치만으로 LOGSERVER 가 뜨는지 판단용, 0038907)
+          Write-Host "[Step 3-0] pscheck BEFORE restart"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "bash -lc pscheck 2>&1 | head -12" | Out-String | Write-Host
 
           # ---------------------------------------------------------
           # [Step 3-1] 업데이트 후 정지/재시작 절차 (수동 절차와 동일 순서)
@@ -323,7 +333,10 @@ jobs:
             "sudo /home/logcatch/bin/logcatch_server start",
             "sudo /home/logcatch/bin/logcatch_taskmgr start"
           ) -join "; "
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; . /etc/profile; ( $restartSeq ) 2>&1" | Out-String | Write-Host
+          # [변경] start 한 데몬이 ssh 출력 통로를 붙잡아 ssh 가 끝나지 않는 문제 방지
+          #        → 서버의 로그 파일로 출력하고(입력은 /dev/null), 끝난 뒤 로그만 읽어 옴
+          $seqLog = "$remotePath/restart_seq.log"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; . /etc/profile; bash -c '$restartSeq' > $seqLog 2>&1 < /dev/null; echo SEQ_EXIT=`$? >> $seqLog; cat $seqLog" | Out-String | Write-Host
           Write-Host "[Step 3-1] Stop/Start sequence finished"
 
           # 기동 상태 기록 (실패 처리는 하지 않고 로그로만 남김)
