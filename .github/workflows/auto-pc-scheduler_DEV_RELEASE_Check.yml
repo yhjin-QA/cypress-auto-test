@@ -1,4 +1,4 @@
-name: Auto-PC Work (Dev_RELEASE_UI)(.51)
+name: Auto-PC Work (Dev_RELEASE_UI)(.51)(이전 프로젝트 경로에서 다운로드하여 설치하여 진행)
 
 env:
   PRODUCT_NAME: "로그캐치"
@@ -8,10 +8,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  push:
-    branches: [ "master" ]
-  schedule:
-    - cron: '5 2 * * 1-5'
+  #push:
+  #  branches: [ "master" ]
+  #schedule:
+  #  - cron: '5 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
