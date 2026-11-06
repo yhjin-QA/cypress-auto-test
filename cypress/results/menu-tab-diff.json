@@ -1,5 +1,13 @@
 [
   {
+    "menu": "분석",
+    "sub": "이상행위",
+    "type": "added",
+    "items": [
+      "외부 연동 설정"
+    ]
+  },
+  {
     "menu": "검출",
     "sub": "필터",
     "type": "removed",

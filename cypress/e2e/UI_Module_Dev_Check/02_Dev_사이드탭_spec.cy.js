@@ -158,7 +158,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(500);
     
     // v2.9.1.125_r35234 에서 결재메뉴  디폴트로 추가됨. 
-    cy.contains('button', '결재').click({ force: true });
+    //2.9.5.0 결재 -> 소명 문구변경
+    cy.contains('button', '소명').click({ force: true });
     cy.wait(3000); // 서브 메뉴가 펼쳐질 시간 대기
     cy.get('body').type('{esc}');
     cy.wait(500);

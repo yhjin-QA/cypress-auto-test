@@ -6,3 +6,6 @@ cypress/downloads
 cypress/screenshots
 cypress/videos
 node_modules/
+
+# 로컬 전용 계정 정보 (Git 제외)
+cypress.env.json

@@ -125,14 +125,34 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
   
-     // 시작날짜 달력 아이콘확인
-     cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-     // 종료날짜 달력 아이콘확인
-     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-     // 전체선택 확인
-     cy.get('span[title="전체 선택"]').should('be.visible');
-     // like버튼 확인 
-     //cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
+    //  // 시작날짜 달력 아이콘확인
+    //  cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    //  // 종료날짜 달력 아이콘확인
+    //  cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    //  // 전체선택 확인
+    //  cy.get('span[title="전체 선택"]').should('be.visible');
+    //  // like버튼 확인 
+    //  //cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
+
+      // 기간 입력칸: 달력 아이콘(event)이 있는 v-input만 수집
+     // ※ 2.9.5.0부터 aria-label="기간" 이 빈 값으로 바뀌어 아이콘 기준으로 찾음
+     const dateInputs = () =>
+      cy.get('.v-input__icon--prepend-inner i.material-icons')
+        .filter(':visible')
+        .filter((i, el) => el.innerText.trim() === 'event')
+        .closest('.v-input');
+
+    // 시작/종료 날짜 달력 아이콘 확인 (화면마다 호출)
+    const checkDateIcons = () => {
+      dateInputs().should('have.length', 2); // 시작 ~ 종료
+      dateInputs().eq(0).find('i.material-icons').should('be.visible').and('contain', 'event');
+      dateInputs().eq(1).find('i.material-icons').should('be.visible').and('contain', 'event');
+    };
+
+    // 시작/종료 날짜 달력 아이콘 확인
+    checkDateIcons();
+
+
     
     //검색 버튼 존재 확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
@@ -171,10 +191,17 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.tab-btn').contains('파일 다운로드').closest('button').should('not.have.class', 'inactive');
     // 'c-headline' 클래스를 가진 요소 중에 '파일 다운로드' 글자가 존재하는지 확인
     cy.contains('.c-headline', '파일 다운로드').should('exist');
-    // 시작날짜 달력 아이콘확인
-     cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-     // 종료날짜 달력 아이콘확인
-     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+
+
+    // // 시작날짜 달력 아이콘확인
+    //  cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    //  // 종료날짜 달력 아이콘확인
+    //  cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+
+    // 시작/종료 날짜 달력 아이콘 확인
+    checkDateIcons();
+
+
      // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="시작 IP"]').filter(':visible').should('be.visible');
@@ -282,11 +309,15 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.tab-btn').contains('검출').closest('button').should('not.have.class', 'inactive');
    // 설명: 'c-headline' 클래스를 가진 요소 중에 '이상행위' 글자가 보여야 한다.
     cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-     // 검색 조건 이름 입력란 확인
+    
+    // // 시작날짜 달력 아이콘확인
+    // cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    // // 종료날짜 달력 아이콘확인
+    // cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // 시작/종료 날짜 달력 아이콘 확인
+    checkDateIcons();
+    
+    // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
@@ -334,10 +365,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.tab-btn').contains('통합').closest('button').should('not.have.class', 'inactive');
    // 설명: 'c-headline' 클래스를 가진 요소 중에 '이상행위' 글자가 보여야 한다.
     cy.contains('.c-headline', '검색 조건').should('exist');
-     // 시작날짜 달력 아이콘확인
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-     // 종료날짜 달력 아이콘확인
-     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    //  // 시작날짜 달력 아이콘확인
+    // cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    //  // 종료날짜 달력 아이콘확인
+    //  cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // 시작/종료 날짜 달력 아이콘 확인
+    checkDateIcons();
+    
      // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
