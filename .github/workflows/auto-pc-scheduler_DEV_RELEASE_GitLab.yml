@@ -254,10 +254,12 @@ jobs:
           # 프로필 수정 후 권한 보강
           $fixProfile = "if [ -f /etc/profile.d/logcatch.sh ]; then sudo tr -d '\r' < /etc/profile.d/logcatch.sh | sudo tee /etc/profile.d/logcatch.sh.tmp > /dev/null; sudo mv /etc/profile.d/logcatch.sh.tmp /etc/profile.d/logcatch.sh; sudo chmod 755 /etc/profile.d/logcatch.sh; fi"
           
-          # 서비스 제어: 비동기(&) 보다는 직접 restart 명령어를 순차적으로 실행 (직관적 에러 확인을 위해)
-          $svcControl = "sudo systemctl daemon-reload; sudo systemctl restart logcatch_redis; sleep 3; sudo systemctl restart logcatch_server; sleep 3; sudo systemctl restart logcatch_taskmgr"
+          # [변경] 서비스 재시작은 설치 작업(120초 제한)에서 분리 → 아래 [Step 3-1]에서 수동 절차와 같은 순서로 실행
+          # (기존) $svcControl = "sudo systemctl daemon-reload; sudo systemctl restart logcatch_redis; sleep 3; sudo systemctl restart logcatch_server; sleep 3; sudo systemctl restart logcatch_taskmgr"
+          # (기존) $fullCmd = "export TERM=linux; $install && $fixProfile && $svcControl"
 
-          $fullCmd = "export TERM=linux; $install && $fixProfile && $svcControl"
+          # 설치 작업($fullCmd)에서는 svcControl 제거
+          $fullCmd = "export TERM=linux; $install && $fixProfile"
 
           $job = Start-Job -ScriptBlock {
               param($keyPath, $target, $cmd)
@@ -288,6 +290,24 @@ jobs:
           Write-Host "=============================================================="
           
           Remove-Job $job
+
+          # ---------------------------------------------------------
+          # [Step 3-1] 업데이트 후 정지/재시작 절차 (수동 절차와 동일 순서)
+          #  - 설치 작업과 분리하여 120초 제한 없이 끝까지 순서대로 실행
+          # ---------------------------------------------------------
+          Write-Host "[Step 3-1] 업데이트 후 정지/재시작 절차 (수동 절차와 동일 순서)"
+          $restartSeq = @(
+            "sudo /home/logcatch/bin/logcatch_pgsql stop",
+            "sudo /home/logcatch/mongodb/logcatch_mongodb stop",
+            "sudo /home/logcatch/bin/logcatch_server stop",
+            "sudo /home/logcatch/bin/logcatch_taskmgr stop",
+            "sudo /home/logcatch/bin/logcatch_pgsql start",
+            "sudo /home/logcatch/mongodb/logcatch_mongodb start",
+            "sudo /home/logcatch/bin/logcatch_server start",
+            "sudo /home/logcatch/bin/logcatch_taskmgr start"
+          ) -join "; "
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; . /etc/profile; ( $restartSeq ) 2>&1" | Out-String | Write-Host
+          Write-Host "[Step 3-1] 정지/재시작 절차 완료"
 
           # 5. 💡 강제 성공 처리 및 즉시 다음 단계 진행
           $env:LASTEXITCODE = 0
