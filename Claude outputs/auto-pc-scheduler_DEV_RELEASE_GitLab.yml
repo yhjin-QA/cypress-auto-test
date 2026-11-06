@@ -215,7 +215,9 @@ jobs:
           $partyName = "${env:PARTY_FILE_NAME}"
 
           Write-Host " [Step 1] Initialize existing installation environment and clean previous installation files (.bin)...."
-          $cleanup = "sudo rm -f /etc/profile.d/logcatch.sh; sudo pkill -9 -u logcatch || true; sudo pkill -9 postgres || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch /var/lib/pgsql; rm -f $remotePath/*.bin"
+          # [변경] root 로 도는 알림 프로세스(noti.sh / managernotification)는 pkill -u logcatch 로 안 죽으므로 먼저 정리
+          #  ※ 패턴의 [n] [l] 은 정리 명령을 실행하는 셸 자신이 같이 종료되지 않도록 하기 위한 것
+          $cleanup = "sudo systemctl stop logcatch_noti 2>/dev/null || true; sudo pkill -9 -f '/home/logcatch/bin/[n]oti[.]sh' || true; sudo pkill -9 -f '[l]ogcatch-managernotification' || true; sudo rm -f /etc/profile.d/logcatch.sh; sudo pkill -9 -u logcatch || true; sudo pkill -9 postgres || true; if [ -f $remotePath/logcatch.install.info ]; then printf 'uninstall\n' | sudo $remotePath/$mainName -X $remotePath/logcatch.install.info || true; fi; sudo userdel -rf logcatch || true; sudo rm -rf /home/logcatch /var/lib/pgsql; rm -f $remotePath/*.bin"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; $cleanup"
 
           Write-Host " [Step 2] Deliver GitLab auth header to the QA server and download files..."
@@ -292,22 +294,42 @@ jobs:
           Remove-Job $job
 
           # ---------------------------------------------------------
+          # [Step 3-0] 3rdparty 패키지 설치 (main 설치 후, 120초 제한 없이 실행)
+          #  - 기존에는 내려받고 chmod 만 하고 실행하지 않았음
+          #  - ※ 옵션(-b -f)은 main 과 같게 둠 : 설치 가이드의 3rdparty 실행 옵션과 다르면 맞춰 주세요
+          # ---------------------------------------------------------
+          Write-Host "[Step 3-0] 3rdparty 패키지 설치: $partyName"
+          $partyInstall = "export TERM=linux; . /etc/profile; sudo LANG=C LC_ALL=C $remotePath/$partyName -b -f 2>&1; echo 3RDPARTY_EXIT=`$?"
+          $partyLog = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$partyInstall" | Out-String
+          Write-Host $partyLog
+          if ($partyLog -notmatch '3RDPARTY_EXIT=0') { Write-Host "⚠️ [Step 3-0] 3rdparty 설치 종료 코드가 0이 아님 - 위 로그 확인" }
+
+          # ---------------------------------------------------------
           # [Step 3-1] 업데이트 후 정지/재시작 절차 (수동 절차와 동일 순서)
           #  - 설치 작업과 분리하여 120초 제한 없이 끝까지 순서대로 실행
           # ---------------------------------------------------------
           Write-Host "[Step 3-1] 업데이트 후 정지/재시작 절차 (수동 절차와 동일 순서)"
+          # [변경] 수동 절차에 logserver stop/start 추가 (신규 설치 후 LOGSERVER 미기동 대응, 0038907)
+          #        stop 은 맨 앞, start 는 DB(pgsql · mongodb) 다음 · server 앞
           $restartSeq = @(
+            "sudo /home/logcatch/bin/logcatch_logserver stop",
             "sudo /home/logcatch/bin/logcatch_pgsql stop",
             "sudo /home/logcatch/mongodb/logcatch_mongodb stop",
             "sudo /home/logcatch/bin/logcatch_server stop",
             "sudo /home/logcatch/bin/logcatch_taskmgr stop",
             "sudo /home/logcatch/bin/logcatch_pgsql start",
             "sudo /home/logcatch/mongodb/logcatch_mongodb start",
+            "sudo /home/logcatch/bin/logcatch_logserver start",
             "sudo /home/logcatch/bin/logcatch_server start",
             "sudo /home/logcatch/bin/logcatch_taskmgr start"
           ) -join "; "
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; . /etc/profile; ( $restartSeq ) 2>&1" | Out-String | Write-Host
           Write-Host "[Step 3-1] 정지/재시작 절차 완료"
+
+          # 기동 상태 기록 (실패 처리는 하지 않고 로그로만 남김)
+          $ps = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "bash -lc pscheck 2>&1 | head -30" | Out-String
+          Write-Host $ps
+          if ($ps -match 'DOWN\s+-\s+LOGSERVER') { Write-Host "⚠️ [Step 3-1] LOGSERVER 가 DOWN 상태입니다" }
 
           # 5. 💡 강제 성공 처리 및 즉시 다음 단계 진행
           $env:LASTEXITCODE = 0
