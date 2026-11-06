@@ -298,17 +298,17 @@ jobs:
           #  - 기존에는 내려받고 chmod 만 하고 실행하지 않았음
           #  - ※ 옵션(-b -f)은 main 과 같게 둠 : 설치 가이드의 3rdparty 실행 옵션과 다르면 맞춰 주세요
           # ---------------------------------------------------------
-          Write-Host "[Step 3-0] 3rdparty 패키지 설치: $partyName"
+          Write-Host "[Step 3-0] 3rdparty package install: $partyName"
           $partyInstall = "export TERM=linux; . /etc/profile; sudo LANG=C LC_ALL=C $remotePath/$partyName -b -f 2>&1; echo 3RDPARTY_EXIT=`$?"
           $partyLog = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "$partyInstall" | Out-String
           Write-Host $partyLog
-          if ($partyLog -notmatch '3RDPARTY_EXIT=0') { Write-Host "⚠️ [Step 3-0] 3rdparty 설치 종료 코드가 0이 아님 - 위 로그 확인" }
+          if ($partyLog -notmatch '3RDPARTY_EXIT=0') { Write-Host "[WARN][Step 3-0] 3rdparty install exit code is not 0 - check log above" }
 
           # ---------------------------------------------------------
           # [Step 3-1] 업데이트 후 정지/재시작 절차 (수동 절차와 동일 순서)
           #  - 설치 작업과 분리하여 120초 제한 없이 끝까지 순서대로 실행
           # ---------------------------------------------------------
-          Write-Host "[Step 3-1] 업데이트 후 정지/재시작 절차 (수동 절차와 동일 순서)"
+          Write-Host "[Step 3-1] Stop/Start sequence after install (same order as manual procedure)"
           # [변경] 수동 절차에 logserver stop/start 추가 (신규 설치 후 LOGSERVER 미기동 대응, 0038907)
           #        stop 은 맨 앞, start 는 DB(pgsql · mongodb) 다음 · server 앞
           $restartSeq = @(
@@ -324,12 +324,12 @@ jobs:
             "sudo /home/logcatch/bin/logcatch_taskmgr start"
           ) -join "; "
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "export TERM=linux; . /etc/profile; ( $restartSeq ) 2>&1" | Out-String | Write-Host
-          Write-Host "[Step 3-1] 정지/재시작 절차 완료"
+          Write-Host "[Step 3-1] Stop/Start sequence finished"
 
           # 기동 상태 기록 (실패 처리는 하지 않고 로그로만 남김)
           $ps = ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i $keyPath $target "bash -lc pscheck 2>&1 | head -30" | Out-String
           Write-Host $ps
-          if ($ps -match 'DOWN\s+-\s+LOGSERVER') { Write-Host "⚠️ [Step 3-1] LOGSERVER 가 DOWN 상태입니다" }
+          if ($ps -match 'DOWN\s+-\s+LOGSERVER') { Write-Host "[WARN][Step 3-1] LOGSERVER is DOWN" }
 
           # 5. 💡 강제 성공 처리 및 즉시 다음 단계 진행
           $env:LASTEXITCODE = 0
