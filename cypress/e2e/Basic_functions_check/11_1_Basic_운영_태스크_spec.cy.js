@@ -1,3 +1,10 @@
+// [2.9.7 현행화] 기간 입력칸 helper — 2.9.5.0부터 aria-label="기간"/라벨 '기간'이 비어 있어 달력 아이콘(event)으로 찾음
+const dateInputs = () =>
+  cy.get('.v-input__icon--prepend-inner i.material-icons')
+    .filter(':visible')
+    .filter((i, el) => el.innerText.trim() === 'event')
+    .closest('.v-input');
+
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /*!********************************!*\
@@ -391,7 +398,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.log('--- 화면 검증 시작 ---'); 
      cy.contains('.c-headline', '검색 조건').should('exist');
      // 검색기간 문구 확인
-     cy.get('input[aria-label="기간"]').filter(':visible').should('be.visible').and('have.attr', 'readonly');
+     dateInputs().eq(0).find('input').first().should('be.visible').and('have.attr', 'readonly');
      //검색조건 달력 아이콘확인인
      cy.get('.material-icons').filter(':visible').contains('event').should('be.visible');
      //검색조건 입력란 확인인
@@ -424,7 +431,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      //기능동작
     //달력표를 펼침 2월 1일 선택하기
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
     cy.wait(1000);
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
@@ -467,8 +474,9 @@ describe('로그캐치 사이트 테스트', () => {
      //- 로그 파일을 선택하셨어도 최신 로그 파일만 보여줍니다. 
      //tail 토글이 비활성화되어 있는 경우
      //- 선택한 로그 파일의 전체 내용을 보여줍니다.
-     cy.get('input[aria-label="tail"]').check({ force: true })
-     .should('be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
+     // [2.9.7] tail ON은 실시간(새로 쌓이는 줄만) 표시라 빈 화면 → tail OFF로 파일 전체 내용 검증
+     cy.get('input[aria-label="tail"]').uncheck({ force: true })
+     .should('not.be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
      cy.wait(1000);
 
      // 검색 버튼 클릭 
@@ -477,7 +485,9 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 로그 출력 검증코드
      // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 첫줄 텍스트 확인
-     cy.contains('.mtk1', /target.*\/home\/logcatch\/data\/logcollector\/data/).should('be.visible');
+     // [2.9.7] 로그 머리말 형식 변경: 'target … /data/logcollector/data' → 'LOGCATCH_TASK_LOGPATH : [/home/logcatch/proc/logcollector/log]'
+     // cy.contains('.mtk1', /target.*\/home\/logcatch\/data\/logcollector\/data/).should('be.visible');
+     cy.contains('.view-line', /LOGCATCH_TASK_LOGPATH.*\/home\/logcatch\/proc\/logcollector\/log/).should('be.visible');
      //cy.get('.mtk1').filter(':contains("/home/logcatch/data/logcollector/data")').should('have.length.at.least', 1); // 최소 1개 이상 존재하는지 확인
      //--------------------------------------------------
      
@@ -494,16 +504,28 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="로그 파일"]').click({ force: true });
      cy.wait(1000);
      
-     // 콤보박스 리스트안에서 'DISCRIMINATOR_2002_api_20260204.log'를 찾아 클릭합니다.
-     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'DISCRIMINATOR_2002_api_20260204.log').click({ force: true });
+     // [2.9.7] 날짜 고정 파일(DISCRIMINATOR_2002_api_20260204.log)은 비어 있을 수 있어
+     //   ① task_iid_2002.std(태스크 로그, LOGPATH 머리말 있음) 우선 ② 없으면 가장 최근 DISCRIMINATOR_2002_*.log 선택
+     cy.get('.v-select-list').filter(':visible').then(($list) => {
+       const titles = [...$list.find('.v-list__tile__title')].map((el) => el.textContent.trim());
+       cy.log(`접속 로그 분석기 로그 파일 목록: ${titles.join(', ')}`);
+       const dated = titles.filter((t) => /^DISCRIMINATOR_2002_.*\d{8}\.log$/.test(t)).sort();
+       const pick = titles.includes('task_iid_2002.std') ? 'task_iid_2002.std' : dated[dated.length - 1];
+       expect(pick, '선택할 접속 로그 분석기 로그 파일').to.be.a('string');
+       cy.wrap(pick).as('discFile');
+       cy.wrap($list).contains('.v-list__tile__title', pick).click({ force: true });
+     });
      cy.wait(1000);
 
      // 선택이 잘 되었는지 검증코드
-     cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', 'DISCRIMINATOR_2002_api_20260204.log');
+     cy.get('@discFile').then((f) => {
+       cy.get('input[aria-label="로그 파일"]').closest('.v-input').should('contain', f);
+     });
 
-     // tail 토글 OFF-> ON
-     cy.get('input[aria-label="tail"]').check({ force: true })
-     .should('be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
+     // tail 토글 ON -> OFF
+     // [2.9.7] tail ON은 실시간(새로 쌓이는 줄만) 표시라 빈 화면 → tail OFF로 파일 전체 내용 검증
+     cy.get('input[aria-label="tail"]').uncheck({ force: true })
+     .should('not.be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
      cy.wait(1000);
 
      // 검색 버튼 클릭 
@@ -512,7 +534,16 @@ describe('로그캐치 사이트 테스트', () => {
      
      // 로그 출력 검증코드
      // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 첫줄 텍스트 확인
-     cy.contains('.mtk1', /target.*\/home\/logcatch\/data\/discriminator\/data/).should('be.visible');
+     // [2.9.7] 로그 머리말 형식 변경: 'target … /data/discriminator/data' → 'LOGCATCH_TASK_LOGPATH : [/home/logcatch/proc/discriminator/log]'
+     // cy.contains('.mtk1', /target.*\/home\/logcatch\/data\/discriminator\/data/).should('be.visible');
+     cy.get('@discFile').then((f) => {
+       if (f.endsWith('.std')) {
+         cy.contains('.view-line', /LOGCATCH_TASK_LOGPATH.*\/home\/logcatch\/proc\/discriminator\/log/).should('be.visible');
+       } else {
+         // 일자별 .log 파일: 내용이 1줄 이상 출력되는지 확인
+         cy.get('.view-line').filter((i, el) => el.textContent.trim().length > 0).should('have.length.at.least', 1);
+       }
+     });
      //--------------------------------------------------
 
      // 업무유형 - 통계 처리기 
@@ -535,9 +566,10 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(1000);
 
 
-     // tail 토글 OFF-> ON
-     cy.get('input[aria-label="tail"]').check({ force: true })
-     .should('be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
+     // tail 토글 ON -> OFF
+     // [2.9.7] tail ON은 실시간(새로 쌓이는 줄만) 표시라 빈 화면 → tail OFF로 파일 전체 내용 검증
+     cy.get('input[aria-label="tail"]').uncheck({ force: true })
+     .should('not.be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
      cy.wait(1000);
 
      // 검색 버튼 클릭 
@@ -577,13 +609,23 @@ describe('로그캐치 사이트 테스트', () => {
      // 콤보박스 리스트안에서 'RULEANALYZER_200320260209.log'를 찾아 클릭합니다.
      //cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', 'RULEANALYZER_200320260209.log').click({ force: true });
      // 콤보박스 리스트안에서 'RULEANALYZER_2003'로 시작하고 날짜/시간 상관없이 '.log'로 끝나는 항목을 찾아 클릭합니다.
-     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', /RULEANALYZER_2003.*\.log/).click({ force: true });
+     // [2.9.7] ① task_iid_2003.std(태스크 로그, LOGPATH 머리말 있음) 우선 ② 없으면 가장 최근 RULEANALYZER_2003*.log
+     cy.get('.v-select-list').filter(':visible').then(($list) => {
+       const titles = [...$list.find('.v-list__tile__title')].map((el) => el.textContent.trim());
+       cy.log(`규칙 분석기 로그 파일 목록: ${titles.join(', ')}`);
+       const dated = titles.filter((t) => /^RULEANALYZER_2003.*\.log$/.test(t)).sort();
+       const pick = titles.includes('task_iid_2003.std') ? 'task_iid_2003.std' : dated[dated.length - 1];
+       expect(pick, '선택할 규칙 분석기 로그 파일').to.be.a('string');
+       cy.wrap(pick).as('ruleFile');
+       cy.wrap($list).contains('.v-list__tile__title', pick).click({ force: true });
+     });
      cy.wait(1000);
 
 
-     // tail 토글 OFF-> ON
-     cy.get('input[aria-label="tail"]').check({ force: true })
-     .should('be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
+     // tail 토글 ON -> OFF
+     // [2.9.7] tail ON은 실시간(새로 쌓이는 줄만) 표시라 빈 화면 → tail OFF로 파일 전체 내용 검증
+     cy.get('input[aria-label="tail"]').uncheck({ force: true })
+     .should('not.be.checked'); // 실제로 체크가 되었는지 확실히 확인하고 넘어감
      cy.wait(1000);
 
      // 검색 버튼 클릭 
@@ -592,7 +634,15 @@ describe('로그캐치 사이트 테스트', () => {
      
      // 로그 출력 검증코드
      // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 첫줄 텍스트 확인
-     cy.contains('.mtk1', /target.*\/home\/logcatch\/data\/ruleanalyzer\/data/).should('be.visible');
+     // [2.9.7] 로그 머리말 형식 변경: 'target … /data/ruleanalyzer/data' → 'LOGCATCH_TASK_LOGPATH : [/home/logcatch/proc/ruleanalyzer/log]'
+     // cy.contains('.mtk1', /target.*\/home\/logcatch\/data\/ruleanalyzer\/data/).should('be.visible');
+     cy.get('@ruleFile').then((f) => {
+       if (f.endsWith('.std')) {
+         cy.contains('.view-line', /LOGCATCH_TASK_LOGPATH.*\/home\/logcatch\/proc\/ruleanalyzer\/log/).should('be.visible');
+       } else {
+         cy.get('.view-line').filter((i, el) => el.textContent.trim().length > 0).should('have.length.at.least', 1);
+       }
+     });
 
       //--------------------------------------------------
 
@@ -610,7 +660,27 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(1000);
      
      // 콤보박스 리스트안에서 '/SQLPARSER_2001_********.log/'를 찾아 클릭합니다.
-     cy.get('.v-select-list').filter(':visible').contains('.v-list__tile__title', /SQLPARSER_2001_\d{8}\.log/).click({ force: true });
+     // [2.9.7] 목록 앞쪽은 SQLPARSER_2001_ParsingException_/ParsingTimeout_ 파일이고, 날짜만 붙은 파일은 아래쪽에 있어
+     //   아직 그려지지 않을 수 있음 → 메뉴를 스크롤하며 목록을 모은 뒤 가장 최근 SQLPARSER_2001_YYYYMMDD.log 선택
+     const SQLP = /^SQLPARSER_2001_\d{8}\.log$/;
+     const collectSqlparser = (attempt = 0, prevCount = -1) => {
+       cy.get('.menuable__content__active').filter(':visible').last().then(($menu) => {
+         const titles = [...$menu.find('.v-list__tile__title')].map((el) => el.textContent.trim());
+         const hits = titles.filter((t) => SQLP.test(t)).sort();
+         if (hits.length && (titles.length === prevCount || attempt >= 10)) {
+           const pick = hits[hits.length - 1];
+           cy.log(`SQLPARSER 로그 파일 선택: ${pick} (후보 ${hits.length}개)`);
+           cy.wrap($menu).contains('.v-list__tile__title', pick).click({ force: true });
+         } else if (attempt < 10) {
+           $menu[0].scrollTop = $menu[0].scrollHeight;   // 끝까지 내려 다음 항목 렌더링
+           cy.wait(500);
+           collectSqlparser(attempt + 1, titles.length);
+         } else {
+           throw new Error(`SQLPARSER_2001_YYYYMMDD.log 파일 없음 - 목록: ${titles.join(', ')}`);
+         }
+       });
+     };
+     collectSqlparser();
      cy.wait(1000);
 
      // 선택이 잘 되었는지 검증코드
@@ -641,7 +711,10 @@ describe('로그캐치 사이트 테스트', () => {
      // 로그 출력 검증코드
      // 로그 경로(LOGCATCH_TASK_LOGPATH)가 포함된 첫줄 텍스트 확인
      // 'target'과 'logcollector' 경로가 모두 포함된 요소를 직접 찾습니다.
-     cy.contains('.mtk1', /target.*\/home\/logcatch\/data\/logcollector\/data/).should('be.visible');
+     // [2.9.7] tail ON은 실시간 표시(새 로그가 쌓일 때만 출력)라 내용 대신 토글 상태와 에디터 영역만 확인
+     // cy.contains('.mtk1', /target.*\/home\/logcatch\/data\/logcollector\/data/).should('be.visible');
+     cy.get('input[aria-label="tail"]').should('be.checked');
+     cy.get('.view-lines').filter(':visible').should('exist');
 
     //--------------------------------------------------
      cy.log('✅ 운영 - 태스크 - [로그 뷰] 출력 확인 완료 ');
@@ -656,7 +729,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.log('--- 화면 검증 시작 ---'); 
      cy.contains('.c-headline', '검색 조건').should('exist');
      // 검색기간 문구 확인
-     cy.get('input[aria-label="기간"]').filter(':visible').should('be.visible').and('have.attr', 'readonly');
+     dateInputs().eq(0).find('input').first().should('be.visible').and('have.attr', 'readonly');
      //검색조건 달력 아이콘확인인
      cy.get('.material-icons').filter(':visible').contains('event').should('be.visible');
      //검색조건 입력란 확인인
@@ -673,7 +746,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      //기능확인
      // 기간 - 시작 날짜 달력 지정하기 
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
      cy.wait(1000);
      // 5일 클릭
      cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });

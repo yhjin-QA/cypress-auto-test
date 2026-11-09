@@ -46,7 +46,11 @@ const currentState = () => {
   const tab = $(doc).find('.v-tabs__item--active').filter(':visible')
     .map((i, el) => clean(el.textContent)).get().join('/').slice(0, 60);
 
-  const key = `${path}|${tab}|${dlg}`;
+  // [2026-11-09] 같은 화면이라도 로그 뷰(Monaco 에디터)에 내용이 채워지면 별도 상태로 한 번 더 검사
+  //   (검색 전 빈 에디터만 검사되고 출력된 로그 글자는 빠지던 문제)
+  const editorText = $(doc).find('.view-lines').filter(':visible')
+    .toArray().some((el) => clean(el.textContent).length > 0);
+  const key = `${path}|${tab}|${dlg}${editorText ? '|editor' : ''}`;
   return { key, path, tab, dlg, scope: $dlg.length ? '.v-dialog--active' : null };
 };
 
@@ -65,7 +69,7 @@ Cypress.Commands.overwrite('click', (originalFn, subject, ...args) => {
     return originalFn(subject, ...args);
   }
   seen.add(st.key);
-  const label = [st.path, st.tab, st.dlg ? `[창] ${st.dlg}` : ''].filter(Boolean).join(' > ');
+  const label = [st.path, st.tab, st.dlg ? `[창] ${st.dlg}` : '', st.key.endsWith('|editor') ? '[로그 출력]' : ''].filter(Boolean).join(' > ');
 
   cy.isDarkTheme().then((dark) => {
     if (!dark) {

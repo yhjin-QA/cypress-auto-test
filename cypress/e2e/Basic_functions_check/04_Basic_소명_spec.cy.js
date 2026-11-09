@@ -1,3 +1,10 @@
+// [2.9.7 현행화] 기간 입력칸 helper — 2.9.5.0부터 aria-label="기간"/라벨 '기간'이 비어 있어 달력 아이콘(event)으로 찾음
+const dateInputs = () =>
+  cy.get('.v-input__icon--prepend-inner i.material-icons')
+    .filter(':visible')
+    .filter((i, el) => el.innerText.trim() === 'event')
+    .closest('.v-input');
+
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /*!********************************!*\
@@ -132,7 +139,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="소명 유형"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
     // 시작날짜 달력 아이콘확인
-     cy.get('label').filter(':visible').contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     dateInputs().eq(0).find('.material-icons').contains('event').should('be.visible');
     // 종료날짜 달력 아이콘확인
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     // 표 문구열 확인
@@ -175,7 +182,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     
     // // 기간 - 시작 날짜 달력 지정하기 
-    //  cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    //  dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
     //  cy.wait(1000);
     //  // 1일 클릭
     //  cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
@@ -197,7 +204,7 @@ const targetDay = targetDate.getDate();
 cy.log(`🎯 선택할 날짜: ${targetYear}년 ${targetMonth}월 ${targetDay}일`);
 
 // 2. "기간" input 클릭하여 달력 오픈
-cy.get('input[aria-label="기간"]').filter(':visible').first().click({ force: true });
+dateInputs().eq(0).find('input').first().click({ force: true });
 cy.wait(1000);
 
 // 3. 🌟 달력 헤더의 연/월과 목표 연/월을 비교해서, 필요한 만큼 이전/다음 달 화살표 클릭
@@ -413,7 +420,7 @@ cy.get('tbody').find('a').then(($links) => {
      cy.get('input[aria-label="소명 유형"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
      // 시작날짜 달력 아이콘확인
-     cy.get('label').filter(':visible').contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     dateInputs().eq(0).find('.material-icons').contains('event').should('be.visible');
     // 종료날짜 달력 아이콘확인
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 표 문구열 확인
@@ -469,7 +476,7 @@ cy.get('tbody').find('a').then(($links) => {
       cy.get('input[aria-label="소명 유형"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
       // 시작날짜 달력 아이콘확인
-      cy.get('label').filter(':visible').contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+      dateInputs().eq(0).find('.material-icons').contains('event').should('be.visible');
       // 종료날짜 달력 아이콘확인
       cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
       //토글 문구 확인인

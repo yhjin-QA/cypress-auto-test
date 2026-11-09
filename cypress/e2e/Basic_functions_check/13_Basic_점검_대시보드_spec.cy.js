@@ -1,3 +1,10 @@
+// [2.9.7 현행화] 기간 입력칸 helper — 달력 아이콘(event)으로 찾음 (점검 대시보드는 '날짜 선택' 범위 1칸)
+const dateInputs = () =>
+  cy.get('.v-input__icon--prepend-inner i.material-icons')
+    .filter(':visible')
+    .filter((i, el) => el.innerText.trim() === 'event')
+    .closest('.v-input');
+
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /*!********************************!*\
@@ -123,7 +130,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 달력 아이콘 확인
     cy.get('.material-icons').filter(':visible').contains('event').should('be.visible');
     //자동갱신안함 문구확인
-    cy.contains('.item-margin', '자동 갱신 안함').should('be.visible');
+    cy.contains('자동 갱신 안함').filter(':visible').should('be.visible');
     
     // 2.9.1.262_r35274 버전에서 확인필요
     // 데이터량 확인
@@ -146,7 +153,7 @@ describe('로그캐치 사이트 테스트', () => {
     //기능확인
     // 기간 - 시작 날짜 달력 지정하기 -------------------------------------------------
     // 1. 날짜 선택 인풋 클릭 (속성 기준)
-     cy.get('input[aria-label*="날짜 선택"]').click({ force: true });
+     dateInputs().find('input[readonly]').first().click({ force: true });
      cy.wait(500)
 
     /// 2. 두 개의 달력 테이블 중 첫 번째(왼쪽/시작일) 달력을 선택합니다.
@@ -167,7 +174,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 기간 - 이번 주 -------------------------------------------------
     // 1. 날짜 선택 인풋 클릭 (속성 기준)
-     cy.get('input[aria-label*="날짜 선택"]').click({ force: true });
+     dateInputs().find('input[readonly]').first().click({ force: true });
      cy.wait(500)
 
     // 2. 팝업 내에서 '최근 30일' 텍스트를 가진 요소를 찾아 클릭합니다.
@@ -184,7 +191,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 기간 - 이번 주 -------------------------------------------------
     // 1. 날짜 선택 인풋 클릭 (속성 기준)
-     cy.get('input[aria-label*="날짜 선택"]').click({ force: true });
+     dateInputs().find('input[readonly]').first().click({ force: true });
      cy.wait(500)
 
     // 2. 팝업 내에서 '최근 30일' 텍스트를 가진 요소를 찾아 클릭합니다.
@@ -201,7 +208,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 기간 - 이번 주 -------------------------------------------------
     // 1. 날짜 선택 인풋 클릭 (속성 기준)
-     cy.get('input[aria-label*="날짜 선택"]').click({ force: true });
+     dateInputs().find('input[readonly]').first().click({ force: true });
      cy.wait(500)
 
     // 2. 팝업 내에서 '최근 30일' 텍스트를 가진 요소를 찾아 클릭합니다.
@@ -218,7 +225,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 기간 - 지난 주 -------------------------------------------------
     // 1. 날짜 선택 인풋 클릭 (속성 기준)
-     cy.get('input[aria-label*="날짜 선택"]').click({ force: true });
+     dateInputs().find('input[readonly]').first().click({ force: true });
      cy.wait(500)
 
     // 2. 팝업 내에서 '최근 30일' 텍스트를 가진 요소를 찾아 클릭합니다.
@@ -235,7 +242,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 기간 - 최근 7일 -------------------------------------------------
     // 1. 날짜 선택 인풋 클릭 (속성 기준)
-     cy.get('input[aria-label*="날짜 선택"]').click({ force: true });
+     dateInputs().find('input[readonly]').first().click({ force: true });
      cy.wait(500)
 
     // 2. 팝업 내에서 '최근 30일' 텍스트를 가진 요소를 찾아 클릭합니다.
@@ -252,7 +259,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 기간 - 최근 14일 -------------------------------------------------
     // 1. 날짜 선택 인풋 클릭 (속성 기준)
-     cy.get('input[aria-label*="날짜 선택"]').click({ force: true });
+     dateInputs().find('input[readonly]').first().click({ force: true });
      cy.wait(500)
 
     // 2. 팝업 내에서 '최근 30일' 텍스트를 가진 요소를 찾아 클릭합니다.
@@ -270,7 +277,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 기간 - 최근 30일 -------------------------------------------------
     // 1. 날짜 선택 인풋 클릭 (속성 기준)
-     cy.get('input[aria-label*="날짜 선택"]').click({ force: true });
+     dateInputs().find('input[readonly]').first().click({ force: true });
      cy.wait(500)
 
     // 2. 팝업 내에서 '최근 30일' 텍스트를 가진 요소를 찾아 클릭합니다.
@@ -305,7 +312,7 @@ describe('로그캐치 사이트 테스트', () => {
 
    // 3. 검증코드
    cy.get('input[role="slider"]').first().should('have.attr', 'aria-valuenow', '5');
-   cy.contains('.item-margin', '5', { timeout: 5000 }).should('be.visible');
+   cy.contains(/갱신 간격\s*5\s*초/, { timeout: 5000 }).should('be.visible');
    cy.wait(1000);
    //----------------------------------------------------------------------------------
 
@@ -322,7 +329,7 @@ describe('로그캐치 사이트 테스트', () => {
    }
    // 3. 검증코드
    cy.get('input[role="slider"]').first().should('have.attr', 'aria-valuenow', '10');
-   cy.contains('.item-margin', '10', { timeout: 5000 }).should('be.visible');
+   cy.contains(/갱신 간격\s*10\s*초/, { timeout: 5000 }).should('be.visible');
    cy.wait(1000);
    //----------------------------------------------------------------------------------
 
@@ -338,7 +345,7 @@ describe('로그캐치 사이트 테스트', () => {
    }
    // 3. 검증코드
    cy.get('input[role="slider"]').first().should('have.attr', 'aria-valuenow', '15');
-   cy.contains('.item-margin', '15', { timeout: 5000 }).should('be.visible');
+   cy.contains(/갱신 간격\s*15\s*초/, { timeout: 5000 }).should('be.visible');
    cy.wait(1000);
    //----------------------------------------------------------------------------------
 
@@ -354,7 +361,7 @@ describe('로그캐치 사이트 테스트', () => {
    }
    // 3. 검증코드
    cy.get('input[role="slider"]').first().should('have.attr', 'aria-valuenow', '20');
-   cy.contains('.item-margin', '20', { timeout: 5000 }).should('be.visible');
+   cy.contains(/갱신 간격\s*20\s*초/, { timeout: 5000 }).should('be.visible');
    cy.wait(1000);
    //----------------------------------------------------------------------------------
 
@@ -370,7 +377,7 @@ describe('로그캐치 사이트 테스트', () => {
    }
    // 3. 검증코드
    cy.get('input[role="slider"]').first().should('have.attr', 'aria-valuenow', '25');
-   cy.contains('.item-margin', '25', { timeout: 5000 }).should('be.visible');
+   cy.contains(/갱신 간격\s*25\s*초/, { timeout: 5000 }).should('be.visible');
    cy.wait(1000);
    //----------------------------------------------------------------------------------
 
@@ -386,7 +393,7 @@ describe('로그캐치 사이트 테스트', () => {
    }
    // 3. 검증코드
    cy.get('input[role="slider"]').first().should('have.attr', 'aria-valuenow', '30');
-   cy.contains('.item-margin', '30', { timeout: 5000 }).should('be.visible');
+   cy.contains(/갱신 간격\s*30\s*초/, { timeout: 5000 }).should('be.visible');
    cy.wait(1000);
    //----------------------------------------------------------------------------------
 
@@ -409,7 +416,7 @@ describe('로그캐치 사이트 테스트', () => {
 
    // 3. 검증코드
    cy.get('input[role="slider"]').first().should('have.attr', 'aria-valuenow', '5');
-   cy.contains('.item-margin', '5', { timeout: 5000 }).should('be.visible');
+   cy.contains(/갱신 간격\s*5\s*초/, { timeout: 5000 }).should('be.visible');
    cy.wait(1000);
    //----------------------------------------------------------------------------------
 

@@ -1,3 +1,10 @@
+// [2.9.7 현행화] 기간 입력칸 helper — 2.9.5.0부터 aria-label="기간"/라벨 '기간'이 비어 있어 달력 아이콘(event)으로 찾음
+const dateInputs = () =>
+  cy.get('.v-input__icon--prepend-inner i.material-icons')
+    .filter(':visible')
+    .filter((i, el) => el.innerText.trim() === 'event')
+    .closest('.v-input');
+
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /*!********************************!*\
@@ -135,11 +142,12 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
   
      // 시작날짜 달력 아이콘확인
-     cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     dateInputs().eq(0).find('.material-icons').contains('event').should('be.visible');
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 전체선택 확인
-     cy.get('span[title="전체 선택"]').should('be.visible');
+     // [2.9.7] '전체 선택' 표시 없어짐 (UI 03_이력과 동일하게 제외)
+     // cy.get('span[title="전체 선택"]').should('be.visible');
 
      //2.9.4.0 추가사항
          // [UI 확인] 사용자 상태 콤보박스
@@ -181,7 +189,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 기간 - 시작 날짜 달력 지정하기 
      // 시작날짜 달력 아이콘확인
-     cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+     dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
      cy.wait(1000);
      // 1일 클릭
      cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
@@ -210,7 +218,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 'c-headline' 클래스를 가진 요소 중에 '파일 다운로드' 글자가 존재하는지 확인
     cy.contains('.c-headline', '파일 다운로드').should('exist');
     // 시작날짜 달력 아이콘확인
-     cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     dateInputs().eq(0).find('.material-icons').contains('event').should('be.visible');
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 검색 조건 이름 입력란 확인
@@ -284,7 +292,7 @@ cy.log(`🎯 선택할 날짜: ${targetYear}년 ${targetMonth}월 ${targetDay}�
 //     // 설명: 'c-headline' 클래스를 가진 요소 중에 '이상행위' 글자가 보여야 한다.
 //     cy.contains('.c-headline', '이상행위').should('exist');
 //     // 시작날짜 달력 아이콘확인
-//      cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+//      dateInputs().eq(0).find('.material-icons').contains('event').should('be.visible');
 //     // 종료날짜 달력 아이콘확인
 //     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
 //     // 검색 조건 이름 입력란 확인
@@ -310,7 +318,7 @@ cy.log(`🎯 선택할 날짜: ${targetYear}년 ${targetMonth}월 ${targetDay}�
 
 
 //     //  // 기간 - 시작 날짜 달력 지정하기 
-//     //  cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+//     //  dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
 //     //  cy.wait(1000);
 //     //  // 1일 클릭
 //     //  cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
@@ -322,7 +330,7 @@ cy.log(`🎯 선택할 날짜: ${targetYear}년 ${targetMonth}월 ${targetDay}�
 
 
 // // 2. "기간" input 클릭하여 달력 오픈
-// cy.get('input[aria-label="기간"]').filter(':visible').first().click({ force: true });
+// dateInputs().eq(0).find('input').first().click({ force: true });
 // cy.wait(1000);
 
 // // 3. 🌟 달력 헤더의 연/월과 목표 연/월을 비교해서, 필요한 만큼 이전/다음 달 화살표 클릭
@@ -370,7 +378,7 @@ cy.log(`🎯 선택할 날짜: ${targetYear}년 ${targetMonth}월 ${targetDay}�
      
 //     //조건입력 기능 동작 
 //     //이상행위 유형 클릭하는 코드 
-//     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+//     cy.get('input[aria-label=\"이상행위 유형\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
 //     cy.wait(1000);
 //     // 이상행위 유형중 개인정보 과다조회 클릭하는 코드
 //     cy.get('.v-list__tile__title').filter(':visible').contains('개인정보 과다조회').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
@@ -398,7 +406,7 @@ cy.log(`🎯 선택할 날짜: ${targetYear}년 ${targetMonth}월 ${targetDay}�
     // 설명: 'c-headline' 클래스를 가진 요소 중에 '이상행위' 글자가 보여야 한다.
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘확인
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    dateInputs().eq(0).find('.material-icons').contains('event').should('be.visible');
     // 종료날짜 달력 아이콘확인
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     // 검색 조건 이름 입력란 확인
@@ -437,7 +445,7 @@ cy.log(`🎯 선택할 날짜: ${targetYear}년 ${targetMonth}월 ${targetDay}�
 
     // 기능동작
     // 달력표를 펼침 
-    // cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    // dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
     // cy.wait(1000);
     // // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     // cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
@@ -453,7 +461,7 @@ cy.log(`🎯 선택할 날짜: ${targetYear}년 ${targetMonth}월 ${targetDay}�
 // 한달전 선택하기
 //=================================
     // 2. "기간" input 클릭하여 달력 오픈
-cy.get('input[aria-label="기간"]').filter(':visible').first().click({ force: true });
+dateInputs().eq(0).find('input').first().click({ force: true });
 cy.wait(1000);
 
 // 3. 🌟 달력 헤더의 연/월과 목표 연/월을 비교해서, 필요한 만큼 이전/다음 달 화살표 클릭
@@ -500,7 +508,8 @@ cy.log('✅ 시작 날짜 지정 성공');
      cy.wait(1000);
 
     // 사용자 상태 리스트 중 '등록' 선택 (안정화 버전)
-    cy.get('.v-menu__content.theme--light.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', '등록').click({ force: true });
+    // ※ 검출 데이터가 '등록' 사용자로 있어야 함 (없으면 CRM dlp_tester.jsp 로 데이터 생성)
+    cy.get('.v-menu__content.v-autocomplete__content').filter(':visible').contains('.v-list__tile__title', /^등록$/).click({ force: true });
     cy.wait(1000); // 선택 후 리스트가 닫히는 시간 확보
 
 
@@ -524,72 +533,68 @@ cy.log(`🎯 순차 탐색할 날짜 목록: ${targetDates.join(', ')}`);
 
 
 // 🌟 2. 동적 날짜 선택 로직 (재귀적 스크롤 - 기존에 만드신 함수 유지)
-const scrollAndFindDate = (dateToFind, retryCount = 0) => {
-    const MAX_RETRIES = 10;
+// [2.9.7 현행화] 드롭다운에 없는 날짜(데이터 없는 날)는 에러 대신 건너뜀 → onFound / onMissing 콜백
+const scrollAndFindDate = (dateToFind, onFound, onMissing, retryCount = 0) => {
+    const MAX_RETRIES = 5;
     cy.get('.v-menu__content:visible').first().as('dropdown');
     cy.get('@dropdown').then(($el) => {
         const $foundItem = $el.find(`.v-list__tile__title:contains("${dateToFind}"):visible, .v-list-item__title:contains("${dateToFind}"):visible`);
 
         if ($foundItem.length > 0) {
-            cy.log(`🎉 화면에서 날짜 [${dateToFind}] 찐 발견!`);
+            cy.log(`🎉 화면에서 날짜 [${dateToFind}] 발견`);
             cy.wrap($foundItem).first().click({ force: true });
+            onFound();
         } else if (retryCount < MAX_RETRIES) {
             cy.log(`⏬ 날짜 [${dateToFind}] 탐색을 위해 스크롤 내리는 중... (${retryCount + 1})`);
-            cy.get('@dropdown').scrollTo('bottom', { duration: 500 });
-            cy.wait(800); 
-            scrollAndFindDate(dateToFind, retryCount + 1);
+            cy.get('@dropdown').scrollTo('bottom', { duration: 500, ensureScrollable: false });
+            cy.wait(800);
+            scrollAndFindDate(dateToFind, onFound, onMissing, retryCount + 1);
         } else {
-            throw new Error(`❌ [${dateToFind}] 날짜를 스크롤 끝까지 내려도 찾을 수 없습니다.`);
+            cy.log(`⏭️ [${dateToFind}] 목록에 없음(해당 일자 데이터 없음) → 다음 날짜로`);
+            cy.get('body').type('{esc}');
+            cy.wait(500);
+            onMissing();
         }
     });
 };
 
 
-// 🌟 3. [핵심] 하루씩 전진하며 탐색하는 재귀 로직
-// dateIndex: 탐색할 배열의 순서 (0부터 7까지)
-// currentUIText: 현재 드롭다운 창에 적혀있어서 클릭해야 할 텍스트
+// 🌟 3. 하루씩 전진하며 탐색하는 재귀 로직
+// dateIndex: 탐색할 배열의 순서 / currentUIText: 현재 드롭다운에 표시된(클릭해서 열어야 할) 날짜
 const searchSequential = (dateIndex, currentUIText) => {
-    // [종료 조건 1] 배열의 모든 날짜(오늘)까지 다 찾아봤는데도 없는 경우 -> 에러 발생
     if (dateIndex >= targetDates.length) {
-        // 문구 수정: 3일 치 -> 8일 치
         cy.log('❌ 지정된 8일 치 기간(7일 전~오늘) 내에 검출 데이터가 없습니다.');
-        // 의도적으로 테스트를 실패시키기 위해 엄격한 검증(Assertion) 실행
-        cy.get('tbody:visible a:contains("검출")').should('be.visible');
-        return; 
+        cy.get('tbody:visible a:contains("검출")').should('be.visible'); // 의도적 실패
+        return;
     }
 
     const dateToFind = targetDates[dateIndex];
     cy.log(`▶️ [탐색 ${dateIndex + 1}/${targetDates.length}] ${dateToFind} 날짜 조회 시작`);
 
-    // 1) 현재 화면에 적혀있는 날짜 영역을 눌러서 리스트 열기
+    // 1) 현재 표시된 날짜 영역을 눌러 리스트 열기
     cy.contains('.v-select__selection', currentUIText).filter(':visible').click({ force: true });
     cy.wait(1000);
 
-    // 2) 날짜 스크롤 탐색 및 선택 함수 실행
-    scrollAndFindDate(dateToFind);
-
-    // 3) 날짜가 잘 바뀌었는지 검증
-    cy.contains('.v-select__selection', dateToFind).should('be.visible');
-    
-    // 데이터 로딩 대기
-    cy.wait(2000); 
-
-    // 4) 조건부 검증 로직 (에러 발생 없이 표 데이터 유무 확인)
-    cy.get('body').then(($body) => {
-        const hasDetection = $body.find('tbody:visible a:contains("검출"):visible').length > 0;
-
-        if (hasDetection) {
-            // [종료 조건 2] 데이터를 찾은 경우 -> 검출 버튼 누르고 완전 종료!
-            cy.log(`✅ [${dateToFind}] 날짜에서 검색 결과(검출)를 찾았습니다!`);
-            cy.get('tbody', { timeout: 10000 }).filter(':visible').contains('a', '검출').should('be.visible').click({ force: true });
-            cy.wait(1000);
-        } else {
-            // 데이터를 못 찾은 경우 -> 다음 인덱스(dateIndex + 1)로 자기 자신을 다시 호출
-            cy.log(`⚠️ [${dateToFind}] 검색 결과 없음. 하루 앞당겨 재검색합니다.`);
-            // 다음 탐색 시 드롭다운을 열려면 "방금 우리가 입력한 날짜(dateToFind)"를 눌러야 하므로 인자로 넘겨줌
-            searchSequential(dateIndex + 1, dateToFind);
-        }
-    });
+    // 2) 날짜 찾기 → 있으면 검증, 없으면 다음 날짜 (표시 날짜는 그대로 currentUIText)
+    scrollAndFindDate(
+        dateToFind,
+        () => {
+            cy.contains('.v-select__selection', dateToFind).should('be.visible');
+            cy.wait(2000);
+            cy.get('body').then(($body) => {
+                const hasDetection = $body.find('tbody:visible a:contains("검출"):visible').length > 0;
+                if (hasDetection) {
+                    cy.log(`✅ [${dateToFind}] 날짜에서 검색 결과(검출)를 찾았습니다!`);
+                    cy.get('tbody', { timeout: 10000 }).filter(':visible').contains('a', '검출').should('be.visible').click({ force: true });
+                    cy.wait(1000);
+                } else {
+                    cy.log(`⚠️ [${dateToFind}] 검색 결과 없음. 다음 날짜로 재검색합니다.`);
+                    searchSequential(dateIndex + 1, dateToFind);
+                }
+            });
+        },
+        () => searchSequential(dateIndex + 1, currentUIText)
+    );
 };
 
 // // 🌟 4. 함수 최초 실행
@@ -620,7 +625,7 @@ cy.wait(1000);
     // 설명: 'c-headline' 클래스를 가진 요소 중에 '이상행위' 글자가 보여야 한다.
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘확인
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    dateInputs().eq(0).find('.material-icons').contains('event').should('be.visible');
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 검색 조건 이름 입력란 확인
@@ -660,8 +665,8 @@ cy.wait(1000);
     cy.get('th').contains('처리').should('exist');
 
     //달력표를 펼침 
-    //cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    //dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
+    dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
 
     cy.wait(1000);
     // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
@@ -677,7 +682,7 @@ cy.wait(1000);
 
     // 조건 입력 
     //업무시스템 클릭하는 코드 
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.get('input[aria-label=\"업무시스템\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     // 업무시스템중 리눅스_배송관리 클릭하는 코드
     cy.get('.v-list__tile__title').contains('리눅스_배송관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
@@ -705,7 +710,9 @@ cy.get('tbody tr').filter(':visible').first().within(() => {
     
     // 2. 만약 화면에 보인다면 색상까지 디테일하게 검증
     if ($el.is(':visible')) {
-      cy.wrap($el).should('have.css', 'color', 'rgb(0, 0, 0)');
+      // [2.9.7] 테마별 글자색: 라이트 rgb(0, 0, 0) / 다크 rgb(241, 245, 249) — 계정 테마가 다크로 저장되어 있으면 흰색 계열
+      const dark = Cypress.$($el[0].ownerDocument).find('.application.theme--dark, .v-application.theme--dark').length > 0;
+      cy.wrap($el).should('have.css', 'color', dark ? 'rgb(241, 245, 249)' : 'rgb(0, 0, 0)');
       
       // 어떤 텍스트로 통과했는지 Cypress 로그에 남겨두면 나중에 디버깅하기 좋습니다.
       cy.log(`검증 통과 텍스트: ${$el.text()}`); 
@@ -807,10 +814,10 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
 // 접속 메뉴 - 단일 업무시스템 확인 Case
 //========================================
 // 업무시스템 초기화
-cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+cy.get('input[aria-label=\"업무시스템\"]').closest('.v-input').filter(':visible').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
 cy.wait(1000);
 // 업무시스템 선택
-cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+cy.get('input[aria-label=\"업무시스템\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
 cy.wait(1000);
 // 업무시스템 - 리녹스_VIP고객 선택
 cy.get('.v-list__tile__title').contains('리눅스_VIP고객').scrollIntoView().should('be.visible').click({ force: true });
@@ -860,10 +867,10 @@ cy.get('tbody tr')
 // 접속 메뉴 - 복수 or 전체선택시 업무시스템 확인 Case
 //========================================
 // 업무시스템 초기화
-cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+cy.get('input[aria-label=\"업무시스템\"]').closest('.v-input').filter(':visible').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
 cy.wait(1000);
 // 업무시스템 선택
-cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+cy.get('input[aria-label=\"업무시스템\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
 cy.wait(1000);
 // 업무시스템 - 전체 선택
 cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_VIP고객').scrollIntoView().should('be.visible').click({ force: true });

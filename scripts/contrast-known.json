@@ -68,6 +68,11 @@
       "mantis": "0038934",
       "screen": "accessLogProxy",
       "kind": "light-bg"
+    },
+    {
+      "mantis": "0038952",
+      "screen": "operate/task/logView",
+      "target": "mtk1"
     }
   ]
 }

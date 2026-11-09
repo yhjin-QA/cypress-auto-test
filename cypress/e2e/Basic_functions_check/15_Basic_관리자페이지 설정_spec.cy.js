@@ -1,3 +1,10 @@
+// [2.9.7 현행화] 기간 입력칸 helper — 2.9.5.0부터 aria-label="기간"/라벨 '기간'이 비어 있어 달력 아이콘(event)으로 찾음
+const dateInputs = () =>
+  cy.get('.v-input__icon--prepend-inner i.material-icons')
+    .filter(':visible')
+    .filter((i, el) => el.innerText.trim() === 'event')
+    .closest('.v-input');
+
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /*!********************************!*\
@@ -269,7 +276,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘확인
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    dateInputs().eq(0).find('.material-icons').contains('event').should('be.visible');
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     //검색 입력문구확인 
     cy.get('input[aria-label="관리자"]').filter(':visible').should('be.visible');
@@ -290,7 +297,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     //기능확인
     //달력표를 펼침  월/일 지정  
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
     cy.wait(1000);
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
@@ -312,8 +319,24 @@ describe('로그캐치 사이트 테스트', () => {
      // 선택한 컨텍스트 메뉴 닫기
      cy.get('body').type('{esc}'); 
 
-     // IP입력값  '10.10.54.5'을 타이핑합니다.
-     cy.get('input[aria-label="IP"][type="text"]').should('be.visible').clear().type('10.10.54.5');
+     // [2.9.7] 운영 이력 IP = 스크립트를 실행한 PC IP(실행 위치마다 다름: 10.10.54.5 / 10.10.0.72 등)
+     //   → --env ADMIN_IP 로 지정하거나, 지정이 없으면 방금 로그인한 Admin 이력의 IP를 읽어서 사용
+     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+     cy.wait(2000);
+     cy.get('th').filter(':visible').then(($ths) => {
+       // 머리글에 정렬 아이콘 글자(arrow_upward 등)가 붙어 있어 아이콘을 뺀 글자로 비교
+       const headText = (th) => { const c = th.cloneNode(true); c.querySelectorAll('i, .v-icon, .material-icons').forEach((e) => e.remove()); return c.textContent.trim(); };
+       cy.log(`운영 이력 머리글: ${[...$ths].map(headText).join(' | ')}`);
+       const idx = [...$ths].findIndex((th) => headText(th) === 'IP');
+       expect(idx, '운영 이력 IP 열').to.be.greaterThan(-1);
+       cy.get('tbody tr').filter(':visible').first().find('td').eq(idx).invoke('text').then((t) => {
+         const ip = (Cypress.env('ADMIN_IP') || t).trim();
+         expect(ip, '접속 PC IP').to.match(/^\d{1,3}(\.\d{1,3}){3}$/);
+         cy.log(`운영 이력 검색 IP: ${ip}`);
+         cy.wrap(ip).as('adminIp');
+       });
+     });
+     cy.get('@adminIp').then((ip) => cy.get('input[aria-label="IP"][type="text"]').should('be.visible').clear().type(ip));
      cy.wait(1000);
 
      //검색대상 클릭
@@ -326,12 +349,14 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
      //검색결과 검증
-     // 1. 검색한 IP('10.10.54.5')가 포함된 테이블 행(tr)을 먼저 찾습니다.
-     cy.contains('tbody tr', '10.10.54.5').should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
+     // 1. 검색한 IP(@adminIp)가 포함된 테이블 행(tr)을 먼저 찾습니다.
+     cy.get('@adminIp').then((ip) => {
+     cy.contains('tbody tr', ip).should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
      .within(() => {
     
       cy.get('span.ellipsis').contains('Admin(admin)').should('be.visible');
-      cy.get('span.ellipsis').contains('10.10.54.5').should('be.visible');
+      cy.get('span.ellipsis').contains(ip).should('be.visible');
+     });
      });
      //-------------------------------------------------------------------------------------------
 
@@ -357,41 +382,69 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
      //검색결과 검증
-     // 1. 검색한 IP('10.10.54.5')가 포함된 테이블 행(tr)을 먼저 찾습니다.
-     cy.contains('tbody tr', '10.10.54.5').should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
+     // 1. 검색한 IP(@adminIp)가 포함된 테이블 행(tr)을 먼저 찾습니다.
+     cy.get('@adminIp').then((ip) => {
+     cy.contains('tbody tr', ip).should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
      .within(() => {
     
       cy.get('span.ellipsis').contains('로그인').should('be.visible');
-      cy.get('span.ellipsis').contains('10.10.54.5').should('be.visible');
+      cy.get('span.ellipsis').contains(ip).should('be.visible');
+     });
      });
 
-     // 이벤트 유형 : 로그인 -> 로그아웃로 변경하여 검색 클릭
-     // 이벤트  x버튼 클릭하여 초기화 
+     // [2.9.7] 이벤트 유형 : 결과에 실제로 있는 이벤트를 읽어서 선택
+     //   자동화는 로그아웃 없이 끝나 실행 PC IP의 '로그아웃' 이력이 없을 수 있음
+     //   → 이벤트 조건을 비우고 검색 → 이벤트 열 값 수집 → '로그아웃' 우선, 없으면 로그인 외 이벤트(예: 선택) → 그 이벤트로 재검색·검증
+     const headText = (th) => { const c = th.cloneNode(true); c.querySelectorAll('i, .v-icon, .material-icons').forEach((e) => e.remove()); return c.textContent.trim(); };
+
+     // 이벤트  x버튼 클릭하여 초기화 후 검색
      cy.get('input[aria-label="이벤트"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
      cy.wait(1000);
-     // 이벤트 클릭
-     cy.get('input[aria-label="이벤트"]').filter(':visible').click({ force: true });
-     // 이벤트 리스트중 '조회' 클릭
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '로그아웃').should('be.visible').click({ force: true });
-     cy.wait(1000);
-     // 선택한 컨텍스트 메뉴 닫기
-     cy.get('body').type('{esc}'); 
+     cy.get('body').type('{esc}');
+     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+     cy.wait(2000);
+
+     cy.get('th').filter(':visible').then(($ths) => {
+       const evIdx = [...$ths].findIndex((th) => headText(th) === '이벤트');
+       expect(evIdx, '운영 이력 이벤트 열').to.be.greaterThan(-1);
+       cy.get('tbody tr').filter(':visible').then(($rows) => {
+         const events = [...new Set([...$rows].map((tr) => (tr.children[evIdx] ? tr.children[evIdx].textContent.trim() : '')).filter(Boolean))];
+         cy.log(`검색 결과 이벤트 종류: ${events.join(', ')}`);
+         const pick = events.includes('로그아웃') ? '로그아웃' : (events.find((e) => e !== '로그인') || events[0]);
+         expect(pick, '선택할 이벤트').to.be.a('string');
+         cy.log(`이벤트 '${pick}' 로 재검색`);
+         cy.wrap(pick).as('pickEvent');
+       });
+     });
+
+     // 이벤트 클릭 → 읽어 온 이벤트 선택 (정확히 일치하는 항목만: '선택' ≠ '전체 선택')
+     cy.get('@pickEvent').then((ev) => {
+       cy.get('input[aria-label="이벤트"]').filter(':visible').click({ force: true });
+       cy.wait(1000);
+       cy.get('.v-menu__content:visible').find('.v-list__tile__title')
+         .filter((i, el) => el.textContent.trim() === ev).first().scrollIntoView().click({ force: true });
+       cy.wait(1000);
+       cy.get('body').type('{esc}');
+     });
 
      // 검색버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+     cy.wait(2000);
 
-     //검색결과 검증
-     // 1. 검색한 IP('10.10.54.5')가 포함된 테이블 행(tr)을 먼저 찾습니다.
-     cy.contains('tbody tr', '10.10.54.5').should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
-     .within(() => {
-    
-      cy.get('a.font-weight-bold').should('contain', '로그아웃').and('be.visible');
-      cy.get('span.ellipsis').contains('10.10.54.5').should('be.visible');
+     //검색결과 검증 : 실행 PC IP + 선택한 이벤트
+     cy.get('@adminIp').then((ip) => {
+       cy.get('@pickEvent').then((ev) => {
+         cy.contains('tbody tr', ip).should('be.visible')
+         .within(() => {
+           cy.get('a.font-weight-bold').should('contain', ev).and('be.visible');
+           cy.get('span.ellipsis').contains(ip).should('be.visible');
+         });
+       });
      });
 
      //-------------------------------------------------------------------------------------------
 
-     // IP입력값  '10.10.54.5'을 타이핑합니다.
+     // IP입력값  '10.10.0.210'을 타이핑합니다.
      cy.get('input[aria-label="IP"][type="text"]').should('be.visible').clear().type('10.10.0.210');
      cy.wait(1000);
 
@@ -427,7 +480,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 
      //검색결과 검증
-     // 1. 검색한 IP('10.10.54.5')가 포함된 테이블 행(tr)을 먼저 찾습니다.
+     // 1. 검색한 IP('10.10.0.210')가 포함된 테이블 행(tr)을 먼저 찾습니다.
      cy.contains('tbody tr', '10.10.0.210').should('be.visible') // 화면에 결과가 렌더링될 때까지 대기
      .within(() => {
     
@@ -445,14 +498,19 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '시스템 경보').should('be.visible').click({ force: true });
      cy.wait(1000); 
 
-     //이벤트 클릭
-     cy.get('input[aria-label="이벤트"]').filter(':visible').click({ force: true });
-     cy.wait(1000);
-     // 이벤트 리스트중 '전체 선택' 클릭
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '전체 선택').should('be.visible').click({ force: true });
-     cy.wait(1000);
-     // 선택한 컨텍스트 메뉴 닫기
-     cy.get('body').type('{esc}'); 
+     // [2.9.7] 검색 대상을 바꾸면 이벤트가 자동으로 전체 선택(칩 표시)되는 경우가 있음
+     //   → 칩이 이미 있으면 그대로 두고(다시 '전체 선택'을 누르면 해제됨), 비어 있을 때만 '전체 선택'
+     cy.get('input[aria-label="이벤트"]').closest('.v-input').filter(':visible').first().then(($ev) => {
+       if ($ev.find('.v-chip').length > 0) {
+         cy.log(`이벤트 이미 선택됨: ${$ev.find('.v-select__selections').text().replace(/\s+/g, ' ').trim()}`);
+       } else {
+         cy.wrap($ev).find('input[aria-label="이벤트"]').click({ force: true });
+         cy.wait(1000);
+         cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '전체 선택').should('be.visible').click({ force: true });
+         cy.wait(1000);
+         cy.get('body').type('{esc}');
+       }
+     });
 
      // 검색버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
@@ -471,14 +529,19 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '파일 다운로드').should('be.visible').click({ force: true });
      cy.wait(1000); 
 
-     //이벤트 클릭
-     cy.get('input[aria-label="이벤트"]').filter(':visible').click({ force: true });
-     cy.wait(1000);
-     // 이벤트 리스트중 '전체 선택' 클릭
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '전체 선택').should('be.visible').click({ force: true });
-     cy.wait(1000);
-     // 선택한 컨텍스트 메뉴 닫기
-     cy.get('body').type('{esc}'); 
+     // [2.9.7] 검색 대상을 바꾸면 이벤트가 자동으로 전체 선택(칩 표시)되는 경우가 있음
+     //   → 칩이 이미 있으면 그대로 두고(다시 '전체 선택'을 누르면 해제됨), 비어 있을 때만 '전체 선택'
+     cy.get('input[aria-label="이벤트"]').closest('.v-input').filter(':visible').first().then(($ev) => {
+       if ($ev.find('.v-chip').length > 0) {
+         cy.log(`이벤트 이미 선택됨: ${$ev.find('.v-select__selections').text().replace(/\s+/g, ' ').trim()}`);
+       } else {
+         cy.wrap($ev).find('input[aria-label="이벤트"]').click({ force: true });
+         cy.wait(1000);
+         cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '전체 선택').should('be.visible').click({ force: true });
+         cy.wait(1000);
+         cy.get('body').type('{esc}');
+       }
+     });
 
      // 검색버튼 클릭 
      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });

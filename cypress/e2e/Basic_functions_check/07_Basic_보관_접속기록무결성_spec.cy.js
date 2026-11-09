@@ -1,3 +1,10 @@
+// [2.9.7 현행화] 기간 입력칸 helper — 2.9.5.0부터 aria-label="기간"/라벨 '기간'이 비어 있어 달력 아이콘(event)으로 찾음
+const dateInputs = () =>
+  cy.get('.v-input__icon--prepend-inner i.material-icons')
+    .filter(':visible')
+    .filter((i, el) => el.innerText.trim() === 'event')
+    .closest('.v-input');
+
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /*!********************************!*\
@@ -185,7 +192,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 금일로부터 0일 이전 데이터에 대해 검사할지 입력
     // 텍스트를 먼저 찾고 그 텍스트를 감싸는 컴포넌트(입력창 영역)를 찾아서 진짜 input 태그 선택
-    cy.contains('금일로부터').closest('.v-input__slot').find('input[type="text"]').clear({ force: true }).type('7', { force: true });
+    cy.contains('금일로부터').parents().filter((i, el) => Cypress.$(el).find('input[type="text"]').length > 0).first().find('input[type="text"]').last().clear({ force: true }).type('7', { force: true });
     
     // 저장 버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
@@ -212,7 +219,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 금일로부터 0일 이전 데이터에 대해 검사할지 입력  (7->3으로 변경)
     // 텍스트를 먼저 찾고 그 텍스트를 감싸는 컴포넌트(입력창 영역)를 찾아서 진짜 input 태그 선택
-    cy.contains('금일로부터').closest('.v-input__slot').find('input[type="text"]').clear({ force: true }).type('3', { force: true });
+    cy.contains('금일로부터').parents().filter((i, el) => Cypress.$(el).find('input[type="text"]').length > 0).first().find('input[type="text"]').last().clear({ force: true }).type('3', { force: true });
 
     // 저장 버튼 클릭 
     cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
@@ -227,7 +234,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('a', 'Test_위변조정책_auto').click({ force: true }); 
     cy.wait(1000);
     cy.get('span[title="특정 기간선택"]').filter(':visible').should('exist');
-    cy.contains('금일로부터').closest('.v-input__slot').find('input[type="text"]').should('have.value', '3');
+    cy.contains('금일로부터').parents().filter((i, el) => Cypress.$(el).find('input[type="text"]').length > 0).first().find('input[type="text"]').last().should('have.value', '3');
     cy.log('✅ 위변조 검사 정책/플랜 변경사항 확인완료!');
 
 
@@ -297,7 +304,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 검색 기능 확인 -------------------
      //시작기간 지정후 검색
     //달력표를 펼침  월/일 지정  
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
     cy.wait(1000);
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });

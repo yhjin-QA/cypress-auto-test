@@ -1,0 +1,320 @@
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/*!********************************!*\
+  !*** ./cypress/e2e/spec.cy.js ***!
+  \********************************/
+  // ▼ 1. 모든 에러 무시 설정 (강력한 방어막) ▼
+  Cypress.on('uncaught:exception', (err, runnable) => {
+    // 무시할 에러 메시지 목록
+    const ignoredErrors = [
+      'Navigation cancelled',
+      'Cannot read properties',
+      'resetValidation',
+      'NavigationDuplicated', // [NEW] 중복 이동 에러 무시 추가
+      'Redirected when going from', // ◀◀◀ 이 문구를 추가하세요!
+      'navigation guard',           // ◀◀◀ 이 문구도 추가하세요!
+      'Avoided redundant navigation',
+      'Loading chunk',
+      'Loading CSS chunk',           // ◀◀◀ [NEW] 이번에 발생한 CSS 청크 에러 무시 추가!
+      'operate.task.packageManagement',
+      'e is not defined',
+      'Script error',
+      'not valid JSON',
+      'ChunkLoadError'
+    ];
+
+    // 위 목록 중 하나라도 포함되면 에러를 무시함
+    if (ignoredErrors.some(e => err.message.includes(e))) {
+      return false;
+    }
+  });
+
+/**코드 시작  */
+describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
+  
+  it('14_Depth_관리자페이지 설정_SMTP설정 자동화 시나리오', () => {
+    let dbRules;
+
+    // ==========================================
+    // STEP 1: 로그인
+    // ==========================================
+    // 1. 사이트 방문
+    cy.visit('https://10.10.54.21:18443/logcatch/login');
+    cy.wait(4000); // 로딩 대기
+
+    ////////////새로고침코드//////
+      cy.get('body').then(($body) => {
+      // 만약 입력창이 안 보인다면? (흰 화면 상태라면?)
+      if ($body.find('input[aria-label="사용자 계정"]').length === 0) {
+        cy.log('🔴 화면 렌더링 실패 감지! 페이지를 새로고침합니다.');
+    
+      // 새로고침 실행
+      cy.reload();
+    
+      // 다시 한번 안정화 대기
+      cy.wait(2000);
+      } else {
+        cy.log('🟢 화면이 정상적으로 로드되었습니다.');
+      }
+     });
+     //////////////////////////////////////
+
+    // 2. 아이디 입력
+    cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
+
+    // 3. 비밀번호 입력
+    cy.get('input[aria-label="패스워드"]').should('exist').type('Manager1!', { force: true }); 
+    
+    // 4. 로그인 실행 (버튼 클릭 대신 엔터키 사용)
+    // 설명: 버튼 클릭보다 엔터키가 '중복 클릭'이나 '이동 에러'가 훨씬 적게 발생합니다.
+    cy.get('input[aria-label="패스워드"]').type('{enter}', { force: true });
+
+    
+
+   // -----------------------------------------------------------
+   // [추가된 부분] "이미 로그인" 알림창 처리 (조건부 로직)
+   // -----------------------------------------------------------
+   cy.wait(2000); // 팝업이 뜨는 찰나의 시간을 기다려줍니다.
+   cy.get('body').then(($body) => {
+    
+    // 2. jQuery 문법(.find)으로 해당 요소가 있는지 '길이(length)'로 체크합니다.
+    // 주의: 여기서는 cy.contains를 쓰면 안 됩니다!
+    if ($body.find('.v-card__title:contains("이미 접속 중인 계정입니다."):visible').length > 0) {
+        
+        cy.log('⚠️ 알림창 발견! 확인 버튼을 클릭합니다.');
+
+        // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
+        cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
+          .closest('.v-card')
+          .contains('확인')
+          .click(); // 여기서 force: true를 주면 더 안전합니다.
+          
+        cy.wait(1000); // 팝업 닫힘 대기
+    } else {
+        cy.log('✅ 알림창이 없습니다. 넘어갑니다.');
+    }
+});
+
+ // 5. [중요] 로그인 성공 검증 (URL 변경 확인)
+    // 로그인이 성공해서 URL에서 '/login'이 빠질 때까지 최대 10초간 기다립니다.
+    // 만약 여기서 실패한다면 "아이디/비번"이 틀렸거나 서버 문제(Access Deny)입니다.
+    cy.url({ timeout: 10000 }).should('not.include', '/login');
+// -----------------------------------------------------------
+
+     
+    //6. 화면 안정화 대기
+     cy.wait(3000);
+    
+    //로그인 성공
+
+
+    // ==========================================
+    // STEP : 일반모드 -> 관리자페이지 탭 진입 (자동 복구 로직 적용)
+    // ==========================================
+    cy.log('🚀 관리자(톱니바퀴) 버튼 클릭 및 렌더링 대기');
+
+    cy.get('body').then(($body) => {
+        // 1차 방어: 화면에 톱니바퀴 아이콘이 아예 렌더링되지 않았다면?
+        if ($body.find('.g-IConfig:visible').length === 0) {
+            cy.log('🔴 톱니바퀴 아이콘 렌더링 실패 감지! 페이지 새로고침');
+            cy.reload();
+            cy.wait(3000);
+        }
+    });
+
+    // 톱니바퀴 클릭
+    cy.get('.g-IConfig').should('be.visible').click({ force: true });
+    cy.wait(2000); // 청크 로딩 대기
+
+    cy.get('body').then(($body) => {
+        // 2차 방어: 클릭은 했는데 ChunkLoadError 때문에 '설정' 메뉴가 안 나타났다면?
+        if ($body.find('button.side-menu:contains("설정"):visible').length === 0) {
+            cy.log('🔴 ChunkLoadError 감지! (사이드 메뉴 렌더링 실패). 새로고침 후 재시도합니다.');
+            cy.reload();
+            cy.wait(3000);
+            cy.get('.g-IConfig').should('be.visible').click({ force: true });
+            cy.wait(2000);
+        }
+    });
+
+    cy.log('✅ 관리자 메뉴 렌더링 및 클릭 완벽 성공');
+
+    // ==========================================
+    // STEP 14: 관리자 -설정 탭 서브메뉴 
+    // ==========================================
+    // 1. 관리자 페이지 사이드 메뉴 중 '설정' 버튼 클릭
+    cy.log('--- [설정] 메뉴 클릭 ---');
+    cy.contains('button.side-menu', '설정').should('be.visible').click({ force: true });
+    // 설정 > SMTP 설정 서브메뉴 클릭 
+    cy.wait(1000)
+    cy.log('--- 서브메뉴 [SMTP 설정] 클릭 ---');
+    cy.get('.v-list__tile__title').filter(':contains("SMTP 설정")').filter(':visible').click({ force: true });
+    cy.wait(2000); // 화면 전환 대기
+    cy.log('--- 화면 검증 시작 ---');
+    cy.contains('.c-headline', 'SMTP 설정').should('exist');
+    //설정 확인
+    cy.get('input[aria-label="SMTP 호스트"]').filter(':visible').should('be.visible');
+    cy.get('input[aria-label="SMTP 포트"]').filter(':visible').should('be.visible');
+    cy.contains('label', '인증 여부').filter(':visible').should('be.visible');
+    cy.contains('label', 'SMTPS 사용 여부').filter(':visible').should('be.visible');
+    cy.get('input[aria-label="SMTP 계정"]').filter(':visible').should('be.visible');
+    cy.get('input[aria-label="SMTP 비밀번호"]').filter(':visible').should('be.visible');
+    cy.get('input[aria-label="전송자 E-Mail"]').filter(':visible').should('be.visible');
+    cy.get('input[aria-label="전송자 이름"]').filter(':visible').should('be.visible');
+    
+    //버튼 확인
+    cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
+    //cy.get('.v-btn__content').filter(':visible').contains('취소').should('be.visible');
+    cy.get('.v-btn__content').filter(':visible').contains('접속 테스트').should('be.visible');
+    cy.log('✅ 설정 - SMTP 설정 출력 확인 완료');
+
+// ==========================================
+// STEP 15: SMTP 설정 값 입력 및 저장
+// ==========================================
+cy.log('--- SMTP 설정값 입력 시작 (Mailpit 환경) ---');
+
+cy.get('input[aria-label="SMTP 호스트"]').filter(':visible').clear().type('10.10.54.26');
+cy.get('input[aria-label="SMTP 포트"]').filter(':visible').clear().type('1025');
+
+cy.contains('label', '인증 여부')
+  .parents('.v-input--selection-controls, .v-input')
+  .find('input')
+  .then(($input) => {
+    if ($input.prop('checked')) cy.wrap($input).click({ force: true });
+  });
+
+cy.contains('label', 'SMTPS 사용 여부')
+  .parents('.v-input--selection-controls, .v-input')
+  .find('input')
+  .then(($input) => {
+    if ($input.prop('checked')) cy.wrap($input).click({ force: true });
+  });
+
+cy.get('input[aria-label="전송자 E-Mail"]').filter(':visible').clear().type('admin@logcatch.local');
+cy.get('input[aria-label="전송자 이름"]').filter(':visible').clear().type('로그캐치_admin');
+
+cy.log('--- [저장] 버튼 클릭 ---');
+cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: true });
+cy.wait(1000);
+
+// ==========================================
+// STEP 15.5: Mailpit 받은편지함 초기화 (테스트 간 메일 섞임 방지)
+// ==========================================
+cy.log('--- Mailpit 받은편지함 초기화 ---');
+cy.request('DELETE', 'http://10.10.54.26:8025/api/v1/messages');
+
+// ==========================================
+// STEP 16: 접속 테스트 (Mail Test 모달 처리)
+// ==========================================
+cy.log('--- [접속 테스트] 버튼 클릭 ---');
+cy.get('.v-btn__content').filter(':visible').contains('접속 테스트').click({ force: true });
+cy.wait(1000);
+
+cy.get('input[aria-label="Mail Address"]').should('be.visible').clear().type('test@logcatch.com');
+cy.wait(1000);
+
+cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
+cy.wait(1000);
+
+cy.contains('테스트에 성공했습니다', { timeout: 10000 }).should('be.visible');
+cy.log('✅ 접속 테스트 UI 성공 메시지 확인 완료');
+
+// Mailpit API로 실제 수신 확인 (재시도 포함)
+cy.log('--- Mailpit API로 접속 테스트 메일 수신 확인 (재시도 포함) ---');
+cy.request('GET', 'http://10.10.54.26:8025/api/v1/messages').then((res) => {
+  expect(res.status).to.eq(200);
+
+  if (res.body.messages.length === 0) {
+    cy.log('⚠️ 즉시 조회 시 메일 없음 - 3초 후 재조회');
+    cy.wait(3000);
+
+    cy.request('GET', 'http://10.10.54.26:8025/api/v1/messages').then((res2) => {
+      expect(
+        res2.body.messages.length,
+        '3초 대기 후에도 메일 수신 안됨 - 접속 테스트 실제 발송 실패 의심'
+      ).to.be.greaterThan(0);
+
+      const mail = res2.body.messages[0];
+      expect(mail.To[0].Address).to.eq('test@logcatch.com');
+      cy.log(`✅ Mailpit 수신 확인 (재조회) - Subject: ${mail.Subject}`);
+    });
+  } else {
+    const mail = res.body.messages[0];
+    expect(mail.To[0].Address).to.eq('test@logcatch.com');
+    cy.log(`✅ Mailpit 수신 확인 (즉시) - Subject: ${mail.Subject}`);
+  }
+});
+
+// 이상행위 경보 메일 발송테스트 맨티스 버그 : 38114
+// https://bug.warevalley.com/view.php?id=38114
+/*
+
+// 다음 테스트 전 토스트 소멸 대기 + 편지함 초기화
+cy.contains('테스트에 성공했습니다').should('not.exist');
+cy.request('DELETE', 'http://10.10.54.26:8025/api/v1/messages');
+
+// ==========================================
+// STEP 17: 이상행위 경보 메일발송 테스트 (모달 없이 즉시 발송)
+// ==========================================
+cy.log('--- [이상행위 경보 메일발송 테스트] 버튼 클릭 ---');
+cy.get('.v-btn__content').filter(':visible').contains('이상행위 경보 메일발송 테스트').click({ force: true });
+cy.wait(1000);
+
+cy.contains('테스트에 성공했습니다', { timeout: 10000 }).should('be.visible');
+cy.log('✅ 이상행위 경보 메일발송 테스트 UI 성공 메시지 확인 완료');
+
+// ==========================================
+// STEP 18: Mailpit API로 이상행위 경보 메일 실제 수신 확인 (재시도 포함)
+// ==========================================
+cy.log('--- Mailpit API로 이상행위 경보 메일 수신 확인 (재시도 포함) ---');
+
+cy.request('GET', 'http://10.10.54.26:8025/api/v1/messages').then((res) => {
+  expect(res.status).to.eq(200);
+
+  if (res.body.messages.length === 0) {
+    cy.log('⚠️ 즉시 조회 시 메일 없음 - 3초 후 재조회');
+    cy.wait(3000);
+
+    cy.request('GET', 'http://10.10.54.26:8025/api/v1/messages').then((res2) => {
+      expect(
+        res2.body.messages.length,
+        '3초 대기 후에도 메일 수신 안됨 - 실제 발송 실패 의심 (버그)'
+      ).to.be.greaterThan(0);
+
+      const latest = res2.body.messages[0];
+      cy.log(`수신자: ${JSON.stringify(latest.To)}`);
+      cy.log(`제목: ${latest.Subject}`);
+      expect(latest.From.Address).to.eq('admin@logcatch.local');
+      expect(latest.Subject).to.match(/이상행위|경보|alert/i);
+      cy.log(`✅ Mailpit 수신 확인 (재조회) - Subject: ${latest.Subject}`);
+    });
+  } else {
+    const latest = res.body.messages[0];
+    cy.log(`수신자: ${JSON.stringify(latest.To)}`);
+    cy.log(`제목: ${latest.Subject}`);
+    expect(latest.From.Address).to.eq('admin@logcatch.local');
+    expect(latest.Subject).to.match(/이상행위|경보|alert/i);
+    cy.log(`✅ Mailpit 수신 확인 (즉시) - Subject: ${latest.Subject}`);
+  }
+});
+*/
+cy.log('✅ SMTP 설정 - 저장/접속테스트/발송테스트/실제수신 검증 완료');
+    
+   
+
+    // ==========================================
+    // [FINAL] 테스트 종료 및 메뉴 닫기
+    // ==========================================
+    cy.log('🎉 모든 테스트 시나리오 성공적으로 완료!');
+    cy.get('body').type('{esc}');
+    cy.get('body').click('center', { force: true });
+
+
+  });
+});  
+
+//코드마지막
+
+
+ })()
+;

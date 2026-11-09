@@ -1,3 +1,40 @@
+// [2.9.7 현행화] 파일 다운로드 그룹 콤보
+// - 같은 aria-label 요소가 2개 → 보이는 input을 직접 클릭(원래 동작). 칩 선택으로 input이 숨으면 칩이 있는 v-input의 slot 클릭
+// - 메뉴는 현재 활성(menuable__content__active) 메뉴만 확인
+const groupField = () =>
+  cy.get('input[aria-label="파일 다운로드 그룹"]').then(($inputs) => {
+    const $vis = $inputs.filter(':visible');
+    cy.log(`파일 다운로드 그룹 input: 전체 ${$inputs.length} / 보임 ${$vis.length}`);
+    if ($vis.length) return cy.wrap($vis.first());
+    const $withChip = $inputs.closest('.v-input').filter((i, el) => Cypress.$(el).find('.v-chip').length > 0);
+    return cy.wrap(($withChip.length ? $withChip : $inputs.closest('.v-input')).first().find('.v-input__slot'));
+  });
+
+const pickDownloadGroup = (name, attempt = 1) => {
+  groupField().click({ force: true });
+  cy.wait(1000);
+  cy.get('.menuable__content__active').filter(':visible').last().then(($m) => {
+    const hit = [...$m.find('.v-list__tile__title')].some((el) => el.textContent.includes(name));
+    if (hit) {
+      cy.wrap($m).contains('.v-list__tile__title', name).click({ force: true });
+    } else if (attempt < 3) {
+      cy.log(`🔁 파일 다운로드 그룹 목록 재시도 (${attempt}회) - "${name}" 없음`);
+      cy.get('body').type('{esc}');
+      cy.wait(1500);
+      pickDownloadGroup(name, attempt + 1);
+    } else {
+      throw new Error(`파일 다운로드 그룹 목록에 "${name}" 없음 - 열린 메뉴: ${$m.text().trim().slice(0, 200)}`);
+    }
+  });
+};
+
+// [2.9.7 현행화] 기간 입력칸 helper — 2.9.5.0부터 aria-label="기간"/라벨 '기간'이 비어 있어 달력 아이콘(event)으로 찾음
+const dateInputs = () =>
+  cy.get('.v-input__icon--prepend-inner i.material-icons')
+    .filter(':visible')
+    .filter((i, el) => el.innerText.trim() === 'event')
+    .closest('.v-input');
+
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /*!********************************!*\
@@ -262,7 +299,7 @@ describe('로그캐치 사이트 테스트', () => {
      //달력 아이콘 확인
      //cy.get('.material-icons').filter(':visible').contains('event').should('be.visible');
      // 시작날짜 달력 아이콘확인
-     cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     dateInputs().eq(0).find('.material-icons').contains('event').should('be.visible');
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 검색 조건 이름 입력란 확인
@@ -386,7 +423,8 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(1000);
 
     // 상태 콤보박스 — 선택 영역(.v-select__selections) 직접 클릭
-    cy.contains('label', /^조건$/).closest('.v-input').find('.v-select__selections').click({ force: true });
+    // [2.9.7] 숨겨진 '조건' 라벨이 먼저 잡혀 메뉴가 안 열림 → 보이는 조건 input 클릭(첫 번째 상태 선택과 동일 방식)
+    cy.get('input[aria-label="조건"]').filter(':visible').first().click({ force: true });
     cy.wait(1000);
 
      // 드롭다운에서 '퇴직자' 선택
@@ -416,7 +454,8 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(1000);
 
      // 상태 콤보박스 — '사용자'로 초기화
-    cy.contains('label', /^조건$/).closest('.v-input').find('.v-select__selections').click({ force: true });
+    // [2.9.7] 숨겨진 '조건' 라벨이 먼저 잡혀 메뉴가 안 열림 → 보이는 조건 input 클릭(첫 번째 상태 선택과 동일 방식)
+    cy.get('input[aria-label="조건"]').filter(':visible').first().click({ force: true });
     cy.wait(1000);
 
      cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '사용자').click({ force: true });
@@ -479,7 +518,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘확인
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    dateInputs().eq(0).find('.material-icons').contains('event').should('be.visible');
     // 종료날짜 달력 아이콘확인
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     // 검색 조건 입력란 
@@ -498,7 +537,7 @@ describe('로그캐치 사이트 테스트', () => {
     
     // 기능확인
     //달력표를 펼침  월/일 지정  
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
     
     cy.wait(1000);
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
@@ -513,14 +552,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 월 정기점검 보고서 조회하기 -------------------------------------------------------------
     //파일 다운로드 그룹 클릭 
-     cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').click({ force: true });
-     cy.wait(1000);
-     
-     // 열려있는 메뉴창을 찾아 맨 아래로 부드럽게 스크롤합니다.
-     cy.get('.v-menu__content:visible').scrollTo('bottom', { duration: 500 });
-     cy.wait(1000);
-     // 상태 리스트중 '월 정기점검 보고서' 클릭
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '월 정기점검 보고서').should('exist').click({ force: true });
+     pickDownloadGroup('월 정기점검 보고서');
      cy.wait(1000);
      // 선택한 컨텍스트 메뉴 닫기
      cy.get('body').type('{esc}');  
@@ -558,19 +590,12 @@ describe('로그캐치 사이트 테스트', () => {
      //-----------------------------------------------------------------------------------
 
      // 파일 다운로드 그룹 x버튼 클릭하여 초기화 
-     cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true }); 
+     cy.get('input[aria-label="파일 다운로드 그룹"]').closest('.v-input').filter((i, el) => Cypress.$(el).find('.v-chip').length > 0).first().find('.v-input__icon--clear').find('.v-icon').click({ force: true }); 
      cy.wait(1000);
 
      //접속이력 조회 화면 결과 파일 보고서 조회하기 -----------------------------------------------
      //파일 다운로드 그룹 클릭 
-     cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').click({ force: true });
-     cy.wait(1000);
-     
-     // 열려있는 메뉴창을 찾아 맨 아래로 부드럽게 스크롤합니다.
-     cy.get('.v-menu__content:visible').scrollTo('bottom', { duration: 500 });
-     cy.wait(1000);
-     // 상태 리스트중 '접속이력 조회 화면 결과 파일' 클릭
-     cy.get('.v-menu__content:visible').contains('.v-list__tile__title', '접속이력 조회 화면 결과 파일').should('exist').click({ force: true });
+     pickDownloadGroup('접속이력 조회 화면 결과 파일');
      cy.wait(1000);
      // 선택한 컨텍스트 메뉴 닫기
      cy.get('body').type('{esc}'); 

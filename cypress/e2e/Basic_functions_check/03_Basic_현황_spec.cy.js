@@ -1,3 +1,31 @@
+// [2.9.7] 현황 업무시스템 목록 = 조회 기간 안에 사용 이력이 있는 업무시스템만 노출(정상 동작)
+//   → selectSystemInRange(it 블록 안)가 기간을 넓혀 가며 선택. 아래는 콤보 선택 공통 helper
+const trySelectSystem = (name) => trySelectFrom('업무시스템', name);
+// 콤보박스(aria-label) 목록에 name 이 있으면 선택, 없으면 경고 후 건너뜀 (그룹 목록도 업무시스템 선택에 따라 채워짐)
+const trySelectFrom = (label, name) => {
+  cy.get(`input[aria-label="${label}"]`).closest('.v-input').filter(':visible').first().find('.v-input__slot').click({ force: true });
+  cy.wait(1500);
+  cy.get('.menuable__content__active').filter(':visible').last().then(($m) => {
+    const tiles = [...$m.find('.v-list__tile__title')];
+    const hit = tiles.find((el) => el.textContent.trim() === name) || tiles.find((el) => el.textContent.includes(name));
+    if (hit) {
+      cy.wrap(hit).scrollIntoView().click({ force: true });
+      cy.log(`${label} '${name}' 선택`);
+    } else {
+      cy.log(`⚠️ ${label} 목록에 '${name}' 없음(${$m.text().trim().slice(0, 40)}) - 선택 건너뜀`);
+    }
+  });
+  cy.wait(1000);
+  cy.get('body').type('{esc}');
+};
+
+// [2.9.7 현행화] 기간 입력칸 helper — 2.9.5.0부터 aria-label="기간"/라벨 '기간'이 비어 있어 달력 아이콘(event)으로 찾음
+const dateInputs = () =>
+  cy.get('.v-input__icon--prepend-inner i.material-icons')
+    .filter(':visible')
+    .filter((i, el) => el.innerText.trim() === 'event')
+    .closest('.v-input');
+
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /*!********************************!*\
@@ -122,11 +150,7 @@ const selectStartDateDaysAgo = (daysAgo) => {
 
   // 화면에 보이는 "기간" 입력창(시작 날짜)만 (숨겨진 다른 탭의 기간 입력창 제외)
   const getStartDateInput = () =>
-    cy.get('label').filter(':visible')
-      .filter((i, el) => el.textContent.trim() === '기간')
-      .first()
-      .closest('.v-input')
-      .find('input');
+    dateInputs().eq(0).find('input'); // [2.9.7] '기간' 라벨 비어 있음 → 달력 아이콘 기준
 
   // 화면에 보이는 달력만 (숨겨진 다른 달력 메뉴 제외)
   const getVisiblePicker = () =>
@@ -200,7 +224,7 @@ cy.log('--- 화면 검증 시작 ---');
 cy.contains('.c-headline', '검색 조건').should('exist');
 
 // 🌟 시작날짜 달력 아이콘 확인 (display:none 부모 이슈 완전 회피)
-cy.contains('기간').closest('.v-input').find('.material-icons').should(($icons) => {
+dateInputs().eq(0).find('.material-icons').should(($icons) => {
   const hasEvent = $icons.toArray().some((el) => el.textContent.trim() === 'event');
   expect(hasEvent).to.be.true;
 });
@@ -216,8 +240,9 @@ cy.get('i.material-icons').filter((i, el) => el.textContent.trim() === 'event').
 cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
 
 // 검색 조건 입력문구 확인
-cy.get('label').filter(':visible').contains('기간').should('be.visible');
-cy.get('label').filter(':visible').contains('추적 타입').should('be.visible');
+dateInputs().should('have.length.at.least', 1);
+// [2.9.7] '추적 타입' 라벨 없어짐 (UI 04_현황과 동일하게 제외)
+// cy.get('label').filter(':visible').contains('추적 타입').should('be.visible');
 cy.get('span').filter(':visible').contains('정보 사용자').should('be.visible');
 
 
@@ -230,6 +255,36 @@ selectStartDateDaysAgo(60);
 // 업무 시스템 - 리눅스_배송관리 선택
 ////////////////////////////
 const TARGET_SYSTEM = '리눅스_배송관리';
+
+// [2.9.7] 업무시스템 목록은 조회 기간에 사용된 업무시스템만 나옴
+//   → 현재 기간에서 없으면 시작일을 120 → 240 → 365일 전으로 넓혀 가며 다시 열어 선택
+const SYSTEM_RANGES = [0, 120, 240, 365];   // 0 = 현재 기간 그대로
+const selectSystemInRange = (name, idx = 0) => {
+  if (SYSTEM_RANGES[idx] > 0) {
+    cy.log(`📅 업무시스템 '${name}' 없음 → 시작일을 ${SYSTEM_RANGES[idx]}일 전으로 넓혀 재시도`);
+    selectStartDateDaysAgo(SYSTEM_RANGES[idx]);
+  }
+  cy.get('input[aria-label="업무시스템"]').closest('.v-input').filter(':visible').first().find('.v-input__slot').click({ force: true });
+  cy.wait(1500);
+  cy.get('.menuable__content__active').filter(':visible').last().then(($m) => {
+    const tiles = [...$m.find('.v-list__tile__title')];
+    const hit = tiles.find((el) => el.textContent.trim() === name);
+    if (hit) {
+      cy.wrap(hit).scrollIntoView().click({ force: true });
+      cy.log(`업무시스템 '${name}' 선택 (시작일 ${SYSTEM_RANGES[idx] || '기본'}${SYSTEM_RANGES[idx] ? '일 전' : ''})`);
+      cy.wait(1000);
+      cy.get('body').type('{esc}');
+    } else {
+      cy.get('body').type('{esc}');
+      cy.wait(500);
+      if (idx + 1 < SYSTEM_RANGES.length) {
+        selectSystemInRange(name, idx + 1);
+      } else {
+        throw new Error(`업무시스템 '${name}' 이 ${SYSTEM_RANGES[SYSTEM_RANGES.length - 1]}일 범위까지 목록에 없음 - 목록: ${tiles.map((e) => e.textContent.trim()).join(', ') || 'No data'}`);
+      }
+    }
+  });
+};
 
 // 업무시스템 드롭다운 열기
 const openSystemDropdown = () => {
@@ -252,7 +307,7 @@ const waitForSystemList = (attempt = 1) => {
       // 원인 구분용 에러 메시지: 목록이 비었는지 / 다른 항목만 있는지
       throw new Error(
         items.length === 0 || $menu.text().includes('No data available')
-          ? `업무시스템 목록이 비어 있음 (No data available) - 이 서버의 해당 기간에 데이터가 없는지 확인 필요`
+          ? `업무시스템 목록이 비어 있음 (No data available) - 조회 기간 안에 사용된 업무시스템이 없음(기간을 넓혀 확인)`
           : `"${TARGET_SYSTEM}" 없음 - 현재 목록: ${items.join(', ')}`
       );
     }
@@ -263,18 +318,12 @@ const waitForSystemList = (attempt = 1) => {
     waitForSystemList(attempt + 1); // 다시 열기
   });
 };
-waitForSystemList();
-
-// 업무시스템 중 리눅스_배송관리 클릭
-cy.get('.menuable__content__active')
-  .contains('.v-list__tile__title', TARGET_SYSTEM)
-  .scrollIntoView()
-  .should('be.visible')
-  .click({ force: true });
-cy.wait(1000);
-
-// 선택한 컨텍스트 메뉴 닫기
-cy.get('body').type('{esc}');
+// [2.9.7] 기간 안에 사용된 업무시스템만 목록에 나옴 → selectSystemInRange 로 기간을 넓혀 가며 선택
+// waitForSystemList();
+// cy.get('.menuable__content__active').contains('.v-list__tile__title', TARGET_SYSTEM).scrollIntoView().should('be.visible').click({ force: true });
+// cy.wait(1000);
+// cy.get('body').type('{esc}');
+selectSystemInRange(TARGET_SYSTEM);
 
 
 // ////////////////////////////
@@ -283,7 +332,7 @@ cy.get('body').type('{esc}');
 // ////////////////////////////
 
 // // 업무시스템 클릭하는 코드
-// cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+// cy.get('input[aria-label=\"업무시스템\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
 // cy.wait(500);
 
 // // 🌟 드롭다운이 실제로 열렸는지 (menuable__content__active 클래스로) 확인
@@ -335,7 +384,7 @@ cy.get('.tab-btn').contains('부서 별').closest('button').should('not.have.cla
 cy.contains('.c-headline', '검색 조건').should('exist');
 
 // 🌟 시작날짜 달력 아이콘 확인 (display:none 부모 이슈 회피 - exist로 완화)
-cy.contains('label', '기간').closest('.v-input').find('i.material-icons').should('exist').then(($icon) => {
+dateInputs().eq(0).find('i.material-icons').should('exist').then(($icon) => {   // [2.9.7] '기간' 라벨 비어 있음
   expect($icon.text().trim()).to.equal('event');
 });
 
@@ -356,38 +405,31 @@ cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
 // 업무 시스템 - 리눅스_배송관리 선택
 ////////////////////////////
 
-// 업무시스템 클릭하는 코드
-cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
-cy.wait(500);
-
-// 🌟 드롭다운이 실제로 열렸는지 (menuable__content__active 클래스로) 확인
-cy.get('.v-menu__content').filter(':visible').should('be.visible');
-
-// 전체 선택 클릭
-//cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '전체 선택').should('be.visible').click({ force: true });
-//cy.wait(1000);
-
-// 업무시스템중 리눅스_배송관리 클릭하는 코드
-cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_배송관리').scrollIntoView().should('be.visible').click({ force: true });
-cy.wait(1000);
-
-// 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
-cy.get('body').type('{esc}');
+// [2.9.7] 부서 별: 업무시스템 리눅스_배송관리 선택 (그룹 '인사팀'은 시작일을 넓혀야 노출됨)
+// [2.9.7] 그룹 목록도 조회 기간 안의 사용 이력 기준 → 업무시스템·그룹을 고르기 전에 시작일을 300일 전으로 넓힘
+selectStartDateDaysAgo(300);
+selectSystemInRange('리눅스_배송관리');
 
 
 
 cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
 
-// 기간 - 시작 날짜를 오늘 기준 60일 전으로 선택
-selectStartDateDaysAgo(60);
+// [2.9.7] 기간은 selectSystemInRange 에서 업무시스템이 나오는 범위로 이미 맞춤 → 60일 재설정 생략
+// selectStartDateDaysAgo(60);
     
     // 조건 입력 
     // 그룹별 클릭하는 코드 
-    cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    // [2.9.7] 그룹 '인사팀' 선택 — 부서 별은 그룹이 필수(미선택 시 '부서를 선택해 주세요.' 알림)라 없으면 실패 처리
+    cy.get('input[aria-label="그룹"]').closest('.v-input').filter(':visible').first().find('.v-input__slot').click({ force: true });
+    cy.wait(1500);
+    cy.get('.menuable__content__active').filter(':visible').last().then(($m) => {
+      const names = [...$m.find('.v-list__tile__title')].map((el) => el.textContent.trim());
+      cy.log(`그룹 목록: ${names.join(', ')}`);
+      expect(names.some((n) => n.includes('인사팀')), `그룹 목록에 '인사팀' (목록: ${names.join(', ') || 'No data'})`).to.be.true;
+    });
+    cy.get('.menuable__content__active').filter(':visible').last()
+      .contains('.v-list__tile__title', '인사팀').scrollIntoView().click({ force: true });
     cy.wait(1000);
-    // 그룹별중 영업팀 클릭하는 코드
-    cy.get('.v-list__tile__title').contains('인사팀').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
-    // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
 
@@ -412,7 +454,7 @@ cy.get('.tab-btn').contains('업무 시스템 별').closest('button').should('no
 cy.contains('.c-headline', '검색 조건').should('exist');
 
 // 🌟 시작날짜 달력 아이콘확인 (display:none 부모 이슈 회피 - exist로 완화)
-cy.contains('label', '기간').closest('.v-input').find('i.material-icons').should('exist').then(($icon) => {
+dateInputs().eq(0).find('i.material-icons').should('exist').then(($icon) => {   // [2.9.7] '기간' 라벨 비어 있음
   expect($icon.text().trim()).to.equal('event');
 });
 
@@ -430,17 +472,10 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
     // 기능확인 - 조건별로 검색 
     //업무 시스템 - 리눅스_배송관리 선택
     // No data available 뜨는 이슈 발생 (맨티스 : 37152) 이로인해 두번클릭하게  우회코드 작성함. 
-     //cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+     //cy.get('input[aria-label=\"업무시스템\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
 
-    cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
-    cy.wait(1000);
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
-   
-    // 업무시스템중 리눅스_배송관리 클릭하는 코드
-    cy.contains('.v-list__tile__title', '리눅스_배송관리').should('be.visible').click();
-    cy.wait(1000);
-    // 검색조건 클릭하여 선택한 컨텍스트 메뉴 닫기
-    cy.get('body').type('{esc}');
+    // [2.9.7] 업무시스템 리눅스_배송관리 선택 (없으면 기간을 넓혀 재시도)
+    selectSystemInRange('리눅스_배송관리');
 
 
     // 검색 버튼 클릭
@@ -481,7 +516,7 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
     //업무 시스템 - 리눅스_배송관리 선택
     // 조건 입력 
     //업무시스템 클릭하는 코드 
-    //cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    //cy.get('input[aria-label=\"업무시스템\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
     cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
     cy.wait(1000);
     cy.get('input[aria-label="업무시스템"]').filter(':visible').click({ force: true });
@@ -522,7 +557,7 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘확인
-    cy.get('label').filter(':visible').contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    dateInputs().eq(0).find('.material-icons').contains('event').should('be.visible');
     // 종료날짜 달력 아이콘확인
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     // 검색 버튼확인
@@ -536,7 +571,7 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
     //업무 시스템 - 리눅스_배송관리 선택
     // 조건 입력 
     //업무시스템 클릭하는 코드 
-    cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.get('input[aria-label=\"업무시스템\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     // 업무시스템중 리눅스_배송관리 클릭하는 코드
     //cy.get('span[title="전체 선택"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
@@ -547,7 +582,7 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
 
     // 조건 입력 
     // 그룹별 클릭하는 코드 
-    cy.get('input[aria-label="그룹"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.get('input[aria-label=\"그룹\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     // 그룹별중 영업팀 클릭하는 코드
     cy.get('.v-list__tile__title').contains('협력사').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
@@ -574,7 +609,7 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘확인
-     cy.get('label').filter(':visible').contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     dateInputs().eq(0).find('.material-icons').contains('event').should('be.visible');
     // 종료날짜 달력 아이콘확인
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     // 검색 버튼 확인 
@@ -586,7 +621,7 @@ cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visi
     // 기능확인 - 조건별로 검색 
     //업무 시스템 - 리눅스_배송관리 선택
     // No data available 뜨는 이슈 발생 (맨티스 : 37152) 이로인해 두번클릭하게  우회코드 작성함. 
-     //cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+     //cy.get('input[aria-label=\"업무시스템\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
 
     cy.get('.v-icon').filter(':visible').contains('arrow_drop_down').click();
     cy.wait(1000);

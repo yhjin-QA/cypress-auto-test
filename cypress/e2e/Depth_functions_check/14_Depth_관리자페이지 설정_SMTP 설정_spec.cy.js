@@ -198,10 +198,33 @@ cy.get('.v-btn__content').filter(':visible').contains('저장').click({ force: t
 cy.wait(1000);
 
 // ==========================================
-// STEP 15.5: Mailpit 받은편지함 초기화 (테스트 간 메일 섞임 방지)
+// STEP 15.5: Mailpit 기존 메일 목록 기억 (공용 메일함이라 전체 삭제하지 않음)
+//   [2026-11-09] DELETE 전체 삭제 → 테스트 전 메일 ID 목록을 저장하고, 이후 새로 들어온 메일만 확인
 // ==========================================
-cy.log('--- Mailpit 받은편지함 초기화 ---');
-cy.request('DELETE', 'http://10.10.54.26:8025/api/v1/messages');
+const MAILPIT = 'http://10.10.54.26:8025/api/v1/messages';
+cy.log('--- Mailpit 기존 메일 ID 기억 ---');
+cy.request('GET', MAILPIT).then((res) => {
+  const ids = (res.body.messages || []).map((m) => m.ID);
+  cy.log(`기존 메일 ${ids.length}건 (전체 ${res.body.total})`);
+  cy.wrap(ids).as('mailIdsBefore');
+});
+
+// 새로 들어온 메일 중 받는 사람이 to 인 메일을 찾음 (최대 retries 회, 3초 간격)
+const findNewMail = (to, retries = 5) => {
+  return cy.get('@mailIdsBefore').then((before) => {
+    return cy.request('GET', MAILPIT).then((res) => {
+      const fresh = (res.body.messages || []).filter((m) => !before.includes(m.ID)
+        && (m.To || []).some((t) => t.Address === to));
+      if (fresh.length) return fresh[0];
+      if (retries <= 0) {
+        throw new Error(`새 메일 수신 안됨 (받는 사람 ${to}) - 실제 발송 실패 의심`);
+      }
+      cy.log(`⚠️ 새 메일 아직 없음 - 3초 후 재조회 (남은 ${retries}회)`);
+      cy.wait(3000);
+      return findNewMail(to, retries - 1);
+    });
+  });
+};
 
 // ==========================================
 // STEP 16: 접속 테스트 (Mail Test 모달 처리)
@@ -219,30 +242,11 @@ cy.wait(1000);
 cy.contains('테스트에 성공했습니다', { timeout: 10000 }).should('be.visible');
 cy.log('✅ 접속 테스트 UI 성공 메시지 확인 완료');
 
-// Mailpit API로 실제 수신 확인 (재시도 포함)
-cy.log('--- Mailpit API로 접속 테스트 메일 수신 확인 (재시도 포함) ---');
-cy.request('GET', 'http://10.10.54.26:8025/api/v1/messages').then((res) => {
-  expect(res.status).to.eq(200);
-
-  if (res.body.messages.length === 0) {
-    cy.log('⚠️ 즉시 조회 시 메일 없음 - 3초 후 재조회');
-    cy.wait(3000);
-
-    cy.request('GET', 'http://10.10.54.26:8025/api/v1/messages').then((res2) => {
-      expect(
-        res2.body.messages.length,
-        '3초 대기 후에도 메일 수신 안됨 - 접속 테스트 실제 발송 실패 의심'
-      ).to.be.greaterThan(0);
-
-      const mail = res2.body.messages[0];
-      expect(mail.To[0].Address).to.eq('test@logcatch.com');
-      cy.log(`✅ Mailpit 수신 확인 (재조회) - Subject: ${mail.Subject}`);
-    });
-  } else {
-    const mail = res.body.messages[0];
-    expect(mail.To[0].Address).to.eq('test@logcatch.com');
-    cy.log(`✅ Mailpit 수신 확인 (즉시) - Subject: ${mail.Subject}`);
-  }
+// Mailpit API로 실제 수신 확인 — 테스트 전에 없던 새 메일만 확인
+cy.log('--- Mailpit API로 접속 테스트 메일 수신 확인 (새 메일만) ---');
+findNewMail('test@logcatch.com').then((mail) => {
+  expect(mail.To[0].Address).to.eq('test@logcatch.com');
+  cy.log(`✅ Mailpit 새 메일 수신 확인 - Subject: ${mail.Subject} / ${mail.Created}`);
 });
 
 // 이상행위 경보 메일 발송테스트 맨티스 버그 : 38114
@@ -251,7 +255,8 @@ cy.request('GET', 'http://10.10.54.26:8025/api/v1/messages').then((res) => {
 
 // 다음 테스트 전 토스트 소멸 대기 + 편지함 초기화
 cy.contains('테스트에 성공했습니다').should('not.exist');
-cy.request('DELETE', 'http://10.10.54.26:8025/api/v1/messages');
+// [2026-11-09] 공용 메일함 전체 삭제 대신 기존 ID 다시 기억
+cy.request('GET', MAILPIT).then((res) => cy.wrap((res.body.messages || []).map((m) => m.ID)).as('mailIdsBefore'));
 
 // ==========================================
 // STEP 17: 이상행위 경보 메일발송 테스트 (모달 없이 즉시 발송)

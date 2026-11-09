@@ -1,3 +1,10 @@
+// [2.9.7 현행화] 기간 입력칸 helper — 2.9.5.0부터 aria-label="기간"/라벨 '기간'이 비어 있어 달력 아이콘(event)으로 찾음
+const dateInputs = () =>
+  cy.get('.v-input__icon--prepend-inner i.material-icons')
+    .filter(':visible')
+    .filter((i, el) => el.innerText.trim() === 'event')
+    .closest('.v-input');
+
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /*!********************************!*\
@@ -157,7 +164,7 @@ cy.get('span').filter(':visible').contains('정보 사용자').should('be.visibl
     // ==========================================
     // 기능확인 - 달력 날짜 기간 1월 20일 지정---------------------------------------------------------------------------
     // 기간 input의 달력 아이콘 클릭 (aria-label로 정확히 타겟)
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('i.material-icons').click({ force: true });
+    dateInputs().eq(0).find('i.material-icons').click({ force: true });
     cy.wait(500);
     // 활성화된 달력 팝업에서 헤더 클릭 → 월 선택 모드
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
@@ -372,7 +379,7 @@ cy.get('label').filter(':visible')
     // ==========================================
     // 기능확인 - 달력 날짜 기간 1월 20일 지정---------------------------------------------------------------------------
     // 기간 input의 달력 아이콘 클릭 (aria-label로 정확히 타겟)
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('i.material-icons').click({ force: true });
+    dateInputs().eq(0).find('i.material-icons').click({ force: true });
     cy.wait(500);
     // 활성화된 달력 팝업에서 헤더 클릭 → 월 선택 모드
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
@@ -529,7 +536,7 @@ const targetStr = `${targetYear}-${pad(targetMonth)}-${pad(targetDay)}`;
 cy.log(`📅 시작 날짜 목표: ${targetStr} (${MONTHS_AGO > 0 ? `${MONTHS_AGO}개월 전` : `${DAYS_AGO}일 전`})`);
 
 // 2. 기간 input의 달력 아이콘 클릭
-cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('i.material-icons').click({ force: true });
+dateInputs().eq(0).find('i.material-icons').click({ force: true });
 cy.wait(500);
 
 // 3. 헤더 클릭 → 월 선택 모드 (헤더에 연도 "2026" 표시)
@@ -572,7 +579,7 @@ cy.get('.menuable__content__active').find('.v-date-picker-table--date button')
 cy.wait(500);
 
 // 7. [추가] 선택 결과 확인
-cy.get('input[aria-label="기간"]').filter(':visible').first()
+dateInputs().eq(0).find('input').first()
   .invoke('val')
   .should('match', new RegExp(`^${targetStr}`));
 

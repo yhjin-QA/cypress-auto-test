@@ -1,3 +1,10 @@
+// [2.9.7 현행화] 기간 입력칸 helper — 2.9.5.0부터 aria-label="기간"/라벨 '기간'이 비어 있어 달력 아이콘(event)으로 찾음
+const dateInputs = () =>
+  cy.get('.v-input__icon--prepend-inner i.material-icons')
+    .filter(':visible')
+    .filter((i, el) => el.innerText.trim() === 'event')
+    .closest('.v-input');
+
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /*!********************************!*\
@@ -147,7 +154,7 @@ cy.get('body').then(($body) => {
     cy.get('input[aria-label="소명 유형"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
     // 시작날짜 달력 아이콘확인
-     cy.get('label').filter(':visible').contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+     dateInputs().eq(0).find('.material-icons').contains('event').should('be.visible');
     // 종료날짜 달력 아이콘확인
     cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
     // 표 문구열 확인
@@ -168,7 +175,7 @@ cy.get('body').then(($body) => {
 
     //기능동작
     //달력표를 펼침  월/일 지정  
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
     cy.wait(1000);
     // 1. 상단 제목('2026년 2월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
@@ -182,7 +189,7 @@ cy.get('body').then(($body) => {
 
     
 
-    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.get('input[aria-label=\"소명하기 조건\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     // 소명상태중 '취소' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('취소').click({ force: true });
@@ -260,7 +267,7 @@ cy.wait(1000);
   
 
     // 선택한 소명 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    cy.get('input[aria-label=\"소명하기 조건\"]').closest('.v-input').filter(':visible').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
 
     // 소명하기 조건 클릭 (팝업창 다시띄우기)
     cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-select__selections').click({ force: true });
@@ -277,7 +284,7 @@ cy.wait(1000);
 
 
     // 선택한 소명 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    cy.get('input[aria-label=\"소명하기 조건\"]').closest('.v-input').filter(':visible').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     // 소명하기 조건 클릭 (팝업창 다시띄우기)
     cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '승인' 클릭하는 코드
@@ -293,7 +300,7 @@ cy.wait(1000);
 
 
     // 선택한 소명 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    cy.get('input[aria-label=\"소명하기 조건\"]').closest('.v-input').filter(':visible').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     // 소명하기 조건 클릭 (팝업창 다시띄우기)
     cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-select__selections').click({ force: true });
     // 소명상태중 '반려' 클릭하는 코드
@@ -308,7 +315,7 @@ cy.wait(1000);
     cy.wait(1000);
 
      // 선택한 소명 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="소명하기 조건"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    cy.get('input[aria-label=\"소명하기 조건\"]').closest('.v-input').filter(':visible').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     
      cy.log('✅ 소명싱태 확인완료');
 
@@ -330,7 +337,7 @@ cy.wait(1000);
 
 
      // 선택한 소명 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    cy.get('input[aria-label=\"소명 유형\"]').closest('.v-input').filter(':visible').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     // 소명유형 클릭 (팝업창 다시 띄우기)
     cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
      // 소명유형중  '사후 소명' 클릭하는 코드
@@ -346,7 +353,7 @@ cy.wait(1000);
 
 
      // 선택한 소명 x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    cy.get('input[aria-label=\"소명 유형\"]').closest('.v-input').filter(':visible').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     // 소명유형 클릭 (팝업창 다시 띄우기)
     cy.get('input[aria-label="소명 유형"]').filter(':visible').closest('.v-select__selections').click({ force: true });
      // 소명유형중  '소명 필요' 클릭하는 코드
@@ -392,7 +399,7 @@ cy.wait(1000);
     // 기능확인 - 조건별로 검색  
     // 이상행위 유형 별로 검증 /////////////
     // 이상행위 유형 문구 클릭하는 코드 
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.get('input[aria-label=\"이상행위 유형\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     // 이상행위 유형중 '개인정보 과다조회' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('개인정보 과다조회').click({ force: true });
@@ -407,7 +414,7 @@ cy.wait(1000);
     
 
     //이상행위 유형 상태 클릭 (팝업창 다시띄우기) (이상행위 유형 다중선택 개인정보 과다조회 + 권한 외 메뉴 + 비인가 IP접근 접근 )
-    cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.get('input[aria-label=\"이상행위 유형\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     cy.get('.v-menu__content').filter(':visible').scrollTo('bottom', { duration: 1000 }); // 부드럽게 끝까지 내림
     // 2. 렌더링 시간을 잠시 준 뒤, 텍스트가 존재하는지 확인하고 클릭
@@ -467,10 +474,10 @@ cy.get('tbody').filter(':visible').then(($body) => {
     // cy.get('body').type('{esc}');
   
 // 🌟 기존 이상행위 유형 선택값 초기화 (X 버튼 클릭)
-cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear i').click({ force: true });
+cy.get('input[aria-label=\"이상행위 유형\"]').closest('.v-input').filter(':visible').find('.v-input__icon--clear i').click({ force: true });
 cy.wait(500);
 
-cy.get('input[aria-label="이상행위 유형"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+cy.get('input[aria-label=\"이상행위 유형\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
 cy.wait(1000);
 
  cy.get('.v-menu__content').filter(':visible').scrollTo('top', { duration: 1000 }); // 부드럽게 끝까지 내림
@@ -489,7 +496,7 @@ cy.wait(1000);
 
     // 경보등급 - 심각 선택 //
     // 경보 등급 유형 선택창 팝업 띄우기
-    cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.get('input[aria-label=\"경보 등급\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     // 경보등급 유형중 '심각' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('심각').click({ force: true });
@@ -520,7 +527,7 @@ cy.wait(1000);
     //경보등급 - 다중선택 심각 + 경계
     cy.wait(1000);
     // 경보 등급 유형 선택창 팝업 띄우기 (다시 띄우기)
-    cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.get('input[aria-label=\"경보 등급\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     // 경보등급 유형중 '경계' 클릭하는 코드 (다중선택 : 심각 + 경계)
     cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
@@ -541,10 +548,10 @@ cy.wait(1000);
 
     // 선택한 경보등급  x버튼 클릭하여 초기화 
     // 경보등급 - 경계 선택만 
-    cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    cy.get('input[aria-label=\"경보 등급\"]').closest('.v-input').filter(':visible').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     cy.wait(1000);
     // 경보 등급 유형 선택창 팝업 띄우기
-    cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.get('input[aria-label=\"경보 등급\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     // 경보등급 유형중 '경계' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('경계').click({ force: true });
@@ -567,12 +574,12 @@ cy.wait(1000);
     //***********************************************************************************/ 
 
     // 선택한 경보등급  x버튼 클릭하여 초기화 
-    cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    cy.get('input[aria-label=\"경보 등급\"]').closest('.v-input').filter(':visible').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     cy.wait(1000);
     // 경보등급 - 주의만
 
     // 경보 등급 유형 선택창 팝업 띄우기
-    cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+    cy.get('input[aria-label=\"경보 등급\"]').closest('.v-input').filter(':visible').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     // 경보등급 유형중 '주의' 클릭하는 코드
     cy.get('.v-list__tile__title').filter(':visible').contains('주의').click({ force: true });
@@ -586,7 +593,7 @@ cy.wait(1000);
 
     //3.0.5.1191_r35135 제외됨
     // 선택한 경보등급  x버튼 클릭하여 초기화 
-    //cy.get('input[aria-label="경보 등급"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
+    //cy.get('input[aria-label=\"경보 등급\"]').closest('.v-input').filter(':visible').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
     //cy.wait(1000);
     
     //3.0.5.1191_r35135 제외됨

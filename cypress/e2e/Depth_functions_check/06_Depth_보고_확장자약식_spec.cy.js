@@ -1,3 +1,10 @@
+// [2.9.7 현행화] 기간 입력칸 helper — 2.9.5.0부터 aria-label="기간"/라벨 '기간'이 비어 있어 달력 아이콘(event)으로 찾음
+const dateInputs = () =>
+  cy.get('.v-input__icon--prepend-inner i.material-icons')
+    .filter(':visible')
+    .filter((i, el) => el.innerText.trim() === 'event')
+    .closest('.v-input');
+
   // ▼ 1. 모든 에러 무시 설정 (강력한 방어막) ▼
   Cypress.on('uncaught:exception', (err, runnable) => {
     // 무시할 에러 메시지 목록
@@ -602,7 +609,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 
     // //반복설정 ON으로 변경시 대상기간 종료일자 -> 기간 설정으로 변경됨. 
     // //기간 콤보박스 열기
-    // cy.get('input[aria-label="기간"]').closest('.v-input').find('.v-input__slot').click({ force: true });
+    // dateInputs().eq(0).find('.v-input__slot').click({ force: true });
     // // 기간 : 1년 선택
     // cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '1년').should('be.visible').click({ force: true });
 
