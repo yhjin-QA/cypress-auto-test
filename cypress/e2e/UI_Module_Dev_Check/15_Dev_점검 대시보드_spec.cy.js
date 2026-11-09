@@ -146,7 +146,8 @@ cy.get('input[aria-label="업무시스템"]')
   .and('have.attr', 'role', 'combobox');
 
 // 자동갱신안함 문구 및 슬라이더 확인
-cy.contains('.item-margin', '자동 갱신 안함').should('be.visible');
+// [변경] 2.9.7 - '.item-margin' 클래스로 찾지 못함 → 글자 기준으로 확인
+cy.contains('자동 갱신 안함').filter(':visible').should('be.visible');
 cy.get('input[role="slider"]')
   .should('exist')
   .and('have.attr', 'aria-valuenow', '0')

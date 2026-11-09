@@ -1,1 +1,7 @@
-[]
+[
+  {
+    "mode": "일반",
+    "where": "/detect/suspicionPrivacy/identifyProcess",
+    "message": "업무시스템을 선택해주세요."
+  }
+]

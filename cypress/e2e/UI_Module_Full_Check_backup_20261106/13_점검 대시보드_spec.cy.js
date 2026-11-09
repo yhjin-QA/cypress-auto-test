@@ -33,7 +33,7 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('https://10.10.54.51:18443/logcatch/login');
+    cy.visit('https://10.10.54.21:18443/logcatch/login');
     cy.wait(4000); // 로딩 대기
     ////////////새로고침코드//////
       cy.get('body').then(($body) => {
@@ -155,22 +155,41 @@ cy.contains('이상행위 발생 건수')
     expect(text.trim()).to.match(/^\d+\s*건$/);
   });
 
-// [신규] 데이터 없음 상태 위젯 검증 (최초 설치 시 - 통계 테이블 미생성 5종)
-cy.get('.dynamic_chart')
-  .filter(':visible')
-  .contains('아직 통계 테이블이 생성되지 않았습니다')
-  .should('have.length.at.least', 1);
+// [수정] 데이터 없음 상태 위젯 검증 - 환경에 따라 0개일 수 있음
+//  - 최초 설치(통계 테이블 미생성): 경고 아이콘 + 안내 문구 노출
+//  - 통계 테이블 생성 후: 경고 위젯 없음
+cy.get('body').then(($body) => {
+  const $noStatWidgets = $body
+    .find('.dynamic_chart:visible')
+    .filter(':contains("아직 통계 테이블이 생성되지 않았습니다")');
 
-cy.get('.fa-exclamation-triangle')
-  .filter(':visible')
-  .should('have.length.at.least', 5);
+  if ($noStatWidgets.length > 0) {
+    cy.log(`ℹ️ 통계 테이블 미생성 위젯 ${$noStatWidgets.length}개 - 경고 아이콘 확인`);
+    cy.wrap($noStatWidgets).each(($widget) => {
+      cy.wrap($widget).find('.fa-exclamation-triangle').should('be.visible');
+    });
+  } else {
+    cy.log('✅ 통계 테이블 생성됨 - 미생성 경고 위젯 없음');
+    // 경고 아이콘이 화면에 남아 있지 않은지 확인
+    expect($body.find('.dynamic_chart .fa-exclamation-triangle:visible'), '경고 아이콘').to.have.length(0);
+  }
+});
 
 // [신규] "이상행위 유형별 현황" - ApexCharts 렌더링 + 데이터 없음 텍스트 확인
 cy.contains('.v-card__title', '이상행위 유형별 현황')
   .parents('.widget_content')
   .within(() => {
-    cy.get('#apex-chart svg').should('exist');
-    cy.get('svg').contains('조회 결과가 존재하지 않습니다').should('exist');
+    cy.get('#apex-chart svg').should('exist').then(($svg) => {
+      const hasNoDataText = $svg.text().includes('조회 결과가 존재하지 않습니다');
+
+      if (hasNoDataText) {
+        cy.log('ℹ️ 이상행위 데이터 없음 상태 확인');
+        cy.wrap($svg).contains('조회 결과가 존재하지 않습니다').should('exist');
+      } else {
+        cy.log('✅ 이상행위 데이터 존재 - 차트 렌더링 확인');
+        cy.wrap($svg).find('path').should('have.length.greaterThan', 0);
+      }
+    });
   });
 
 cy.log('✅ 점검 대시보드 출력 및 차트 타이틀 확인 완료 ');

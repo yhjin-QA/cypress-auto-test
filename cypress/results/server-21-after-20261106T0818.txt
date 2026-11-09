@@ -1,0 +1,419 @@
+# 10.10.54.21 / after
+
+########## 호스트 / 시각
+$ hostname; date "+%F %T"; uptime
+localhost.localdomain
+2026-11-06 17:18:33
+ 17:18:33 up 18 days,  7:30,  1 user,  load average: 0.18, 0.56, 0.32
+
+########## 설치 버전 파일
+$ ls -l --time-style=+%F_%T /home/logcatch 2>/dev/null | head -40; for f in $(find /home/logcatch -maxdepth 2 -iname "*version*" -type f 2>/dev/null | head -10); do echo "== $f"; head -5 "$f"; done
+합계 1260
+-rw-r--r--  1 root     root       12657 2026-11-06_17:14:24 RELEASE_NOTE_2.9.7.0.md
+drwxr-xr-x  8 logcatch logcatch     114 2026-09-09_09:26:15 backup
+drwx------  4 logcatch logcatch    4096 2026-11-06_17:14:24 bin
+drwxr-xr-x 12 logcatch logcatch    4096 2026-11-06_17:12:35 common
+drwxr-xr-x  2 root     root          72 2026-03-05_12:47:46 conf
+drwxr-xr-x 18 logcatch logcatch    4096 2026-03-18_15:40:38 data
+drwxr-xr-x  2 logcatch logcatch      29 2026-02-04_14:36:05 ha
+drwxr-xr-x  9 logcatch logcatch     107 2026-02-04_14:35:39 java
+-rw-r--r--  1 root     root        1319 2026-02-04_14:36:05 logcatch_tasks.csv
+drwxr-xr-x  2 logcatch logcatch 1101824 2026-11-06_17:16:08 logs
+-rw-r--r--  1 root     root           0 2026-08-07_11:24:47 logs.log
+drwxr-xr-x  4 logcatch logcatch      32 2026-08-12_13:10:35 manager
+drwxr-xr-x  7 logcatch logcatch    4096 2026-04-23_16:31:36 mongodb
+drwxr-xr-x  7 logcatch logcatch      85 2026-02-04_14:36:00 postgresql
+drwxr-xr-x 29 logcatch logcatch    4096 2026-09-22_15:03:27 proc
+drwxr-xr-x  3 logcatch logcatch    4096 2026-11-06_17:14:22 redis
+drwxr-xr-x  2 logcatch logcatch       6 2026-02-04_14:36:02 reports
+drwxr-xr-x  6 logcatch logcatch      54 2026-02-04_14:36:02 task
+drwxr-xr-x 21 logcatch logcatch    4096 2026-11-06_17:13:02 taskmgr
+
+########## pscheck
+$ bash -lc "pscheck" 2>&1 || su - logcatch -c "pscheck" 2>&1
+/etc/profile.d/logcatch.sh: 줄 343: 문법 오류: 예기치 않은 파일의 끝
+bash: 줄 1: pscheck: 명령어를 찾을 수 없음
+/etc/profile.d/logcatch.sh: 줄 343: 문법 오류: 예기치 않은 파일의 끝
+-bash: 줄 1: pscheck: 명령어를 찾을 수 없음
+
+########## logcatch 프로세스
+$ ps -eo pid,user,lstart,cmd | grep -i -E "logcatch|logserver|java" | grep -v grep | cut -c1-220
+1089 logcatch Mon Oct 19 09:48:23 2026 /usr/lib/systemd/systemd --user
+   1184 logcatch Mon Oct 19 09:48:23 2026 (sd-pam)
+   1870 logcatch Mon Oct 19 09:48:24 2026 bash /home/logcatch/bin/diskCleanup.sh
+   2212 logcatch Mon Oct 19 09:48:24 2026 /home/logcatch/redis/redis-server *:16379
+ 760228 root     Fri Nov  6 17:13:09 2026 bash /home/logcatch/bin/noti.sh
+ 760262 root     Fri Nov  6 17:13:09 2026 /home/logcatch/java/bin/java -jar /home/logcatch/task/lib/logcatch-managernotification-2.9.6.0.jar
+ 763861 logcatch Fri Nov  6 17:13:47 2026 /home/logcatch/java/bin/java -cp /home/logcatch/common/lib/asm-9.3.jar:/home/logcatch/common/lib/accessors-smart-2.4.11.jar:/home/logcatch/common/lib/evo-inflector-1.3.jar:/home/
+ 764959 logcatch Fri Nov  6 17:13:49 2026 /home/logcatch/java/bin/java -cp /home/logcatch/common/lib/asm-9.3.jar:/home/logcatch/common/lib/accessors-smart-2.4.11.jar:/home/logcatch/common/lib/evo-inflector-1.3.jar:/home/
+ 765981 logcatch Fri Nov  6 17:13:51 2026 /home/logcatch/java/bin/java -cp /home/logcatch/common/lib/asm-9.3.jar:/home/logcatch/common/lib/accessors-smart-2.4.11.jar:/home/logcatch/common/lib/evo-inflector-1.3.jar:/home/
+ 766859 logcatch Fri Nov  6 17:13:54 2026 /home/logcatch/java/bin/java -cp /home/logcatch/common/lib/asm-9.3.jar:/home/logcatch/common/lib/accessors-smart-2.4.11.jar:/home/logcatch/common/lib/evo-inflector-1.3.jar:/home/
+ 767642 logcatch Fri Nov  6 17:14:18 2026 bash /home/logcatch/redis/redisdump.sh
+ 767658 logcatch Fri Nov  6 17:14:18 2026 /home/logcatch/java/bin/java -jar /home/logcatch/task/lib/logcatch-redisdump-2.9.6.0.jar
+ 768803 logcatch Fri Nov  6 17:14:24 2026 bash /home/logcatch/bin/logserver.sh
+ 768872 logcatch Fri Nov  6 17:14:24 2026 /home/logcatch/java/bin/java -Xmx4521m -XX:+ExitOnOutOfMemoryError -jar /home/logcatch/task/lib/logcatch-logserver-2.9.6.0.jar /home/logcatch/bin/logserver_conf.json
+ 771235 logcatch Fri Nov  6 17:16:07 2026 /home/logcatch/postgresql/bin/postgres -D /home/logcatch/postgresql/data
+ 771236 logcatch Fri Nov  6 17:16:07 2026 postgres: logger 
+ 771237 logcatch Fri Nov  6 17:16:07 2026 postgres: checkpointer 
+ 771238 logcatch Fri Nov  6 17:16:07 2026 postgres: background writer 
+ 771240 logcatch Fri Nov  6 17:16:07 2026 postgres: walwriter 
+ 771241 logcatch Fri Nov  6 17:16:07 2026 postgres: autovacuum launcher 
+ 771242 logcatch Fri Nov  6 17:16:07 2026 postgres: logical replication launcher 
+ 771326 logcatch Fri Nov  6 17:16:07 2026 /home/logcatch/mongodb/bin/mongod -f /home/logcatch/mongodb/bin/conf/mongod.conf --wiredTigerCacheSizeGB 3
+ 771364 logcatch Fri Nov  6 17:16:07 2026 /home/logcatch/java/bin/java -Djava.util.logging.config.file=/home/logcatch/manager/app/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager 
+ 771420 logcatch Fri Nov  6 17:16:07 2026 sh ./scheduler.sh
+ 771425 logcatch Fri Nov  6 17:16:07 2026 /home/logcatch/java/bin/java -cp ..//conf:..//lib/ozsfw80.jar:..//lib/jcert.jar:..//lib/jnet.jar:..//lib/jsse.jar:..//lib/logback-access-1.2.9.jar:..//lib/logback-classic-1.2.9.j
+ 772425 logcatch Fri Nov  6 17:16:08 2026 /home/logcatch/java/bin/java -cp /home/logcatch/common/lib/asm-9.3.jar:/home/logcatch/common/lib/accessors-smart-2.4.11.jar:/home/logcatch/common/lib/evo-inflector-1.3.jar:/home/
+ 772630 logcatch Fri Nov  6 17:16:10 2026 /home/logcatch/taskmgr/bin/task-executor.d
+ 774556 logcatch Fri Nov  6 17:17:47 2026 postgres: logcatch logcatch 127.0.0.1(34582) idle
+ 774565 logcatch Fri Nov  6 17:17:48 2026 postgres: logcatch logcatch 127.0.0.1(34588) idle
+ 774567 logcatch Fri Nov  6 17:17:48 2026 postgres: logcatch logcatch 127.0.0.1(34596) idle
+ 774574 logcatch Fri Nov  6 17:17:48 2026 postgres: logcatch logcatch 127.0.0.1(34602) idle
+ 774577 logcatch Fri Nov  6 17:17:49 2026 postgres: logcatch logcatch 127.0.0.1(34614) idle
+ 774868 logcatch Fri Nov  6 17:18:03 2026 sleep 60
+ 774902 logcatch Fri Nov  6 17:18:05 2026 postgres: logcatch logcatch 127.0.0.1(34526) idle
+ 774909 logcatch Fri Nov  6 17:18:06 2026 postgres: logcatch logcatch 127.0.0.1(34528) idle
+ 774912 logcatch Fri Nov  6 17:18:06 2026 postgres: logcatch logcatch 127.0.0.1(34542) idle
+ 774913 logcatch Fri Nov  6 17:18:06 2026 postgres: logcatch logcatch 127.0.0.1(34546) idle
+ 774916 logcatch Fri Nov  6 17:18:06 2026 postgres: logcatch logcatch 127.0.0.1(34558) idle
+ 774923 logcatch Fri Nov  6 17:18:06 2026 postgres: logcatch logcatch 127.0.0.1(34570) idle
+ 774924 logcatch Fri Nov  6 17:18:06 2026 postgres: logcatch logcatch 127.0.0.1(34584) idle
+ 774926 logcatch Fri Nov  6 17:18:07 2026 postgres: logcatch logcatch 127.0.0.1(34586) idle
+ 774927 logcatch Fri Nov  6 17:18:07 2026 postgres: logcatch logcatch 127.0.0.1(34600) idle
+ 774928 logcatch Fri Nov  6 17:18:07 2026 postgres: logcatch logcatch 127.0.0.1(34610) idle
+ 774929 logcatch Fri Nov  6 17:18:07 2026 postgres: logcatch logcatch 127.0.0.1(34624) idle
+ 774931 logcatch Fri Nov  6 17:18:07 2026 postgres: logcatch logcatch 127.0.0.1(34640) idle
+ 774939 logcatch Fri Nov  6 17:18:07 2026 postgres: logcatch logcatch 127.0.0.1(34652) idle
+ 774940 logcatch Fri Nov  6 17:18:08 2026 postgres: logcatch logcatch 127.0.0.1(34668) idle
+ 774945 logcatch Fri Nov  6 17:18:08 2026 postgres: logcatch logcatch 127.0.0.1(34678) idle
+ 774954 logcatch Fri Nov  6 17:18:09 2026 postgres: logcatch logcatch 127.0.0.1(34688) idle
+ 774955 logcatch Fri Nov  6 17:18:09 2026 postgres: logcatch logcatch 127.0.0.1(34692) idle
+ 774971 logcatch Fri Nov  6 17:18:09 2026 postgres: logcatch logcatch 127.0.0.1(34696) idle
+ 774980 logcatch Fri Nov  6 17:18:10 2026 postgres: logcatch logcatch 127.0.0.1(34706) idle
+ 774989 logcatch Fri Nov  6 17:18:10 2026 postgres: logcatch logcatch 127.0.0.1(34712) idle
+ 774999 logcatch Fri Nov  6 17:18:11 2026 postgres: logcatch logcatch 127.0.0.1(34716) idle
+ 775000 logcatch Fri Nov  6 17:18:12 2026 postgres: logcatch logcatch 127.0.0.1(34724) idle
+ 775002 logcatch Fri Nov  6 17:18:12 2026 postgres: logcatch logcatch 127.0.0.1(34728) idle
+ 775003 logcatch Fri Nov  6 17:18:12 2026 postgres: logcatch logcatch 127.0.0.1(34744) idle
+ 775010 logcatch Fri Nov  6 17:18:13 2026 postgres: logcatch logcatch 127.0.0.1(40636) idle
+ 775074 logcatch Fri Nov  6 17:18:18 2026 sleep 60
+ 775083 logcatch Fri Nov  6 17:18:19 2026 postgres: logcatch logcatch 127.0.0.1(40650) idle
+ 775091 logcatch Fri Nov  6 17:18:19 2026 postgres: logcatch logcatch 127.0.0.1(40660) idle
+ 775106 logcatch Fri Nov  6 17:18:21 2026 postgres: logcatch logcatch 127.0.0.1(40674) idle
+ 775113 logcatch Fri Nov  6 17:18:22 2026 postgres: logcatch logcatch 127.0.0.1(40678) idle
+ 775130 logcatch Fri Nov  6 17:18:24 2026 postgres: logcatch logcatch 127.0.0.1(43594) idle
+ 775191 logcatch Fri Nov  6 17:18:30 2026 sleep 5
+
+########## proc 폴더
+$ ls -l --time-style=+%F_%T /home/logcatch/proc 2>&1
+합계 0
+drwxr-xr-x 3 root     root     17 2026-02-04_14:36:42 3rdparty_checker
+drwxr-xr-x 2 logcatch logcatch 22 2026-02-04_14:35:31 anomalybehavior
+drwxr-xr-x 4 logcatch logcatch 50 2026-11-01_00:00:02 antiforgery
+drwxr-xr-x 4 logcatch logcatch 50 2026-11-01_11:00:00 backup
+drwxr-xr-x 4 logcatch logcatch 30 2026-02-04_14:38:32 discriminator
+drwxr-xr-x 3 root     root     17 2026-09-22_15:03:27 diskCleanup
+drwxr-xr-x 3 logcatch logcatch 36 2026-10-10_00:00:00 excelfiledownload
+drwxr-xr-x 2 logcatch logcatch 22 2026-02-04_14:35:31 externalfilelog
+drwxr-xr-x 2 logcatch logcatch 22 2026-02-04_14:35:31 externalpluginlog
+drwxr-xr-x 2 logcatch logcatch 22 2026-02-04_14:35:31 filedownload
+drwxr-xr-x 6 logcatch logcatch 80 2026-02-04_14:38:29 logcollector
+drwxr-xr-x 2 logcatch logcatch 22 2026-02-04_14:35:31 logrepository
+drwxr-xr-x 3 root     root     17 2026-02-04_14:36:03 logserver
+drwxr-xr-x 2 logcatch logcatch 22 2026-02-04_14:35:31 metadb
+drwxr-xr-x 4 logcatch logcatch 46 2026-02-04_14:35:31 notification
+drwxr-xr-x 2 logcatch logcatch 22 2026-05-14_00:00:00 ozreport
+drwxr-xr-x 2 logcatch logcatch 22 2026-02-04_14:35:31 plugin
+drwxr-xr-x 2 logcatch logcatch 22 2026-02-04_14:35:31 privacydatacollector
+drwxr-xr-x 4 logcatch logcatch 50 2026-11-01_00:00:00 rank
+drwxr-xr-x 3 logcatch logcatch 33 2026-02-04_14:35:31 redisdump
+drwxr-xr-x 2 logcatch logcatch 22 2026-02-04_14:35:31 report
+drwxr-xr-x 2 logcatch logcatch 22 2026-02-04_14:35:31 reprocess
+drwxr-xr-x 3 root     root     17 2026-02-04_14:36:41 restart
+drwxr-xr-x 4 logcatch logcatch 30 2026-02-04_14:38:34 ruleanalyzer
+drwxr-xr-x 2 logcatch logcatch 22 2026-02-04_14:35:31 scandbpv
+drwxr-xr-x 2 logcatch logcatch 22 2026-02-04_14:35:31 scannet
+drwxr-xr-x 4 logcatch logcatch 46 2026-02-04_14:38:36 statistics
+
+########## bin 폴더 (수정 시각)
+$ ls -l --time-style=+%F_%T /home/logcatch/bin 2>&1
+합계 132
+-rwxr-xr-x 1 logcatch logcatch  2259 2026-02-04_14:36:36 common_conf.json
+-rwxr-xr-x 1 root     root      1055 2026-02-04_14:36:03 diskCleanup.sh
+-rwxr-xr-x 1 logcatch logcatch  1181 2026-02-04_14:35:31 init_worker.sh
+-rwxr-xr-x 1 root     root     33467 2026-11-06_17:14:24 logcatch-memory-tune.sh
+-rwxr-xr-x 1 root     root       822 2026-02-04_14:36:42 logcatch_check_3rdparty.sh
+-rwxr-xr-x 1 root     root      3487 2026-11-06_17:14:13 logcatch_clean_logs.sh
+-rwxr-xr-x 1 root     root      2222 2026-02-04_14:36:03 logcatch_diskCleanup
+-rwxr-xr-x 1 root     root      2211 2026-02-04_14:36:03 logcatch_logserver
+-rwxr-xr-x 1 root     root      1600 2026-11-06_17:13:03 logcatch_noti
+-rwxr-xr-x 1 root     root       843 2026-02-04_14:36:01 logcatch_pgsql
+-rwxr-xr-x 1 root     root     15331 2026-02-04_14:36:41 logcatch_restart.sh
+-rwxr-xr-x 1 root     root      2370 2026-11-06_17:12:30 logcatch_server
+-rwxr-xr-x 1 root     root      2965 2026-11-06_17:12:30 logcatch_taskmgr
+-rwxr-xr-x 1 logcatch logcatch   891 2026-02-04_14:35:31 logcatch_worker
+-rwxr-xr-x 1 logcatch logcatch  7315 2026-11-06_17:14:24 logserver.sh
+-rwxr-xr-x 1 logcatch logcatch   432 2026-11-06_17:13:03 logserver.sh.bak_20261106171424
+-rwxr-xr-x 1 logcatch logcatch  2425 2026-02-04_14:36:02 logserver_conf.json
+-rwxr-xr-x 1 root     root       447 2026-11-06_17:13:03 noti.sh
+-rwxr-xr-x 1 root     root      6300 2026-02-04_14:36:04 oz_account_changer.sh
+-rwxr-xr-x 1 logcatch logcatch   263 2026-02-04_14:35:31 sync_dat_to_master.sh
+drwxr-xr-x 2 logcatch logcatch    52 2026-08-05_20:41:32 tessdata
+drwxr-xr-x 2 root     root        30 2026-08-05_12:47:42 version
+
+########## 로그서버 실행 래퍼 앞부분
+$ sed -n 1,80p /home/logcatch/bin/logcatch_logserver 2>&1
+#!/bin/sh
+#Configurations injected by install_server below....
+
+
+if [ -f /etc/profile ] ; then
+  . /etc/profile
+fi
+
+###############
+# SysV Init Information
+# chkconfig: - 58 74
+# description: logserver is the logserver daemon.
+### BEGIN INIT INFO
+# Provides: logserver
+# Required-Start: $network $local_fs $remote_fs
+# Required-Stop: $network $local_fs $remote_fs
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Should-Start: $syslog $named
+# Should-Stop: $syslog $named
+# Short-Description: start and stop logserver
+# Description: logServer daemon
+### END INIT INFO
+
+mkdir -p /home/logcatch/conf/
+mkdir -p /home/logcatch/proc/logserver/log/
+
+chown -R logcatch:logcatch /home/logcatch/proc/logserver/log/
+
+case "$1" in
+    start)
+        process=`ps aux | grep -E "logserver.sh" | grep -v grep | awk '{print $2}'`
+        if [ "" != "$process" ] ; then
+            echo "logserver.sh is already running or crashed"
+        else
+            echo "Starting logserver.sh"
+        	  sudo -u logcatch -i sh -c '. /etc/profile;nohup /home/logcatch/bin/logserver.sh >> /home/logcatch/proc/logserver/log/logserver-sh.out 2>&1 &'
+        fi
+        ;;
+    stop)
+        process=`ps aux | grep -E "logserver.sh" | grep -v grep | awk '{print $2}'`
+	if [ -z $process ] ; then
+            echo "logserver.sh is not running"
+        else
+            echo "logserver.sh shutdown."
+			kill -9 $(ps -o pid= --ppid ${process});kill -9 ${process}
+            while [ -x /proc/${process} ]
+            do
+                echo "Waiting for logserver.sh to shutdown ..."
+                sleep 1
+            done
+        fi
+
+        process=`ps aux | grep -E "logcatch-logserver" | grep -v grep | awk '{print $2}'`
+	if [ -z $process ] ; then
+            echo "logcatch-logserver is not running"
+        else
+            echo "logcatch-logserver shutdown."
+            kill -9 ${process}
+            while [ -x /proc/${process} ]
+            do
+                echo "Waiting for logcatch-logserver to shutdown ..."
+                sleep 1
+            done
+        fi
+        ;;
+    restart)
+        $0 stop
+        $0 start
+        ;;
+    *)
+        echo "Please use start, stop, restart or status as first argument"
+        ;;
+esac
+
+########## 최근 1일 안에 바뀐 bin·conf 파일
+$ find /home/logcatch/bin /home/logcatch/conf -type f -mtime -1 -printf "%TF %TT %p
+" 2>/dev/null | sort | tail -40
+2026-11-06 17:12:30.2386530050 /home/logcatch/bin/logcatch_server
+2026-11-06 17:12:30.3146531480 /home/logcatch/bin/logcatch_taskmgr
+2026-11-06 17:13:03.3667151100 /home/logcatch/bin/logserver.sh.bak_20261106171424
+2026-11-06 17:13:03.3737151230 /home/logcatch/bin/logcatch_noti
+2026-11-06 17:13:03.3767151280 /home/logcatch/bin/noti.sh
+2026-11-06 17:14:13.2508461120 /home/logcatch/bin/logcatch_clean_logs.sh
+2026-11-06 17:14:18.4448558490 /home/logcatch/conf/.redis.status
+2026-11-06 17:14:24.5608673140 /home/logcatch/bin/logserver.sh
+2026-11-06 17:14:24.7118675970 /home/logcatch/conf/.patch_history
+2026-11-06 17:14:24.8308678200 /home/logcatch/bin/logcatch-memory-tune.sh
+2026-11-06 17:16:07.4540601880 /home/logcatch/conf/.mongodb.status
+
+########## 버전 폴더 · 패치 이력
+$ ls -l --time-style=+%F_%T /home/logcatch/bin/version; for f in /home/logcatch/bin/version/*; do echo "== $f"; head -20 "$f"; done; echo "== .patch_history (끝 30줄)"; tail -30 /home/logcatch/conf/.patch_history 2>&1
+합계 8
+-rwxrwxr-x 1 root root 5178 2026-02-04_14:36:40 logcatch_version
+== /home/logcatch/bin/version/logcatch_version
+#!/usr/bin/env bash
+
+source /etc/profile
+
+# 환경변수를 이용한 경로
+LOGCATCH_MANGER_INFO_PATH=$LOGCATCH_BASE/manager/app/webapps/logcatch/WEB-INF/classes/info
+LOGCATCH_MANAGER_LIB_PATH=$LOGCATCH_BASE/manager/app/webapps/logcatch/WEB-INF/lib
+TASK_LIB_PATH=$LOGCATCH_BASE/task/lib
+TASK_MANAGER_LIB_PATH=$LOGCATCH_BASE/taskmgr/lib
+
+# 단일파일
+LOGCATCH_MANAGER_INFO_FILE=*.build_info
+TASK_MANAGER_JAR_FILE=logcatch-taskmgr-*.jar
+
+# 날짜별로 누적되지 않지만 여러 파일이 섞여있는 구분자
+LOGCATCH_MANAGER_JAR_LIB_FILE=logcatch-*.jar
+
+# 날짜별로 누적되기 때문에 프로세스별 구분
+BACKGROUND_TASK_LIST=( "logcatch-logcollector-*.jar" "logcatch-discriminator-*.jar" "logcatch-rule-analyzer-*.jar" "logcatch-statistics-*.jar" )
+FOREGROUND_TASK_LIST=( "logcatch-analysis-scenario-engine-*.jar" "logcatch-anomaly-behavior-*.jar" "logcatch-anti-forgery-*.jar" "logcatch-backup-*.jar" "logcatch-dataCollect-*.jar" "logcatch-excel-file-download-*.jar" "logcatch-external-file-log-*.jar" "logcatch-external-plugin-log-*.jar" "logcatch-file-download-*.jar" "logcatch-ledger-restore-*.jar" "logcatch-log-repository-*.jar" "logcatch-metadb-*.jar" "logcatch-oz-report-*.jar" "logcatch-privacy-data-collector-*.jar" "logcatch-privacy-data-scanner-*.jar" "logcatch-rank-*.jar" "logcatch-re-process-*.jar" "logcatch-report-generator-*.jar" "logcatch-s3-downloader-*.jar" "logcatch-scannet-*.jar" ) 
+== .patch_history (끝 30줄)
+2026-03-05 12:47:46,logcatch_linux_x86-64_3.0.4.0_r34865_260303180051.bin,logcatch_3rdparty_linux_x86-64_3.0.4.0_r34865_260303180051.bin
+2026-03-26 09:54:31,logcatch_linux_x86-64_3.0.5.0_r34908_260323205242.bin,logcatch_3rdparty_linux_x86-64_3.0.5.0_r34908_260323205242.bin
+2026-06-25 09:50:26,logcatch_linux_x86-64_3.0.5.1191_r35135_260617094555.bin,logcatch_3rdparty_linux_x86-64_3.0.5.1191_r35135_260617094555.bin
+2026-06-25 09:59:09,logcatch_linux_x86-64_3.0.5.1191_r35135_260617094555.bin,logcatch_3rdparty_linux_x86-64_3.0.5.1191_r35135_260617094555.bin
+2026-08-03 09:50:00,logcatch_linux_x86-64_2.9.1.130_r35234_260731181019.bin,logcatch_3rdparty_linux_x86-64_2.9.1.130_r35234_260731181019.bin
+2026-09-02 13:25:43,,logcatch_3rdparty_linux_x86-64_2.9.1.263_r35274_260827165108.bin
+2026-10-01 17:25:13,logcatch_linux_x86-64_2.9.4.0_261001143848.bin,logcatch_3rdparty_linux_x86-64_2.9.4.0_261001143848.bin
+2026-11-06 17:14:24,logcatch_linux_x86-64_2.9.7.0_261105150429.bin,logcatch_3rdparty_linux_x86-64_2.9.7.0_261105150429.bin
+
+########## jar · war 버전
+$ ls -l --time-style=+%F_%T /home/logcatch/task/lib 2>/dev/null | grep -i -E "logcatch-.*\.jar"; find /home/logcatch/manager /home/logcatch/taskmgr -maxdepth 4 \( -name "*.war" -o -name "logcatch*.jar" \) -printf "%TF %TT %s %p\n" 2>/dev/null | head -20
+-rw-r--r-- 1 logcatch logcatch     96226 2026-11-06_17:13:02 logcatch-analysis-scenario-engine-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch     94288 2026-11-06_17:13:02 logcatch-anomaly-behavior-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch     45000 2026-11-06_17:13:02 logcatch-anti-forgery-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch    225268 2026-11-06_17:13:03 logcatch-backup-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch     63430 2026-11-06_17:13:03 logcatch-data-subject-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch     60399 2026-02-04_14:36:01 logcatch-dataCollect-3.0.3.0.jar
+-rw-r--r-- 1 logcatch logcatch     26308 2026-11-06_17:13:03 logcatch-dataFileCleaner-2.9.6.0.jar
+-rw-r--r-- 1 logcatch logcatch   1964819 2026-11-06_17:13:03 logcatch-discriminator-2.9.6.0.jar
+-rw-r--r-- 1 logcatch logcatch     92594 2026-11-06_17:13:03 logcatch-diskCleanup-2.9.6.0.jar
+-rw-r--r-- 1 logcatch logcatch    175218 2026-11-06_17:13:03 logcatch-excel-file-download-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch     33279 2026-11-06_17:13:03 logcatch-external-db-data-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch     53854 2026-11-06_17:13:03 logcatch-external-file-log-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch     67098 2026-11-06_17:13:03 logcatch-external-plugin-log-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch   1188424 2026-11-06_17:13:03 logcatch-file-download-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch     41655 2026-11-06_17:13:03 logcatch-ledger-restore-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch     55894 2026-11-06_17:13:03 logcatch-log-repository-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch    344008 2026-11-06_17:13:03 logcatch-logcollector-2.9.6.0.jar
+-rw-r--r-- 1 logcatch logcatch 108505300 2026-11-06_17:13:03 logcatch-logserver-2.9.6.0.jar
+-rw-r--r-- 1 logcatch logcatch 109025200 2026-11-06_17:13:03 logcatch-managernotification-2.9.6.0.jar
+-rw-r--r-- 1 logcatch logcatch    269036 2026-11-06_17:13:09 logcatch-metadb-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch     29152 2026-11-06_17:13:09 logcatch-oz-report-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch      4465 2026-06-26_14:16:51 logcatch-plugin-sample-3.0.3.0.jar
+-rw-r--r-- 1 logcatch logcatch     48648 2026-11-06_17:13:09 logcatch-privacy-data-collector-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch    395358 2026-11-06_17:13:09 logcatch-privacy-data-scanner-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch    163357 2026-11-06_17:13:09 logcatch-rank-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch     34403 2026-11-06_17:13:09 logcatch-re-process-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch  91288166 2026-11-06_17:13:09 logcatch-redisdump-2.9.6.0.jar
+-rw-r--r-- 1 logcatch logcatch   6117718 2026-11-06_17:13:09 logcatch-report-generator-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch    353731 2026-11-06_17:13:09 logcatch-rule-analyzer-2.9.6.0.jar
+-rw-r--r-- 1 logcatch logcatch     74123 2026-11-06_17:13:09 logcatch-s3-downloader-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch     91988 2026-11-06_17:13:09 logcatch-scannet-2.9.6.13.jar
+-rw-r--r-- 1 logcatch logcatch    357388 2026-11-06_17:13:09 logcatch-statistics-2.9.6.0.jar
+2026-11-06 17:13:02.5387135570 355533 /home/logcatch/taskmgr/lib/logcatch-taskmgr-3.0.0.jar
+2026-02-04 14:36:05.1108222880 315425 /home/logcatch/taskmgr/lib_1772682416/logcatch-taskmgr-3.0.0.jar
+2026-03-05 12:47:31.1933627120 318696 /home/logcatch/taskmgr/lib_1774486390/logcatch-taskmgr-3.0.0.jar
+2026-03-26 09:54:12.0269795440 318694 /home/logcatch/taskmgr/lib_1782348550/logcatch-taskmgr-3.0.0.jar
+2026-06-25 09:49:56.9028454130 331600 /home/logcatch/taskmgr/lib_1782349095/logcatch-taskmgr-3.0.0.jar
+2026-06-25 09:58:45.8691796630 331600 /home/logcatch/taskmgr/lib_1785718107/logcatch-taskmgr-3.0.0.jar
+2026-08-03 09:49:27.9752505140 331378 /home/logcatch/taskmgr/lib_1788323105/logcatch-taskmgr-2.9.1.125.0.jar
+
+########## 로그서버 래퍼 · 스크립트 지문(md5)
+$ cd /home/logcatch/bin && md5sum logcatch_logserver* logserver.sh* 2>&1
+4c100123be27f4c32bf5bc8a9781d1df  logcatch_logserver
+2d60eee98c62f63552b3472c52c4a3fe  logserver.sh
+928e510d1c8e65d6db86d76e2a6d21da  logserver.sh.bak_20261106171424
+
+########## 프로필(/etc/profile.d/logcatch.sh) 문법 · 끝부분
+$ ls -l --time-style=+%F_%T /etc/profile.d/ | grep -i logcatch; wc -l /etc/profile.d/logcatch.sh; echo "== bash -n"; bash -n /etc/profile.d/logcatch.sh 2>&1 && echo SYNTAX_OK; echo "== CR 포함 줄 수"; grep -c $(printf "\r") /etc/profile.d/logcatch.sh; echo "== if/fi · do/done 개수"; grep -c -E "^[[:space:]]*if[[:space:]]" /etc/profile.d/logcatch.sh; grep -c -E "^[[:space:]]*fi([[:space:]]|;|$)" /etc/profile.d/logcatch.sh; echo "== 끝 60줄"; tail -60 /etc/profile.d/logcatch.sh | cat -A | cut -c1-200
+-rw-r--r--  1 root root 12031 2026-11-06_17:11:48 logcatch.sh
+342 /etc/profile.d/logcatch.sh
+== bash -n
+/etc/profile.d/logcatch.sh: 줄 343: 문법 오류: 예기치 않은 파일의 끝
+== CR 포함 줄 수
+0
+== if/fi · do/done 개수
+17
+14
+== 끝 60줄
+    local main_processes=($
+        "201|MANAGER|WEB|\$LOGCATCH_BASE/manager/app/logs/logcatch/|manager"$
+        "202|OZ-REPORT|WEB|\$LOGCATCH_BASE/manager/app/webapps/oz80/WEB-INF/logs/server.log|oz"$
+        "203|MANAGER-NOTIFY|ETC|\$LOGCATCH_BASE/proc/notification/log/NOTI.std|managernotification"$
+        "301|TASK-MANAGER|TASK|\$LOGCATCH_BASE/taskmgr/log/taskmgr.std|taskmgr"$
+        "302|TASK-EXECUTOR|TASK|\$LOGCATCH_BASE/taskmgr/log/task-executor.log|task-executor.d"$
+    )$
+$
+    local bg_processes=($
+        "401|LOG-COLLECTOR|BACK|\$LOGCATCH_BASE/proc/logcollector/log/task_iid_2001.std|logcollector"$
+        "402|DISCRIMINATOR|BACK|\$LOGCATCH_BASE/proc/discriminator/log/task_iid_2002.std|discriminator"$
+        "403|RULE-ANALYZER|BACK|\$LOGCATCH_BASE/proc/ruleanalyzer/log/task_iid_2003.std|ruleanalyzer"$
+        "404|STATISTICS|BACK|\$LOGCATCH_BASE/proc/statistics/log/task_iid_2501.std|statistics"$
+    )$
+$
+    local fg_processes=($
+        "501|anomalybehavior"$
+        "502|antiforgery"$
+        "503|backup"$
+        "504|excelfiledownload"$
+        "505|externalfilelog"$
+        "506|externalpluginlog"$
+        "507|filedownload"$
+        "508|logrepository"$
+        "509|metadb"$
+        "510|privacydatacollector"$
+        "511|rank"$
+        "512|report"$
+        "513|reprocess"$
+        "514|restart"$
+        "515|scandbpv"$
+        "516|scannet"$
+    )$
+$
+    local ps_output$
+    ps_output=$(ps -ef)$
+$
+    # ============================================$
+    # Print All Sections$
+    # ============================================$
+$
+    print_section_header "Storage Processes" "STIME"$
+    print_process_list store_processes print_daemon_process$
+$
+    print_section_header "Main Processes" "STIME"$
+    print_process_list main_processes print_daemon_process$
+$
+    print_section_header "Background Processes" "STIME"$
+    print_process_list bg_processes print_daemon_process$
+$
+    print_section_header "Foreground Processes" "LASTEXEC"$
+    print_process_list fg_processes print_foreground_process$
+$
+    echo ""$
+}export LOGCATCH_COUNTRY=KR$
+export LOGCATCH_TIMEZONE=Asia/Seoul$
+LOGCATCH_TIMEZONE="${LOGCATCH_TIMEZONE:-Asia/Seoul}"$
+export LOGCATCH_TIMEZONE$
+export TZ="$LOGCATCH_TIMEZONE"$
+export LOGCATCH_UI_LOCALE=ko$
+
+########## 디스크
+$ df -h | grep -v tmpfs
+Filesystem           Size  Used Avail Use% Mounted on
+efivarfs             128M   32K  128M   1% /sys/firmware/efi/efivars
+/dev/mapper/rl-root   70G  5.8G   65G   9% /
+/dev/sda2            960M  298M  663M  32% /boot
+/dev/mapper/rl-home   53G   28G   26G  53% /home
+/dev/sda1            599M  7.1M  592M   2% /boot/efi

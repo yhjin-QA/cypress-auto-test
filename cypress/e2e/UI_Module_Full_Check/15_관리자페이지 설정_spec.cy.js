@@ -27,7 +27,7 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('로그캐치 UI기본체크', () => {
+  it('DEV_Release 로그캐치 UI기본체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -52,7 +52,6 @@ describe('로그캐치 사이트 테스트', () => {
       }
      });
      //////////////////////////////////////
-
 
     // 2. 아이디 입력
     cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
@@ -116,17 +115,19 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(2000);
     cy.log('✅ 관리자 톱니바퀴 아이콘 클릭 완료');
 
-
     // ==========================================
     // STEP 14: 관리자 -설정 탭 서브메뉴 
     // ==========================================
     // 1. 관리자 페이지 사이드 메뉴 중 '설정' 버튼 클릭
     cy.log('--- [설정] 메뉴 클릭 ---');
     cy.contains('button.side-menu', '설정').should('be.visible').click({ force: true });
+    //cy.contains('span', '설정').closest('button.side-menu').click({ force: true });
     // 설정 > 패스워드 규칙 서브메뉴 클릭 
-    cy.wait(1000)
+    cy.wait(2000)
     cy.log('--- 서브메뉴 [패스워드 규칙] 클릭 ---');
-    cy.get('.v-list__tile__title').filter(':contains("패스워드 규칙")').filter(':visible').click({ force: true });
+    //cy.get('.v-list__tile__title').filter(':contains("패스워드 규칙")').filter(':visible').click({ force: true });
+    cy.contains('.v-list__tile__title', '패스워드 규칙').should('be.visible').closest('a, .v-list__tile').click({ force: true });
+    //cy.contains('패스워드 규칙', { timeout: 10000 }).should('be.visible').click({ force: true });
     cy.wait(2000); // 화면 전환 대기
   
     cy.log('--- 화면 검증 시작 ---');
@@ -157,6 +158,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-select--chips').find('.v-input__icon--append .material-icons').should('be.visible');
     // 버튼 확인 
     cy.get('.v-btn__content').filter(':visible').contains('들여오기').should('be.visible');
+    //2.9.1.262_r35274 내보내기 -> EXPORT 문구 변경
     cy.get('.v-btn__content').filter(':visible').contains('Export').should('be.visible');
     cy.get('.v-btn__content').filter(':visible').contains('저장').should('be.visible');
     //v3.0.3.0_R34785 취소 버튼 없어짐 
@@ -177,24 +179,28 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('계정관리').last().click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
-
     // =================================================
     // 1. [권한 그룹] 섹션 검증 (첫 번째 테이블)
     // =================================================
     cy.contains('.c-headline', '권한 그룹').should('exist');
     // v버튼 확인
     cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
-    // 1번 테이블  헤더 확인 (첫 번째 테이블은 eq(0) 생략 가능하지만 명시하면 더 안전함)
+    // 1번 테이블 헤더 확인 (첫 번째 테이블은 eq(0) 생략 가능하지만 명시하면 더 안전함)
     cy.get('table').first().within(() => {
     cy.contains('th', '이름').should('be.visible');
     cy.contains('th', '설명').should('be.visible');
-    // 3.0.5.1191_r35135 표 열 문구 삭제됨.
+    
+
     //cy.contains('th', '소속된 관리자').should('be.visible');
+    
+    cy.contains('th', '소속된 관리자').should('exist');
+    // 2.9.5.0 잘려보여 존재만으로 확인 대체 
     //cy.contains('th', '읽기 전용').should('be.visible');
+    // ※ (.51) '소속된 관리자' 열에 관리자 이름이 길게 나열되어 '읽기 전용' 열이 표 밖(가로 스크롤 영역)으로 밀림 → 존재만 확인
+    cy.contains('th', '읽기 전용').should('exist');
     });
     // 1번 추가 버튼 확인
     cy.get('.grid-add-button').first().should('be.visible');
-    
     // =================================================
     // 2. [관리자 계정] 섹션 검증 (두 번째 테이블)
     // =================================================
@@ -206,8 +212,9 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('table').eq(1).within(() => {
     // 이 안에서는 오직 '두 번째 테이블' 내부만 검사합니다.
     cy.contains('th', '아이디').should('be.visible');
-    cy.contains('th', '이름').should('be.visible');      // 중복 문제 완벽 해결!
-    cy.contains('th', '조건').should('be.visible');      // 혹시 1번 테이블에 상태가 생겨도 안전함
+    cy.contains('th', '이름').should('be.visible');
+    // 2.9.1.262_r35274 상태 -> 조건으로 문구변경됨.
+    cy.contains('th', '조건').should('be.visible');     
     cy.contains('th', '권한 그룹').should('be.visible');
     cy.contains('th', '이메일').should('be.visible');
     cy.contains('th', '접속 가능 IP').should('be.visible');
@@ -265,10 +272,26 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
-   // 시작날짜 달력 아이콘확인
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // // 시작날짜 달력 아이콘확인
+    // cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    // // 종료날짜 달력 아이콘확인
+    // cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // 기간 입력칸: 달력 아이콘(event)이 있는 v-input만 수집
+     // ※ 2.9.5.0부터 aria-label="기간" 이 빈 값으로 바뀌어 아이콘 기준으로 찾음
+     const dateInputs = () =>
+       cy.get('.v-input__icon--prepend-inner i.material-icons')
+         .filter(':visible')
+         .filter((i, el) => el.innerText.trim() === 'event')
+         .closest('.v-input');
+
+     // 시작/종료 날짜 칸 확인 (readonly + 달력 아이콘)
+     const checkDateIcons = () => {
+       dateInputs().should('have.length', 2); // 시작 ~ 종료
+       dateInputs().eq(0).find('i.material-icons').should('be.visible').and('contain', 'event');
+       dateInputs().eq(1).find('i.material-icons').should('be.visible').and('contain', 'event');
+       dateInputs().find('input').should('have.attr', 'readonly');
+     };
+     checkDateIcons();
     //검색 입력문구확인 
     cy.get('input[aria-label="관리자"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="IP"]').filter(':visible').should('be.visible');
@@ -296,9 +319,11 @@ describe('로그캐치 사이트 테스트', () => {
      // v버튼 확인
      cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
      //표열 문구확인
+     //2.9.1.262_r35274 정책이름 -> 정책명 문구 변경
      cy.get('th').filter(':visible').contains('정책명').should('be.visible');
      cy.get('th').filter(':visible').contains('생성일').should('be.visible');
      cy.get('th').filter(':visible').contains('생성자').should('be.visible');
+     //2.9.1.262_r35274 타입 -> 유형 문구 변경
      cy.get('th').filter(':visible').contains('유형').should('be.visible');
      cy.get('th').filter(':visible').contains('설명').should('be.visible');
      cy.get('th').filter(':visible').contains('삭제').should('be.visible')

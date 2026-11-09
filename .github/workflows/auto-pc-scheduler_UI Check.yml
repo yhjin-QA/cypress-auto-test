@@ -9,7 +9,7 @@ on:
   push:
    branches: [ "master" ]
   schedule:
-    - cron: '5 2 * * *'
+    - cron: '5 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -166,8 +166,8 @@ jobs:
           # 👇 [필수] 'mochawesome'을 명시적으로 설치해야 합니다.
           npm install cy2 mochawesome mochawesome-merge mochawesome-report-generator --save-dev
         
-          # cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Full_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
-          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Dev_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Full_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
+          #cmd /c "chcp 65001 & npx cy2 run --record --spec 'cypress/e2e/UI_Module_Dev_Check/**/*.cy.js' --browser chrome --parallel --ci-build-id ${{ github.ref_name }}-${{ github.run_id }}-UI 2>&1" | Out-File -FilePath cypress.log -Encoding UTF8
 
           Get-Content cypress.log
 
@@ -366,8 +366,8 @@ jobs:
           JOB_STATUS: ${{ needs.cypress-run.result }}
           # 👇 원하시는 버전명을 여기에 하드코딩 하세요!
           HARDCODED_VERSION: "2.9.7.0_261106" 
-          MSG_SUCCESS: "*[성공]*[Auto-PC](.51)"
-          MSG_FAIL: "*[실패]*[Auto-PC](.51)"
+          MSG_SUCCESS: "*[성공]*[Auto-PC](.21)"
+          MSG_FAIL: "*[실패]*[Auto-PC](.21)"
           MSG_TITLE: "확인결과"
           LABEL_DASH: "대시보드"
           LABEL_GIT: "GitHub(Report)"

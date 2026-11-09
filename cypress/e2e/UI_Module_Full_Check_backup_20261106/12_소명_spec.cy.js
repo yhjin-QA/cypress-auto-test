@@ -40,7 +40,7 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('https://10.10.54.51:18443/logcatch/login');
+    cy.visit('https://10.10.54.21:18443/logcatch/login');
     cy.wait(4000); // 로딩 대기
 
     ////////////새로고침코드//////
@@ -114,9 +114,7 @@ describe('로그캐치 사이트 테스트', () => {
    // ==========================================
    // STEP : 결재 서브메뉴 - 정책
    // ==========================================
-   // 수정: side-menu 클래스로 정확히 타겟팅
-  //  cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', '소명').click({ force: true });
-  //  cy.wait(1000);
+   //v2.9.4.0 결재 -> 소명
    cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', /^\s*소명\s*$/).click({ force: true });
    cy.wait(1000);
 
@@ -137,15 +135,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('i.v-icon').filter(':visible').contains('add').should('be.visible');
 
     // 표 문구열 확인
-    cy.get('th').filter(':visible').contains('결재 유형').should('be.visible');
-    //2.9.1.262_r35274 정책이름 -> 정책명 문구수정
+    cy.get('th').filter(':visible').contains('유형').should('be.visible');
     cy.get('th').filter(':visible').contains('정책명').should('be.visible');
     cy.get('th').filter(':visible').contains('설명').should('be.visible');
     cy.get('th').filter(':visible').contains('등록').should('be.visible');
     cy.get('th').filter(':visible').contains('수정').should('be.visible');
     cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
-    //v2.9.1.125_r35234제거됨.
-    //cy.get('th').filter(':visible').contains('..').should('be.visible');
+  
     
     cy.log('✅ 결재 - 정책 - [결재선] 탭 진입 및 데이터 출력 확인 완료!');
 
@@ -153,6 +149,7 @@ describe('로그캐치 사이트 테스트', () => {
 // ==========================================
 // STEP : 결재 서브메뉴 - 결재함
 // ==========================================
+ //v2.9.4.0 결재 -> 소명
 cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', /^\s*소명\s*$/).click({ force: true });
 cy.wait(1000);
 
@@ -183,7 +180,6 @@ cy.get('input[aria-label="부서"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('settings').should('exist');
 
 // 신청자 콤보박스 + 드롭다운 아이콘
-// 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
 cy.get('input[aria-label="신청자"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('arrow_drop_down').should('exist');
 
@@ -199,7 +195,6 @@ cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visib
 // 테이블 컬럼 확인
 cy.get('th').filter(':visible').contains('신청일').should('be.visible');
 cy.get('th').filter(':visible').contains('부서').should('be.visible');
-// 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
 cy.get('th').filter(':visible').contains('신청자').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 대상').should('be.visible');
 cy.get('th').filter(':visible').contains('제목').should('be.visible');
@@ -233,7 +228,6 @@ cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visib
 // 테이블 컬럼 확인
 cy.get('th').filter(':visible').contains('신청일').should('be.visible');
 cy.get('th').filter(':visible').contains('부서').should('be.visible');
-// 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
 cy.get('th').filter(':visible').contains('신청자').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 대상').should('be.visible');
 cy.get('th').filter(':visible').contains('제목').should('be.visible');
@@ -258,7 +252,6 @@ cy.get('input[aria-label="기간"]').should('exist');
 cy.get('i.v-icon.material-icons').filter(':visible').contains('event').should('exist');
 cy.get('input[aria-label="부서"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('settings').should('exist');
-// 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
 cy.get('input[aria-label="신청자"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('arrow_drop_down').should('exist');
 cy.get('input[aria-label="로그인 아이디"]').should('exist');
@@ -268,7 +261,6 @@ cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visib
 // 테이블 컬럼 확인
 cy.get('th').filter(':visible').contains('신청일').should('be.visible');
 cy.get('th').filter(':visible').contains('부서').should('be.visible');
-// 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
 cy.get('th').filter(':visible').contains('신청자').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 대상').should('be.visible');
 cy.get('th').filter(':visible').contains('제목').should('be.visible');
@@ -293,7 +285,6 @@ cy.get('input[aria-label="기간"]').should('exist');
 cy.get('i.v-icon.material-icons').filter(':visible').contains('event').should('exist');
 cy.get('input[aria-label="부서"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('settings').should('exist');
-// 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
 cy.get('input[aria-label="신청자"]').should('exist');
 cy.get('i.v-icon--link.material-icons').filter(':visible').contains('arrow_drop_down').should('exist');
 cy.get('input[aria-label="로그인 아이디"]').should('exist');
@@ -303,7 +294,6 @@ cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visib
 // 테이블 컬럼 확인
 cy.get('th').filter(':visible').contains('신청일').should('be.visible');
 cy.get('th').filter(':visible').contains('부서').should('be.visible');
-// 2.9.1.262_r35274 신청인 -> 신청자로 문구 변경
 cy.get('th').filter(':visible').contains('신청자').should('be.visible');
 cy.get('th').filter(':visible').contains('결재 대상').should('be.visible');
 cy.get('th').filter(':visible').contains('제목').should('be.visible');
@@ -312,9 +302,9 @@ cy.get('th').filter(':visible').contains('결재 상태').should('be.visible');
 cy.log('✅ 결재함 - [참조 결재] 탭 화면 확인 완료!');
 
 // ==========================================
-// STEP : 소명 서브메뉴 - 신청 > 이상행위 경보
-// [변경] 사이드 메뉴 "결재" → "소명"
+// STEP : 결재 서브메뉴 - 신청 > 이상행위 경보
 // ==========================================
+ //v2.9.4.0 결재 -> 소명
 cy.get('button.side-menu').filter(':visible').contains('span.font-weight-bold', /^\s*소명\s*$/).click({ force: true });
 cy.wait(1000);
 
@@ -323,137 +313,188 @@ cy.wait(2000);
 
 cy.log('--- 신청 > 이상행위 경보 화면 검증 시작 ---');
 
-// URL 확인
+// URL 및 탭 확인
 cy.url().should('include', '/approval/submit/anomaly-alerts');
+cy.get('.v-btn__content').filter(':visible').contains('이상행위 경보').should('be.visible');
 
-// ------------------------------------------
-// 1. 상단 탭
-// [신규] "소명 요청 자동화" 탭 추가
-// ------------------------------------------
-cy.contains('button.tab-btn', '이상행위 경보').should('be.visible').and('have.class', 'active');
-cy.contains('button.tab-btn', '소명 요청 자동화').should('be.visible').and('have.class', 'inactive');
+// [신규] 상단 안내 배너
+cy.contains('탐지된 이상행위 경보의 대상자를 골라 소명을 요청합니다.').should('be.visible');
 
-// ------------------------------------------
-// 2. 헤더 영역
-// [신규] 제목 "소명 요청" + 아이콘
-// ------------------------------------------
-cy.get('.explanation-submit-header').should('be.visible').within(() => {
-  cy.get('.esh-icon').should('contain.text', 'mark_email_read');
-  cy.get('.esh-title').should('have.text', '소명 요청');
-  // v2.9.4.0 문구변경 (기존과 동일)
-  cy.get('.esh-desc').should('have.text', '탐지된 이상행위 경보의 대상자를 골라 소명을 요청합니다.');
+// 검색 조건 요소 확인
+// [변경] aria-label 없음 → placeholder 기반
+cy.get('input[placeholder="정책 선택"]').should('exist');
+cy.get('i.v-icon.material-icons').filter(':visible').contains('search').should('exist');
+cy.get('input[placeholder="메시지 + 정책명 검색"]').should('exist');
 
-  // [신규] 조회 범위 버튼 - 기본값 "전체 사용자"
-  cy.contains('.esh-scope-btn', '전체 사용자').should('be.visible').and('have.class', 'esh-scope-btn--on');
-  cy.contains('.esh-scope-btn', '내 경보만').should('be.visible').and('not.have.class', 'esh-scope-btn--on');
-
-  // [변경] 진행 단계 3단계 → 2단계
-  //  기존: 경보 선택 → 소명하기 → 결재 상신
-  //  변경: 1 소명 대상 선택 → 2 소명 요청
-  cy.get('.esh-step').should('have.length', 2);
-  cy.get('.esh-step').eq(0).invoke('text').should('match', /^\s*1\s*소명 대상 선택\s*$/);
-  cy.get('.esh-step').eq(1).invoke('text').should('match', /^\s*2\s*소명 요청\s*$/);
-  cy.get('.esh-step-arrow').should('contain.text', 'chevron_right');
-});
-
-// ------------------------------------------
-// 3. 기본 필터
-// ------------------------------------------
-cy.get('.basic-filter-panel__title').filter(':visible').should('have.text', '기본 필터');
-
-cy.get('input[placeholder="정책 선택"]').should('exist').and('have.attr', 'role', 'combobox');
-cy.get('input[placeholder="메시지 + 정책명 검색"]').should('be.visible')
-  .closest('.v-input__slot').find('.material-icons').should('contain.text', 'search');
-
-// From / To 날짜
+// [변경] From/To aria-label 삭제 → date-range-picker 내 type="date" 2개로 확인
 cy.get('.date-range-picker input[type="date"]').should('have.length', 2);
 cy.get('.date-range-picker input[type="date"]').eq(0).should('be.visible'); // From
 cy.get('.date-range-picker input[type="date"]').eq(1).should('be.visible'); // To
-cy.get('.date-range-sep').filter(':visible').should('have.text', '~');
+cy.get('.date-range-sep').filter(':visible').contains('~').should('be.visible');
 
-// 검색 버튼
-cy.get('button.btn-search').should('be.visible').and('contain.text', '검색');
+//검색 버튼 확인 
+cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
 
-// 위험도 필터 - 기본값 "전체"
-cy.contains('.filter-label', '위험도').parent().within(() => {
-  cy.get('button.sev-filter-btn--active').should('have.text', '전체');
-  cy.get('button.sev-filter-btn--1').should('have.text', '높음');
-  cy.get('button.sev-filter-btn--2').should('have.text', '보통');
-  cy.get('button.sev-filter-btn--3').should('have.text', '낮음');
-});
+// 위험도 필터 버튼 확인
+cy.contains('.filter-label', '위험도').should('be.visible');
+cy.get('button.sev-filter-btn--active').contains('전체').should('be.visible');
+cy.get('button.sev-filter-btn--1').contains('높음').should('be.visible');
+cy.get('button.sev-filter-btn--2').contains('보통').should('be.visible');
+cy.get('button.sev-filter-btn--3').contains('낮음').should('be.visible');
 
-// 기간 필터
-cy.contains('.filter-label', '기간').parent().within(() => {
-  ['오늘', '1주일', '1개월', '3개월', '1년'].forEach((label, i) => {
-    cy.get('button.sev-filter-btn').eq(i).should('have.text', label);
-  });
-});
+// 기간 필터 버튼 확인
+cy.contains('.filter-label', '기간').should('be.visible');
+cy.get('button.sev-filter-btn').contains('오늘').should('be.visible');
+cy.get('button.sev-filter-btn').contains('1주일').should('be.visible');
+cy.get('button.sev-filter-btn').contains('1개월').should('be.visible');
+cy.get('button.sev-filter-btn').contains('3개월').should('be.visible');
+cy.get('button.sev-filter-btn').contains('1년').should('be.visible');
 
-// ------------------------------------------
-// 4. 결과 영역
-// ------------------------------------------
-cy.get('.appr-main-card .v-toolbar__title').filter(':visible')
-  .invoke('text').should('match', /^경보 \(사용자별 \d+건\)$/);
+// 결과 영역 확인
+cy.contains('.v-toolbar__title', '경보').should('be.visible');
 
-// 하단 페이지 영역
-cy.get('.appr-main-card .table-footer').should('be.visible').within(() => {
-  cy.get('.table-footer-info').invoke('text').should('match', /^\d+건$/);
-  cy.get('.table-footer-size .v-select__selection').should('have.text', '20');
-  cy.contains('.caption.grey--text', '건').should('be.visible');
-});
 
 // ==========================================
 // 이상행위 경보 결과 (동적 데이터 대응)
 // ==========================================
+
 cy.get('body').then(($body) => {
+  // 1. 화면에 visible 상태인 .incident-header 요소가 존재 확인
   const $incidents = $body.find('.incident-header:visible');
 
   if ($incidents.length > 0) {
+    // ------------------------------------------
     // [A] 데이터가 1건 이상 존재하는 경우
+    // ------------------------------------------
     cy.wrap($incidents).each(($row) => {
       cy.wrap($row).within(() => {
-        // 1. 위험도 칩
-        cy.get('.v-chip--label').first().invoke('text').then((text) => {
+
+        // 0. [신규] 펼침 아이콘 / 선택 체크박스
+        cy.root().children('i.material-icons').first().should('contain.text', 'chevron_right');
+        cy.get('.explreq-check').should('be.visible')
+          .invoke('text').should('match', /check_box(_outline_blank)?/);
+
+        // 1. 위험도 칩 - "높음/보통/낮음" 중 하나인지 확인
+        // [변경] .v-chip--label → 클래스 없는 span.mr-2 (인라인 스타일)
+        cy.root().children('span.mr-2').first().invoke('text').then((text) => {
           expect(['높음', '보통', '낮음']).to.include(text.trim());
         });
 
-        // 2. 사용자 뱃지 - "person" 아이콘 + 이름
-        cy.get('.lookup-badge-group').should('be.visible').within(() => {
+        // 2. 사용자 뱃지 - "person" 아이콘 + 이름 확인
+        cy.get('.incident-policy-name .lookup-badge-group').should('be.visible').within(() => {
           cy.get('.material-icons').should('contain.text', 'person');
         });
+
+        // 아이콘 텍스트 섞임 방지 (clone)
         cy.get('.lookup-badge-group').then(($el) => {
           const clone = $el.clone();
           clone.find('.material-icons').remove();
-          expect(clone.text().trim().length).to.be.greaterThan(0);
+          const labelText = clone.text().trim();   // 예: "배혜택 (loginid208)"
+          expect(labelText.length).to.be.greaterThan(0);
         });
 
-        // 3. 건수 - 숫자
+        // 3. 건수 - 숫자 형식인지 확인
         cy.get('.incident-count').invoke('text').then((text) => {
-          expect(isNaN(parseInt(text.trim(), 10))).to.be.false;
+          const num = parseInt(text.trim(), 10);
+          expect(isNaN(num)).to.be.false;
         });
 
-        // 4. 연관 정책명
-        cy.get('.incident-window.truncate-cell').invoke('text').then((text) => {
+        // 4. 연관 정책명 - 비어있지 않은지 + title 속성과 일치하는지 확인
+        cy.get('.incident-window.truncate-cell').then(($el) => {
+          const text = $el.text().trim();
           const policies = text.split(',').map((p) => p.trim()).filter((p) => p.length > 0);
           expect(policies.length).to.be.greaterThan(0);
+          expect($el.attr('title')).to.eq(text);
         });
+
+        // 5. [신규] 소명 요청 버튼
+        cy.get('button.explreq-open-btn').should('be.visible')
+          .and('contain.text', '소명 요청')
+          .find('.material-icons').should('contain.text', 'mail_outline');
+
       });
     });
+
   } else {
+    // ------------------------------------------
     // [B] 데이터가 0건인 경우 (Empty State)
-    cy.get('.appr-main-card').within(() => {
-      cy.contains('.text-xs-center.grey--text', '소명할 이상행위 경보가 없습니다.').should('be.visible');
-      cy.get('.v-toolbar__title').should('have.text', '경보 (사용자별 0건)');
-      cy.get('.table-footer-info').should('have.text', '0건');
-      // 0건이면 이전/다음 페이지 버튼 비활성
-      cy.get('.table-footer-center button').should('have.length', 2).each(($btn) => {
-        cy.wrap($btn).should('be.disabled');
-      });
-    });
+    // ------------------------------------------
+    // 소명할 경보가 없는 안내 문구가 정상적으로 노출되는지 검증
+    cy.contains('소명할 이상행위 경보가 없습니다.').should('be.visible');
+    cy.contains('경보 (사용자별 0건)').should('be.visible');
   }
 });
 
-cy.log('✅ 소명 - 신청 - [이상행위 경보] 화면 확인 완료!');
+// ==========================================
+// [팝업] 소명 요청 모달 화면 구성요소 검증 및 닫기
+// ==========================================
+
+cy.get('body').then(($body) => {
+  const hasAlerts = $body.find('button.explreq-open-btn:visible').length > 0;
+
+  if (!hasAlerts) {
+    // ------------------------------------------
+    // [A] 경보 데이터가 0건인 경우 - 안내 문구만 확인하고 스킵
+    // ------------------------------------------
+    cy.log('ℹ️ 소명 요청 대상 경보 0건 - 팝업 검증 스킵');
+    cy.contains('소명할 이상행위 경보가 없습니다.').should('be.visible');
+    cy.contains('경보 (사용자별 0건)').should('be.visible');
+  } else {
+    // ------------------------------------------
+    // [B] 경보 데이터가 1건 이상 존재하는 경우 - 팝업 검증 수행
+    // ------------------------------------------
+
+    // 1. 노출된 첫 번째 '소명 요청' 버튼 클릭하여 팝업 호출
+    cy.get('button.explreq-open-btn').filter(':visible').first().click({ force: true });
+
+    // 3. 안내 문구 검증
+    cy.get('.explreq-help')
+      .should('be.visible')
+      .and('contain.text', '선택한 사용자에게 이상행위 소명을 요청하는 메일을 발송하고 요청 기록을 남깁니다.');
+
+    // 4. 요청 대상 인원 수 표시 검증
+    cy.get('.explreq-target-title')
+      .should('be.visible')
+      .and('contain.text', '요청 대상')
+      .find('b')
+      .should('not.be.empty');
+
+    // 5. 정보관리 책임자 의견 입력 영역
+    cy.contains('.explreq-label', '정보관리 책임자 의견').should('be.visible');
+    cy.get('textarea')
+      .should('be.visible')
+      .and('have.attr', 'maxlength', '300')
+      .and('have.attr', 'placeholder', '소명 요청 사유·안내를 입력하세요 (선택, 최대 300자)');
+
+    // 6. 엑셀 파일 첨부 체크박스 & 라벨 검증
+    cy.get('input[type="checkbox"]').should('exist');
+    cy.contains('span', '이상행위 이력 엑셀 파일 첨부').should('be.visible');
+
+    // 7. 하단 버튼 노출 확인
+    cy.get('button.explreq-cancel').should('be.visible').and('contain.text', '취소');
+    cy.get('button.explreq-send').should('be.visible').and('contain.text', '소명 요청 발송');
+
+    // 8. 팝업 닫기
+cy.get('button.explreq-cancel').should('be.visible').click();
+
+// [수정] v-dialog는 닫혀도 DOM에 남고 숨김 처리만 됨 → "화면에 보이는 것이 없어야" 통과
+// (DOM에 남아 있든, 아예 제거되든 둘 다 통과)
+cy.get('body').should(($body) => {
+  const $visibleHeadline = $body.find('.c-headline:contains("소명 요청")').filter(':visible');
+  expect($visibleHeadline, '소명 요청 팝업 제목').to.have.length(0);
+});
+// 선택 상태 정리
+cy.contains('선택 해제').click({ force: true });
+cy.contains('1명 일괄 소명 요청').should('not.exist');
+
+  }
+});
+
+cy.log('✅ 소명 요청 팝업창 검증 완료!');
+
+
+
+cy.log('✅ 결재 - 신청 - [이상행위 경보] 화면 확인 완료!');
 
 
 // ==========================================
@@ -461,18 +502,12 @@ cy.log('✅ 소명 - 신청 - [이상행위 경보] 화면 확인 완료!');
 // ==========================================
 
     // ------------------------------------------
-    // 1. STEP : 소명 서브메뉴 - 신청 > 소명 요청 자동화 이동
-    // [변경] 사이드 메뉴 "결재" → "소명"
+    // 1. STEP : 결재 서브메뉴 - 신청 > 소명요청 자동화 이동
     // ------------------------------------------
-    // [수정] 탭 버튼 기준으로 정확히 클릭
-    cy.contains('button.tab-btn', '소명 요청 자동화').click({ force: true });
-
-    // UI가 로드될 때까지 대기
+    cy.get('.v-btn__content').filter(':visible').contains('소명 요청 자동화').click({ force: true });
+    
+    // UI가 로드될 때까지 1초 대기 (또는 특정 요소의 visible 상태 대기 권장)
     cy.get('.ers-header', { timeout: 10000 }).should('be.visible');
-
-    // 탭 활성 상태 전환 확인
-    cy.contains('button.tab-btn', '소명 요청 자동화').should('have.class', 'active');
-    cy.contains('button.tab-btn', '이상행위 경보').should('have.class', 'inactive');
 
     // ------------------------------------------
     // 2. 상단 페이지 헤더 및 설명 검증
@@ -482,7 +517,7 @@ cy.log('✅ 소명 - 신청 - [이상행위 경보] 화면 확인 완료!');
       cy.get('.ers-desc').should('contain.text', '일정 시각마다 일정 기간 미소명한 이상행위 사용자에게 자동으로 소명 요청 메일을 발송합니다.');
     });
 
-    // ------------------------------------------
+     // ------------------------------------------
     // 3. [섹션 1] 자동 발송 설정
     // ------------------------------------------
     // 카드 헤더 검증
@@ -556,7 +591,8 @@ cy.log('✅ 소명 - 신청 - [이상행위 경보] 화면 확인 완료!');
     // ------------------------------------------
     // 5. 완료 로그
     // ------------------------------------------
-    cy.log('✅ 소명 - 신청 - [소명 요청 자동화] 화면 확인 완료!');
+    cy.log('✅ 결재 - 신청 - [소명 요청 자동화] 화면 확인 완료!');
+
     
 
     // ==========================================

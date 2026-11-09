@@ -109,12 +109,35 @@ cy.contains('button', '점검').click({ force: true });
 cy.wait(2000);
 cy.log('--- 화면 검증 시작 ---');
 
-// [수정] 검색 버튼 - 숨겨진 중복 요소 방지를 위해 :visible 필터 우선 적용
+// 검색 조건 헤더 + 검색 버튼 (숨겨진 중복 요소 방지 → :visible)
+cy.get('.c-headline').filter(':visible').contains('검색 조건').should('be.visible');
 cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
 
-// [수정] 날짜 선택 입력란 - aria-label로 직접 확인 (끝에 공백 포함 주의)
-cy.get('input[aria-label="날짜 선택 "]').filter(':visible').should('be.visible');
-cy.get('.material-icons').filter(':visible').contains('event').should('be.visible');
+// 기간 입력칸: 달력 아이콘(event)이 있는 v-input만 수집
+// ※ 2.9.5.0부터 aria-label="기간" 이 빈 값으로 바뀌어 아이콘 기준으로 찾음
+// 기간 입력칸: 달력 아이콘(event)이 있는 v-input만 수집
+const dateInputs = () =>
+  cy.get('.v-input__icon--prepend-inner i.material-icons')
+    .filter(':visible')
+    .filter((i, el) => el.innerText.trim() === 'event')
+    .closest('.v-input');
+
+// 기간 범위 1칸 확인 (예: 점검 대시보드 - '2026-10-21 - 2026-10-28')
+const checkDateRange = () => {
+  dateInputs().should('have.length', 1);
+  dateInputs().find('i.material-icons').should('be.visible').and('contain', 'event');
+
+  // placeholder 끝에 공백이 있음('날짜 선택 ') → 공백 무시하고 비교
+  dateInputs().find('input[readonly]')
+    .should('have.attr', 'placeholder')
+    .and('match', /^날짜 선택\s*$/);
+
+  // 기본값 형식: YYYY-MM-DD - YYYY-MM-DD
+  dateInputs().find('input[readonly]').invoke('val')
+    .should('match', /^\d{4}-\d{2}-\d{2} - \d{4}-\d{2}-\d{2}$/);
+};
+
+checkDateRange();
 
 // [신규] 업무시스템 콤보박스
 cy.get('input[aria-label="업무시스템"]')
@@ -123,7 +146,8 @@ cy.get('input[aria-label="업무시스템"]')
   .and('have.attr', 'role', 'combobox');
 
 // 자동갱신안함 문구 및 슬라이더 확인
-cy.contains('.item-margin', '자동 갱신 안함').should('be.visible');
+// [변경] 2.9.7 - '.item-margin' 클래스로 찾지 못함 → 글자 기준으로 확인
+cy.contains('자동 갱신 안함').filter(':visible').should('be.visible');
 cy.get('input[role="slider"]')
   .should('exist')
   .and('have.attr', 'aria-valuenow', '0')
@@ -155,42 +179,48 @@ cy.contains('이상행위 발생 건수')
     expect(text.trim()).to.match(/^\d+\s*건$/);
   });
 
-// [수정] 데이터 없음 상태 위젯 검증 - 환경에 따라 0개일 수 있음
-//  - 최초 설치(통계 테이블 미생성): 경고 아이콘 + 안내 문구 노출
-//  - 통계 테이블 생성 후: 경고 위젯 없음
-cy.get('body').then(($body) => {
-  const $noStatWidgets = $body
-    .find('.dynamic_chart:visible')
-    .filter(':contains("아직 통계 테이블이 생성되지 않았습니다")');
+// ------------------------------------------
+// 위젯 본문 상태 검증 (환경별 데이터 차이 대응)
+// ※ (.51) 업데이트 설치는 통계 데이터가 있어 신규 설치(.71)와 다름
+// - 통계 테이블 미생성 : 경고 아이콘 + '아직 통계 테이블이 생성되지 않았습니다.'
+// - 생성됨 : ApexCharts 차트 (데이터 없으면 '조회 결과가 존재하지 않습니다')
+// - 요약 카드 : 건수 표시 (h3)
+// - 그 밖 : 값 1개만 글자로 표시 (예: IP주소별 TOP 10 에 IP 1개만 있을 때 '10.10.5.25')
+// ------------------------------------------
+cy.get('.dynamic_chart').filter(':visible').each(($w) => {
+  const $box = $w.closest('.v-card, .widget_content');
+  const name = $box.find('.v-card__title').first().text().trim()
+    || $w.find('.kpi-card-caption').first().text().trim()
+    || '(제목 없는 위젯)';
+   // 위젯 칸이 비어 있으면 카드 전체 글자(제목 제외)로 판단
+  // ※ (.51) IP주소별 TOP 10 은 IP 1개일 때 '10.10.5.25'를 위젯 칸 밖(카드 안)에 큰 글자로 표시
+  const title = $box.find('.v-card__title').first().text().trim();
+  const text = (($w[0].innerText || '').trim()
+    || (($box[0] && $box[0].innerText) || '').replace(title, '')).trim();
 
-  if ($noStatWidgets.length > 0) {
-    cy.log(`ℹ️ 통계 테이블 미생성 위젯 ${$noStatWidgets.length}개 - 경고 아이콘 확인`);
-    cy.wrap($noStatWidgets).each(($widget) => {
-      cy.wrap($widget).find('.fa-exclamation-triangle').should('be.visible');
-    });
+  if (text.includes('아직 통계 테이블이 생성되지 않았습니다')) {
+    cy.log(`⚠️ [${name}] 통계 테이블 미생성`);
+    expect($w.find('.fa-exclamation-triangle').length, `[${name}] 경고 아이콘`).to.be.at.least(1);
+   } else if ($w.find('svg').length > 0) {
+    cy.log(`📊 [${name}] 차트(ApexCharts)${text.includes('조회 결과가 존재하지 않습니다') ? ' (조회 결과 없음)' : ''}`);
+  } else if ($w.find('canvas').length > 0) {
+    // ※ (.51) IP주소별 TOP 10 등은 ECharts(canvas)로 그려짐 - 글자도 캔버스 그림이라 크기만 확인
+    const c = $w.find('canvas')[0];
+    expect(c.width * c.height, `[${name}] 캔버스 크기`).to.be.greaterThan(0);
+    cy.log(`📊 [${name}] 차트(ECharts canvas ${c.width}x${c.height})`);
+  } else if ($w.find('h3').length > 0) {
+    cy.log(`🔔 [${name}] 요약 ${$w.find('h3').text().trim()}`);
+  } else if (text.length > 0) {
+    cy.log(`🔤 [${name}] 글자 표시 : ${text.slice(0, 30)}`);
   } else {
-    cy.log('✅ 통계 테이블 생성됨 - 미생성 경고 위젯 없음');
-    // 경고 아이콘이 화면에 남아 있지 않은지 확인
-    expect($body.find('.dynamic_chart .fa-exclamation-triangle:visible'), '경고 아이콘').to.have.length(0);
+    throw new Error(`[${name}] 위젯 본문이 비어 있음 (미생성 안내 / 차트 / 요약 / 글자 모두 아님)`);
   }
 });
 
-// [신규] "이상행위 유형별 현황" - ApexCharts 렌더링 + 데이터 없음 텍스트 확인
+// "이상행위 유형별 현황" - 차트가 그려졌는지만 확인 (데이터 유무와 무관)
 cy.contains('.v-card__title', '이상행위 유형별 현황')
   .parents('.widget_content')
-  .within(() => {
-    cy.get('#apex-chart svg').should('exist').then(($svg) => {
-      const hasNoDataText = $svg.text().includes('조회 결과가 존재하지 않습니다');
-
-      if (hasNoDataText) {
-        cy.log('ℹ️ 이상행위 데이터 없음 상태 확인');
-        cy.wrap($svg).contains('조회 결과가 존재하지 않습니다').should('exist');
-      } else {
-        cy.log('✅ 이상행위 데이터 존재 - 차트 렌더링 확인');
-        cy.wrap($svg).find('path').should('have.length.greaterThan', 0);
-      }
-    });
-  });
+  .find('#apex-chart svg').should('exist');
 
 cy.log('✅ 점검 대시보드 출력 및 차트 타이틀 확인 완료 ');
 

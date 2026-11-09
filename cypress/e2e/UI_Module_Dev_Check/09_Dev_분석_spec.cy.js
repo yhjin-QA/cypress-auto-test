@@ -1208,7 +1208,12 @@ cy.get('.anomaly-widget-card').filter(':visible').should('have.length.greaterTha
       expect(/Top\s*\d+/.test(text + ' ' + values), '[개인정보 유형별 사용자] Top N 선택').to.be.true;
     });
 
-    cy.wrap($card).contains('더 많이 보기').should('exist');            // 항목이 잘렸을 때만 나오면 이 줄은 지워 주세요
+    // 「더 많이 보기」는 사용자 항목이 Top N 보다 많을 때만 표시됨 (데이터가 적으면 없음)
+    if (/더 많이 보기/.test($card[0].innerText || '')) {
+      cy.wrap($card).contains('더 많이 보기').should('exist');
+    } else {
+      cy.log(`ℹ️ [${titleText}] 항목이 적어 '더 많이 보기' 없음`);
+    }
     expect($csvBtn.length, `[${titleText}] CSV 버튼(사용자 순위)`).to.eq(0);
 
   } else {

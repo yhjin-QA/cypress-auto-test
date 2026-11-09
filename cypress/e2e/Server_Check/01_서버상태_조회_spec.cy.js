@@ -25,6 +25,7 @@ const CMDS = [
   ['버전 폴더 · 패치 이력', 'ls -l --time-style=+%F_%T /home/logcatch/bin/version; for f in /home/logcatch/bin/version/*; do echo "== $f"; head -20 "$f"; done; echo "== .patch_history (끝 30줄)"; tail -30 /home/logcatch/conf/.patch_history 2>&1'],
   ['jar · war 버전', 'ls -l --time-style=+%F_%T /home/logcatch/task/lib 2>/dev/null | grep -i -E "logcatch-.*\\.jar"; find /home/logcatch/manager /home/logcatch/taskmgr -maxdepth 4 \\( -name "*.war" -o -name "logcatch*.jar" \\) -printf "%TF %TT %s %p\\n" 2>/dev/null | head -20'],
   ['로그서버 래퍼 · 스크립트 지문(md5)', 'cd /home/logcatch/bin && md5sum logcatch_logserver* logserver.sh* 2>&1'],
+  ['프로필(/etc/profile.d/logcatch.sh) 문법 · 끝부분', 'ls -l --time-style=+%F_%T /etc/profile.d/ | grep -i logcatch; wc -l /etc/profile.d/logcatch.sh; echo "== bash -n"; bash -n /etc/profile.d/logcatch.sh 2>&1 && echo SYNTAX_OK; echo "== CR 포함 줄 수"; grep -c $(printf "\\r") /etc/profile.d/logcatch.sh; echo "== if/fi · do/done 개수"; grep -c -E "^[[:space:]]*if[[:space:]]" /etc/profile.d/logcatch.sh; grep -c -E "^[[:space:]]*fi([[:space:]]|;|$)" /etc/profile.d/logcatch.sh; echo "== 끝 60줄"; tail -60 /etc/profile.d/logcatch.sh | cat -A | cut -c1-200'],
   ['디스크', 'df -h | grep -v tmpfs'],
 ];
 

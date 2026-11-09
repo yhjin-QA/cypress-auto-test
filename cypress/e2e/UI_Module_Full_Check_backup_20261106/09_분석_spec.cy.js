@@ -33,7 +33,7 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 1: 로그인
     // ==========================================
     // 1. 사이트 방문
-    cy.visit('https://10.10.54.51:18443/logcatch/login');
+    cy.visit('https://10.10.54.21:18443/logcatch/login');
     cy.wait(4000); // 로딩 대기
 
     ////////////새로고침코드//////
@@ -79,10 +79,7 @@ describe('로그캐치 사이트 테스트', () => {
         cy.log('⚠️ 알림창 발견! 확인 버튼을 클릭합니다.');
 
         // 3. 요소가 있다는 게 확실해졌으니, 이제 안심하고 Cypress 명령어를 씁니다.
-        cy.contains('.v-card__title', '이미 접속 중인 계정입니다.')
-          .closest('.v-card')
-          .contains('확인')
-          .click(); // 여기서 force: true를 주면 더 안전합니다.
+        cy.contains('.v-card__title', '이미 접속 중인 계정입니다.').closest('.v-card').contains('확인').click(); // 여기서 force: true를 주면 더 안전합니다.
           
         cy.wait(1000); // 팝업 닫힘 대기
     } else {
@@ -114,8 +111,128 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.v-list__tile__title', '이상행위').should('be.visible').click({ force: true });
     cy.wait(2000); 
 
-
     
+
+
+  
+    
+    //2.9.1.125_r35234 에서 제거됨.
+    // cy.log('--- 화면 검증 시작 ---');
+    // // 3.0.3.0_R34785 버전 실시간 탭 -> 이상행위 정책 탭 문구 변경됨
+    // cy.get('.v-btn__content').contains('이상행위 정책').closest('button').should('not.have.class', 'inactive');
+    // cy.contains('.c-headline', '정책 유형').should('exist');
+    // cy.contains('.c-headline', '개인정보 과다조회 정책 목록').should('exist');
+    // // 표 문구열 확인
+    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    // cy.log('✅  분석 탭 진입 및 데이터 출력 확인 완료!');
+    // cy.wait(2000);
+    // // 설명: 'v-chip__content' 클래스를 가진 요소 중 '업무 시간 외 접속' 텍스트를 찾아 클릭
+    // cy.contains('.v-chip__content', '업무 시간 외 접속').should('be.visible').click({ force: true });
+    // cy.contains('.c-headline', '업무 시간 외 접속 정책 목록').should('exist');
+    // // 표 문구열 확인
+    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    // cy.log('✅  분석 탭 - 업무시간 외 접속 및 데이터 출력 확인 완료!');
+    // cy.wait(2000);
+
+    // cy.contains('.v-chip__content', '장기 미접속 사용자').should('be.visible').click({ force: true });
+    // cy.contains('.c-headline', '장기 미접속 사용자 정책 목록').should('exist');
+    // // 표 문구열 확인
+    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    // cy.log('✅  분석 탭 - 장기 미접속 사용자 및 데이터 출력 확인 완료!');
+    // cy.wait(2000);
+
+    // cy.contains('.v-chip__content', '미등록 사용자 접속').should('be.visible').click({ force: true });
+    // cy.contains('.c-headline', '미등록 사용자 접속 정책 목록').should('exist');
+    // // 표 문구열 확인
+    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    // cy.log('✅  분석 탭 - 미등록 사용자 접속 및 데이터 출력 확인 완료!');
+    // cy.wait(2000);
+
+    // cy.contains('.v-chip__content', '비인가 IP 접근').should('be.visible').click({ force: true });
+    // cy.contains('.c-headline', '비인가 IP 접근 정책 목록').should('exist');
+    // // 표 문구열 확인
+    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    // cy.log('✅  분석 탭 - 비인가 IP 접근 및 데이터 출력 확인 완료!');
+    // cy.wait(2000);
+
+    // cy.contains('.v-chip__content', '개인정보 유형 과다사용').should('be.visible').click({ force: true });
+    // cy.contains('.c-headline', '개인정보 유형 과다사용 정책 목록').should('exist');
+    // // 표 문구열 확인
+    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    // cy.log('✅  분석 탭 - 개인정보 유형 과다사용 및 데이터 출력 확인 완료!');
+    // cy.wait(2000);
+
+    // cy.contains('.v-chip__content', '열람제한 개인정보 접근').should('be.visible').click({ force: true });
+    // cy.contains('.c-headline', '열람제한 개인정보 접근 정책 목록').should('exist');
+    // // 표 문구열 확인
+    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    // cy.log('✅  분석 탭 - 열람제한 개인정보 접근 및 데이터 출력 확인 완료!');
+    // cy.wait(2000);
+
+    // cy.contains('.v-chip__content', '권한 외 메뉴 접근').should('be.visible').click({ force: true });
+    // cy.contains('.c-headline', '권한 외 메뉴 접근 정책 목록').should('exist');
+    // // 표 문구열 확인
+    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    // cy.log('✅  분석 탭 - 권한 외 메뉴 접근 및 데이터 출력 확인 완료!');
+    // cy.wait(2000);
+
+    // cy.contains('.v-chip__content', '비인가 접근 사용자').should('be.visible').click({ force: true });
+    // cy.contains('.c-headline', '비인가 접근 사용자 정책 목록').should('exist');
+    // // 표 문구열 확인
+    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    // cy.log('✅  분석 탭 - 비인가 접근 사용자 및 데이터 출력 확인 완료!');
+    // cy.wait(2000);
+
+    // cy.contains('.v-chip__content', '접근제한 업무 시스템 접근').should('be.visible').click({ force: true });
+    // cy.contains('.c-headline', '접근제한 업무 시스템 접근 정책 목록').should('exist');
+    // // 표 문구열 확인
+    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    // cy.log('✅  분석 탭 - 접근제한 업무 시스템 접근 및 데이터 출력 확인 완료!');
+    // cy.wait(2000);
+
+    // cy.contains('.v-chip__content', '파일다운로드').should('be.visible').click({ force: true });
+    // cy.contains('.c-headline', '파일다운로드 정책 목록').should('exist');
+    // // 표 문구열 확인
+    // cy.get('th').filter(':visible').contains('정책 이름').should('be.visible');
+    // cy.get('th').filter(':visible').contains('등록일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    // cy.get('th').filter(':visible').contains('사용 여부').should('be.visible');
+    // cy.log('✅  분석 탭 - 파일다운로드 접근 및 데이터 출력 확인 완료!');
+    // cy.wait(2000);
+    
+
+
+
 
 // ==========================================
 // STEP : 분석 - 사용자 이상행위 정책 탭
@@ -128,14 +245,8 @@ cy.log('--- 사용자 이상행위 정책 화면 검증 시작 ---');
 // URL 확인
 cy.url().should('include', '/analyze/customAnomalyBehaviorPolicy');
 
-// 버전 안내 문구 확인
-// ※ 2.9.5.0: '정책명' 항목 추가 → 항목 나열 부분은 바뀔 수 있어 핵심 문장 기준으로 확인
-cy.get('.version-notice').filter(':visible').should('have.length', 1).within(() => {
-  cy.contains('핵심 사항을 수정하면 버전이 자동 증가').should('exist');
-  cy.contains('지난 버전').should('exist');
-  cy.contains('정책명은 결재 문서에').should('exist');
-  cy.contains('설명·라벨·사용여부 변경은 버전에 영향을 주지 않습니다').should('exist');
-});
+//안내문구 확인
+cy.get('.version-notice').filter(':visible').contains('규칙·위험도·메시지 등 핵심 사항을 수정하면 버전이 자동 증가').should('exist');
 
 //신규 버튼
 cy.get('.v-btn__content').filter(':visible').contains('새 정책').should('be.visible');
@@ -144,7 +255,7 @@ cy.get('i.material-icons').filter(':visible').contains('add').should('exist');
 
 // 버전 안내 문구
 cy.get('.version-notice').filter(':visible')
-    .contains('규칙·위험도·메시지·정책명 등 핵심 사항을 수정하면 버전이 자동 증가').should('exist');
+    .contains('규칙·위험도·메시지 등 핵심 사항을 수정하면 버전이 자동 증가').should('exist');
 
 
 // 검색 영역
@@ -152,9 +263,8 @@ cy.get('i.v-icon.material-icons').filter(':visible').contains('search').should('
 cy.get('input[placeholder="정책명 / 설명 / 라벨 검색"]').should('be.visible');
 cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
 
-// [변경] 탐지 대상 / 라벨 - label → placeholder 기반으로 변경됨
-// ※ 2.9.5.0: placeholder가 '탐지 대상'(띄어쓰기 포함)
-cy.get('input[placeholder="탐지 대상"]').filter(':visible').should('be.visible');
+// [변경] 탐지대상 / 라벨 - label → placeholder 기반으로 변경됨
+cy.get('input[placeholder="탐지대상"]').filter(':visible').should('be.visible');
 cy.get('input[placeholder="라벨"]').filter(':visible').should('be.visible');
 
 
@@ -172,9 +282,9 @@ cy.contains('.filter-label', '위험도')
   .parent()
   .within(() => {
     cy.get('button.sev-filter-btn--active').should('contain.text', '전체');
-    cy.get('button.sev-filter-btn--1').should('contain.text', '심각');
-    cy.get('button.sev-filter-btn--2').should('contain.text', '경계');
-    cy.get('button.sev-filter-btn--3').should('contain.text', '주의');
+    cy.get('button.sev-filter-btn--1').should('contain.text', '높음');
+    cy.get('button.sev-filter-btn--2').should('contain.text', '보통');
+    cy.get('button.sev-filter-btn--3').should('contain.text', '낮음');
   });
 
 // [변경] 데이터셋 필터 - 클래스명 및 전체 텍스트로 변경됨
@@ -193,8 +303,7 @@ cy.get('.policy-card-name').filter(':visible').should('have.length.at.least', 1)
 cy.get('.v-toolbar__title').filter(':visible').contains('정책 목록').should('be.visible');
 
 // 액션 버튼 확인 (비활성 포함)
-//v2.9.5.0 폴더이동 -> 폴더 이동 띄워쓰기
-cy.get('button.toolbar-action-btn').filter(':visible').contains('폴더 이동').should('exist');
+cy.get('button.toolbar-action-btn').filter(':visible').contains('폴더이동').should('exist');
 cy.get('button.toolbar-action-btn').filter(':visible').contains('즉시실행').should('exist');
 cy.get('button.toolbar-action-btn').filter(':visible').contains('삭제').should('exist');
 cy.get('button.toolbar-action-btn').filter(':visible').contains('복사').should('exist');
@@ -240,7 +349,7 @@ cy.get('input[data-role="policy-select-all"]').should('exist');
 
 // [변경] 액션 버튼 - 주기복구 삭제, 사용 ON/OFF 추가
 const disabledButtons = [
-  { icon: 'folder_open', label: '폴더 이동' },
+  { icon: 'folder_open', label: '폴더이동' },
   { icon: 'play_arrow', label: '즉시실행' },
   { icon: 'toggle_on', label: '사용 ON' },
   { icon: 'toggle_off', label: '사용 OFF' },
@@ -296,11 +405,9 @@ cy.get('body').then($body => {
 });
 
 cy.get('.list-view-toggle-menu').filter(':visible').should('be.visible').within(() => {
-  cy.get('.list-view-toggle-item').should('have.length', 3);
+  cy.get('.list-view-toggle-item').should('have.length', 2);
   cy.contains('.list-view-toggle-item', '목록').should('be.visible');
   cy.contains('.list-view-toggle-item', '카드').should('be.visible');
-  //v2.9.5.0 그룹 추가됨.
-  cy.contains('.list-view-toggle-item', '그룹').should('be.visible');
   cy.contains('.list-view-toggle-item', '카드').should('have.class', 'active');
 });
 
@@ -343,63 +450,7 @@ cy.get('[data-role="policy-active-toggle"][type="checkbox"]')
 
 // 6. 위험도 칩 (기존 동일)
 cy.get('.sev-chip-sm .v-chip__content').invoke('text').then((text) => {
-  expect(['심각', '경계', '주의']).to.include(text.trim());
-});
-
-// 7. 정책 설명 - 앞면(.policy-card-desc) → 뒷면(.policy-card-back-desc)으로 이동됨
-cy.get('.policy-card-back-desc').invoke('text').then((text) => {
-  expect(text.trim().length).to.be.greaterThan(0);
-});
-
-// 8. 수정일 - .policy-card-footer .caption.grey--text → .policy-card-when 으로 변경됨
-cy.get('.policy-card-when').invoke('text').then((text) => {
-  expect(text.trim()).to.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
-});
-
-
-  });
-});
-
-// ==================================================
-// 사용자 이상행위 정책 - 카드 뷰 구조 검증 (동적 데이터 대응)
-// ==================================================
-
-cy.get('.policy-card').filter(':visible').should('have.length.greaterThan', 0).each(($card) => {
-  cy.wrap($card).within(() => {
-
-    // 1. 선택 체크박스 - 존재 여부 및 초기 미체크 상태 확인
-    cy.get('[data-role="policy-select"][type="checkbox"]')
-      .should('exist')
-      .and('have.attr', 'aria-checked'); // true/false 여부는 무관, 속성 존재만 확인
-
-   // 2. 정책 ID - "#" 접두어 제거 후 숫자 형식인지 확인
-  cy.get('.policy-card-id').invoke('text').then((text) => {
-  const id = parseInt(text.trim().replace('#', ''), 10);
-  expect(isNaN(id)).to.be.false;  
-  });
-
-   // 3. 버전 칩 - "v" + 숫자 형식인지 확인
-cy.get('.policy-card-ver').invoke('text').then((text) => {
-  expect(text.trim()).to.match(/^v\d+$/);
-});
-
-   // 4. 정책명 (기존 동일)
-cy.get('.policy-card-name').invoke('text').then((text) => {
-  expect(text.trim().length).to.be.greaterThan(0);
-});
-
-// 5. 사용 여부 토글 (기존 동일)
-cy.get('[data-role="policy-active-toggle"][type="checkbox"]')
-  .should('exist')
-  .invoke('attr', 'aria-checked')
-  .then((checked) => {
-    expect(['true', 'false']).to.include(checked);
-  });
-
-// 6. 위험도 칩 (기존 동일)
-//v2.9.5.0 에서 문구 변경됨.
-cy.get('.sev-chip-sm .v-chip__content').invoke('text').then((text) => {
-  expect(['심각', '경계', '주의']).to.include(text.trim());
+  expect(['높음', '보통', '낮음']).to.include(text.trim());
 });
 
 // 7. 정책 설명 - 앞면(.policy-card-desc) → 뒷면(.policy-card-back-desc)으로 이동됨
@@ -417,35 +468,21 @@ cy.get('.policy-card-when').invoke('text').then((text) => {
 });
 
 // ==========================================
-// 페이지 영역 (페이지 이동 + 페이지 사이즈 선택) - 노출 확인
-// ※ 2.9.5.0: .table-footer-right → .list-pager 구조로 변경, '건' 텍스트 제거됨
+// 테이블 페이지 사이즈 선택 영역 - 노출 확인
 // ==========================================
 
-// 1. 페이지 영역(wrapper) 전체가 보이는지 확인
-cy.get('.list-pager').filter(':visible').should('have.length', 1).within(() => {
+// 1. 페이지 사이즈 선택 영역(wrapper) 전체가 보이는지 확인
+cy.get('.table-footer-right').filter(':visible').should('be.visible').within(() => {
 
-  // 2. 페이지 사이즈 콤보박스(v-select)가 보이는지 확인
-  cy.get('.list-pager-right .list-pager-size').should('be.visible');
+// 2. 콤보박스(v-select)가 보이는지 확인
+cy.get('.table-footer-size').should('be.visible');
 
-  // 3. 콤보박스 안의 드롭다운 화살표 아이콘이 보이는지 확인
-  cy.get('.list-pager-size .v-input__icon--append .material-icons')
-    .should('be.visible').and('contain.text', 'arrow_drop_down');
+// 3. 콤보박스 안의 드롭다운 화살표 아이콘이 보이는지 확인
+cy.get('.v-input__icon--append .material-icons').should('be.visible').and('contain.text', 'arrow_drop_down');
 
-  // 4. 건수 표시 확인 (기존 '건' 텍스트 → '1-35 / 35' 형식으로 변경)
-  cy.get('.list-pager-info').should('be.visible')
-    .invoke('text').should('match', /^\s*\d+-\d+ \/ \d+\s*$/);
-
-  // 5. 이전 / 다음 페이지 버튼 확인
-  cy.get('.list-pager-center i.material-icons').eq(0).should('contain', 'chevron_left');
-  cy.get('.list-pager-center i.material-icons').eq(1).should('contain', 'chevron_right');
+// 4. "건" 텍스트가 보이는지 확인
+cy.contains('.caption.grey--text', '건').should('be.visible');
 });
-
-// 상단 정책 목록 건수 = 하단 전체 건수
-cy.get('.lst-toolbar .v-toolbar__title').invoke('text').then((t) => {
-  const total = t.match(/\((\d+)\)/)[1];
-  cy.get('.list-pager-info').should('contain', `/ ${total}`);
-});
-
 
 
 // =========================================================
@@ -466,10 +503,9 @@ cy.get('input[aria-label="라벨"]').should('be.visible');
 cy.get('textarea[aria-label="설명"]').should('be.visible');
 
 // 위험도 라디오
-// v2.9.5.0 문구 변경
-cy.contains('.severity-radio-label', '심각').should('be.visible');
-cy.contains('.severity-radio-label', '경계').should('be.visible');
-cy.contains('.severity-radio-label', '주의').should('be.visible');
+cy.contains('.severity-radio-label', '높음').should('be.visible');
+cy.contains('.severity-radio-label', '보통').should('be.visible');
+cy.contains('.severity-radio-label', '낮음').should('be.visible');
 
 // 사용/소명 토글
 cy.contains('.v-label', '사용').should('be.visible');
@@ -485,30 +521,14 @@ cy.contains('.section-header', '탐지 대상').should('be.visible');
 cy.contains('.dataset-option-name', '접속 기록 기준 탐지').should('be.visible');
 cy.contains('.dataset-option-name', '개인정보 사용 기준 탐지').should('be.visible');
 
-// 탐지 대상 항목 확인
-// ※ 2.9.5.0: '접속 IP' → '사용자 IP' 변경, '정규화 URI' · '행위 유형' · '시간대' · '접속 요일' 추가
-const targets = ['업무시스템', '부서', '사용자', '사용자 계정', '사용자 IP', '접속 URI',
-                 '정규화 URI', '등록된 메뉴', '행위 유형', '시간대', '접속 요일'];
-
-// 글자 정확히 일치 ('사용자'가 '사용자 계정' / '사용자 IP'에 잘못 매칭되지 않도록)
-const exactLabel = (t) => new RegExp(`^\\s*${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`);
-
+// 탐지대상 체크박스 목록
+const targets = ['업무시스템', '부서', '등록된 메뉴', '접속 URI', '사용자', '접속 IP', '사용자 계정'];
 targets.forEach((label) => {
-  cy.contains('.groupby-card-label', exactLabel(label)).should('be.visible');
+  cy.contains('.groupby-card-label', label).should('be.visible');
 });
 
-// 항목 개수도 확인 (항목이 추가/삭제되면 바로 알 수 있도록)
-cy.get('.groupby-card-label').filter(':visible').should('have.length', targets.length);
-
-// [변경] '탐지대상 값이 비어 있으면 경보 미생성' 토글 삭제
-//        → '값이 비어 있는 컬럼 제외' 영역 + 컬럼 추가 버튼으로 변경 (2.9.5.0)
-cy.get('.v-dialog--active .empty-keys-choice').should('be.visible').within(() => {
-  cy.contains('.empty-keys-choice__title', '값이 비어 있는 컬럼 제외').should('be.visible');
-  cy.get('.empty-keys-choice__help').should('contain.text', 'help_outline');
-  cy.contains('.empty-keys-choice__add', '컬럼 추가')
-    .should('be.visible')
-    .find('.material-icons').should('contain.text', 'add');
-});
+// [신규] 탐지대상 값이 비어 있으면 경보를 만들지 않는 토글
+cy.get('input[aria-label="탐지대상 값이 비어 있으면 경보를 만들지 않습니다"]').should('exist');
 
 // 4. 탐지 주기 섹션
 cy.contains('.section-header', '탐지 주기').should('be.visible');
@@ -527,10 +547,8 @@ cy.get('input[aria-label="탐지시작일"]').should('be.visible');
 // [신규] 실행이력 보존기간(일)
 cy.get('input[aria-label="실행이력 보존기간(일)"]').should('be.visible');
 
-// [수정] 툴바가 position: fixed로 바뀌어 하단 dialog-footer에 가려질 수 있음
-//        → 탐지 규칙 영역을 먼저 화면 위쪽으로 스크롤한 뒤 확인
-cy.contains('탐지 규칙').scrollIntoView({ offset: { top: -100 } });
-cy.wait(300);
+// 5. 탐지 규칙 섹션
+cy.contains('탐지 규칙').should('be.visible');
 
 // 시간범위/단위 (집계 단위)
 cy.contains('시간범위').should('be.visible');
@@ -542,12 +560,14 @@ cy.get('.v-select__selection--comma').filter(':visible').contains('시간').shou
 cy.get('.section-tab').filter(':visible').contains('미리보기').should('be.visible');
 cy.get('.section-tab--active').filter(':visible').contains('수정').should('be.visible');
 
-// 가려짐 여부와 무관하게 존재 + 문구로 검증
-cy.contains('.ws-toolbar-label', '조건').should('exist');
-cy.contains('.ws-toolbar-subtitle', '어떤 접근 기록을 감시할지 선별합니다').should('exist');
+cy.contains('.ws-toolbar-label', '조건')
+  .scrollIntoView({ offset: { top: -150 } })
+  .should('be.visible');
+cy.contains('.ws-toolbar-subtitle', '어떤 접근 기록을 감시할지 선별합니다').should('be.visible');
 
-cy.contains('.ws-toolbar-label', '집계').should('exist');
-cy.contains('.ws-toolbar-subtitle', '수치 기준으로 이상행위를 판정합니다').should('exist');
+cy.contains('.ws-toolbar-label', '집계')
+  .scrollIntoView({ offset: { top: -150 } })
+  .should('be.visible');
 
 // [변경] 조건 도구 팔레트 - 신규 5종 추가
 const conditionTools = [
@@ -574,25 +594,21 @@ aggregationTools.forEach((label) => {
     .should('be.visible');
 });
 
-// [변경] 경보 메시지 섹션 문구 변경 (2.9.5.0)
-//  - '탐지 로그에' → '경보 메시지에'
-//  - '탐지 시 로그 메시지' → '경보 메시지', '상세 설명' → '경보 메시지 상세'
-cy.get('.v-dialog--active .rule-msg-card').within(() => {
-  cy.contains('.ws-toolbar-subtitle', '$를 사용하여 경보 메시지에 실제 값을 표시할 수 있습니다')
-    .should('be.visible');
+// 6. 경보 메시지 섹션
+cy.contains('.v-card__title', '경보 메시지')
+  .scrollIntoView({ offset: { top: -100 } })
+  .should('be.visible');
 
-  // '경보 메시지'는 '경보 메시지 상세'에도 포함되므로 정확히 일치로 확인
-  cy.contains('.caption.grey--text', /^\s*경보 메시지\s*$/).should('be.visible');
-  cy.contains('.msg-editor-placeholder', '[사용자]가 [업무시스템] 시스템에서 이상행위 탐지')
-    .should('exist');
+cy.contains('.ws-toolbar-subtitle', '$를 사용하여 탐지 로그에 실제 값을 표시할 수 있습니다')
+  .should('be.visible');
 
-  cy.contains('.caption.grey--text', '경보 메시지 상세').should('be.visible');
-  cy.contains('.msg-editor-placeholder', '탐지 사유 및 상세 내용을 기술합니다.')
-    .should('exist');
+cy.contains('.caption.grey--text', '탐지 시 로그 메시지').should('be.visible');
+cy.contains('.msg-editor-placeholder', '[사용자]가 [업무시스템] 시스템에서 이상행위 탐지')
+  .should('exist');
 
-  // 변수 삽입 안내
-  cy.contains('.caption.grey--text', '입력으로 변수 삽입').find('kbd').should('have.text', '$');
-});
+cy.contains('.caption.grey--text', '상세 설명').should('be.visible');
+cy.contains('.msg-editor-placeholder', '탐지 사유 및 상세 내용을 기술합니다.')
+  .should('exist');
 
 // 7. [확인 필요] 기본 차트 관점 섹션 - 실제 존재 여부 스크롤해서 확인 후 유지/삭제 결정
 // cy.contains('.v-card__title.default-perspective-title', '기본 차트 관점')...
@@ -609,7 +625,6 @@ cy.log('✅ 분석 - [사용자 이상행위 정책] 신규 정책 화면 확인
 //--------------------------------------------------------------------------
 
 cy.log('✅ 분석 - [사용자 이상행위 정책] 화면 확인 완료!');
-
 
 
 // ==========================================
@@ -641,16 +656,15 @@ cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visib
 // 위험도 필터 (기존과 동일)
 cy.contains('.filter-label', '위험도').should('be.visible');
 cy.get('button.sev-filter-btn--active').contains('전체').should('be.visible');
-cy.get('button.sev-filter-btn--1').contains('심각').should('be.visible');
-cy.get('button.sev-filter-btn--2').contains('경계').should('be.visible');
-cy.get('button.sev-filter-btn--3').contains('주의').should('be.visible');
+cy.get('button.sev-filter-btn--1').contains('높음').should('be.visible');
+cy.get('button.sev-filter-btn--2').contains('보통').should('be.visible');
+cy.get('button.sev-filter-btn--3').contains('낮음').should('be.visible');
 
 // 기간 필터 (기존과 동일)
 cy.contains('.filter-label', '기간').should('be.visible');
 cy.get('button.sev-filter-btn').contains('오늘').should('be.visible');
-//v2.9.5.0 최근 7일, 최근 30일 로 문구변경됨.
-cy.get('button.sev-filter-btn').contains('최근 7일').should('be.visible');
-cy.get('button.sev-filter-btn').contains('최근 30일').should('be.visible');
+cy.get('button.sev-filter-btn').contains('1주일').should('be.visible');
+cy.get('button.sev-filter-btn').contains('1개월').should('be.visible');
 cy.get('button.sev-filter-btn').contains('3개월').should('be.visible');
 cy.get('button.sev-filter-btn').contains('1년').should('be.visible');
 
@@ -709,10 +723,9 @@ cy.get('input[placeholder="사용자 ID 또는 이름 검색"]').should('be.visi
 // [신규] 고급 필터 - IP 입력 행
 cy.get('.adv-filter-panel__label').filter(':visible').contains('IP').should('be.visible');
 cy.get('input[placeholder="예: 10.0.3.12 (Enter 로 추가)"]').should('be.visible');
-// [변경] placeholder '명칭' → '이름', '업무' → '업무시스템' (2.9.5.0)
-cy.get('input[placeholder="부서 ID 또는 이름 검색"]').should('be.visible');
-cy.get('input[placeholder="업무시스템 ID 또는 이름 검색"]').should('be.visible');
-cy.get('input[placeholder="메뉴 ID 또는 이름 검색"]').should('be.visible');
+cy.get('input[placeholder="부서 ID 또는 명칭 검색"]').should('be.visible');
+cy.get('input[placeholder="업무 ID 또는 명칭 검색"]').should('be.visible');
+cy.get('input[placeholder="메뉴 ID 또는 명칭 검색"]').should('be.visible');
 cy.get('input[placeholder="예: /api/audit/logs (Enter 로 추가)"]').should('be.visible');
 
 //-----------------------------------------------------------------------------------------------
@@ -742,10 +755,9 @@ cy.get('i.material-icons').filter(':visible').contains('language').should('exist
 // 경보 툴바 - 전체 클릭했을때
 /////////////////////////////
 cy.get('.datamode-btn').filter(':visible').contains('전체').click({ force: true });
-// [변경] '알림 메시지' → '경보 메시지' (2.9.5.0 용어 통일)
 cy.get('th').filter(':visible').contains('위험도').should('be.visible');
 cy.get('th').filter(':visible').contains('정책명').should('be.visible');
-cy.get('th').filter(':visible').contains('경보 메시지').should('be.visible');
+cy.get('th').filter(':visible').contains('알림 메시지').should('be.visible');
 cy.get('th').filter(':visible').contains('탐지 시작').should('be.visible');
 cy.get('th').filter(':visible').contains('탐지 종료').should('be.visible');
 
@@ -766,7 +778,7 @@ Cypress.Commands.add('verifyIncidentHeaderRows', (mode) => {
     cy.get('.incident-header').filter(':visible').should('have.length.greaterThan', 0).each(($row) => {
       cy.wrap($row).within(() => {
         cy.get('.v-chip--label').first().invoke('text').then((text) => {
-          expect(['심각', '경계', '주의']).to.include(text.trim());
+          expect(['높음', '보통', '낮음']).to.include(text.trim());
         });
         cy.get('.incident-count').invoke('text').then((text) => {
           expect(isNaN(parseInt(text.trim(), 10))).to.be.false;
@@ -782,7 +794,7 @@ Cypress.Commands.add('verifyIncidentHeaderRows', (mode) => {
             expect(text.trim()).to.match(/^\(\d+회 실행\)$/);
           });
           cy.get('.incident-window').invoke('text').then((text) => {
-            expect(text.trim()).to.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} ~ \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+             expect(text.trim()).to.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})? ~ \d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/);
           });
         }
         if (['user', 'department', 'work', 'menu', 'uri', 'ip'].includes(mode)) {
@@ -809,28 +821,34 @@ Cypress.Commands.add('verifyIncidentHeaderRows', (mode) => {
   });
 });
 
-// [변경] 버튼 텍스트 - "정책별"→"정책", "사용자별"→"사용자", "부서별"→"부서", "메뉴별"→"메뉴", "접속URI별"→"URI", "사용자IP별"→"IP" (업무별은 유지)
+cy.intercept('GET', '**/logcatch/api/v1/anomaly/detection/alerts**').as('anomalyAlerts');
+
 cy.contains('.datamode-btn', '정책').click({ force: true });
+cy.wait('@anomalyAlerts', { timeout: 10000 });
 cy.verifyIncidentHeaderRows('policy');
 
 cy.contains('.datamode-btn', '사용자').click({ force: true });
+cy.wait('@anomalyAlerts', { timeout: 10000 });
 cy.verifyIncidentHeaderRows('user');
 
 cy.contains('.datamode-btn', '부서').click({ force: true });
+cy.wait('@anomalyAlerts', { timeout: 10000 });
 cy.verifyIncidentHeaderRows('department');
 
-// [변경] 데이터 모드 버튼명 변경 (2.9.5.0)
-//  업무별 → 업무시스템, 메뉴 → 등록된 메뉴, URI → 접속 URI, IP → 사용자 IP
-cy.contains('.datamode-btn', '업무시스템').click({ force: true });
+cy.contains('.datamode-btn', '업무별').click({ force: true });
+cy.wait('@anomalyAlerts', { timeout: 10000 });
 cy.verifyIncidentHeaderRows('work');
 
-cy.contains('.datamode-btn', '등록된 메뉴').click({ force: true });
+cy.contains('.datamode-btn', '메뉴').click({ force: true });
+cy.wait('@anomalyAlerts', { timeout: 10000 });
 cy.verifyIncidentHeaderRows('menu');
 
-cy.contains('.datamode-btn', '접속 URI').click({ force: true });
+cy.contains('.datamode-btn', 'URI').click({ force: true });
+cy.wait('@anomalyAlerts', { timeout: 10000 });
 cy.verifyIncidentHeaderRows('uri');
 
-cy.contains('.datamode-btn', '사용자 IP').click({ force: true });
+cy.contains('.datamode-btn', 'IP').click({ force: true });
+cy.wait('@anomalyAlerts', { timeout: 10000 });
 cy.verifyIncidentHeaderRows('ip');
 
 // ==========================================
@@ -880,268 +898,159 @@ cy.get('.basic-filter-panel__clear-all', { timeout: 10000 }).filter(':visible').
 cy.log('✅ 분석 - [사용자 이상행위 결과] 화면 확인 완료!');
 
 
+// v2.9.4.0 대시보드 위젯추가 없어서 진행하지 못함.
 // ==========================================
 // STEP : 분석 - 사용자 이상행위 대시보드
 // ==========================================
-// [신규] 탭 클릭 후 실제로 페이지가 바뀔 때까지 재시도
-// 결과 탭에서 필터를 바꾸면 URL 쿼리(dateFrom/dataMode 등)가 갱신되는데,
-// 그 직후 탭을 누르면 라우터 이동이 취소(Navigation cancelled)될 수 있음
-const clickTabUntilPath = (tabText, pathPart, attempt = 1) => {
-  cy.get('.v-btn__content').filter(':visible')
-    .filter((i, el) => Cypress.$(el).text().trim() === tabText)
-    .first()
-    .click({ force: true });
-  cy.wait(1000);
+// cy.get('.v-btn__content').filter(':visible').contains('사용자 이상행위 대시보드').click({ force: true });
+// cy.wait(1000);
 
-  cy.location('pathname').then((path) => {
-    if (path.includes(pathPart)) return;
-    if (attempt >= 3) {
-      throw new Error(`[${tabText}] 탭 이동 실패 - 현재 경로: ${path}`);
-    }
-    cy.log(`🔁 [${tabText}] 탭 이동 재시도 (${attempt}회 실패)`);
-    clickTabUntilPath(tabText, pathPart, attempt + 1);
-  });
-};
+// cy.log('--- 사용자 이상행위 대시보드 화면 검증 시작 ---');
+// cy.url().should('include', '/analyze/customAnomalyBehaviorPolicyDashboard');
 
-// 직전 화면에 열려 있을 수 있는 hover 메뉴 닫기
-cy.get('body').type('{esc}');
-cy.wait(500);
+// cy.get('body').then(($body) => {
+//   const hiddenBtns = $body.find('button[title="숨긴 항목 보기(관리)"]:visible');
+//   if (hiddenBtns.length > 0) {
+//     cy.log(`숨긴 항목 보기 버튼 ${hiddenBtns.length}개 발견`);
+//     hiddenBtns.each((i, el) => {
+//       // 아이콘(<i class="material-icons">) 텍스트를 제외하고 라벨만 추출
+//       const clone = Cypress.$(el).clone();
+//       clone.find('.material-icons').remove();
+//       const labelText = clone.text().trim();
+//       expect(labelText).to.match(/^숨김 \d+개 보기$/);
+//     });
+//   } else {
+//     cy.log('숨긴 항목 보기 버튼 없음 (숨긴 카드 0개) - 스킵');
+//   }
+// });
 
-clickTabUntilPath('사용자 이상행위 대시보드', '/analyze/customAnomalyBehaviorPolicyDashboard');
+// // [신규] "빈 카드 숨김" 토글 버튼 확인
+// cy.get('button.anomaly-dashboard__vis-btn')
+//   .filter(':visible')
+//   .contains('빈 카드 숨김')
+//   .should('be.visible')
+//   .and('have.attr', 'title')
+//   .and('include', '데이터 없는 카드 자동 숨김');
 
-cy.log('--- 사용자 이상행위 대시보드 화면 검증 시작 ---');
-cy.location('pathname').should('include', '/analyze/customAnomalyBehaviorPolicyDashboard');
+// // [신규] "레이아웃 편집" 버튼 확인
+// // opacity:0로 평소엔 숨겨져 있다가 hover 시 나타나는 버튼이라 :visible 필터 없이 존재만 확인
+// cy.get('.anomaly-dashboard__edit-btn').should('have.length.greaterThan', 0);
+// cy.contains('.anomaly-dashboard__edit-btn .v-btn__content', '레이아웃 편집').should('exist');
 
-// ------------------------------------------
-// 1. 탭 확인
-// [변경] "이상행위 정책" 탭 삭제, 순서: 정책 → 결과 → 대시보드
-// ------------------------------------------
-['사용자 이상행위 정책', '사용자 이상행위 결과', '사용자 이상행위 대시보드'].forEach((tab) => {
-  cy.get('.v-btn__content').filter(':visible')
-    .filter((i, el) => Cypress.$(el).text().trim() === tab) // 부분 매칭 방지
-    .should('have.length', 1);
-});
+// // 탭 확인
+// cy.get('.v-btn__content').filter(':visible').contains('이상행위 정책').should('be.visible');
+// cy.get('.v-btn__content').filter(':visible').contains('사용자 이상행위 대시보드').should('be.visible');
+// cy.get('.v-btn__content').filter(':visible').contains('사용자 이상행위 정책').should('be.visible');
+// cy.get('.v-btn__content').filter(':visible').contains('사용자 이상행위 결과').should('be.visible');
 
-// ------------------------------------------
-// 2. 상단 툴바 - 기간 버튼 (기본값: 오늘)
-// ------------------------------------------
-cy.get('.cabp-page-toolbar .pcpf__btn').filter(':visible')
-  .should('have.attr', 'title', '기간: 오늘')
-  .within(() => {
-    cy.get('.pcpf__btn-icon').should('contain.text', 'event');
-    cy.get('.pcpf__btn-label').should('have.text', '기간');
-    cy.get('.pcpf__btn-value').should('have.text', '오늘');
-  });
+// // 기간 버튼 확인
+// cy.get('i.material-icons').filter(':visible').contains('event').should('exist');
+// cy.get('.pcpf__btn-label').filter(':visible').contains('기간').should('be.visible');
 
-// ------------------------------------------
-// 3. 전체 현황 섹션 바 (숨김 보기 클릭 '전' 상태)
-// ------------------------------------------
-cy.contains('.anomaly-dashboard__section-bar', '전체 현황').within(() => {
-  cy.contains('.anomaly-dashboard__section-title', '전체 현황').should('be.visible');
 
-  // "숨김 N개 보기" - 숨긴 카드가 있을 때만 렌더링됨
-  cy.root().then(($bar) => {
-    const $hiddenBtn = $bar.find('button[title="숨긴 항목 보기(관리)"]');
-    if ($hiddenBtn.length > 0) {
-      const clone = $hiddenBtn.first().clone();
-      clone.find('.material-icons').remove();
-      expect(clone.text().trim()).to.match(/^숨김 \d+개 보기$/);
-      expect($hiddenBtn.find('.material-icons').text()).to.contain('visibility');
-    } else {
-      cy.log('숨긴 카드 0개 - "숨김 N개 보기" 버튼 없음');
-    }
-  });
-});
+// // 전체 현황 섹션
+// cy.contains('.anomaly-dashboard__section-title', '전체 현황').should('be.visible');
 
-// ------------------------------------------
-// 3-1. [변경] 2.9.5.0: 진입 시 위젯이 모두 숨김 상태 → '숨김 N개 보기' 클릭
-// ------------------------------------------
-let shownHidden = false; // 테스트 끝에 원래 상태로 되돌리기 위한 표시
+// // [수정] "빈 카드 숨김" - 화면에 있는 모든 섹션의 버튼을 순회하며 켜져 있으면 끄기
+// cy.get('.anomaly-dashboard__vis-btn:visible').filter((i, el) => {
+//   return Cypress.$(el).text().includes('빈 카드 숨김');
+// }).each(($btn) => {
+//   cy.wrap($btn).then(($el) => {
+//     const isActive = $el.hasClass('anomaly-dashboard__vis-btn--active') ||
+//                       $el.css('background-color') !== 'rgba(0, 0, 0, 0)';
+//     if (isActive) {
+//       cy.wrap($el).click({ force: true });
+//       cy.wait(500);
+//     }
+//   });
+// });
 
-// 데이터가 많은 서버(.51)는 차트 요청이 끝난 뒤에야 '숨김 N개 보기' 버튼이 그려짐
-// → 버튼이 나타날 때까지 1초 간격으로 최대 10번 확인 (없으면 숨긴 항목 없음으로 진행)
-const waitHiddenBtn = (tries = 10) =>
-  cy.contains('.anomaly-dashboard__section-bar', '전체 현황').then(($bar) => {
-    if ($bar.find('button[title="숨긴 항목 보기(관리)"]').length > 0 || tries <= 1) return $bar;
-    cy.wait(1000);
-    return waitHiddenBtn(tries - 1);
-  });
+// // 위젯 카드 확인
+// // [확인 필요] "클러스터 토폴로지" 위젯이 이번 DOM 스니펫에 없었음 - 실제 존재 여부 재확인 필요
+// cy.get('.anomaly-widget-card__title').filter(':visible').contains('개인정보 유형별 사용자').should('be.visible');
 
-waitHiddenBtn().then(($bar) => {
-  const $btn = $bar.find('button[title="숨긴 항목 보기(관리)"]');
-  if ($btn.length === 0) {
-    cy.log('숨긴 항목 없음 - 바로 검증 진행');
-    return;
-  }
+// // [신규] 카드별 숨기기 버튼 확인
+// cy.get('.anomaly-widget-card__hide')
+//   .should('have.length.greaterThan', 0)
+//   .first()
+//   .should('have.attr', 'title', '이 카드 숨기기');
 
-  // 숨김 상태에서는 '표시할 위젯이 없습니다' 안내가 보임
-  cy.contains('.dashboard-empty__title', '표시할 위젯이 없습니다').should('be.visible');
+// // 정책별 분석 섹션
+// cy.contains('.anomaly-dashboard__section-title', '정책별 분석').should('be.visible');
 
-  cy.wrap($btn.first()).click({ force: true });
-  shownHidden = true;
-  cy.wait(1500);
+// // [수정] .parents() 제거 - cy.contains가 이미 section-bar 요소 자체를 반환함
+// cy.contains('.anomaly-dashboard__section-bar', '정책별 분석').within(() => {
+//   cy.contains('.anomaly-dashboard__vis-btn', '중지된 정책')
+//     .should('be.visible')
+//     .find('.material-icons').should('contain.text', 'visibility_off');
 
-  // 클릭 후 버튼 상태: '숨김 N 표시중' / title '숨긴 항목 숨기기' / is-on / visibility_off
-  cy.get('.anomaly-dashboard__vis-btn[title="숨긴 항목 숨기기"]')
-    .should('be.visible')
-    .and('have.class', 'is-on')
-    .then(($on) => {
-      const clone = $on.clone();
-      clone.find('.material-icons').remove();
-      expect(clone.text().trim()).to.match(/^숨김 \d+ 표시중$/);
-    })
-    .find('.material-icons').should('contain.text', 'visibility_off');
-});
+//   cy.contains('.anomaly-dashboard__vis-btn', '지난 버전')
+//     .should('be.visible')
+//     .find('.material-icons').should('contain.text', 'history');
+// });
 
-// ------------------------------------------
-// 3-2. 전체 현황 - 레이아웃 편집 버튼 (hover 노출 → 존재만 확인)
-// ------------------------------------------
-cy.contains('.anomaly-dashboard__section-bar', '전체 현황')
-  .contains('.anomaly-dashboard__edit-btn', '레이아웃 편집')
-  .should('exist')
-  .find('.material-icons').should('contain.text', 'edit');
+// // ==========================================
+// // 기간 드롭다운 - 30일 변경
+// // ==========================================
+// // 드롭다운 버튼 자체를 클릭 (텍스트 매칭 없이)
+// cy.get('.pcpf__btn-value').filter(':visible').should('be.visible').click({ force: true });
+// cy.wait(500);
 
-// [삭제] 4. 정책별 분석 섹션 (빈 카드 숨김 / 중지된 정책 / 지난 버전 버튼) - 2.9.5.0에서 섹션 자체가 없어짐
-cy.get('.anomaly-dashboard__section-bar').should('have.length', 1);
+// cy.get('.v-list__tile__title').filter(':visible').contains('30일').click({ force: true });
+// cy.wait(1000);
 
-// ------------------------------------------
-// 4. 위젯 카드 목록 확인
-// ------------------------------------------
-const WIDGET_TITLES = [
-  '클러스터 토폴로지',
-  '위험도별 경보', '범주별 경보', '업무시스템별 경보', '부서별 경보',
-  '일자별 경보 추이', '위험도별 일자 추이',
-  '정책별 경보', '요일별 경보', '개인정보 유형별 사용자',
-];
+// cy.get('.pcpf__btn-value').filter(':visible').contains('30일').should('be.visible');
+// cy.wait(1000);
 
-cy.get('.anomaly-widget-card').filter(':visible').then(($cards) => {
-  const titles = [...$cards].map((c) =>
-    Cypress.$(c).find('.anomaly-widget-card__title').text().trim());
-  cy.log(`📋 위젯 카드 ${titles.length}개: ${titles.join(' | ')}`);
-  WIDGET_TITLES.forEach((t) => expect(titles, '위젯 카드 목록').to.include(t));
-  expect(titles.length, '위젯 카드 개수').to.eq(WIDGET_TITLES.length);
-});
+// // ======================================================
+// // 정책별 분석 - 위젯 카드 (ApexCharts) 동적 데이터 대응 검증
+// // ======================================================
+// cy.get('.anomaly-widget-card__title').filter(':visible').should('have.length.greaterThan', 0).each(($title) => {
+//   cy.wrap($title).invoke('attr', 'title').then((title) => {
+//     expect(title.trim().length).to.be.greaterThan(0);
+//   });
 
-// ------------------------------------------
-// 5. 기간 드롭다운 - "오늘" → "최근 30일" 변경
-// ------------------------------------------
-cy.get('.cabp-page-toolbar .pcpf__btn').filter(':visible')
-  .scrollIntoView({ offset: { top: -100 } })
-  .click({ force: true });
-cy.wait(500);
+//   cy.wrap($title).invoke('text').then((text) => {
+//     expect(text.trim().length).to.be.greaterThan(0);
+//   });
 
-cy.get('.v-list__tile__title').filter(':visible').contains('30일').click({ force: true });
-cy.wait(1500);
+//   cy.wrap($title)
+//     .closest('.anomaly-widget-card')
+//     .then(($card) => {
+//       const isHidden = $card.hasClass('anomaly-widget-card--hidden');
+//       const isTopologyIdle = $card.find('.topology-idle').length > 0;
+//       // [변경] 데이터 없음 상태 클래스 확정 - .bucketized-dynamic-chart__nodata
+//       const isNoData = $card.find('.bucketized-dynamic-chart__nodata').length > 0;
 
-cy.get('.cabp-page-toolbar .pcpf__btn-value').filter(':visible').should('have.text', '최근 30일');
-cy.get('.cabp-page-toolbar .pcpf__btn').filter(':visible').should('have.attr', 'title', '기간: 최근 30일');
+//       if (isHidden) {
+//         cy.log('👁️‍🗨️ 숨김 처리된 카드 - 콘텐츠 검증 스킵, "숨김" 태그만 확인');
+//         cy.wrap($card).find('.anomaly-widget-card__hidden-tag').should('be.visible').and('contain.text', '숨김');
+//       } else if (isTopologyIdle) {
+//         cy.log('ℹ️ 토폴로지 카드 - 시작 전(idle) 상태 확인');
+//         cy.wrap($card).find('.topology-idle').should('be.visible');
+//         cy.wrap($card).find('.topology-toggle').should('be.visible').and('contain.text', '시작');
+//       } else if (isNoData) {
+//         // [신규] 데이터 없음 카드 - svg 대신 nodata 안내 확인
+//         cy.log('ℹ️ 데이터 없음 카드 확인');
+//         cy.wrap($card).find('.bucketized-dynamic-chart__nodata')
+//           .should('be.visible')
+//           .and('contain.text', '데이터 없음')
+//           .find('.material-icons').should('contain.text', 'bar_chart');
+//       } else {
+//         cy.wrap($card).find('svg').should('exist');
 
-// ------------------------------------------
-// 6. 위젯 카드 구조 검증 (동적 데이터 대응)
-// ------------------------------------------
-const NO_DATA_REGEX = /^선택한 기간에 (데이터|이상행위)가 없습니다\.$/;
-const CHART_TITLE_REGEX = /이상행위 건수$/; // 예: '접속 요일별 이상행위 건수'
+//         const legendCount = $card.find('.apexcharts-legend').length;
+//         if (legendCount > 0) {
+//           cy.wrap($card).find('.apexcharts-legend').should('exist');
+//         }
+//       }
 
-cy.get('.anomaly-widget-card').filter(':visible').should('have.length.greaterThan', 0).each(($card) => {
-  cy.wrap($card).scrollIntoView({ offset: { top: -100 } });
+//       // [신규] 카드마다 "이 카드 숨기기" 버튼 존재 확인
+//       cy.wrap($card).find('.anomaly-widget-card__hide').should('exist');
+//     });
+// });
 
-  // 6-1. 카드 타이틀 - title 속성과 텍스트가 동일
-  const $title = $card.find('.anomaly-widget-card__title');
-  const titleText = $title.text().trim();
-  expect(titleText.length, '카드 타이틀').to.be.greaterThan(0);
-  expect($title.attr('title'), '타이틀 title 속성').to.eq(titleText);
-
-  // 6-2. 숨김 상태 카드: '숨김' 태그 + '이 카드 다시 표시' 버튼 / 일반 카드: '이 카드 숨기기' 버튼
-  const isHidden = $card.hasClass('anomaly-widget-card--hidden');
-  const $hideBtn = $card.find('.anomaly-widget-card__actions .anomaly-widget-card__hide');
-  expect($hideBtn.length, `[${titleText}] 숨기기/다시 표시 버튼`).to.eq(1);
-
-  if (isHidden) {
-    const $tag = $card.find('.anomaly-widget-card__hidden-tag');
-    expect($tag.text().trim(), `[${titleText}] 숨김 태그`).to.eq('숨김');
-    expect($tag.attr('title')).to.eq('숨김 상태 — 눈 아이콘으로 다시 표시');
-    expect($hideBtn.attr('title'), `[${titleText}] 버튼 title`).to.eq('이 카드 다시 표시');
-    expect($hideBtn.find('.material-icons').text()).to.contain('visibility_off');
-  } else {
-    expect($hideBtn.attr('title'), `[${titleText}] 버튼 title`).to.eq('이 카드 숨기기');
-    expect($hideBtn.find('.material-icons').text()).to.contain('visibility');
-  }
-
-  // 6-3. [신규] 크게 보기 버튼 - 모든 카드 공통
-  const $enlarge = $card.find('.anomaly-widget-card__enlarge');
-  expect($enlarge.length, `[${titleText}] 크게 보기 버튼`).to.eq(1);
-  expect($enlarge.attr('title')).to.eq('크게 보기');
-  expect($enlarge.find('.material-icons').text()).to.contain('zoom_out_map');
-
-  // 6-4. 본문 - 토폴로지 / 데이터 없음 / 차트 분기
-  const isTopology = $card.find('.topology-wrap').length > 0;
-  const isNoData = $card.find('.bucketized-dynamic-chart__nodata').length > 0;
-  const $csvBtn = $card.find('.anomaly-widget-card__export[title^="CSV 다운로드"]');
-
-  if (isTopology) {
-    // [신규] 클러스터 토폴로지 - 시작 전 대기 화면 (시작 버튼은 누르지 않음)
-    cy.log(`🛰 [${titleText}] 토폴로지`);
-    cy.wrap($card).find('.topology-toggle').should('contain.text', '시작');
-    cy.wrap($card).find('.topology-idle .idle-title').should('have.text', '클러스터 토폴로지');
-    cy.wrap($card).find('.topology-idle .idle-sub')
-      .should('contain.text', '시작 버튼을 누르면 실시간 모니터링이 켜집니다');
-    expect($csvBtn.length, `[${titleText}] CSV 버튼(토폴로지)`).to.eq(0);
-
-  } else if (isNoData) {
-    cy.log(`ℹ️ [${titleText}] 데이터 없음`);
-    cy.wrap($card).find('.bucketized-dynamic-chart__nodata').within(() => {
-      cy.get('.material-icons').should('contain.text', 'bar_chart');
-      cy.get('div').invoke('text').then((t) => {
-        expect(t.trim()).to.match(NO_DATA_REGEX);
-      });
-    });
-    // 데이터 없는 카드에는 CSV 다운로드 버튼이 없음
-    expect($csvBtn.length, `[${titleText}] CSV 버튼(데이터 없음)`).to.eq(0);
-
-  // (.51서버) 데이터가 있어서 (.71서버) 신규설치와는 차이점 발생
-  } else if (titleText === '개인정보 유형별 사용자') {
-    // 개인정보 유형별 사용자 TOP 위젯 - 차트 제목/세로축 제목/CSV 버튼 없음, Top N · 유형 선택 칩 + 더 많이 보기
-    cy.log(`👤 [${titleText}] 사용자 순위 차트`);
-    cy.wrap($card).find('.dynamic_chart svg.apexcharts-svg').should('exist');
-
-    // Top N 선택 - 태그 종류와 무관하게 카드 전체의 화면 글자 + 입력/선택 칸 값에서 'Top 숫자' 확인
-    cy.wrap($card).should(($c) => {
-      const text = $c[0].innerText || '';
-      const values = [...$c.find('input, select')].map((el) => el.value || '').join(' ');
-      expect(/Top\s*\d+/.test(text + ' ' + values), '[개인정보 유형별 사용자] Top N 선택').to.be.true;
-    });
-
-    cy.wrap($card).contains('더 많이 보기').should('exist');            // 항목이 잘렸을 때만 나오면 이 줄은 지워 주세요
-    expect($csvBtn.length, `[${titleText}] CSV 버튼(사용자 순위)`).to.eq(0);
-
-  } else {
-    cy.log(`📊 [${titleText}] 차트`);
-    cy.wrap($card).find('.dynamic_chart svg.apexcharts-svg').should('exist');
-    cy.wrap($card).find('.apexcharts-title-text').invoke('text').then((t) => {
-      expect(t.trim()).to.match(CHART_TITLE_REGEX);
-    });
-    cy.wrap($card).find('.apexcharts-yaxis-title-text').should('have.text', '건수(이상행위)');
-
-    // 차트 카드에는 CSV 다운로드 버튼이 있고, title에 카드명이 포함됨
-    cy.wrap($card).find('.anomaly-widget-card__export[title^="CSV 다운로드"]')
-      .should('have.length', 1)
-      .and('have.attr', 'title', `CSV 다운로드 — ${titleText}`)
-      .find('.material-icons').should('contain.text', 'file_download');
-  }
-});
-
-// ------------------------------------------
-// 7. 원래 상태로 복구 - 숨긴 항목 다시 숨기기
-// ------------------------------------------
-cy.then(() => {
-  if (!shownHidden) return;
-  cy.get('.anomaly-dashboard__vis-btn[title="숨긴 항목 숨기기"]').click({ force: true });
-  cy.wait(1000);
-  cy.get('button[title="숨긴 항목 보기(관리)"]').should('be.visible');
-});
-
-cy.log('✅ 분석 - [사용자 이상행위 대시보드] 화면 확인 완료!');
-
+// cy.log('✅ 분석 - [사용자 이상행위 대시보드] 화면 확인 완료!');
 
 
 // ================================

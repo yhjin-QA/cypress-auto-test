@@ -104,6 +104,18 @@ describe('로그캐치 사이트 테스트', () => {
     //로그인 성공
 
 
+    // 기간 입력칸: 달력 아이콘(event)이 있는 v-input만 수집 (2.9.5.0부터 aria-label="기간" 빈 값)
+    const dateInputs = () =>
+      cy.get('.v-input__icon--prepend-inner i.material-icons')
+        .filter(':visible')
+        .filter((i, el) => el.innerText.trim() === 'event')
+        .closest('.v-input');
+    const checkDateIcons = () => {
+      dateInputs().should('have.length', 2); // 시작 ~ 종료
+      dateInputs().eq(0).find('i.material-icons').should('be.visible').and('contain', 'event');
+      dateInputs().eq(1).find('i.material-icons').should('be.visible').and('contain', 'event');
+    };
+
     // ==========================================
     // STEP 5: 소명 서브메뉴 
     // ==========================================
@@ -128,10 +140,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="소명하기 조건"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="소명 유형"]').filter(':visible').should('be.visible');
     cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
-    // 시작날짜 달력 아이콘확인
-     cy.get('label').filter(':visible').contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // [변경] 2.9.5.0부터 기간 라벨/aria-label 이 빈 값 → 달력 아이콘 기준으로 시작·종료 확인
+    checkDateIcons();
     // 표 문구열 확인
     cy.get('th').filter(':visible').contains('일시').should('be.visible');
     cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
@@ -163,10 +173,8 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="소명하기 조건"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="소명 유형"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
-     // 시작날짜 달력 아이콘확인
-     cy.get('label').filter(':visible').contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // [변경] 2.9.5.0부터 기간 라벨/aria-label 이 빈 값 → 달력 아이콘 기준으로 시작·종료 확인
+    checkDateIcons();
      // 표 문구열 확인
      cy.get('th').filter(':visible').contains('일시').should('be.visible');
      cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
@@ -218,10 +226,8 @@ describe('로그캐치 사이트 테스트', () => {
       cy.get('input[aria-label="소명하기 조건"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="소명 유형"]').filter(':visible').should('be.visible');
       cy.get('input[aria-label="이상행위 유형"]').filter(':visible').should('be.visible');
-      // 시작날짜 달력 아이콘확인
-      cy.get('label').filter(':visible').contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-      // 종료날짜 달력 아이콘확인
-      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // [변경] 2.9.5.0부터 기간 라벨/aria-label 이 빈 값 → 달력 아이콘 기준으로 시작·종료 확인
+    checkDateIcons();
       //토글 문구 확인인
       cy.get('label').filter(':visible').contains('승인이 필요한 내역만 보기').should('be.visible');
       // 표 문구열 확인

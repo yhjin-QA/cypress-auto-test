@@ -27,7 +27,7 @@ describe('로그캐치 사이트 테스트', () => {
   });
 
   
-  it('로그캐치 UI기본체크', () => {
+  it('DEV_Release 로그캐치 UI기본체크', () => {
 
     // ==========================================
     // STEP 1: 로그인
@@ -52,7 +52,6 @@ describe('로그캐치 사이트 테스트', () => {
       }
      });
      //////////////////////////////////////
-
 
     // 2. 아이디 입력
     cy.get('input[aria-label="사용자 계정"]').should('exist').type('admin', { force: true });
@@ -102,7 +101,7 @@ describe('로그캐치 사이트 테스트', () => {
     
     //로그인 성공
 
-
+    
     
 
     // ==========================================
@@ -183,6 +182,7 @@ describe('로그캐치 사이트 테스트', () => {
     // 표열의 이름 확인 
     cy.get('th').filter(':visible').contains('이름').should('be.visible');
     cy.get('th').filter(':visible').contains('그룹').should('be.visible');
+    // 2.9.1.262_r35274  타입 -> 유형 문구수정
     cy.get('th').filter(':visible').contains('유형').should('be.visible');
     cy.get('th').filter(':visible').contains('IP').should('be.visible');
     cy.log('✅ 관리 - 시스템 - [데이터베이스]탭 출력 확인 완료 ');
@@ -196,7 +196,7 @@ describe('로그캐치 사이트 테스트', () => {
     // v버튼 아이콘 존재확인
     cy.get('.material-icons').filter(':visible').contains('keyboard_arrow_down').should('be.visible');
     // 타이틀 확인
-    //cy.contains('span', '인사정보(ON)').filter(':visible').should('be.visible');
+    //cy.contains('span', '인사정보(OFF)').filter(':visible').should('be.visible');
     cy.get('span').filter(':visible').contains('인사정보(ON)').should('be.visible');
     cy.get('span').filter(':visible').contains('데이터베이스').should('be.visible');
     cy.get('span').filter(':visible').contains('Log Tracer').should('be.visible');
@@ -236,7 +236,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.contains('.c-headline', '검색 조건').should('exist');
      // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="접속기록 수집기"]').filter(':visible').should('be.visible');
-     // cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
+     // 2.9.1.262_r35274 상태 -> 조건 문구 변경
      cy.get('input[aria-label="조건"]').should('exist').and('be.visible');
      // 토글 문구 확인
      cy.get('label').filter(':visible').contains('라이선스 사용 여부').should('be.visible');
@@ -244,43 +244,82 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
      // 표 열 문구 확인 
      cy.get('th').filter(':visible').contains('이름').should('be.visible');
+     // 2.9.1.262_r35274 상태 -> 조건 문구 변경
      cy.get('th').filter(':visible').contains('조건').should('be.visible');
      cy.get('th').filter(':visible').contains('사용건수').should('be.visible');
      cy.get('th').filter(':visible').contains('라이선스 사용 여부').should('be.visible');
      cy.log('✅ 관리 - 시스템 - [접속기록 수집기- 통합조회]탭 출력 확인 완료 ');
 
-    // 2.9.1.262_r35274 에서 제거됨. 
-    //  // 관리 > 시스템 > 차단 관리 탭  클릭
-    // cy.get('.v-btn__content').filter(':visible').contains('차단 관리').last().click({ force: true });
-    // cy.wait(3000);
-    // cy.log('--- 화면 검증 시작 ---');
-    // cy.contains('.c-headline', '검색 조건').should('exist');
-    //  //달력 아이콘 확인
-    //  //cy.get('.material-icons').filter(':visible').contains('event').should('be.visible');
+ 
+     // 기간 입력칸(달력 아이콘) 확인 함수 - 아래 숨김 블록 밖에서도 쓰므로 블록 앞으로 이동
+     // ※ 2.9.5.0부터 aria-label="기간" 이 빈 값으로 바뀌어 아이콘 기준으로 찾음
+     const dateInputs = () =>
+       cy.get('.v-input__icon--prepend-inner i.material-icons')
+         .filter(':visible')
+         .filter((i, el) => el.innerText.trim() === 'event')
+         .closest('.v-input');
+
+     // 시작/종료 날짜 칸 확인 (readonly + 달력 아이콘)
+     const checkDateIcons = () => {
+       dateInputs().should('have.length', 2); // 시작 ~ 종료
+       dateInputs().eq(0).find('i.material-icons').should('be.visible').and('contain', 'event');
+       dateInputs().eq(1).find('i.material-icons').should('be.visible').and('contain', 'event');
+       dateInputs().find('input').should('have.attr', 'readonly');
+     };
+
+     // [.21 전용] 시스템 「차단 관리」 탭이 .21 메뉴 설정에서 숨김(hidden) → 확인 제외 (.51/.71 은 표시)
+/*
+     // 관리 > 시스템 > 차단 관리 탭  클릭
+    cy.get('.v-btn__content').filter(':visible').contains('차단 관리').last().click({ force: true });
+    cy.wait(3000);
+    
+    cy.log('--- 화면 검증 시작 ---');
+    cy.contains('.c-headline', '검색 조건').should('exist');
+     
+    //달력 아이콘 확인
     //  // 시작날짜 달력 아이콘확인
-    //  cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    //  cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
     //  // 종료날짜 달력 아이콘확인
     //  cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
-    //  // 검색 조건 이름 입력란 확인
-    //  cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
-    //  cy.get('input[aria-label="Log Tracer"]').filter(':visible').should('be.visible');
-    //  cy.get('input[aria-label="계정"]').filter(':visible').should('be.visible');
-    //  // like버튼 확인 
-    //  cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
-    //  // IP입력란 확인인
-    //  cy.get('input[aria-label="시작 IP"]').filter(':visible').should('be.visible');
-    //  cy.get('input[aria-label="종료 IP"]').filter(':visible').should('be.visible');
-    //  // 검색 버튼 확인
-    //  cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    //  // 표 열 문구 확인 
-    //  cy.get('th').filter(':visible').contains('차단 날짜').should('be.visible');
-    //  cy.get('th').filter(':visible').contains('마지막 접속 날짜').should('be.visible');
-    //  cy.get('th').filter(':visible').contains('업무시스템').should('be.visible');
-    //  cy.get('th').filter(':visible').contains('로그 수집기').should('be.visible');
-    //  cy.get('th').filter(':visible').contains('사용자 아이피').should('be.visible');
-    //  cy.get('th').filter(':visible').contains('계정').should('be.visible');
-    //  cy.get('th').filter(':visible').contains('차단 해제').should('be.visible');
-    //  cy.log('✅ 관리 - 시스템 - [차단 관리]탭 출력 확인 완료 ');
+         // 기간 입력칸: 달력 아이콘(event)이 있는 v-input만 수집
+     // ※ 2.9.5.0부터 aria-label="기간" 이 빈 값으로 바뀌어 아이콘 기준으로 찾음
+     const dateInputs = () =>
+       cy.get('.v-input__icon--prepend-inner i.material-icons')
+         .filter(':visible')
+         .filter((i, el) => el.innerText.trim() === 'event')
+         .closest('.v-input');
+
+     // 시작/종료 날짜 칸 확인 (readonly + 달력 아이콘)
+     const checkDateIcons = () => {
+       dateInputs().should('have.length', 2); // 시작 ~ 종료
+       dateInputs().eq(0).find('i.material-icons').should('be.visible').and('contain', 'event');
+       dateInputs().eq(1).find('i.material-icons').should('be.visible').and('contain', 'event');
+       dateInputs().find('input').should('have.attr', 'readonly');
+     };
+     checkDateIcons();
+
+     // 검색 조건 이름 입력란 확인
+     cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="Log Tracer"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="계정"]').filter(':visible').should('be.visible');
+     // like버튼 확인 
+     cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
+     // IP입력란 확인인
+     cy.get('input[aria-label="시작 IP"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="종료 IP"]').filter(':visible').should('be.visible');
+     // 검색 버튼 확인
+     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+     // 표 열 문구 확인 
+     cy.get('th').filter(':visible').contains('차단 날짜').should('be.visible');
+     cy.get('th').filter(':visible').contains('마지막 접속 날짜').should('be.visible');
+     // 2.9.1.262_r35274 띄어쓰기 
+     cy.get('th').filter(':visible').contains('업무 시스템').should('be.visible');
+     cy.get('th').filter(':visible').contains('로그 수집기').should('be.visible');
+     cy.get('th').filter(':visible').contains('사용자 아이피').should('be.visible');
+     cy.get('th').filter(':visible').contains('계정').should('be.visible');
+     cy.get('th').filter(':visible').contains('차단 해제').should('be.visible');
+     cy.log('✅ 관리 - 시스템 - [차단 관리]탭 출력 확인 완료 ');
+*/
 
   
 
@@ -334,6 +373,7 @@ describe('로그캐치 사이트 테스트', () => {
      // 검색 조건 입력란 
      cy.get('input[aria-label="검색 조건"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="값"]').filter(':visible').should('be.visible');
+     //2.9.1.262_r35274 상태 -> 조건으로 문구 변경
      cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
      // 검색 버튼 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
@@ -350,36 +390,38 @@ describe('로그캐치 사이트 테스트', () => {
      cy.log('✅ 관리 - 정보사용자/그룹 관리 - [관리]탭 출력 확인 완료 ');
 
     cy.wait(2000);
-    // v3.0.5.1191_r35135 에서 제거됨.
-    // // 관리 > 클러스터링 서버 관리 서브메뉴 선택 
-    // cy.contains('button.side-menu', '관리').click({ force: true });
-    // cy.wait(2000);
-    // cy.log('--- 서브메뉴 [클러스터링 서버 관리] 클릭 ---');
+    // [.21 전용] 관리 > 「클러스터링 서버 관리」 서브메뉴가 .21 메뉴 설정에서 숨김 → 확인 제외 (.51/.71 은 표시)
+/*
+    // 관리 > 클러스터링 서버 관리 서브메뉴 선택 
+    cy.contains('button.side-menu', '관리').click({ force: true });
+    cy.wait(2000);
+    cy.log('--- 서브메뉴 [클러스터링 서버 관리] 클릭 ---');
     
-    // cy.get('.v-list__tile__title').filter(':visible').contains('클러스터링 서버 관리').click({ force: true });
-    // //cy.contains('.v-list__tile__title', '클러스터링 서버 관리').filter(':visible').click({ force: true });
-    // cy.wait(4000); // 화면 전환 대기
-    // // 관리 > 클러스터링 서버 관리 > [개인정보 탐색 서버(포그라운드 전용)] 탭 클릭 
-    // cy.get('.v-btn__content').filter(':visible').contains('개인정보 탐색 서버(포그라운드 전용)').last().click({ force: true });
-    // cy.wait(3000);
-    // cy.log('--- 화면 검증 시작 ---');
-    // cy.contains('.c-headline', '검색 조건').should('exist');
-    // // 검색 버튼 확인
-    // cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
-    // cy.contains('.c-headline', '개인정보 탐색 서버').should('exist');
-    // // 정책 추가 + 버튼 확인
-    // cy.get('.material-icons.theme--dark') .contains('add').should('be.visible');
-    // // 표 열 문구 확인 
-    // cy.get('th').filter(':visible').contains('아이디').should('be.visible');
-    // cy.get('th').filter(':visible').contains('서버 타입').should('be.visible');
-    // cy.get('th').filter(':visible').contains('서버 프로토콜').should('be.visible');
-    // cy.get('th').filter(':visible').contains('서버 ip').should('be.visible');
-    // cy.get('th').filter(':visible').contains('PORT').should('be.visible');
-    // cy.get('th').filter(':visible').contains('상세 설명').should('be.visible');
-    // cy.get('th').filter(':visible').contains('생성일').should('be.visible');
-    // cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
-    // cy.get('th').filter(':visible').contains('관리').should('be.visible');
-    // cy.log('✅ 관리 - 클러스터링 서버 관리 - [개인정보 탐색 서버(포그라운드 전용)]탭 출력 확인 완료 ');
+    cy.get('.v-list__tile__title').filter(':visible').contains('클러스터링 서버 관리').click({ force: true });
+    //cy.contains('.v-list__tile__title', '클러스터링 서버 관리').filter(':visible').click({ force: true });
+    cy.wait(4000); // 화면 전환 대기
+    // 관리 > 클러스터링 서버 관리 > [개인정보 탐색 서버(포그라운드 전용)] 탭 클릭 
+    cy.get('.v-btn__content').filter(':visible').contains('개인정보 탐색 서버(포그라운드 전용)').last().click({ force: true });
+    cy.wait(3000);
+    cy.log('--- 화면 검증 시작 ---');
+    cy.contains('.c-headline', '검색 조건').should('exist');
+    // 검색 버튼 확인
+    cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+    cy.contains('.c-headline', '개인정보 탐색 서버').should('exist');
+    // 정책 추가 + 버튼 확인
+    cy.get('.material-icons.theme--dark') .contains('add').should('be.visible');
+    // 표 열 문구 확인 
+    cy.get('th').filter(':visible').contains('아이디').should('be.visible');
+    cy.get('th').filter(':visible').contains('서버 타입').should('be.visible');
+    cy.get('th').filter(':visible').contains('서버 프로토콜').should('be.visible');
+    cy.get('th').filter(':visible').contains('서버 ip').should('be.visible');
+    cy.get('th').filter(':visible').contains('PORT').should('be.visible');
+    cy.get('th').filter(':visible').contains('상세 설명').should('be.visible');
+    cy.get('th').filter(':visible').contains('생성일').should('be.visible');
+    cy.get('th').filter(':visible').contains('수정일시').should('be.visible');
+    cy.get('th').filter(':visible').contains('관리').should('be.visible');
+    cy.log('✅ 관리 - 클러스터링 서버 관리 - [개인정보 탐색 서버(포그라운드 전용)]탭 출력 확인 완료 ');
+*/
 
 
     // 관리 > 내부 파일 다운로드 서브메뉴 선택
@@ -393,21 +435,26 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
     cy.contains('.c-headline', '검색 조건').should('exist');
-    // 시작날짜 달력 아이콘확인
-    cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
-    // 종료날짜 달력 아이콘확인
-    cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // // 시작날짜 달력 아이콘확인
+    // cy.get('input[aria-label="기간"]').filter(':visible').first().closest('.v-input').find('.material-icons').contains('event').should('be.visible');
+    // // 종료날짜 달력 아이콘확인
+    // cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
+    // 시작/종료 날짜 칸 확인 (2.9.5.0 aria-label 변경 대응)
+     checkDateIcons();
     // 검색 조건 입력란 
     cy.get('input[aria-label="파일 다운로드 그룹"]').filter(':visible').should('be.visible');
+    //2.9.1.262_r35274 상태 -> 조건 문구 변경
     cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
      // 검색 버튼 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 표 열 문구 확인 
     cy.get('th').filter(':visible').contains('파일 다운로드 그룹').should('be.visible');
     cy.get('th').filter(':visible').contains('제목').should('be.visible');
+    // 2.9.1.262_r35274 띄워쓰기 
     cy.get('th').filter(':visible').contains('파일 명').should('be.visible');
     cy.get('th').filter(':visible').contains('시작 시간').should('be.visible');
     cy.get('th').filter(':visible').contains('종료 시간').should('be.visible');
+    // 2.9.1.262_r35274 상태 -> 조건 문구 변경  
     cy.get('th').filter(':visible').contains('조건').should('be.visible');
     cy.log('✅ 관리 - 내부 파일 다운로드 - [생성된 파일 목록 조회 / 다운로드]탭 출력 확인 완료 ');
 
@@ -441,6 +488,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.c-headline', '소속 (전체)').should('exist');
     // 검색 조건 입력란 
     cy.get('input[aria-label="이름"]').filter(':visible').should('be.visible');
+    // // 2.9.1.262_r35274 상태 -> 조건 문구 변경
     cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
     // 검색 버튼 확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
@@ -527,27 +575,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 관리 - 데이터 시각화 관리 - [통계 모듈 관리] 출력 확인 완료');
 
 
-//HTML 구조 추출용 코드
-// // ==========================================
-// // 관리 > 데이터 시각화 관리 > 통계 정책 관리 (신규 화면)
-// // ==========================================
-// cy.log('--- 통계 정책 관리 탭 클릭 ---');
-// // 탭 이름 띄어쓰기("통계정책관리" / "통계 정책 관리") 차이 대응 - 정확 일치
-// cy.get('.v-btn__content').filter(':visible')
-//   .filter((i, el) => /^\s*통계\s*정책\s*관리\s*$/.test(Cypress.$(el).text()))
-//   .should('have.length', 1)
-//   .click({ force: true });
-// cy.wait(3000);
-
-// // [진단용] 화면 HTML을 파일로 저장 (검증 코드 작성 후 삭제)
-// cy.get('main.v-content').then(($main) => {
-//   cy.writeFile('cypress/debug/stat-policy.html', $main[0].outerHTML);
-// });
-// cy.screenshot('stat-policy', { capture: 'fullPage' });
-
-// cy.log('✅ 관리 - 데이터 시각화 관리 - [통계 정책 관리] 진입 확인');
-
-
+//v2.9.4.0
 // ==========================================
 // 관리 > 데이터 시각화 관리 > 통계 정책 관리 (신규 화면)
 // ==========================================
@@ -675,7 +703,6 @@ cy.get('body').then(($body) => {
 });
 
 cy.log('✅ 관리 - 데이터 시각화 관리 - [통계 정책 관리] 출력 확인 완료');
-
 
 
     // ==========================================
