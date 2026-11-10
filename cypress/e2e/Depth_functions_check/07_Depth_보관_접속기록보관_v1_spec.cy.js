@@ -442,6 +442,20 @@ cy.get('input[aria-label="백업 경로"]').invoke('val').then((backupPath) => {
 
                                 cy.wait(20000);
 
+                                // [2.9.7 보강] 보관 개수 로테이션(오래된 system 폴더 삭제)은 백업 종료 직전에 수행됨
+                                //   실행 PC/서버 부하에 따라 20초 안에 끝나지 않아 GitHub 실행에서 '4 to be at most 3' 실패 → 최대 120초 폴링
+                                const waitRotation = (left) => {
+                                    cy.task('runSSH', `ls -1d ${backupPath}/system/${todayPrefix}_* 2>/dev/null | wc -l`).then((t) => {
+                                        const n = parseInt(t.trim()) || 0;
+                                        if (n > expectedCount && left > 0) {
+                                            cy.log(`⏳ 로테이션 대기 중 (현재 ${n}개 > 설정 ${expectedCount}개, 남은 재시도 ${left}회)`);
+                                            cy.wait(10000);
+                                            waitRotation(left - 1);
+                                        }
+                                    });
+                                };
+                                waitRotation(10);
+
                                 cy.task('runSSH', `ls -1d ${backupPath}/system/${todayPrefix}_* 2>/dev/null`).then((folderList) => {
                                     cy.log('📂 [system] 현재 system 하위폴더 목록:'); 
                                     if (folderList && folderList.trim()) {
