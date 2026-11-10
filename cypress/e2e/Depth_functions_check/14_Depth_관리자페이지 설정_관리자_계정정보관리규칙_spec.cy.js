@@ -31,6 +31,24 @@
 
 /**코드 시작  */
 describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
+  // [2026-11-09] 중간 실패 시 계정 규칙이 바뀐 채 남아 admin 로그인(패스워드 변경 주기 ON)까지 막힘
+  //   → 첫 백업값을 보관하고, 테스트 성공/실패와 관계없이 after 에서 원복
+  let acctRuleBackup = null;
+  const buildRestoreSql = (o) => `
+    UPDATE logcatch.tbr_cnf_account_rule SET
+    pw_valid_period_flag = ${o.pw_valid_period_flag}, pw_valid_period = ${o.pw_valid_period},
+    pw_error_count_flag = ${o.pw_error_count_flag}, pw_error_count = ${o.pw_error_count},
+    pw_error_lock_time = ${o.pw_error_lock_time},
+    acc_no_used_period_flag = ${o.acc_no_used_period_flag}, acc_no_used_period = ${o.acc_no_used_period},
+    relogin_after_idle_flag = ${o.relogin_after_idle_flag}, relogin_after_idle_time = ${o.relogin_after_idle_time},
+    id_upper_case_flag = ${o.id_upper_case_flag}
+    WHERE id = 3`;
+  after(() => {
+    if (acctRuleBackup) {
+      cy.task('queryPostgresDB', buildRestoreSql(acctRuleBackup)).then(() => cy.log('🔄 [after] 계정 정보 관리 규칙 원복 완료'));
+    }
+  });
+
   
   it('14_Depth_관리자페이지 설정_관리자_계정정보관리규칙 자동화 시나리오', () => {
 
@@ -109,6 +127,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // 1. 원복을 위한 초기 상태 백업 (DB에서 현재값 가져오기)
     cy.task('queryPostgresDB', 'SELECT * FROM logcatch.tbr_cnf_account_rule WHERE id = 3').then((rows) => {
         const originalData = rows[0]; 
+        // 재시도(attempt 2,3)에서 이미 바뀐 값을 다시 백업하지 않도록 첫 값만 보관
+        if (!acctRuleBackup) acctRuleBackup = { ...originalData };
         cy.log('💾 테스트 데이터 백업 완료');
 
     // ==========================================
@@ -222,7 +242,8 @@ cy.task('queryPostgresDB', accountRuleSql).then((rows) => {
         // 로그 추가
         cy.log(`[숫자입력] 항목: ${label} | DB컬럼: ${param} | DB값: ${dbValue}`);
       
-        cy.get(`input[aria-label="${label}"]`)
+        // [2.9.7] 같은 aria-label 로 스위치(checkbox)와 숫자 입력칸이 함께 있음 → 숫자 입력칸만
+        cy.get(`input[aria-label="${label}"]:not([type="checkbox"])`)
             .should('exist')
             .should('have.value', String(dbValue));
     });
@@ -272,7 +293,7 @@ cy.task('queryPostgresDB', accountRuleSql).then((rows) => {
 
     // [2] 스위치가 켜져서 정상적으로 입력 가능한 상태일 때 값을 입력합니다.
     if (item.hasOwnProperty('value')) {
-        cy.get(`input[aria-label="${item.label}"]`)
+        cy.get(`input[aria-label="${item.label}"]:not([type=\"checkbox\"])`)
             .clear({ force: true })
             .type(item.value, { force: true });
     }
@@ -308,10 +329,10 @@ cy.task('queryPostgresDB', accountRuleSql).then((rows) => {
         
         // 나머지 항목들도 오타 없는지 확인
         expect(db.pw_error_count_flag, '패스워드 오류시 잠금설정 Flag').to.equal(0); // false로 바꿨으니 0
-        expect(db.pw_error_count, '패스워드 오류시 잠금설정 Value').to.equal(3);
+        expect(db.pw_error_count, '패스워드 오류시 잠금설정 Value (스위치 OFF → 0 저장, 2.9.7)').to.equal(0);
         
         expect(db.acc_no_used_period_flag, '장기 미사용 기간 설정 Flag').to.equal(0);
-        expect(db.acc_no_used_period, '장기 미사용 기간 설정 Value').to.equal(30);
+        expect(db.acc_no_used_period, '장기 미사용 기간 설정 Value (스위치 OFF → 0 저장, 2.9.7)').to.equal(0);
         
         expect(db.relogin_after_idle_flag, '자리 비움 Flag').to.equal(1);
         expect(db.relogin_after_idle_time, '자리 비움 Value').to.equal(60);
@@ -387,7 +408,7 @@ cy.task('queryPostgresDB', accountRuleSql).then((rows) => {
     Object.entries(valueRules).forEach(([label, param]) => {
         const expectedValue = originalData[param];
         
-        cy.get(`input[aria-label="${label}"]`)
+        cy.get(`input[aria-label="${label}"]:not([type=\"checkbox\"])`)
             .should('exist')
             .should('have.value', String(expectedValue));
     });

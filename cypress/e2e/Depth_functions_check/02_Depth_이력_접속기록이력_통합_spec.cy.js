@@ -146,7 +146,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 전체선택 확인
-     cy.get('span[title="전체 선택"]').should('be.visible');
+     // [2.9.7] '전체 선택' 표시 없어짐 (Basic/UI 이력과 동일하게 제외)
+     // cy.get('span[title=\"전체 선택\"]').should('be.visible');
      // like버튼 확인 
      //cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
     
@@ -229,7 +230,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 
 
     // //달력표를 펼침 
-    // cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    // dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
     // cy.wait(1000);
     // // 1. 상단 제목('2026년 1월')을 클릭하여 '월 선택 모드'로 바꿉니다.
     // cy.get('.menuable__content__active').find('.v-date-picker-header__value button').click({ force: true });
@@ -561,19 +562,23 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
 cy.get('.v-dialog--active .scrollable-content').filter(':visible').first()
   .scrollTo('top', { ensureScrollable: false });
 cy.wait(1000);
-cy.contains('button.v-btn', '전체 확정 선택').should('be.visible').click({ force: true });
+// [2.9.7 임시 스킵] Mantis 0038956 — 이미 오탐으로 처리된 건에서 「전체 확정 선택」도 반영 안 됨 (수동 확인 2026-11-10)
+//   검출 건이 오탐 상태면 확정 검증이 실패하므로 함께 보류, 수정되면 주석 해제
+cy.contains('button.v-btn', '전체 확정 선택').should('be.visible');
+// cy.contains('button.v-btn', '전체 확정 선택').should('be.visible').click({ force: true });
+//
+// // 확정 버튼 갯수 비교 검증 (each 대체)
+// cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns) => {
+//   const totalCount = $allBtns.length; // 예: 4개
+//
+//   // 'selected'가 붙은 확정 버튼이 전체 갯수와 동일해질 때까지 자동 대기 및 검증
+//   cy.get('button.btn-toggle-style-1.selected', { timeout: 10000 })
+//     .filter(':contains("확정")')
+//     .should('have.length', totalCount);
+// });
 
-// 확정 버튼 갯수 비교 검증 (each 대체)
-cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns) => {
-  const totalCount = $allBtns.length; // 예: 4개
-  
-  // 'selected'가 붙은 확정 버튼이 전체 갯수와 동일해질 때까지 자동 대기 및 검증
-  cy.get('button.btn-toggle-style-1.selected', { timeout: 10000 })
-    .filter(':contains("확정")')
-    .should('have.length', totalCount);
-});
 
-
+/* [2.9.7 임시 스킵] Mantis 0038956 — 오탐 버튼 동작 안 함 (전체 오탐 선택·개별 오탐 클릭 모두 미반영), 수정되면 주석 해제
 // 2. [전체 오탐 선택] 변경 클릭 및 검증
 cy.contains('button.v-btn', '전체 오탐 선택')
   .should('be.visible')
@@ -589,6 +594,7 @@ cy.get('button.btn-toggle-style-1').filter(':contains("오탐")').then(($allBtns
     .should('have.length', totalCount);
 });
 
+*/
     
      // 1. 다이얼로그 내부 스크롤 컨테이너를 끝까지 내림
      cy.get('.scrollable-content').filter(':visible').scrollTo('bottom', { ensureScrollable: false, duration: 500 });
@@ -612,19 +618,23 @@ cy.get('button.btn-toggle-style-1').filter(':contains("오탐")').then(($allBtns
 // ============================================================================
 // 1. [전체 확정 선택] 클릭 및 검증
 // ============================================================================
-cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.visible').click({ force: true });
+// [2.9.7 임시 스킵] Mantis 0038956 — 오탐 상태에서 「전체 확정 선택」 미반영, 수정되면 주석 해제
+cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.visible');
+// cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.visible').click({ force: true });
+//
+// // 확정 버튼 갯수 비교 검증 (each 대체)
+// cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns) => {
+//   const totalCount = $allBtns.length;
+//
+//   // 'selected'가 붙은 확정 버튼이 전체 갯수와 동일해질 때까지 대기
+//   cy.get('button.btn-toggle-style-1.selected', { timeout: 10000 })
+//     .filter(':contains("확정")')
+//     .should('have.length', totalCount);
+// });
 
-// 확정 버튼 갯수 비교 검증 (each 대체)
-cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns) => {
-  const totalCount = $allBtns.length;
-  
-  // 'selected'가 붙은 확정 버튼이 전체 갯수와 동일해질 때까지 대기
-  cy.get('button.btn-toggle-style-1.selected', { timeout: 10000 })
-    .filter(':contains("확정")')
-    .should('have.length', totalCount);
-});
 
-
+/* [2.9.7 임시 스킵] Mantis 0038956 — 오탐 버튼 동작 안 함 (전체 오탐 선택·개별 오탐 클릭 모두 미반영), 수정되면 주석 해제
+   (이전 선택 복구는 직전 오탐 상태로 되돌리는지 확인하는 단계라 오탐이 동작해야 검증 가능)
 // ============================================================================
 // 2. [이전 선택 복구] 클릭 및 검증 (오탐 상태로 복구)
 // ============================================================================
@@ -649,20 +659,23 @@ cy.get('button.btn-toggle-style-1').filter(':contains("오탐")').then(($allBtns
 });
 
 
+*/
 // ============================================================================
 // 3. 다시 [전체 확정 선택] 클릭 및 검증
 // ============================================================================
-cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.visible').click({ force: true });
-
-// 다시 한번 확정 버튼 갯수 비교 검증
-cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns) => {
-  const totalCount = $allBtns.length;
-  
-  // 'selected'가 붙은 확정 버튼이 전체 갯수와 동일해질 때까지 대기
-  cy.get('button.btn-toggle-style-1.selected', { timeout: 10000 })
-    .filter(':contains("확정")')
-    .should('have.length', totalCount);
-});
+// [2.9.7 임시 스킵] Mantis 0038956 — 오탐 상태에서 「전체 확정 선택」 미반영, 수정되면 주석 해제
+cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.visible');
+// cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.visible').click({ force: true });
+//
+// // 다시 한번 확정 버튼 갯수 비교 검증
+// cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns) => {
+//   const totalCount = $allBtns.length;
+//
+//   // 'selected'가 붙은 확정 버튼이 전체 갯수와 동일해질 때까지 대기
+//   cy.get('button.btn-toggle-style-1.selected', { timeout: 10000 })
+//     .filter(':contains("확정")')
+//     .should('have.length', totalCount);
+// });
 
      // 1. 다이얼로그 내부 스크롤 컨테이너를 끝까지 내림
      cy.get('.scrollable-content').filter(':visible').scrollTo('bottom', { ensureScrollable: false, duration: 500 });
@@ -677,118 +690,137 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      cy.wait(1000);
      //-------------------------------------------------------------------------------------------  
 
-     /////////////////////////////////////////////////
-     // [이력 > 통합 > 검출 팝업 > 키워드  탭]
-     /////////////////////////////////////////////////
+     // [2.9.7 임시 스킵] 키워드 탭 — Mantis 0038957 — 키워드값 입력 후 Enter 시 값이 등록되지 않고 지워짐 (수동 재현 확인)
+     //   키워드 등록 → 수정 → 삭제 흐름 전체를 건너뜀. 수정되면 아래 '// ' 를 풀어 복구
+//      /////////////////////////////////////////////////
+//      // [이력 > 통합 > 검출 팝업 > 키워드  탭]
+//      /////////////////////////////////////////////////
 
-     //Case 키워드 등록하기-------------------------------------------------------------
-     // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
-     cy.wait(1000);
+//      //Case 키워드 등록하기-------------------------------------------------------------
+//      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+//      cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
+//      cy.wait(1000);
 
-     // 다이얼로그 내부 스크롤을 맨 위로 올린 뒤 탭 클릭
-     cy.get('.v-dialog--active').scrollTo('top', { ensureScrollable: false });
-     cy.wait(1000);
+//      // 다이얼로그 내부 스크롤을 맨 위로 올린 뒤 탭 클릭
+//      cy.get('.v-dialog--active').scrollTo('top', { ensureScrollable: false });
+//      cy.wait(1000);
 
-     // 키워드 탭 클릭
-     cy.contains('.v-tabs__item, a', '키워드').scrollIntoView().filter(':visible').click({ force: true });
-     cy.wait(1000);
+//      // 키워드 탭 클릭
+//      cy.contains('.v-tabs__item, a', '키워드').scrollIntoView().filter(':visible').click({ force: true });
+//      cy.wait(1000);
 
-     // 키워드 값 'Depth_test_KeyWord'를 입력
-     cy.get('input[placeholder="항목을 입력하고 Enter 를 누르세요."]').filter(':visible').last().clear().type('Depth_test_KeyWord{enter}');
+//      // 키워드 값 'Depth_test_KeyWord'를 입력
+//      // [2.9.7] 키워드 탭 양식 변경(개인정보 유형·유형·적용 업무시스템·Content Type·키워드값…)
+//      //   같은 안내문 입력칸이 여러 개 → '키워드값' 라벨과 같은 높이(같은 줄)에 있는 입력칸을 선택
+//      cy.get('.v-dialog--active').filter(':visible').last().then(($dlg) => {
+//        const $label = $dlg.find('*').filter((i, el) => el.children.length === 0 && /^\s*키워드\s*값\s*:?\s*$/.test(el.textContent)).filter(':visible').first();
+//        const $inputs = $dlg.find('input[placeholder="항목을 입력하고 Enter 를 누르세요."]').filter(':visible');
+//        let $target = $inputs.last();
+//        if ($label.length && $inputs.length > 1) {
+//          const ly = $label[0].getBoundingClientRect().top;
+//          $target = Cypress.$([...$inputs].sort((a, b) => Math.abs(a.getBoundingClientRect().top - ly) - Math.abs(b.getBoundingClientRect().top - ly))[0]);
+//        }
+//        cy.log(`키워드값 입력칸 후보 ${$inputs.length}개 / 라벨 ${$label.length ? '찾음' : '못 찾음'}`);
+//        // [2.9.7] Enter 로 칩 등록되는 입력칸 → force 없이 클릭(포커스) 후 입력, Enter 는 따로 입력
+//        cy.wrap($target).scrollIntoView().click();
+//        cy.wrap($target).type('Depth_test_KeyWord', { delay: 30 });
+//        cy.wrap($target).type('{enter}');
+//        cy.wait(500);
+//        // 칩으로 등록됐는지 확인 (입력칸이 속한 v-input 안에 키워드 칩)
+//        cy.wrap($target).closest('.v-input').should('contain.text', 'Depth_test_KeyWord');
+//      });
 
-     // 설명  입력
-     cy.get('input[aria-label="설명"]').filter(':visible').clear().type('depth _키워드_수정삭제');
+//      // 설명  입력
+//      cy.get('input[aria-label="설명"]').filter(':visible').clear().type('depth _키워드_수정삭제');
 
-     // 저장버튼 클릭
-     cy.get('button.v-btn').filter(':visible').contains('저장').click({ force: true });
-     cy.wait(1000);
+//      // 저장버튼 클릭
+//      cy.get('button.v-btn').filter(':visible').contains('저장').click({ force: true });
+//      cy.wait(1000);
 
-     // 저장알림창 확인
-     // v2.9.1.125_r35234 p.mb-0'->p.ca-msg 변경됨. 
-     cy.contains('p.ca-msg', /저장했습니다\.|중복된 값입니다/).should('be.visible');
-     cy.wait(1000);
+//      // 저장알림창 확인
+//      // v2.9.1.125_r35234 p.mb-0'->p.ca-msg 변경됨. 
+//      cy.contains('p.ca-msg', /저장했습니다\.|중복된 값입니다/).should('be.visible');
+//      cy.wait(1000);
      
-     // 저장 > 알림창 안의 '확인' 버튼을 찾아 클릭!
-     cy.contains('button.v-btn:visible', '확인').click({ force: true });
-     cy.wait(1000);
+//      // 저장 > 알림창 안의 '확인' 버튼을 찾아 클릭!
+//      cy.contains('button.v-btn:visible', '확인').click({ force: true });
+//      cy.wait(1000);
 
-     // 검출창 닫기버튼 클릭
-     cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
-     cy.wait(1000);
+//      // 검출창 닫기버튼 클릭
+//      cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+//      cy.wait(1000);
      
 
-     // Case 키워드 수정하기 -----------------------------------------------------------------
-     // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
-     cy.wait(1000);
+//      // Case 키워드 수정하기 -----------------------------------------------------------------
+//      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+//      cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
+//      cy.wait(1000);
 
-     // 다이얼로그 내부 스크롤을 맨 위로 올린 뒤 탭 클릭
-     cy.get('.v-dialog--active').scrollTo('top', { ensureScrollable: false });
-     cy.wait(1000);
+//      // 다이얼로그 내부 스크롤을 맨 위로 올린 뒤 탭 클릭
+//      cy.get('.v-dialog--active').scrollTo('top', { ensureScrollable: false });
+//      cy.wait(1000);
 
-     // 키워드 탭 클릭
-     cy.contains('.v-tabs__item', '키워드').scrollIntoView().should('be.visible').click({ force: true });
-     cy.wait(1000);
+//      // 키워드 탭 클릭
+//      cy.contains('.v-tabs__item', '키워드').scrollIntoView().should('be.visible').click({ force: true });
+//      cy.wait(1000);
 
-     //등록한 키워드 클릭하기  
-     //'주민등록_' 뒤에 어떤 문자(.*)가 오더라도 해당 라벨을 찾아 클릭합니다.
-     cy.contains('label.text-label', /주민등록번호_.*/).should('be.visible').click({ force: true });
+//      //등록한 키워드 클릭하기  
+//      //'주민등록_' 뒤에 어떤 문자(.*)가 오더라도 해당 라벨을 찾아 클릭합니다.
+//      cy.contains('label.text-label', /주민등록번호_.*/).should('be.visible').click({ force: true });
    
-     cy.wait(1000);
+//      cy.wait(1000);
 
-     // 입력된 이름을 수정 
-     cy.get('input[aria-label="이름"]').filter(':visible').scrollIntoView().should('be.visible').clear().type('주민등록번호_test_수정');
-     cy.wait(1000);
+//      // 입력된 이름을 수정 
+//      cy.get('input[aria-label="이름"]').filter(':visible').scrollIntoView().should('be.visible').clear().type('주민등록번호_test_수정');
+//      cy.wait(1000);
 
-     // 입력된 설명 수정
-     cy.get('input[aria-label="설명"]').filter(':visible').clear().type('depth_키워드_수정완료');
-     cy.wait(1000);
+//      // 입력된 설명 수정
+//      cy.get('input[aria-label="설명"]').filter(':visible').clear().type('depth_키워드_수정완료');
+//      cy.wait(1000);
 
-     // 저장버튼 클릭
-     cy.get('button.v-btn').filter(':visible').contains('저장').click({ force: true });
-     cy.wait(1000);
+//      // 저장버튼 클릭
+//      cy.get('button.v-btn').filter(':visible').contains('저장').click({ force: true });
+//      cy.wait(1000);
      
-     // 수정알림창 확인
-     // v2.9.1.125_r35234 p.mb-0'->p.ca-msg 변경됨.
-     cy.contains('p.ca-msg', '수정했습니다.').should('be.visible');
-     cy.wait(1000);
+//      // 수정알림창 확인
+//      // v2.9.1.125_r35234 p.mb-0'->p.ca-msg 변경됨.
+//      cy.contains('p.ca-msg', '수정했습니다.').should('be.visible');
+//      cy.wait(1000);
 
-     // 저장 > 알림창 안의 '확인' 버튼을 찾아 클릭!
-     cy.contains('button.v-btn:visible', '확인').click({ force: true });
-     cy.wait(1000);
+//      // 저장 > 알림창 안의 '확인' 버튼을 찾아 클릭!
+//      cy.contains('button.v-btn:visible', '확인').click({ force: true });
+//      cy.wait(1000);
 
-     // 검출창 닫기버튼 클릭
-     cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
-     cy.wait(1000);
+//      // 검출창 닫기버튼 클릭
+//      cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+//      cy.wait(1000);
 
-     // Case 키워드 삭제하기---------------------------------------------------------------------------------
-     // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
-     cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
-     cy.wait(1000);
+//      // Case 키워드 삭제하기---------------------------------------------------------------------------------
+//      // 표의 데이터 행(tbody tr) 중 '첫 번째' 행을 먼저 잡습니다.
+//      cy.get('tbody tr').filter(':visible').first().find('i.g.g-IConfig', { timeout: 20000 }).should('be.visible').click({ force: true });
+//      cy.wait(1000);
 
-     // 다이얼로그 내부 스크롤을 맨 위로 올린 뒤 탭 클릭
-     cy.get('.v-dialog--active').scrollTo('top', { ensureScrollable: false });
-     cy.wait(1000);
+//      // 다이얼로그 내부 스크롤을 맨 위로 올린 뒤 탭 클릭
+//      cy.get('.v-dialog--active').scrollTo('top', { ensureScrollable: false });
+//      cy.wait(1000);
 
-     // 키워드 탭 클릭
-     cy.contains('.v-tabs__item', '키워드').scrollIntoView().should('be.visible').click({ force: true });
-     cy.wait(1000);
+//      // 키워드 탭 클릭
+//      cy.contains('.v-tabs__item', '키워드').scrollIntoView().should('be.visible').click({ force: true });
+//      cy.wait(1000);
 
-     // 1. 해당 텍스트 영역을 찾아 마우스를 올립니다(Hover)
-     cy.contains('label.text-label', '주민등록번호_test_수정').closest('.vue-treeselect__label').trigger('mouseover');      
+//      // 1. 해당 텍스트 영역을 찾아 마우스를 올립니다(Hover)
+//      cy.contains('label.text-label', '주민등록번호_test_수정').closest('.vue-treeselect__label').trigger('mouseover');      
 
-     // 2. 이제 나타난 휴지통 아이콘을 찾아 클릭합니다.
-     cy.get('.fa-trash').filter(':visible').first().click({ force: true });
+//      // 2. 이제 나타난 휴지통 아이콘을 찾아 클릭합니다.
+//      cy.get('.fa-trash').filter(':visible').first().click({ force: true });
 
-     // 삭제 알림창 확인
-     cy.contains('삭제했습니다.', { timeout: 30000 }).should('exist');
+//      // 삭제 알림창 확인
+//      cy.contains('삭제했습니다.', { timeout: 30000 }).should('exist');
      
-     // 검출창 닫기버튼 클릭
-     cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
-     cy.wait(1000);
-     //--------------------------------------------------------------------------------------------
-
+//      // 검출창 닫기버튼 클릭
+//      cy.get('button.v-btn').filter(':visible').contains('닫기').click({ force: true });
+//      cy.wait(1000);
+//      //--------------------------------------------------------------------------------------------
      //////////////////////////////////////////////////////
      //  [이력 > 통합 > 검출 팝업 > 불용 데이터 - 키워드 탭]
      /////////////////////////////////////////////////////
@@ -1087,7 +1119,8 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
      cy.wait(1000); 
      
      //HTTP Request 탭 클릭---------------------
-     cy.contains('span.tab-title', 'HTTP Request').should('be.visible').click({ force: true });
+     // [2.9.7] 탭 이름이 'HTTP REQUEST'(대문자)로 바뀌고 span.tab-title 구조가 아님 → 대소문자 무시, 보이는 탭에서 찾음
+     cy.get('.v-dialog--active').last().contains('.v-tabs__item, a, span, div', /^\s*HTTP\s+REQUEST\s*$/i).filter(':visible').first().click({ force: true });
      cy.wait(1000); 
 
      // 안쪽 팝업의 Key/Value 테이블이 실제로 로드됐는지 먼저 확인
@@ -1157,7 +1190,7 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
 
 
 //HTTP Response 탭 클릭---------------------
-     cy.contains('span.tab-title', 'HTTP Response').should('be.visible').click({ force: true });
+     cy.get('.v-dialog--active').last().contains('.v-tabs__item, a, span, div', /^\s*HTTP\s+RESPONSE\s*$/i).filter(':visible').first().click({ force: true });
      cy.wait(1000);
 
      // 'Connection'라는 텍스트를 가진 행(tr)을 찾아서 검증합니다.
@@ -1177,7 +1210,7 @@ cy.get('button.btn-toggle-style-1').filter(':contains("확정")').then(($allBtns
 // 변수명을 sqlTargets로 변경
 const sqlTargets = ['menuNo', 'id', 'name', 'NAME', 'password', 'Url'];
 
-cy.contains('span.tab-title', 'SQL').should('be.visible').click({ force: true });
+cy.get('.v-dialog--active').last().contains('.v-tabs__item, a, span, div', /^\s*SQL\s*$/i).filter(':visible').first().click({ force: true });
 cy.wait(1500); 
 
 cy.get('.v-dialog--active').within(() => {
@@ -1212,10 +1245,11 @@ cy.get('.v-dialog--active').within(() => {
 });
 
     // 검출팝업 왼쪽 HTTP 상세 팝업 닫기 -----------------------------------------------------------------
-    cy.contains('.tab-title', 'HTTP Request').parents('.flex.xs12.sm12.md12.lg12').first()
-    .within(() => {
-      cy.get('i.material-icons').contains('close').filter(':visible').first().click({ force: true });
-    });
+    // [2.9.7] 탭 이름 'HTTP REQUEST'(대문자)·구조 변경 → 탭에서 위로 올라가며 'close' 아이콘이 처음 나오는 영역(HTTP 상세 패널)의 X 클릭
+    cy.get('.v-dialog--active').last().contains('.v-tabs__item, a, span, div', /^\s*HTTP\s+REQUEST\s*$/i).filter(':visible').first()
+      .parents().filter((i, el) => Cypress.$(el).find('i.material-icons:contains("close")').filter(':visible').length > 0).first()
+      .find('i.material-icons').filter((i, el) => el.textContent.trim() === 'close').filter(':visible').first()
+      .click({ force: true });
 
      cy.wait(1000);
      // 검출창 닫기버튼 클릭

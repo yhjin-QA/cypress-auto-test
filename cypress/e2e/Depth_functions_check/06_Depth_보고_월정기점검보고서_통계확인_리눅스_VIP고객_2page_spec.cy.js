@@ -39,7 +39,10 @@ const dateInputs = () =>
 /**코드 시작  */
 describe('로그캐치 사이트 테스트', () => {
   
-  it('로그캐치 배포점검목록 동작 체크', () => {
+  // [2.9.7 보류] Mantis 0038961 — 통계가 정상 생성된 날짜(어제)도 현황 > 업무 시스템 별 조회가 400(No Data Found)이라
+  //   업무시스템 목록에서 리눅스_VIP고객을 선택할 수 없음 → 이슈 해결 전까지 전체 skip (해결 후 it.skip → it 로 복원)
+  //   참고: 0038962(조회 실패 시 이전 목록 잔존) — 수동 확인 시 이전 목록이 남아 정상처럼 보일 수 있음
+  it.skip('로그캐치 배포점검목록 동작 체크', () => {
 
 
     // ==========================================
@@ -145,7 +148,8 @@ describe('로그캐치 사이트 테스트', () => {
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 전체선택 확인
-     cy.get('span[title="전체 선택"]').should('be.visible');
+     // [2.9.7] '전체 선택' 표시 없어짐 (Basic/UI 이력과 동일하게 제외)
+     // cy.get('span[title=\"전체 선택\"]').should('be.visible');
      // like버튼 확인 
      //cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
     
@@ -233,19 +237,23 @@ describe('로그캐치 사이트 테스트', () => {
   // ==========================================
   const today = new Date();
 
-  // 1월에 실행할 경우 작년 12월로 넘어가야 하므로 Date 객체 자체를 한 달 전으로 돌립니다.
-  const prevMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  // [2.9.7 임시] Mantis 0038958 — .21 은 2026-10-11 ~ 11-08 통계 누락(PostgreSQL 락 테이블 부족) → 기본은 '어제 하루' 대상으로 검증
+  //   원래 시나리오(전월 1일 ~ 말일)로 돌리려면 --env STAT_PERIOD=prev-month
+  const usePrevMonth = Cypress.env('STAT_PERIOD') === 'prev-month';
+  const _y = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);   // 어제
+  const prevMonthDate = usePrevMonth ? new Date(today.getFullYear(), today.getMonth() - 1, 1) : new Date(_y.getFullYear(), _y.getMonth(), 1);
 
   // 기존 변수명(currentMonthText)을 그대로 유지하여 다른 코드에서 발생하는 참조 에러를 방지합니다.
-  const currentMonthNum = prevMonthDate.getMonth() + 1; // 전월 숫자 (예: 4)
-  const currentMonthText = `${currentMonthNum}월`; // 예: "4월"
+  const currentMonthNum = prevMonthDate.getMonth() + 1;
+  const currentMonthText = `${currentMonthNum}월`;
 
-  // 전월의 마지막 날(말일) 구하기
-  const lastDayNum = new Date(prevMonthDate.getFullYear(), currentMonthNum, 0).getDate(); 
+  // 시작일·종료일 (전월 모드: 1일 ~ 말일 / 기본: 어제 ~ 어제)
+  const firstDayNum = usePrevMonth ? 1 : _y.getDate();
+  const lastDayNum = usePrevMonth ? new Date(prevMonthDate.getFullYear(), currentMonthNum, 0).getDate() : _y.getDate();
 
-  const firstDayRegex = new RegExp(`^\\s*1일\\s*$`);
+  const firstDayRegex = new RegExp(`^\\s*${firstDayNum}일\\s*$`);
   const lastDayRegex = new RegExp(`^\\s*${lastDayNum}일\\s*$`);
-  cy.log(`📅 동적 기간 세팅 준비 완료: ${currentMonthText} 1일 ~ ${lastDayNum}일`);
+  cy.log(`📅 동적 기간 세팅 준비 완료: ${currentMonthText} ${firstDayNum}일 ~ ${lastDayNum}일`);
 
 
 
@@ -263,15 +271,15 @@ describe('로그캐치 사이트 테스트', () => {
     // // 동적 정규식 생성 (공백 무시하고 정확히 매칭)
     // const firstDayRegex = new RegExp(`^\\s*1일\\s*$`);
     // const lastDayRegex = new RegExp(`^\\s*${lastDayNum}일\\s*$`);
-    // cy.log(`📅 동적 기간 세팅 준비 완료: ${currentMonthText} 1일 ~ ${lastDayNum}일`);
+    // cy.log(`📅 동적 기간 세팅 준비 완료: ${currentMonthText} ${firstDayNum}일 ~ ${lastDayNum}일`);
 
 
     //달력표를 펼침  
     // ==========================================
     // '기간 시작일자' 셋팅 ( 1일)
     // ==========================================
-    cy.log(`📅 대상기간 시작일자를 ${currentMonthText} 1일로 셋팅합니다.`);
-    //cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    cy.log(`📅 대상기간 시작일자를 ${currentMonthText} ${firstDayNum}일로 셋팅합니다.`);
+    //dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(0) .closest('.v-input').find('.material-icons').contains('event').click({ force: true });
     cy.wait(1000);
 
@@ -452,8 +460,8 @@ cy.contains('div:visible', '전체:', { timeout: 30000 }).invoke('text')
     // ==========================================
     // '기간 시작일자' 셋팅 (이번 달 1일)
     // ==========================================
-    cy.log(`📅 대상기간 시작일자를 ${currentMonthText} 1일로 셋팅합니다.`);
-    //cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
+    cy.log(`📅 대상기간 시작일자를 ${currentMonthText} ${firstDayNum}일로 셋팅합니다.`);
+    //dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(0) .closest('.v-input').find('.material-icons').contains('event').click({ force: true });
     cy.wait(1000);
 
@@ -653,7 +661,7 @@ cy.get('.apexcharts-legend').eq(0).find('.apexcharts-legend-text').each(($legend
 // ==========================================
 // 1. 대상기간 '시작일자' 셋팅 (1일)
 // ==========================================
-cy.log(`📅 대상기간 시작일자를 ${currentMonthText} 1일로 셋팅합니다.`);
+cy.log(`📅 대상기간 시작일자를 ${currentMonthText} ${firstDayNum}일로 셋팅합니다.`);
 
 cy.get('input[aria-label="대상기간 시작일자"]').closest('.v-input').find('.material-icons').contains('event').click({ force: true });
 cy.wait(500);

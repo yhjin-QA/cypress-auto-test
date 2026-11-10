@@ -489,7 +489,8 @@ const clickChartAndVerifyPopup = (logLabel, clickAction) => {
   cy.wait(500);
   
   // 🌟 수정: p.mb-0 -> p.cc-msg 로 변경
-  cy.contains('p.cc-msg:visible', '상세 페이지로 이동하시겠습니까?').should('be.visible');
+  // [2.9.7] '상세 화면을 새 창에서 열기' 토글 ON 이면 문구가 '상세 화면을 새 창에서 여시겠습니까?' 로 바뀜
+  cy.contains('p.cc-msg:visible', /상세 페이지로 이동하시겠습니까\?|상세 화면을 새 창에서 여시겠습니까\?/).should('be.visible');
   cy.wait(500);
   cy.get('.v-btn__content').filter(':visible').contains('확인').click({ force: true });
   cy.wait(1000);
@@ -554,13 +555,16 @@ clickChartAndVerifyPopup('개인정보 사용자 TOP 10', () => {
 // ==========================================
 // 6. 이상행위 유형별 현황
 // ==========================================
-clickChartAndVerifyPopup('이상행위 유형별 현황', () => {
-  cy.contains('.v-card__title', '이상행위 유형별 현황')
-    .closest('.v-card')
-    .within(() => {
-      cy.get('span.apexcharts-legend-text').first().click({ force: true });
-    });
-}, 'anomaly');
+// [2.9.7] 이상행위 발생 건수가 0이면 차트 대신 '조회 결과가 존재하지 않습니다' 표시 → 범례가 없어 건너뜀
+cy.contains('.v-card__title', '이상행위 유형별 현황').closest('.v-card').then(($card) => {
+  if ($card.find('span.apexcharts-legend-text').length === 0) {
+    cy.log('⚠️ 이상행위 유형별 현황 데이터 없음(조회 결과 없음) - 차트 팝업 검증 건너뜀');
+    return;
+  }
+  clickChartAndVerifyPopup('이상행위 유형별 현황', () => {
+    cy.wrap($card).find('span.apexcharts-legend-text').first().click({ force: true });
+  }, 'anomaly');
+});
 
 cy.log('🎉 점검 대시보드 모든 차트 팝업 검증 완료!');
 

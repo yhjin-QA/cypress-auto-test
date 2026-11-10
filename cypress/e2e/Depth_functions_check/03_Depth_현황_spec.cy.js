@@ -130,10 +130,8 @@ cy.contains('.c-headline', '검색 조건').should('exist');
 // 🌟 시작날짜 달력 아이콘 확인
 // [수정] cy.contains('기간')은 "기간별 트렌드" 탭을 먼저 잡을 수 있음
 //        → 화면에 보이는 label 중 글자가 정확히 "기간"인 것만 대상
-cy.get('label').filter(':visible')
-  .filter((i, el) => el.textContent.trim() === '기간')
-  .first()
-  .closest('.v-input')
+// [2.9.7] '기간' 라벨 비어 있음 → 달력 아이콘 기준
+dateInputs().eq(0)
   .find('.material-icons')
   .should(($icons) => {
     const hasEvent = $icons.toArray().some((el) => el.textContent.trim() === 'event');
@@ -151,8 +149,9 @@ cy.get('i.material-icons').filter((i, el) => el.textContent.trim() === 'event').
 cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
 
 // 검색 조건 입력문구 확인
-cy.get('label').filter(':visible').contains('기간').should('be.visible');
-cy.get('label').filter(':visible').contains('추적 타입').should('be.visible');
+dateInputs().should('have.length.at.least', 1);
+// [2.9.7] '추적 타입' 라벨 없어짐 (Basic 03 과 동일하게 제외)
+// cy.get('label').filter(':visible').contains('추적 타입').should('be.visible');
 cy.get('span').filter(':visible').contains('정보 사용자').should('be.visible');
 
  /*
@@ -297,13 +296,12 @@ cy.get('span').filter(':visible').contains('정보 사용자').should('be.visibl
     // 컨텍스트 메뉴 닫기
     cy.get('body').type('{esc}');
 
-    // 추적타입 - 정보 사용자 선택하기  
-    cy.get('input[aria-label="추적 타입"]').filter(':visible').click({ force: true });
-    cy.wait(500);
-    // 추적타입중 - 아이피 클릭
-    cy.get('.v-list__tile__title').contains('정보 사용자').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
-    // 선택 후 메뉴 닫기
-    cy.get('body').type('{esc}');
+    // [2.9.7] '추적 타입' 입력칸(aria-label) 없어짐 — 기본값이 '정보 사용자'라 선택 생략 (Basic 03 과 동일)
+    // cy.get('input[aria-label="추적 타입"]').filter(':visible').click({ force: true });
+    // cy.wait(500);
+    // cy.get('.v-list__tile__title').contains('정보 사용자').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    // cy.get('body').type('{esc}');
+    cy.get('span[title="정보 사용자"]').filter(':visible').should('exist');
 
     // '사용자' 입력창에 '호준'을 입력하여 검색 결과를 띄웁니다.
     cy.get('input[aria-label="사용자"]').filter(':visible').clear().type('테스터', { force: true });
@@ -356,10 +354,8 @@ dashboardStats1.forEach((stat) => {
     cy.get('.tab-btn').contains('부서 별').closest('button').should('not.have.class', 'inactive');
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘 확인 (화면에 보이는 "기간" 라벨 기준)
-cy.get('label').filter(':visible')
-  .filter((i, el) => el.textContent.trim() === '기간')
-  .first()
-  .closest('.v-input')
+// [2.9.7] '기간' 라벨 비어 있음 → 달력 아이콘 기준
+dateInputs().eq(0)
   .find('.material-icons')
   .filter((i, el) => el.textContent.trim() === 'event')
   .should('exist');
@@ -499,7 +495,7 @@ dashboardStats2.forEach((stat) => {
     // 'c-headline' 클래스를 가진 요소 중에 '파일 다운로드' 글자가 존재하는지 확인
     cy.contains('.c-headline', '검색 조건').should('exist');
     // 시작날짜 달력 아이콘 확인 (부모 display:none 이슈로 exist 사용)
-    cy.contains('기간').closest('.v-input').find('.material-icons').contains('event').should('exist');
+    dateInputs().eq(0).find('.material-icons').contains('event').should('exist');
     // 종료날짜 달력 아이콘 확인 - aria-label이 빈 값인 종료날짜 input으로 타겟
     cy.get('input[aria-label=""][readonly="readonly"]').filter(':visible').first().closest('.v-input').find('.material-icons').should('exist'); // visible 대신 exist로 변경 (부모 display:none 이슈 회피)
     // 달력 아이콘이 2개 존재하는지 확인

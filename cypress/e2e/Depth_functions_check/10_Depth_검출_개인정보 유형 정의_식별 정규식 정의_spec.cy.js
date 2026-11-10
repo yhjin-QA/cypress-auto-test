@@ -100,7 +100,10 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     // 트리영역 돋보기 아이콘
     cy.get('.v-icon.fa-search').filter(':visible').should('be.visible'); 
     // 타이틀 문구확인
-    cy.contains('span.title', '식별자').should('be.visible').and('have.class', 'font-weight-bold');
+    // [2.9.7] 화면 상단 안내 카드로 변경 (제목 '식별 정규식 정의' + 안내문), 트리 루트는 '식별자 패턴 그룹'
+    // cy.contains('span.title', '식별자').should('be.visible').and('have.class', 'font-weight-bold');
+    cy.contains('식별 정규식 수정 후').filter(':visible').should('be.visible');
+    cy.contains('식별자 패턴 그룹').should('exist');
 
 
     // // 트리영역 폴더 문구확인
@@ -205,7 +208,8 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
           
           // 🚨 [핵심 해결] 이 안에서는 입력창이 무조건 1개만 존재합니다! (.last() 필요 없음)
           // 🚨 [수정] 식별자 패턴
-          cy.get('input[aria-label="식별자 패턴"]')
+          // [2.9.7] 입력칸 이름 변경: 식별자 패턴 → 정규식 패턴
+          cy.get('input[aria-label="정규식 패턴"]')
             .clear({ force: true })
             // force: true 옆에 parseSpecialCharSequences 옵션을 콤마(,)로 연결해서 추가합니다.
             .type('^[0-9]{3}-[0-9]{7}-[0-9]-[0-9]{3}$', { force: true, parseSpecialCharSequences: false });
@@ -265,11 +269,26 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
             // 1. 개인정보 유형 텍스트 확인 (띄어쓰기 없는 '계좌번호')
             cy.get('span.ellipsis').contains('계좌번호').should('be.visible');
             
-            // 2. 식별자 패턴 정규식 텍스트 확인 
-            // (자바스크립트 문자열에서는 역슬래시를 두 번(\\) 써야 정상 인식됩니다)
-            cy.get('span.ellipsis').contains('^[0-9]{3}-[0-9]{7}-[0-9]-[0-9]{3}$').should('be.visible');
+            // 2. [2.9.7] 목록에는 '식별 정규식 패턴 설명'·'확정' 열만 표시되고 정규식 열이 없음
+            //    → 정규식은 아래에서 수정(연필) 팝업의 '정규식 패턴' 값으로 확인
+            // cy.get('span.ellipsis').contains('^[0-9]{3}-[0-9]{7}-[0-9]-[0-9]{3}$').should('be.visible');
         });
     });
+
+    // 2-1. 수정 팝업에서 저장된 정규식 확인 후 취소
+    // 연필 아이콘 클래스가 고정되지 않아, 행 안의 아이콘 중 휴지통·체크박스를 뺀 것을 수정 아이콘으로 사용
+    cy.get('table tbody').contains('tr', '계좌번호').find('i').filter(':visible')
+      .filter((i, el) => !/trash|check|box/i.test(el.className + ' ' + el.textContent))
+      .then(($icons) => {
+        cy.log(`수정 아이콘 후보: ${[...$icons].map((el) => el.className.trim()).join(' | ')}`);
+        expect($icons.length, '수정(연필) 아이콘').to.be.greaterThan(0);
+        cy.wrap($icons.last()).click({ force: true });
+      });
+    cy.wait(1000);
+    cy.get('input[aria-label="정규식 패턴"]').filter(':visible').first()
+      .should('have.value', '^[0-9]{3}-[0-9]{7}-[0-9]-[0-9]{3}$');
+    cy.get('.v-dialog--active').filter(':visible').last().contains('button', '취소').click({ force: true });
+    cy.wait(1000);
 
     cy.log('🎉 식별자 패턴(계좌번호) 추가 및 화면 검증 완벽 성공!');
 

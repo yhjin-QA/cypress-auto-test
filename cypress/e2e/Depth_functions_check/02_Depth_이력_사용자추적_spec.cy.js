@@ -1,3 +1,5 @@
+// [2.9.7] 테마별 일반 글자색: 라이트 rgb(0, 0, 0) / 다크 rgb(241, 245, 249)
+const TEXT_COLOR = () => (Cypress.$(cy.state('document')).find('.application.theme--dark, .v-application.theme--dark').length ? 'rgb(241, 245, 249)' : 'rgb(0, 0, 0)');
 // [2.9.7 현행화] 기간 입력칸 helper — 2.9.5.0부터 aria-label="기간"/라벨 '기간'이 비어 있어 달력 아이콘(event)으로 찾음
 const dateInputs = () =>
   cy.get('.v-input__icon--prepend-inner i.material-icons')
@@ -145,7 +147,8 @@ describe('로그캐치 사이트 테스트', () => {
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 전체선택 확인
-     cy.get('span[title="전체 선택"]').should('be.visible');
+     // [2.9.7] '전체 선택' 표시 없어짐 (Basic/UI 이력과 동일하게 제외)
+     // cy.get('span[title=\"전체 선택\"]').should('be.visible');
      // like버튼 확인 
      //cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
     
@@ -212,7 +215,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('리눅스_배송관리').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('리눅스_배송관리').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
 
     // 선택한 업무시스템 x버튼 클릭하여 초기화 
@@ -240,7 +243,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('윈도우_배송관리').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('윈도우_배송관리').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
 
      // 선택한 업무시스템 x버튼 클릭하여 초기화 
@@ -282,7 +285,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('총무팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('총무팀').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
      //---------------------------------------------------------------------------------------------------------------
 
@@ -311,7 +314,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('인사팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('인사팀').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
      //---------------------------------------------------------------------------------------------------------------
 
@@ -341,7 +344,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('영업팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('영업팀').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
      //---------------------------------------------------------------------------------------------------------------
 
@@ -370,7 +373,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('기술지원팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('기술지원팀').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
      //---------------------------------------------------------------------------------------------------------------
 
@@ -404,7 +407,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('테스터(tester)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('테스터(tester)').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
 
      // 선택한 정보 사용자 x버튼 클릭하여 초기화 
@@ -427,7 +430,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains(/\(hojun\)/).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains(/\(hojun\)/).should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
 
     // 입력한 사용자 계정 x버튼 클릭하여 초기화 
@@ -507,7 +510,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('조회').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('조회').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
      //---------------------------------------------------------------------------------------------------------------
 
@@ -597,7 +600,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="id"]').clear().type('user001');
     cy.wait(1000);
 
-    cy.get('input[aria-label="@domain.com"]').clear().type('@logcatch.com');
+    // [2.9.7] 도메인 칸: '@' 는 앞쪽 아이콘으로 분리되고 입력칸 이름이 'domain.com' (이전: '@domain.com')
+    cy.get('input[aria-label$="domain.com"]').filter(':visible').first().then(($in) => {
+      const withAt = ($in.attr('aria-label') || '').startsWith('@');
+      cy.wrap($in).clear().type(withAt ? '@logcatch.com' : 'logcatch.com');
+    });
     cy.wait(1000);
 
     //사용자 상태 클릭
@@ -605,7 +612,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(1000);
 
      // 사용자 상태 리스트중 - 등록  선택----------------------------------------------------------
-     cy.get('.v-list__tile__title').contains('등록').should('be.visible').click({ force: true });
+     cy.get('.v-list__tile__title').filter(':visible').contains(/^등록$/).should('be.visible').click({ force: true });
      cy.wait(1000);
 
     //검색버튼 클릭
@@ -639,7 +646,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.wait(1000);
 
      // 사용자 상태 리스트중 - 등록  선택----------------------------------------------------------
-     cy.get('.v-list__tile__title').contains('등록').should('be.visible').click({ force: true });
+     cy.get('.v-list__tile__title').filter(':visible').contains(/^등록$/).should('be.visible').click({ force: true });
      cy.wait(1000);
 
      //검색버튼 클릭
@@ -648,7 +655,7 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 첫 번째 행 정밀 검증코드 
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains(/\(hojun\)/).should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains(/\(hojun\)/).should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
 
      // 사용자 상태 - 미등록  선택----------------------------------------------- 
@@ -807,7 +814,7 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
      cy.wait(1000);
      // 사용자 상태 리스트중 - 등록  선택
-     cy.get('.v-list__tile__title').contains('등록').should('be.visible').click({ force: true });
+     cy.get('.v-list__tile__title').filter(':visible').contains(/^등록$/).should('be.visible').click({ force: true });
      cy.wait(1000);
 
     //검색버튼 클릭
@@ -823,13 +830,13 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     // 첫 번째 행 내부의 모든 항목 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {    
     // [업무시스템] - a 태그
-    cy.get('a').contains('리눅스_VIP고객').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('리눅스_VIP고객').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
 
     // [부서/소속] - a 태그 + ellipsis 클래스
-    cy.get('a.ellipsis').contains('서비스기획팀').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a.ellipsis').contains('서비스기획팀').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
 
     // [정보 사용자] - a 태그 + ellipsis 클래스
-    cy.get('a.ellipsis').contains('사원_5(user005)').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a.ellipsis').contains('사원_5(user005)').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
 
     // [접속 IP 주소] - span 태그 (성공하셨던 패턴!)
     cy.get('span.ellipsis').contains('10.10.54.5').should('be.visible');
@@ -838,7 +845,7 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     cy.contains('a', 'VIP_대량 조회 훈련').should('be.visible');
 
     // [행위 유형] - a 태그 (조회 버튼 등)
-    cy.get('a').contains('조회').should('be.visible').and('have.css', 'color', 'rgb(0, 0, 0)');
+    cy.get('a').contains('조회').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
     
     

@@ -146,7 +146,8 @@ describe('로그캐치 사이트 테스트', () => {
      // 종료날짜 달력 아이콘확인
      cy.get('input[type="text"][readonly="readonly"]').filter(':visible').eq(1).closest('.v-input').find('.material-icons:contains("event")').should('be.visible');
      // 전체선택 확인
-     cy.get('span[title="전체 선택"]').should('be.visible');
+     // [2.9.7] '전체 선택' 표시 없어짐 (Basic/UI 이력과 동일하게 제외)
+     // cy.get('span[title=\"전체 선택\"]').should('be.visible');
      // like버튼 확인 
      //cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
     

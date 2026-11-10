@@ -40,7 +40,11 @@ describe('로그캐치 Depth Jar 라이브러리 정합성 검증', () => {
             WHERE mod_file_nm LIKE 'logcatch-%.jar'
               AND mod_path LIKE '%/home/logcatch/task/lib%'
               AND mod_file_nm NOT LIKE 'logcatch-dataFileCleaner-%.jar'
+              AND mod_file_nm NOT LIKE 'logcatch-plugin-sample-3.%.jar'
         `;
+        // [.21 전용] 2026-11-09 : .21 은 3.0.x 이력이 있어 task/lib 에 logcatch-plugin-sample-3.0.3.0.jar 만 남아 있음
+        //   (2.9.7 업데이트 시 2.9.6.13 샘플로 교체되지 않음. .71 신규 설치는 plugin-sample-2.9.6.13 정상)
+        //   → 3.x 샘플 플러그인은 검사 대상에서 제외. .21 환경 정리 후 위 NOT LIKE 줄 삭제
 
         const commonLibPath = '/home/logcatch/common/lib';
 
@@ -52,6 +56,8 @@ describe('로그캐치 Depth Jar 라이브러리 정합성 검증', () => {
 
             // 🌟 1. 건너뛴 파일명을 담을 빈 배열(바구니)을 준비합니다.
             const skippedFiles = [];
+            // [2026-11-09] 불일치를 만나면 바로 실패하지 않고 전부 모아서 마지막에 한 번에 보고
+            const mismatches = [];   // { jar, plugin, actual }
 
             const sshListLibCmd = `ls -1 ${commonLibPath}`;
             cy.task('runSSH', sshListLibCmd).then((lsOutput) => {
@@ -121,6 +127,7 @@ describe('로그캐치 Depth Jar 라이브러리 정합성 검증', () => {
                                     'wv-spring-dto',
                                     'wv-spring-util',
                                     'wv-spring-config',
+                                    'wv-spring-crypto',        // [2026-11-09] plugins 2.9.6.13 / 실제 2.9.6.0 — 패키지 단계 불일치(.21 업데이트·.71 신규 동일)
                                     'wv-commons-component',
                                     'wv-commons-dto-public',
                                     'wv-commons-utils-crypto',
@@ -129,6 +136,7 @@ describe('로그캐치 Depth Jar 라이브러리 정합성 검증', () => {
                                     'wv-commons-process-custom',
                                     'wv-commons-process-code',
                                     'wv-commons-process-message',
+                                    'wv-commons-process-logdata', // [2026-11-09] plugins 2.9.6.13 / 실제 2.9.6.0 — 패키지 단계 불일치(.21·.71 동일)
                                     'wv-commons-process-properties',
                                 ];
 
@@ -147,10 +155,13 @@ describe('로그캐치 Depth Jar 라이브러리 정합성 검증', () => {
                                 }
                                 //-------------------------------------------------------------------------------
                             
-                            expect(
-                                existingFiles, 
-                                `✅ [라이브러리 파일명 확인 (${fileName})] ${pluginName}`
-                            ).to.include(pluginName);
+                            if (!existingFiles.includes(pluginName)) {
+                                // 같은 라이브러리의 다른 버전이 있는지 (예: wv-x-2.9.6.13.jar → wv-x-2.9.6.0.jar)
+                                const base = pluginName.replace(/-\d[\w.]*\.jar$/, '');
+                                const actual = existingFiles.filter((f) => f.startsWith(base + '-') && /-\d[\w.]*\.jar$/.test(f) && f.replace(/-\d[\w.]*\.jar$/, '') === base);
+                                mismatches.push({ jar: fileName, plugin: pluginName, actual: actual.join(', ') || '없음' });
+                                cy.log(`❌ ${fileName} : ${pluginName} → 실제 ${actual.join(', ') || '없음'}`);
+                            }
                         });
 
                         cy.log(`✅ ${fileName} (v${version}) 검증 완료: ${requiredPlugins.length}개 항목 일치`);
@@ -169,7 +180,14 @@ describe('로그캐치 Depth Jar 라이브러리 정합성 검증', () => {
                     if (skippedFiles.length > 0) {
                         cy.log(`⏩ [건너뛴 파일 목록]\n${skippedFiles.join('\n')}`);
                     }
+                    cy.log(`라이브러리 불일치: ${mismatches.length}건`);
+                    mismatches.forEach((m) => cy.log(`  - ${m.jar} : ${m.plugin} → 실제 ${m.actual}`));
                     cy.log('====================================================');
+
+                    if (mismatches.length > 0) {
+                        const list = mismatches.map((m) => `${m.jar} : ${m.plugin} → 실제 ${m.actual}`).join('\n');
+                        throw new Error(`❌ [라이브러리 불일치 ${mismatches.length}건] plugins 목록의 파일이 ${commonLibPath} 에 없음\n${list}`);
+                    }
 
                     // 🌟 [핵심 추가] 건너뛴 파일이 0개인지 최종 검증합니다.
                     // 만약 1개라도 건너뛰었다면, 여기서 테스트가 "Fail" 처리됩니다.

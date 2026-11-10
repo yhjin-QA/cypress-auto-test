@@ -49,35 +49,23 @@ describe('로그캐치 Depth 배포점검 - 로그파일 소유자(logcatch) 통
       
       cy.log(`🔍 검사 시작 경로: ${path}`);
 
-      // runSSH 태스크 실행
-      cy.task('runSSH', `stat -c "%U" ${path}*.log 2>/dev/null`).then((stdout) => {
-        
-        // 1. 파일이 없는 경우 처리
-        if (!stdout || stdout.trim() === "") {
+      // [2026-11-09] 파일마다 expect·log 하면 로그 파일이 수천 개일 때 러너가 멈춘 것처럼 느려짐
+      //   → 서버에서 전체 개수와 'logcatch 소유가 아닌 파일'만 뽑아 한 번에 검증
+      const cmd = `echo "TOTAL=$(find ${path} -maxdepth 1 -name '*.log' 2>/dev/null | wc -l)"; ` +
+                  `find ${path} -maxdepth 1 -name '*.log' ! -user ${expectedOwner} -printf '%u %p\\n' 2>/dev/null | head -50`;
+      cy.task('runSSH', cmd).then((stdout) => {
+        expect(stdout, `SSH 응답 (${path})`).to.not.be.null;
+        const lines = stdout.trim().split('\n').map((l) => l.trim()).filter(Boolean);
+        const total = parseInt((lines.find((l) => l.startsWith('TOTAL=')) || 'TOTAL=0').split('=')[1], 10);
+        const notOwned = lines.filter((l) => !l.startsWith('TOTAL='));
+
+        if (total === 0) {
           cy.log(`⚠️  [알림] ${path} 경로에 .log 파일이 존재하지 않습니다.`);
-          return; 
+          return;
         }
-
-        const owners = stdout.trim().split('\n');
-        const totalFiles = owners.length;
-
-        cy.log(`📂 [${path}] 폴더 내 ${totalFiles}개 파일 검증 중...`);
-
-        // 2. 각 파일 소유자 검증
-        owners.forEach((owner, index) => {
-          const currentOwner = owner.trim();
-          
-          // 성공 시 로그가 너무 도배되지 않도록 expect 메시지를 간결하게 유지
-          expect(currentOwner, `경로: ${path} (${index + 1}/${totalFiles})`).to.equal(expectedOwner);
-          
-          // 500개 단위로 진행률 표시
-          if ((index + 1) % 500 === 0 || (index + 1) === totalFiles) {
-            cy.log(`🔄 진행률: ${index + 1} / ${totalFiles} 완료`);
-          }
-        });
-
-        cy.log(`✅ [성공] ${path} 경로의 모든 파일 권한이 정상입니다.`);
-        cy.log(`✅ [검증 완료] 모든 파일이 ${expectedOwner} 소유임을 확인했습니다.`);
+        cy.log(`📂 [${path}] .log 파일 ${total}개 / ${expectedOwner} 소유 아님 ${notOwned.length}개`);
+        expect(notOwned, `${path} 에서 ${expectedOwner} 소유가 아닌 로그 파일 (최대 50개 표시)`).to.have.length(0);
+        cy.log(`✅ [성공] ${path} 경로의 .log 파일 ${total}개 모두 ${expectedOwner} 소유`);
       });
     });
   });
