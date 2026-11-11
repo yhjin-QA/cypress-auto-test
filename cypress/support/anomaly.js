@@ -56,10 +56,26 @@ const ANOMALY_URL = {
   '사용자 이상행위 결과': '/logcatch/analyze/customAnomalyBehaviorPolicyResult',
   '사용자 이상행위 대시보드': '/logcatch/analyze/customAnomalyBehaviorPolicyDashboard'
 };
+//   [2026-11-11] 결과 화면을 주소로 바로 열면 탭·내용 없이 빈 화면으로 뜰 때가 있음(같은 날 2회 관찰)
+//     → 탭 버튼이 안 보이면 새로 고침 1회, 그래도 없으면 정책 화면으로 들어가 탭 버튼을 눌러 이동
 const goAnomaly = (tab) => {
-  cy.visit(ANOMALY_URL[tab] || ANOMALY_URL['사용자 이상행위 정책']);
+  const name = tab || '사용자 이상행위 정책';
+  const hasTab = ($b) => $b.find('.v-btn__content:visible').toArray().some((e) => e.innerText.trim() === name);
+  cy.visit(ANOMALY_URL[name] || ANOMALY_URL['사용자 이상행위 정책']);
   cy.wait(3500);
-  cy.get('.v-btn__content', { timeout: 20000 }).filter(':visible').contains(tab || '사용자 이상행위 정책').should('exist');
+  cy.get('body').then(($b) => {
+    if (hasTab($b)) return;
+    cy.log(`↻ 「${name}」 화면이 비어 있음 → 새로 고침`);
+    cy.reload(); cy.wait(5000);
+    cy.get('body').then(($b2) => {
+      if (hasTab($b2) || name === '사용자 이상행위 정책') return;
+      cy.log(`↻ 정책 화면을 거쳐 「${name}」 탭으로 이동`);
+      cy.visit(ANOMALY_URL['사용자 이상행위 정책']); cy.wait(4000);
+      cy.get('.v-btn__content', { timeout: 20000 }).filter(':visible').contains(name).click({ force: true });
+      cy.wait(3000);
+    });
+  });
+  cy.get('.v-btn__content', { timeout: 20000 }).filter(':visible').contains(name).should('exist');
 };
 
 const policyTotal = () => cy.get('.v-toolbar__title').filter(':visible').contains('정책 목록')
@@ -132,11 +148,30 @@ const login = (id, pw, retry = 1) => {
   cy.wait(3000);
   cy.url().then((u) => {
     if (!u.includes('/login')) { cy.log(`✅ [${id}] 로그인`); return; }
+    // [2026-11-11] 계정 잠금·비밀번호 오류 안내가 떠 있으면 재시도하지 않고 바로 멈춤
+    //   (재시도하면 실패 횟수가 더 쌓여 자동화가 계정을 잠그게 됨)
+    const msg = Cypress.$('.v-alert:visible').text().replace(/\s+/g, ' ').trim();
+    if (/잠금|비밀번호|패스워드|일치하지|틀렸|실패/.test(msg)) {
+      throw new Error(`[${id}] 로그인 실패 (재시도 안 함) — 화면 안내 : 「${msg.slice(0, 80)}」 → 계정 잠금 해제 또는 cypress.env.json 비밀번호 확인`);
+    }
     if (retry > 0) { cy.log(`↻ [${id}] 로그인 화면에 머묾 → 재시도`); login(id, pw, retry - 1); }
     else throw new Error(`[${id}] 로그인 실패 — 비밀번호(cypress.env.json) 또는 계정 잠금을 확인하세요`);
   });
   cy.wait(1500);
 };
+// 필수 입력 검증용 : 빈 값으로 눌렀을 때 「입력해 주세요」류 안내창이 따로 뜨면 그 안내창만 닫음
+//   (2.9.7 소명 신청 : 「알림 — 소명 내용을 작성해 주세요.」)
+//   (keepSelector 가 들어 있는 원래 창은 건드리지 않음 — 「확인」을 눌러도 처리가 진행되지 않는 안내창일 때만)
+const dismissInputNotice = (keepSelector) => cy.get('body', { log: false }).then(($b) => {
+  const $top = $b.find('.v-dialog--active:visible').last();
+  if ($top.length && !$top.find(keepSelector).length && /입력|필수|작성|주세요|알림/.test($top.text())) {
+    cy.log(`ℹ️ 안내창 닫음 : ${$top.text().replace(/\s+/g, ' ').trim().slice(0, 60)}`);
+    cy.wrap($top).contains('button', /확인|닫기/).click({ force: true });
+    cy.wait(800);
+  }
+});
+const isDisabled = ($b) => $b.is(':disabled') || $b.hasClass('v-btn--disabled');
+
 const loginAdmin = () => login(ADMIN_ID(), ADMIN_PW());
 
-module.exports = { ADMIN_ID, ADMIN_PW, ignoreErrors, dumpScreen, activeDialog, confirmIfAny, goAnomaly, policyTotal, searchPolicy, policyName, policySelect, policyActive, dialogSwitch, setDialogSwitch, thresholdInput, login, loginAdmin };
+module.exports = { ADMIN_ID, ADMIN_PW, ignoreErrors, dumpScreen, activeDialog, confirmIfAny, goAnomaly, policyTotal, searchPolicy, policyName, policySelect, policyActive, dialogSwitch, setDialogSwitch, thresholdInput, login, loginAdmin, dismissInputNotice, isDisabled };

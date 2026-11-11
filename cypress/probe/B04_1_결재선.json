@@ -1,0 +1,58 @@
+{
+  "url": "https://10.10.54.21:18443/logcatch/approval/policy/approval-line",
+  "headlines": [
+    "결재 정책 목록"
+  ],
+  "buttons": [
+    "점검",
+    "이력",
+    "현황",
+    "leak_add 자산",
+    "assignment 보고",
+    "보관",
+    "verified_user 분석",
+    "policy 검출",
+    "운영",
+    "소명",
+    "info",
+    "wb_sunny",
+    "ADMIN 님",
+    "결재선",
+    "add 정책 추가",
+    "delete",
+    "chevron_left",
+    "chevron_right"
+  ],
+  "inputs": [
+    {
+      "type": "checkbox",
+      "aria": "지난 정책 보기",
+      "ph": null,
+      "val": "",
+      "checked": "false"
+    },
+    {
+      "type": "text",
+      "aria": "페이지당",
+      "ph": null,
+      "val": "",
+      "checked": null
+    }
+  ],
+  "th": [
+    "결재 유형",
+    "정책명",
+    "설명",
+    "등록",
+    "수정",
+    "사용 여부"
+  ],
+  "rows": [
+    "소명 auto_add_test 결재정책 test Admin ( 2026-11-10 18:34 ) Admin ( 2026-11-10 18:34 ) 사용 delete",
+    "사전소명 auto_add_test 결재정책 사전소명 정책입니다. Admin ( 2026-10-08 16:10 ) Admin ( 2026-10-08 16:10 ) 사용 delete"
+  ],
+  "cards": [],
+  "menus": [],
+  "dialogs": [],
+  "snack": []
+}

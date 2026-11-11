@@ -1,0 +1,207 @@
+[
+  {
+    "cls": "v-menu__content theme--dark ",
+    "vis": false,
+    "text": "edit편집content_copy복제save_alt내보내기codeJSON 복사toggle_on활성화folder_open폴더 이동play_arrow즉시실행history실행이력delete삭제"
+  },
+  {
+    "cls": "v-list py-1 v-list--dense theme--dark",
+    "vis": false,
+    "text": "edit편집content_copy복제save_alt내보내기codeJSON 복사toggle_on활성화folder_open폴더 이동play_arrow즉시실행history실행이력delete삭제"
+  },
+  {
+    "cls": "",
+    "vis": false,
+    "text": ""
+  },
+  {
+    "cls": "v-menu__content theme--dark ",
+    "vis": false,
+    "text": "102050100"
+  },
+  {
+    "cls": "v-list v-list--dense theme--dark",
+    "vis": false,
+    "text": "102050100"
+  },
+  {
+    "cls": "v-menu__content theme--dark ",
+    "vis": false,
+    "text": "check_box_outline_blank기본"
+  },
+  {
+    "cls": "v-list v-list--dense theme--dark",
+    "vis": false,
+    "text": "check_box_outline_blank기본"
+  },
+  {
+    "cls": "v-menu__content theme--dark ",
+    "vis": false,
+    "text": "check_box_outline_blank누가(계정)check_box_outline_blank언제(시간)check_box_outline_blank어디서(접속지)check_box_outline_blank무엇을(개인정보)check_box_outline_blank어떻게(행위)check_box_outline_blank얼마나(사용량)"
+  },
+  {
+    "cls": "v-list v-list--dense theme--dark",
+    "vis": false,
+    "text": "check_box_outline_blank누가(계정)check_box_outline_blank언제(시간)check_box_outline_blank어디서(접속지)check_box_outline_blank무엇을(개인정보)check_box_outline_blank어떻게(행위)check_box_outline_blank얼마나(사용량)"
+  },
+  {
+    "cls": "v-menu__content theme--dark ",
+    "vis": false,
+    "text": "check_box_outline_blank업무시스템check_box_outline_blank부서check_box_outline_blank사용자check_box_outline_blank사용자 계정check_box_outline_blank사용자 IPcheck_box_outline_blank접속 URIcheck_box_outline_blank정규화 URIcheck_box_outline_blank등록된 메뉴check_box_outline_blank행위 유형check_box_outline_blank시간대check_box_outline_bla"
+  },
+  {
+    "cls": "v-list v-list--dense theme--dark",
+    "vis": false,
+    "text": "check_box_outline_blank업무시스템check_box_outline_blank부서check_box_outline_blank사용자check_box_outline_blank사용자 계정check_box_outline_blank사용자 IPcheck_box_outline_blank접속 URIcheck_box_outline_blank정규화 URIcheck_box_outline_blank등록된 메뉴check_box_outline_blank행위 유형check_box_outline_blank시간대check_box_outline_bla"
+  },
+  {
+    "cls": "v-list elevation-1 v-list--dense theme--dark",
+    "vis": false,
+    "text": "apps미분류"
+  },
+  {
+    "cls": "v-menu__content theme--dark ",
+    "vis": false,
+    "text": "이름 변경삭제"
+  },
+  {
+    "cls": "v-list v-list--dense theme--dark",
+    "vis": false,
+    "text": "이름 변경삭제"
+  },
+  {
+    "cls": "v-menu__content theme--dark ",
+    "vis": false,
+    "text": ""
+  },
+  {
+    "cls": "v-menu__content theme--dark side-sub-menu-content",
+    "vis": false,
+    "text": "정책신청결재함"
+  },
+  {
+    "cls": "v-list side-sub-menu-list pa-1 theme--dark display inactive has-child",
+    "vis": false,
+    "text": "정책신청결재함"
+  },
+  {
+    "cls": "v-menu__content theme--dark side-sub-menu-content",
+    "vis": false,
+    "text": "태스크실행 플랜인사정보외부 연동"
+  },
+  {
+    "cls": "v-list side-sub-menu-list pa-1 theme--dark display inactive has-child",
+    "vis": false,
+    "text": "태스크실행 플랜인사정보외부 연동"
+  },
+  {
+    "cls": "v-menu__content theme--dark side-sub-menu-content",
+    "vis": false,
+    "text": "개인정보 의심 확정 처리필터검출 메뉴 관리개인정보 유형 정의행위유형 관리"
+  },
+  {
+    "cls": "v-list side-sub-menu-list pa-1 theme--dark display inactive has-child",
+    "vis": false,
+    "text": "개인정보 의심 확정 처리필터검출 메뉴 관리개인정보 유형 정의행위유형 관리"
+  },
+  {
+    "cls": "v-menu__content theme--dark side-sub-menu-content",
+    "vis": false,
+    "text": "이상행위프로파일링"
+  },
+  {
+    "cls": "v-list side-sub-menu-list pa-1 theme--dark display active has-child",
+    "vis": false,
+    "text": "이상행위프로파일링"
+  },
+  {
+    "cls": "v-menu__content theme--dark side-sub-menu-content",
+    "vis": false,
+    "text": "접속기록 보관접속기록 무결성운영이력 보관"
+  },
+  {
+    "cls": "v-list side-sub-menu-list pa-1 theme--dark display inactive has-child",
+    "vis": false,
+    "text": "접속기록 보관접속기록 무결성운영이력 보관"
+  },
+  {
+    "cls": "v-menu__content theme--dark side-sub-menu-content",
+    "vis": false,
+    "text": "데이터베이스개인정보 파일 / 문서데이터베이스 자산정보데이터베이스 확정처리"
+  },
+  {
+    "cls": "v-list side-sub-menu-list pa-1 theme--dark display inactive has-child",
+    "vis": false,
+    "text": "데이터베이스개인정보 파일 / 문서데이터베이스 자산정보데이터베이스 확정처리"
+  },
+  {
+    "cls": "v-menu__content theme--dark side-sub-menu-content",
+    "vis": false,
+    "text": "접속기록 이력사용자 추적"
+  },
+  {
+    "cls": "v-list side-sub-menu-list pa-1 theme--dark display inactive has-child",
+    "vis": false,
+    "text": "접속기록 이력사용자 추적"
+  },
+  {
+    "cls": "v-menu__content theme--dark ",
+    "vis": false,
+    "text": "check_box_outline_blankstandardcheck_box_outline_blankstandard-pluscheck_box_outline_blankenterprisecheck_box_outline_blankenterprise-plus"
+  },
+  {
+    "cls": "v-list theme--dark",
+    "vis": false,
+    "text": "check_box_outline_blankstandardcheck_box_outline_blankstandard-pluscheck_box_outline_blankenterprisecheck_box_outline_blankenterprise-plus"
+  },
+  {
+    "cls": "v-menu__content theme--dark ",
+    "vis": false,
+    "text": "check_box_outline_blanklogcatchcheck_box_outline_blankcyclonecheck_box_outline_blankadmin"
+  },
+  {
+    "cls": "v-list theme--dark",
+    "vis": false,
+    "text": "check_box_outline_blanklogcatchcheck_box_outline_blankcyclonecheck_box_outline_blankadmin"
+  },
+  {
+    "cls": "v-menu__content theme--dark ",
+    "vis": false,
+    "text": "com.word.usecom.word.development_in_progresscom.word.plannedinterruptcom.word.hiddencom.word.abort"
+  },
+  {
+    "cls": "v-list theme--dark",
+    "vis": false,
+    "text": "com.word.usecom.word.development_in_progresscom.word.plannedinterruptcom.word.hiddencom.word.abort"
+  },
+  {
+    "cls": "v-menu__content theme--dark ",
+    "vis": false,
+    "text": "com.word.mainMenucom.menu.management_menu"
+  },
+  {
+    "cls": "v-list theme--dark",
+    "vis": false,
+    "text": "com.word.mainMenucom.menu.management_menu"
+  },
+  {
+    "cls": "v-menu__content theme--dark ",
+    "vis": false,
+    "text": "wb_sunny라이트 모드내 정보settings로그아웃"
+  },
+  {
+    "cls": "v-list pa-0 theme--dark",
+    "vis": false,
+    "text": "wb_sunny라이트 모드내 정보settings로그아웃"
+  },
+  {
+    "cls": "v-menu__content theme--dark ",
+    "vis": false,
+    "text": ""
+  },
+  {
+    "cls": "v-menu__content theme--dark ",
+    "vis": false,
+    "text": ""
+  }
+]

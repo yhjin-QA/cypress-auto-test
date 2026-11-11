@@ -1,0 +1,149 @@
+// ==========================================================================
+// [2.9.7 신규] 04_Depth_소명_다건신청_증빙첨부
+//   경보 여러 건을 한 문서로 소명 신청 + 증빙 파일 첨부 → 결재 대기 중 파일 추가 → 신청 취소로 원상 복구
+//     (user014) 소명 > 신청 : 경보 2건 체크 → 「2건 소명하기」 → 신청 창에 대상 2건 · 「파일 선택」 첨부 → 신청
+//     → 신청 결재 > 문서 상세 : 대상 경보 2건 · 첨부 1건 → 「파일 추가」 로 1건 더 → 첨부 2건
+//     → 「신청 취소」 → 문서 상태 「취소」, 경보 2건 모두 소명 대상 목록으로 돌아옴
+//   반복 실행 설계
+//     - 전용 정책 「auto_소명_반려」 경보 중 2·3번째로 최근 것을 씀
+//       (반려 스크립트 = 가장 최근, 신청 취소 스크립트 = 가장 오래된 것 → 서로 겹치지 않음)
+//     - 신청 취소로 경보가 되돌아오므로 경보를 소모하지 않음 → 하루에 몇 번 돌려도 됨
+//     - 시작할 때 이 정책의 결재 대기 문서가 남아 있으면 먼저 신청 취소로 정리
+//   첨부 파일 : cypress/fixtures/evidence_sample_1.txt · evidence_sample_2.txt
+//   비밀번호 : cypress.env.json (LC_USER014_PW)
+// ==========================================================================
+const A = require('../../support/anomaly');
+const POLICY = 'auto_소명_반려';
+const USER_ID = 'user014';
+const FILE1 = 'cypress/fixtures/evidence_sample_1.txt';
+const FILE2 = 'cypress/fixtures/evidence_sample_2.txt';
+const URLS = {
+  submit: '/logcatch/approval/submit/anomaly-alerts',
+  mySubmissions: '/logcatch/approval/document/my-submissions'
+};
+const stamp = () => {
+  const d = new Date(); const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+};
+const go = (key) => { cy.visit(URLS[key]); cy.wait(3500); };
+const search = () => { cy.contains('.v-btn__content, button', '검색').click({ force: true }); cy.wait(2500); };
+const yearAlerts = () => { go('submit'); cy.contains('button.sev-filter-btn', /^\s*1년\s*$/).click({ force: true }); cy.wait(3000); };
+const alertCount = () => cy.get('.v-toolbar__title, .c-headline').filter(':visible').contains('경보').invoke('text')
+  .then((t) => parseInt((t.match(/(\d+)\s*건/) || [])[1] || '0', 10));
+const policyRows = ($b) => $b.find('table tbody tr:visible').filter((i, e) => e.innerText.includes(POLICY));
+const pendingDocs = ($b) => $b.find('tr.ag-row:visible').filter((i, e) => e.innerText.includes(POLICY) && Cypress.$(e).find('.ag-status').text().trim() === '신청');
+// 첨부파일 수 (결재 상세의 「첨부파일 N」)
+const attachCount = () => A.activeDialog().invoke('text').then((t) => parseInt((t.replace(/\s+/g, ' ').match(/첨부파일\s*(\d+)/) || [])[1] || '-1', 10));
+// 열린 창 안의 파일 입력칸에 파일 넣기 (숨겨진 input[type=file])
+//   창 안에 없으면(일괄 소명 창 등) 문서 전체에서 찾음. 하나도 없으면 창 HTML 을 남기고 실패
+const attach = (file, name) => cy.get('body').then(($b) => {
+  const $dlg = $b.find('.v-dialog--active:visible').last();
+  cy.writeFile(`cypress/probe/${name}_창.html`, $dlg.length ? $dlg[0].outerHTML.slice(0, 80000) : '(창 없음)');
+  let $in = $dlg.find('input[type="file"]');
+  if (!$in.length) $in = $b.find('input[type="file"]');
+  cy.log(`파일 입력칸 : 창 안 ${$dlg.find('input[type="file"]').length}개 / 문서 전체 ${$b.find('input[type="file"]').length}개`);
+  expect($in.length, '파일 입력칸(input[type=file])').to.be.greaterThan(0);
+  cy.wrap($in.last()).selectFile(file, { force: true });
+});
+// 결재 상세에서 신청 취소
+const cancelOpenDoc = (name) => {
+  A.activeDialog().contains('button', /^\s*신청 취소\s*$/).click({ force: true });
+  cy.wait(1500);
+  cy.get('.v-dialog--active').filter(':visible').last().should('contain', '결재를 취소');
+  A.confirmIfAny();
+  cy.wait(2500);
+  A.dumpScreen(name);
+  cy.get('body').type('{esc}', { force: true });
+  cy.wait(800);
+};
+
+describe('04_Depth_소명_다건신청_증빙첨부', () => {
+  A.ignoreErrors();
+
+  it('경보 2건을 한 문서로 신청하고 증빙을 첨부한 뒤 신청 취소한다', { retries: 0 }, function () {
+    const test = this;
+    A.login(USER_ID, Cypress.env('LC_USER014_PW'));
+
+    // ---------- 0. 남은 결재 대기 문서 정리 ----------
+    go('mySubmissions'); search();
+    cy.get('body').then(($b) => {
+      const n = pendingDocs($b).length;
+      if (!n) return;
+      cy.log(`🧹 남아 있던 ${POLICY} 결재 대기 문서 ${n}건 → 먼저 신청 취소`);
+      for (let k = 0; k < n; k += 1) {
+        go('mySubmissions'); search();
+        cy.get('body').then(($bb) => { cy.wrap(pendingDocs($bb).first()).find('td.ag-title').click({ force: true }); });
+        cy.wait(2500);
+        cancelOpenDoc(`D04M_0_정리_${k}`);
+      }
+    });
+
+    // ---------- 1. 경보 2건 선택 → 「2건 소명하기」 ----------
+    yearAlerts();
+    cy.get('body').then(($b) => {
+      const n = policyRows($b).length;
+      cy.log(`${POLICY} 경보 ${n}건`);
+      if (n < 4) {
+        cy.log(`⏭️ ${POLICY} 경보가 4건 미만 — 다른 시나리오와 겹치지 않게 고를 경보가 부족해 건너뜀`);
+        cy.then(() => test.skip());
+      }
+    });
+    alertCount().as('alertsBefore');
+    cy.get('body').then(($b) => {
+      const rows = policyRows($b).toArray().slice(1, 3);                  // 2·3번째로 최근 경보
+      const starts = rows.map((tr) => Cypress.$(tr).find('td').eq(4).text().trim());
+      cy.wrap(starts).as('starts');
+      cy.log(`선택 경보 : ${starts.join(' / ')}`);
+      rows.forEach((tr) => cy.wrap(tr).find('td').first().click({ force: true }));
+    });
+    cy.wait(1000);
+    A.dumpScreen('D04M_1_2건선택');
+    cy.contains('button', /2\s*건\s*소명하기/).click({ force: true });
+    cy.wait(2500);
+
+    // ---------- 2. 신청 창 : 대상 2건 · 증빙 첨부 · 신청 ----------
+    A.activeDialog().should('contain', '이상행위 소명 신청').and('contain', '소명 대상 이상행위 2건');
+    cy.get('@starts').then((starts) => starts.forEach((s) => A.activeDialog().should('contain', s)));
+    A.dumpScreen('D04M_2_신청창_첨부전');
+    attach(FILE1, 'D04M_2_신청창');
+    cy.wait(1500);
+    A.activeDialog().should('contain', 'evidence_sample_1.txt');
+    A.activeDialog().find('textarea[placeholder*="소명 사유"]').type(`[자동화] ${POLICY} 경보 2건 일괄 소명 · 증빙 첨부 — ${stamp()} (${USER_ID})`, { force: true });
+    A.dumpScreen('D04M_2_신청창');
+    A.activeDialog().find('.approval-action-bar button').filter((i, e) => e.innerText.trim() === '신청').first().click({ force: true });
+    cy.wait(1500); A.confirmIfAny(); cy.wait(3000);
+    cy.get('@alertsBefore').then((n) => { yearAlerts(); alertCount().should('eq', n - 2); });   // 2건 모두 목록에서 빠짐
+
+    // ---------- 3. 결재 상세 : 대상 2건 · 첨부 1건 → 파일 추가 → 첨부 2건 ----------
+    go('mySubmissions'); search();
+    cy.get('body').then(($b) => {
+      const $d = pendingDocs($b);
+      expect($d.length, '방금 신청한 결재 대기 문서 수').to.eq(1);
+      cy.wrap($d.first()).find('td.ag-title').click({ force: true });
+    });
+    cy.wait(2500);
+    A.activeDialog().should('contain', '결재 상세').and('contain', 'evidence_sample_1.txt');
+    cy.get('@starts').then((starts) => starts.forEach((s) => A.activeDialog().should('contain', s)));
+    attachCount().should('eq', 1);
+    A.dumpScreen('D04M_3_상세_첨부1');
+    attach(FILE2, 'D04M_3_상세');
+    cy.wait(2500);
+    A.confirmIfAny();
+    A.activeDialog().should('contain', 'evidence_sample_2.txt');
+    attachCount().should('eq', 2);
+    A.dumpScreen('D04M_3_상세_첨부2');
+
+    // ---------- 4. 신청 취소 → 상태 「취소」 · 경보 2건 원복 ----------
+    cancelOpenDoc('D04M_4_취소후');
+    go('mySubmissions'); search();
+    cy.get('body').then(($b) => expect(pendingDocs($b).length, '취소 후 남은 결재 대기 문서').to.eq(0));
+    cy.get('@alertsBefore').then((n) => {
+      yearAlerts();
+      alertCount().should('eq', n);
+      cy.get('@starts').then((starts) => starts.forEach((s) =>
+        cy.get('table tbody tr').filter(':visible').filter((i, e) => e.innerText.includes(POLICY) && e.innerText.includes(s))
+          .should('have.length', 1).find('button.alert-inline-explain').should('exist')));
+    });
+    A.dumpScreen('D04M_4_경보목록_원복');
+  });
+});

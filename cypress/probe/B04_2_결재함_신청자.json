@@ -1,0 +1,105 @@
+{
+  "url": "https://10.10.54.21:18443/logcatch/approval/document/overview",
+  "headlines": [
+    "검색 조건"
+  ],
+  "buttons": [
+    "이력",
+    "소명",
+    "info",
+    "wb_sunny",
+    "사원_14 님",
+    "모든 결재",
+    "신청 결재",
+    "담당 결재",
+    "참조 결재",
+    "검색",
+    "chevron_left",
+    "chevron_right"
+  ],
+  "inputs": [
+    {
+      "type": "text",
+      "aria": "",
+      "ph": null,
+      "val": "2026-10-11 00:00:00",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": "",
+      "ph": null,
+      "val": "2026-11-11 23:59:59",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": "부서",
+      "ph": null,
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": "신청자",
+      "ph": null,
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": "로그인 아이디",
+      "ph": null,
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": "결재 대상",
+      "ph": null,
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": "결재 상태",
+      "ph": null,
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "checkbox",
+      "aria": "현행 결재만 보기",
+      "ph": null,
+      "val": "",
+      "checked": "false"
+    },
+    {
+      "type": "text",
+      "aria": "페이지당",
+      "ph": null,
+      "val": "",
+      "checked": null
+    }
+  ],
+  "th": [
+    "신청일",
+    "부서",
+    "신청자",
+    "결재 대상",
+    "제목",
+    "결재 상태"
+  ],
+  "rows": [
+    "2026-11-11 16:25 AI개발2팀, 개발그룹 사원_14 (user014) 소명 replay 재신청 2/2auto_소명_반려 소명 (발생 2026-11-11 00:00:00) 반려",
+    "2026-11-11 15:52 AI개발2팀, 개발그룹 사원_14 (user014) 소명 replay 재신청 2/2auto_소명_반려 소명 (발생 2026-07-07 00:00:00) 취소",
+    "2026-11-11 15:48 AI개발2팀, 개발그룹 사원_14 (user014) 소명 auto_소명_반려 소명 (발생 2026-07-07 00:00:00) 반려",
+    "2026-11-11 15:33 AI개발2팀, 개발그룹 사원_14 (user014) 소명 auto_소명_반려 소명 (발생 2026-11-11 00:00:00) 반려",
+    "2026-11-11 15:28 AI개발2팀, 개발그룹 사원_14 (user014) 소명 auto_소명_승인 소명 (발생 2026-11-11 00:00:00) 승인",
+    "2026-11-11 10:47 AI개발2팀, 개발그룹 사원_14 (user014) 소명 replay 재신청 2/2auto_소명_접속량 과다 소명 (발생 2026-07-07 00:00:00) 승인"
+  ],
+  "cards": [],
+  "menus": [],
+  "dialogs": [],
+  "snack": []
+}

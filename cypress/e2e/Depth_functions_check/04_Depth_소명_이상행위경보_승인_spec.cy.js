@@ -13,7 +13,9 @@
 //   단계마다 cypress/probe/D04_*.json 으로 화면 구조를 남김
 // ==========================================================================
 const A = require('../../support/anomaly');
-const POLICY = 'auto_소명_접속량 과다';
+// [2026-11-11] 시나리오별 전용 정책 — 승인·반려가 서로의 경보를 쓰지 않도록 분리 (정책마다 하루 1건씩 경보 생성)
+//   「auto_소명_접속량 과다」를 복사(클립보드) → 가져오기 후 이름만 변경 : 임계값 1 · 소명 ON · 적용 대상 사원_14 · 집계 1일
+const POLICY = 'auto_소명_승인';
 const USER_ID = 'user014';
 const USER_DEPT = 'AI개발2팀';
 const HEAD_ID = 'user001';
@@ -135,7 +137,7 @@ describe('04_Depth_소명_이상행위경보_승인', () => {
 
     // 결재함 표에서 방금 신청한 문서 줄 : 신청자 (user014) + 제목 「… 소명 (발생 <탐지 시작>)」
     const docRow = () => cy.get('@alertStart').then((start) =>
-      cy.get('table tbody tr').filter(':visible').filter((i, e) => e.innerText.includes(`(${USER_ID})`) && e.innerText.includes(`발생 ${start}`)).first());
+      cy.get('table tbody tr').filter(':visible').filter((i, e) => e.innerText.includes(`(${USER_ID})`) && e.innerText.includes(POLICY) && e.innerText.includes(`발생 ${start}`)).first());
 
     // Mailpit(.26) : 소명 신청·결재 때 새로 온 메일 수집 (공용 메일함이라 삭제하지 않고, 실행 전 ID 와 비교)
     const MAILPIT = 'http://10.10.54.26:8025/api/v1/messages';
@@ -173,9 +175,12 @@ describe('04_Depth_소명_이상행위경보_승인', () => {
       const n = parseInt((t.match(/(\d+)건/) || [])[1] || '0', 10);
       cy.log(`소명 대상 경보 ${n}건`);
       cy.wrap(n).as('alertsBefore');
-      if (n === 0) {
+      // 이 정책의 경보만 셈 (다른 전용 정책의 경보는 다른 시나리오 몫)
+      const mine = Cypress.$('table tbody tr:visible').filter((i, e) => e.innerText.includes(POLICY)).length;
+      cy.log(`그중 ${POLICY} 경보 ${mine}건`);
+      if (mine === 0) {
         // 제품 문제가 아니라 테스트 데이터 소진 (하루 단위 정책이라 같은 날 여러 번 돌리면 그날 몫을 다 씀) → 건너뜀(Pending)
-        cy.log('⏭️ 소명 대상 경보 0건 — 오늘 몫을 이미 사용했습니다. 이번 실행은 건너뜁니다.');
+        cy.log(`⏭️ ${POLICY} 소명 대상 경보 0건 — 오늘 몫을 이미 사용했습니다. 이번 실행은 건너뜁니다.`);
         cy.writeFile('cypress/probe/D04_경보소진.json', { at: stamp(), spec: Cypress.spec.name });
         cy.then(() => test.skip());
       }
@@ -193,6 +198,17 @@ describe('04_Depth_소명_이상행위경보_승인', () => {
       cy.contains('.ad-tl-name', `(${USER_ID})`).should('contain', '신청자');
       cy.contains('.ad-tl-name', `(${HEAD_ID})`).should('exist');
     });
+    // [필수 입력 검증] 소명 사유를 비운 채 「신청」 → 신청되지 않고 창이 그대로 있어야 함 (경보를 쓰지 않는 확인)
+    A.activeDialog().find('textarea[placeholder*="소명 사유"]').clear({ force: true });
+    A.activeDialog().find('.approval-action-bar button').filter((i, e) => e.innerText.trim() === '신청').first().then(($b) => {
+      if (A.isDisabled($b)) { cy.log('✅ 소명 사유 미입력 → 「신청」 버튼 비활성'); return; }
+      cy.wrap($b).click({ force: true });
+      cy.wait(1500);
+      A.dumpScreen('D04_5a0_사유없이_신청');
+      A.dismissInputNotice('textarea[placeholder*="소명 사유"]');
+    });
+    A.activeDialog().should('contain', '이상행위 소명 신청').find('textarea[placeholder*="소명 사유"]').should('exist');
+    cy.log('✅ 소명 사유 없이는 신청되지 않음');
     const reason = `[자동화] ${POLICY} 경보 소명 — ${stamp()} 신청 (${USER_ID})`;
     cy.wrap(reason).as('reason');
     A.activeDialog().find('textarea[placeholder*="소명 사유"]').clear({ force: true }).type(reason, { force: true });
@@ -245,6 +261,16 @@ describe('04_Depth_소명_이상행위경보_승인', () => {
     mailSnapshot('mailsBeforeDecision');
     A.activeDialog().contains('button', /^\s*승인\s*$/).click({ force: true });
     cy.wait(1500);
+    // [취소 검증] 「소명 승인」 확인창에서 「취소」 → 확인창만 닫히고 결재 상세(결재 대기)는 그대로
+    A.activeDialog().should('contain', '소명 승인').contains('button', /^\s*취소\s*$/).click({ force: true });
+    cy.wait(1200);
+    A.activeDialog().should('contain', '결재 상세');
+    A.activeDialog().find('input[placeholder*="의견을 입력"]').should('not.exist');
+    A.activeDialog().contains('button', /^\s*반려\s*$/).should('be.visible');
+    cy.log('✅ 승인 취소 → 결재 대기 유지');
+    // 다시 「승인」
+    A.activeDialog().contains('button', /^\s*승인\s*$/).click({ force: true });
+    cy.wait(1500);
     // 「소명 승인」 확인창 : 코멘트(선택) 입력 후 확인
     A.activeDialog().should('contain', '소명 승인').within(() => {
       // [Mantis 0038972] 다크 모드에서 이 확인창의 사유 입력칸·취소 버튼이 흰 바탕으로 표시됨 (기능 동작은 정상 → 검증은 그대로 유지)
@@ -267,6 +293,13 @@ describe('04_Depth_소명_이상행위경보_승인', () => {
     cy.contains('.v-btn__content, button', '검색').click({ force: true });
     cy.wait(2500);
     A.dumpScreen('D04_6e_모든결재');
+    docRow().find('.ag-status').should('have.text', '승인');
+    // 결재 완료 문서는 결재자의 「참조 결재」에서도 조회됨 (2.9.7 — 담당 결재 처리 후 참조 결재·모든 결재로 이동)
+    cy.get('.v-btn__content').filter(':visible').contains(/^\s*참조 결재\s*$/).click({ force: true });
+    cy.wait(3000);
+    cy.contains('.v-btn__content, button', '검색').click({ force: true });
+    cy.wait(2500);
+    A.dumpScreen('D04_6f_참조결재');
     docRow().find('.ag-status').should('have.text', '승인');
   });
 });
