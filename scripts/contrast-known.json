@@ -2,6 +2,66 @@
   "_설명": "이미 등록한 Mantis 와 결과 행을 맞추는 규칙. screen·target·text 는 '포함' 비교, fg·bg 는 '같음' 비교. 적힌 조건을 모두 만족하면 그 번호를 붙인다. kind 를 적으면 그 종류만.",
   "rules": [
     {
+      "mantis": "0038972",
+      "target": "반려 사유를 입력"
+    },
+    {
+      "mantis": "0038972",
+      "target": "의견을 입력하세요"
+    },
+    {
+      "mantis": "0038974",
+      "target": "ad-tl-badge"
+    },
+    {
+      "mantis": "0038974",
+      "target": "ad-tl-marker"
+    },
+    {
+      "mantis": "0038974",
+      "screen": "/approval/",
+      "target": "req-mark"
+    },
+    {
+      "mantis": "0038974",
+      "screen": "/approval/",
+      "target": "field-notice"
+    },
+    {
+      "mantis": "0038974",
+      "target": "etr-sev"
+    },
+    {
+      "mantis": "0038974",
+      "target": "resub-chip"
+    },
+    {
+      "mantis": "0038974",
+      "screen": "/approval/submit/anomaly-alerts",
+      "target": "v-alert"
+    },
+    {
+      "mantis": "0038975",
+      "screen": "customAnomalyBehaviorPolicyResult",
+      "target": "v-chip__content"
+    },
+    {
+      "mantis": "0038975",
+      "screen": "customAnomalyBehaviorPolicyResult",
+      "target": "incident-count"
+    },
+    {
+      "mantis": "0038976",
+      "screen": "record/accessLog",
+      "target": "v-btn--round.v-btn--depressed"
+    },
+    {
+      "mantis": "0038976",
+      "screen": "record/accessLog",
+      "kind": "light-bg",
+      "text": "파일 다운로드"
+    },
+    {
       "mantis": "0038920",
       "screen": "폴더 이동",
       "text": "미분류"

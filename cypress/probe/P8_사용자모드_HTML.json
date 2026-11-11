@@ -1,0 +1,67 @@
+{
+  "checkboxes": [
+    {
+      "aria": null,
+      "checked": "false",
+      "html3": "<div class=\"v-input__control\"><div class=\"v-input__slot\"><div class=\"v-input--selection-controls__input\"><input aria-checked=\"false\" role=\"checkbox\" type=\"checkbox\" value=\"\"><div class=\"v-input--selection-controls__ripple\"></div><div class=\"v-input--switch__track theme--dark\"></div><div class=\"v-input--switch__thumb theme--dark\"><!----></div></div></div></div>"
+    },
+    {
+      "aria": null,
+      "checked": "false",
+      "html3": "<div class=\"v-input__control\"><div class=\"v-input__slot\"><div class=\"v-input--selection-controls__input\"><input aria-checked=\"false\" role=\"checkbox\" type=\"checkbox\" value=\"\"><div class=\"v-input--selection-controls__ripple\"></div><div class=\"v-input--switch__track theme--dark\"></div><div class=\"v-input--switch__thumb theme--dark\"><!----></div></div></div></div>"
+    },
+    {
+      "aria": null,
+      "checked": "false",
+      "html3": "<div class=\"v-input__control\"><div class=\"v-input__slot\"><div class=\"v-input--selection-controls__input\"><input aria-checked=\"false\" role=\"checkbox\" type=\"checkbox\" value=\"\"><div class=\"v-input--selection-controls__ripple\"></div><div class=\"v-input--switch__track theme--dark\"></div><div class=\"v-input--switch__thumb theme--dark\"><!----></div></div></div></div>"
+    },
+    {
+      "aria": "선택한 부서 아래의 하위 부서도 함께 포함",
+      "checked": "false",
+      "html3": "<div class=\"v-input__control\"><div class=\"v-input__slot\"><div class=\"v-input--selection-controls__input\"><input aria-label=\"선택한 부서 아래의 하위 부서도 함께 포함\" aria-checked=\"false\" role=\"checkbox\" type=\"checkbox\" value=\"\"><div class=\"v-input--selection-controls__ripple\"></div><div class=\"v-input--switch__track theme--dark\"></div><div class=\"v-input--switch__thumb theme--dark\"><!----></div></div><label aria-hidden=\"true\" class=\"v-label theme--dark\" style=\"left: 0px; right: auto; position: relative;\">선택한 부서 아래의 하위 부서도 함께 포함</label></div></div>"
+    }
+  ],
+  "numbers": [
+    {
+      "val": "1",
+      "html4": "<div data-v-09410aea=\"\" class=\"v-input v-text-field v-text-field--single-line v-input--hide-details v-input--is-label-active v-input--is-dirty theme--dark\"><div class=\"v-input__control\"><div class=\"v-input__slot\"><div class=\"v-text-field__slot\"><input min=\"1\" type=\"number\"></div></div></div></div>"
+    },
+    {
+      "val": "1000",
+      "html4": "<div data-v-09410aea=\"\" class=\"v-input v-text-field v-text-field--single-line v-input--hide-details v-input--is-label-active v-input--is-dirty theme--dark\"><div class=\"v-input__control\"><div class=\"v-input__slot\"><div class=\"v-text-field__slot\"><input min=\"1\" type=\"number\"><div class=\"v-text-field__suffix\">건 이상</div></div></div></div></div>"
+    }
+  ],
+  "texts": [
+    {
+      "ph": null,
+      "aria": null,
+      "html5": "<div data-v-09410aea=\"\" class=\"sp-field\"><div data-v-09410aea=\"\" class=\"v-input v-text-field v-text-field--single-line v-input--hide-details v-input--is-label-active v-input--is-dirty theme--dark\"><div class=\"v-input__control\"><div class=\"v-input__slot\"><div class=\"v-text-field__slot\"><input maxlength=\"200\" type=\"text\"></div></div></div></div></div>"
+    },
+    {
+      "ph": null,
+      "aria": null,
+      "html5": "<div data-v-09410aea=\"\" role=\"combobox\" class=\"v-input v-text-field v-select v-input--hide-details v-input--is-label-active v-input--is-dirty theme--dark\"><div class=\"v-input__control\"><div class=\"v-input__slot\"><div class=\"v-select__slot\"><div class=\"v-select__selections\"><div class=\"v-select__selection v-select__selection--comma\">일</div><input readonly=\"readonly\" type=\"text\" autocomplete=\"on\" aria-readonly=\"false\"></div><div class=\"v-input__append-inner\"><div class=\"v-input__icon v-input__icon--append\"><i aria-hidden=\"true\" class=\"v-icon material-icons theme--dark\">arrow_drop_down</i></div></div></div><div class=\"v-menu\"></div></div></div></div>"
+    },
+    {
+      "ph": null,
+      "aria": "검색하여 복수 선택",
+      "html5": "<div data-v-3cc57696=\"\" class=\"v-input v-text-field v-select v-select--chips v-select--chips--small v-autocomplete v-input--hide-details theme--dark\"><div class=\"v-input__control\"><div class=\"v-input__slot\"><div class=\"v-select__slot\"><label aria-hidden=\"true\" class=\"v-label theme--dark\" style=\"left: 0px; right: auto; position: absolute;\">검색하여 복수 선택</label><div class=\"v-select__selections\"><input aria-label=\"검색하여 복수 선택\" type=\"text\" autocomplete=\"off\" role=\"combobox\"></div><div class=\"v-input__append-inner\"><div class=\"v-input__icon v-input__icon--append\"><i aria-hidden=\"true\" class=\"v-icon material-icons theme--dark\">arrow_drop_down</i></div></div></div><div class=\"v-menu\"></div></div></div></div>"
+    },
+    {
+      "ph": "전체",
+      "aria": null,
+      "html5": "<div data-v-09410aea=\"\" class=\"v-input v-text-field v-text-field--placeholder v-select v-select--chips v-select--chips--small v-autocomplete v-input--hide-details theme--dark\"><div class=\"v-input__control\"><div class=\"v-input__slot\"><div class=\"v-select__slot\"><div class=\"v-select__selections\"><input type=\"text\" placeholder=\"전체\" autocomplete=\"off\" role=\"combobox\"></div><div class=\"v-input__append-inner\"><div class=\"v-input__icon v-input__icon--\"><i aria-hidden=\"true\" class=\"v-icon v-icon--link material-icons theme--dark\"></i></div></div><div class=\"v-input__append-inner\"><div class=\"v-input__icon v-input__icon--append\"><i aria-hidden=\"true\" class=\"v-icon material-icons theme--dark\">arrow_drop_down</i></div></div></div><div class=\"v-menu\"></div></div></div></div>"
+    },
+    {
+      "ph": "전체",
+      "aria": null,
+      "html5": "<div data-v-09410aea=\"\" class=\"v-input v-text-field v-text-field--placeholder v-select v-select--chips v-select--chips--small v-autocomplete v-input--hide-details theme--dark\"><div class=\"v-input__control\"><div class=\"v-input__slot\"><div class=\"v-select__slot\"><div class=\"v-select__selections\"><input type=\"text\" placeholder=\"전체\" autocomplete=\"off\" role=\"combobox\"></div><div class=\"v-input__append-inner\"><div class=\"v-input__icon v-input__icon--\"><i aria-hidden=\"true\" class=\"v-icon v-icon--link material-icons theme--dark\"></i></div></div><div class=\"v-input__append-inner\"><div class=\"v-input__icon v-input__icon--append\"><i aria-hidden=\"true\" class=\"v-icon material-icons theme--dark\">arrow_drop_down</i></div></div></div><div class=\"v-menu\"></div></div></div></div>"
+    },
+    {
+      "ph": "전체",
+      "aria": null,
+      "html5": "<div data-v-09410aea=\"\" class=\"v-input v-text-field v-text-field--placeholder v-select v-select--chips v-select--chips--small v-autocomplete v-input--hide-details theme--dark\"><div class=\"v-input__control\"><div class=\"v-input__slot\"><div class=\"v-select__slot\"><div class=\"v-select__selections\"><input type=\"text\" placeholder=\"전체\" autocomplete=\"off\" role=\"combobox\"></div><div class=\"v-input__append-inner\"><div class=\"v-input__icon v-input__icon--\"><i aria-hidden=\"true\" class=\"v-icon v-icon--link material-icons theme--dark\"></i></div></div><div class=\"v-input__append-inner\"><div class=\"v-input__icon v-input__icon--append\"><i aria-hidden=\"true\" class=\"v-icon material-icons theme--dark\">arrow_drop_down</i></div></div></div><div class=\"v-menu\"></div></div></div></div>"
+    }
+  ],
+  "severity": "<div data-v-09410aea=\"\" class=\"severity-radio-group severity-radio-group--sm\"><button data-v-09410aea=\"\" type=\"button\" class=\"severity-radio-btn severity-radio-btn--sm severity-radio-btn--1\"><span data-v-09410aea=\"\" class=\"severity-radio-label\">심각</span></button><button data-v-09410aea=\"\" type=\"button\" class=\"severity-radio-btn severity-radio-btn--sm severity-radio-btn--2\"><span data-v-09410aea=\"\" class=\"severity-radio-label\">경계</span></button><button data-v-09410aea=\"\" type=\"button\" class=\"severity-radio-btn severity-radio-btn--sm severity-radio-btn--active severity-radio-btn--3\"><span data-v-09410aea=\"\" class=\"severity-radio-label\">주의</span></button></div>"
+}

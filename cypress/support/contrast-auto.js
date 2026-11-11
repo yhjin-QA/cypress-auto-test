@@ -64,6 +64,12 @@ Cypress.Commands.overwrite('click', (originalFn, subject, ...args) => {
     bypass = false;
     return originalFn(subject, ...args);
   }
+  // [2026-11-11] cy.type()/cy.clear() 는 내부에서 click 을 직접 호출(cy.now)함
+  //   → 그때 검사 명령을 끼워 넣으면 type 의 대상이 바뀌어 실패하므로, spec 이 직접 부른 click 일 때만 검사
+  let cur = '';
+  try { cur = cy.state('current').get('name'); } catch (e) { /* ignore */ }
+  if (cur !== 'click') return originalFn(subject, ...args);
+
   const st = currentState();
   if (!st || seen.has(st.key) || seen.size >= MAX_SCAN) {
     return originalFn(subject, ...args);

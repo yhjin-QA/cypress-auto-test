@@ -1,0 +1,48 @@
+{
+  "url": "https://10.10.54.21:18443/logcatch/analyze/profiling/policy",
+  "headlines": [
+    "프로파일 정책 (7)"
+  ],
+  "buttons": [
+    "점검",
+    "이력",
+    "현황",
+    "contact_mail 소명하기",
+    "leak_add 자산",
+    "assignment 보고",
+    "보관",
+    "verified_user 분석",
+    "policy 검출",
+    "운영",
+    "소명",
+    "info",
+    "wb_sunny",
+    "ADMIN 님",
+    "프로파일링 정책",
+    "프로파일링 결과",
+    "refresh 갱신",
+    "▦ 카드 ▾",
+    "add 프로파일 정책 등록",
+    "즉시 실행",
+    "link",
+    "history",
+    "delete",
+    "chevron_left",
+    "chevron_right"
+  ],
+  "inputs": [
+    {
+      "type": "text",
+      "aria": null,
+      "ph": null,
+      "val": "",
+      "checked": null
+    }
+  ],
+  "th": [],
+  "rows": [],
+  "cards": [],
+  "menus": [],
+  "dialogs": [],
+  "snack": []
+}

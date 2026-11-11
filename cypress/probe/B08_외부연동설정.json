@@ -1,0 +1,74 @@
+{
+  "url": "https://10.10.54.21:18443/logcatch/analyze/customAnomalyBehaviorExportConfig",
+  "headlines": [
+    "list 연동 대상 목록"
+  ],
+  "buttons": [
+    "점검",
+    "이력",
+    "현황",
+    "contact_mail 소명하기",
+    "leak_add 자산",
+    "assignment 보고",
+    "보관",
+    "verified_user 분석",
+    "policy 검출",
+    "운영",
+    "소명",
+    "info",
+    "wb_sunny",
+    "ADMIN 님",
+    "사용자 이상행위 정책",
+    "사용자 이상행위 결과",
+    "사용자 이상행위 대시보드",
+    "외부 연동 설정",
+    "전체",
+    "활성",
+    "비활성",
+    "visibility 미리보기",
+    "add 신규 연동 추가",
+    "history 전체 전송 이력",
+    "refresh",
+    "visibility",
+    "play_circle_outline",
+    "history",
+    "assignment",
+    "edit",
+    "delete"
+  ],
+  "inputs": [
+    {
+      "type": "text",
+      "aria": null,
+      "ph": "검색",
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": null,
+      "ph": "대상 유형",
+      "val": "",
+      "checked": null
+    }
+  ],
+  "th": [
+    "#",
+    "이름",
+    "대상 유형",
+    "경로",
+    "스케줄",
+    "활성",
+    "실행 일시",
+    "관리"
+  ],
+  "rows": [
+    "1 insert_drive_file 기본 스플렁크 파일 연동 (UF) 로컬 디스크 파일(toSplunk)로 이상행위 경보를 JSON 형식으로 기록하여 Splunk Universal Forwarder로 수집 Splunk UF - 10분 주기 cancel 미실행 visib",
+    "2 cloud_upload 스플렁크 HEC 전송 (샘플) Splunk HTTP Event Collector (HEC)를 통해 REST API로 경보를 직접 전송 Splunk HEC https://splunk-hec.example.com:8088/**** 10분 주기 c",
+    "3 http 외부 SIEM 웹훅 연동 (샘플) 외부 보안 관제 시스템(SIEM/SOAR) 또는 웹훅 엔드포인트로 JSON 경보 전송 Webhook https://siem-gateway.example.com/**** 10분 주기 cancel 미실행 visibility p"
+  ],
+  "cards": [],
+  "menus": [],
+  "dialogs": [],
+  "snack": []
+}

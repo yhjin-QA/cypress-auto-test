@@ -110,7 +110,8 @@ Cypress.Commands.add('checkContrast', (label, context = null, opts = {}) => {
 const LEAK_LUM = Number(Cypress.env('DARK_LEAK_LUM') || 0.5);
 const LEAK_MIN_AREA = Number(Cypress.env('DARK_LEAK_MIN_AREA') || 400);
 // 원래 밝게 그리는 부품(스위치 손잡이 등)은 제외 — 필요하면 --env DARK_LEAK_SKIP="cls1,cls2" 로 추가
-const LEAK_SKIP_CLASSES = ['v-input--switch__thumb', 'v-slider__thumb', 'v-progress-circular__underlay']
+// [2026-11-11] approval-action-layout : 결재 창 하단 버튼 줄 — 바탕값은 흰색이지만 안쪽 어두운 영역에 덮여 화면에는 어둡게 보임(오탐)
+const LEAK_SKIP_CLASSES = ['v-input--switch__thumb', 'v-slider__thumb', 'v-progress-circular__underlay', 'approval-action-layout']
   .concat(String(Cypress.env('DARK_LEAK_SKIP') || '').split(',').map((x) => x.trim()).filter(Boolean));
 const LEAK_SKIP_TAGS = new Set(['IMG', 'SVG', 'CANVAS', 'VIDEO', 'IFRAME', 'PATH', 'G', 'CIRCLE', 'RECT', 'LINE', 'POLYLINE', 'POLYGON']);
 

@@ -78,7 +78,7 @@ function dedupe(rows) {
   const m = new Map();
   rows.forEach((r) => m.set([r.host, r.spec, r.screen, r.kind, r.target, plain(r)].join('|'), r));
   // 밝은 바탕 검사 초기 실행분에 섞인 「원래 밝은 부품」(스위치·슬라이더 손잡이) 제외 — contrast.js 의 제외 목록과 같음
-  return [...m.values()].filter((r) => !(r.kind === 'light-bg' && /switch__thumb|slider__thumb|progress-circular__underlay/.test(r.target || '')));
+  return [...m.values()].filter((r) => !(r.kind === 'light-bg' && /switch__thumb|slider__thumb|progress-circular__underlay|approval-action-layout/.test(r.target || '')));
 }
 
 const ISSUE = (r) => r.kind === 'violation' || r.kind === 'light-bg' || (r.kind === 'incomplete' && r.ratio !== '' && r.ratio != null);

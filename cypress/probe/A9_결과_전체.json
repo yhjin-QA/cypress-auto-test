@@ -1,0 +1,127 @@
+{
+  "url": "https://10.10.54.21:18443/logcatch/analyze/customAnomalyBehaviorPolicyResult?dateFrom=2026-10-12&dateTo=2026-11-10&dataMode=policy",
+  "headlines": [
+    "경보 (정책 0건)"
+  ],
+  "buttons": [
+    "점검",
+    "이력",
+    "현황",
+    "contact_mail 소명하기",
+    "leak_add 자산",
+    "assignment 보고",
+    "보관",
+    "verified_user 분석",
+    "policy 검출",
+    "운영",
+    "소명",
+    "info",
+    "wb_sunny",
+    "ADMIN 님",
+    "사용자 이상행위 정책",
+    "사용자 이상행위 결과",
+    "사용자 이상행위 대시보드",
+    "외부 연동 설정",
+    "전체 비우기",
+    "search 검색",
+    "전체",
+    "심각",
+    "경계",
+    "주의",
+    "오늘",
+    "최근 7일",
+    "최근 30일",
+    "3개월",
+    "1년",
+    "사용",
+    "미사용",
+    "visibility_off제외",
+    "history제외",
+    "list",
+    "policy 정책",
+    "person",
+    "business",
+    "dns",
+    "menu_book",
+    "link",
+    "language",
+    "⏳ 그룹 > 타임라인 ▾",
+    "chevron_left",
+    "chevron_right"
+  ],
+  "inputs": [
+    {
+      "type": "text",
+      "aria": null,
+      "ph": "정책 선택",
+      "role": null,
+      "val": "",
+      "ro": false,
+      "checked": null,
+      "cls": ""
+    },
+    {
+      "type": "text",
+      "aria": null,
+      "ph": "메시지 + 정책명 검색",
+      "role": null,
+      "val": "",
+      "ro": false,
+      "checked": null,
+      "cls": ""
+    },
+    {
+      "type": "date",
+      "aria": null,
+      "ph": null,
+      "role": null,
+      "val": "2026-10-12",
+      "ro": false,
+      "checked": null,
+      "cls": ""
+    },
+    {
+      "type": "date",
+      "aria": null,
+      "ph": null,
+      "role": null,
+      "val": "2026-11-10",
+      "ro": false,
+      "checked": null,
+      "cls": ""
+    },
+    {
+      "type": "text",
+      "aria": null,
+      "ph": null,
+      "role": null,
+      "val": "",
+      "ro": true,
+      "checked": null,
+      "cls": ""
+    }
+  ],
+  "labels": [
+    "위험도",
+    "기간",
+    "기준선 출처",
+    "중지된 정책",
+    "지난 버전"
+  ],
+  "th": [],
+  "rows": [],
+  "cards": [
+    {
+      "cls": "mb-3 basic-filter-panel v-card v-sheet theme--dark",
+      "text": "expand_more 기본 필터 전체 비우기 arrow_drop_down search date_range ~ date_range search 검색 위험도 전체 심각 경계 주의 기간 오늘 최근 7일 최근 30일 3개월 1년 기준선 출처 전체 사용 미사용 중지된 정책 vi"
+    },
+    {
+      "cls": "v-card v-sheet theme--dark",
+      "text": "경보 (정책 0건) schedule 16:55:54 list policy 정책 person business dns menu_book link language ⏳ 그룹 > 타임라인 ▾ 경보가 없습니다. chevron_left 0건 chevron_right arrow_dr"
+    }
+  ],
+  "menus": [],
+  "dialogs": [],
+  "dataRoles": [],
+  "snack": []
+}

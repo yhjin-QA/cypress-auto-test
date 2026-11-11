@@ -1128,11 +1128,13 @@ cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.
      cy.wait(500);
 
     cy.get('.v-dialog--active').last().within(() => {
-  cy.contains('tr', 'connection', { timeout: 10000 })
+  // [2026-11-11] 'connection' 헤더는 브라우저 접속에만 있음 (curl 등 명령어 접속 기록에는 host/user-agent/accept 뿐)
+  //   → 첫 행이 어떤 접속이든 항상 있는 'host' 헤더로 확인
+  cy.contains('tr', 'host', { timeout: 10000 })
     .scrollIntoView()
     .should('exist')          // be.visible 대신 exist로 완화
     .then(($tr) => {
-      cy.wrap($tr).contains('keep-alive').should('exist');
+      cy.wrap($tr).contains('10.10.54.22:8080').should('exist');
     });
 });
 
@@ -1155,10 +1157,18 @@ cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.
             cy.log('⚠️ [Case A] 비정상(undefined) 사용자: connection 정보 검증');
             
             // referer가 없으므로 대신 'connection' 행을 찾아 'keep-alive'를 검증합니다.
-            cy.contains('tr', 'connection', { timeout: 10000 }).should('be.visible')
-              .within(() => {
-                  cy.contains('keep-alive').should('be.visible');
-              });
+            // [2026-11-11] connection 행은 브라우저 접속일 때만 있으므로, 있을 때만 keep-alive 확인
+            cy.get('.v-dialog--active').last().then(($d) => {
+                const hasConn = $d.find('tr').toArray().some((tr) => /(^|\s)connection(\s|$)/i.test(tr.innerText));
+                if (hasConn) {
+                    cy.contains('tr', 'connection').should('be.visible')
+                      .within(() => {
+                          cy.contains('keep-alive').should('be.visible');
+                      });
+                } else {
+                    cy.log('ℹ️ connection 헤더 없는 접속(curl 등) — host 만 확인');
+                }
+            });
 
             // 추가로 'host' 정보도 함께 검증해주면 더욱 안전합니다.
             cy.contains('tr', 'host').within(() => {
