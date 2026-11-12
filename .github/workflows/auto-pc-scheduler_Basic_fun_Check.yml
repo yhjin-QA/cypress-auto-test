@@ -33,6 +33,16 @@ jobs:
         uses: actions/checkout@v5
 
         # 👇 [추가] 이전 테스트 결과 찌꺼기(HTML 등) 삭제
+      - name: "Create cypress.env.json (secret CYPRESS_ENV_JSON)"
+        env:
+          CYPRESS_ENV_JSON: ${{ secrets.CYPRESS_ENV_JSON }}
+        run: |
+          # for specs that read passwords from cypress.env.json (04 sommyeong / 08 analysis). Value lives only in the repo secret and is masked in logs
+          if ([string]::IsNullOrWhiteSpace($env:CYPRESS_ENV_JSON)) { Write-Host "::warning::Secret CYPRESS_ENV_JSON is empty - specs that read passwords from cypress.env.json will fail to log in"; exit 0 }
+          try { $null = $env:CYPRESS_ENV_JSON | ConvertFrom-Json } catch { Write-Host "::error::Secret CYPRESS_ENV_JSON is not valid JSON"; exit 1 }
+          [System.IO.File]::WriteAllText((Join-Path (Get-Location) 'cypress.env.json'), $env:CYPRESS_ENV_JSON, (New-Object System.Text.UTF8Encoding($false)))
+          Write-Host "cypress.env.json created"
+
       - name: Clean Previous Reports
         run: | 
           Remove-Item -Path "cypress/reports" -Recurse -Force -ErrorAction SilentlyContinue
@@ -225,6 +235,10 @@ jobs:
           if-no-files-found: ignore
 
       # 👇 [수정됨] 경로를 'cypress/reports' 전체로 변경하여 파일 누락 방지
+      - name: "Remove cypress.env.json"
+        if: always()
+        run: Remove-Item -Path "cypress.env.json" -Force -ErrorAction SilentlyContinue
+
       - name: 📂 리포트 데이터 업로드
         if: always()
         uses: actions/upload-artifact@v6
@@ -263,6 +277,16 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: "Create cypress.env.json (secret CYPRESS_ENV_JSON)"
+        env:
+          CYPRESS_ENV_JSON: ${{ secrets.CYPRESS_ENV_JSON }}
+        run: |
+          # for specs that read passwords from cypress.env.json (04 sommyeong / 08 analysis). Value lives only in the repo secret and is masked in logs
+          if ([string]::IsNullOrWhiteSpace($env:CYPRESS_ENV_JSON)) { Write-Host "::warning::Secret CYPRESS_ENV_JSON is empty - specs that read passwords from cypress.env.json will fail to log in"; exit 0 }
+          try { $null = $env:CYPRESS_ENV_JSON | ConvertFrom-Json } catch { Write-Host "::error::Secret CYPRESS_ENV_JSON is not valid JSON"; exit 1 }
+          [System.IO.File]::WriteAllText((Join-Path (Get-Location) 'cypress.env.json'), $env:CYPRESS_ENV_JSON, (New-Object System.Text.UTF8Encoding($false)))
+          Write-Host "cypress.env.json created"
 
       - name: Cypress Run (Restart Task Spec)
         run: |
@@ -306,6 +330,10 @@ jobs:
            }
           }
           
+      - name: "Remove cypress.env.json"
+        if: always()
+        run: Remove-Item -Path "cypress.env.json" -Force -ErrorAction SilentlyContinue
+
       - name: 📂 리포트 데이터 업로드 (Restart Spec)
         if: always()
         uses: actions/upload-artifact@v6

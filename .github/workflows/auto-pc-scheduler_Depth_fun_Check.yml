@@ -9,10 +9,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  push:
-    branches: [ "master" ]
-  schedule:
-    - cron: '45 9 * * 1-5'
+  #push:
+  #  branches: [ "master" ]
+  #schedule:
+  #  - cron: '45 9 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -38,6 +38,16 @@ jobs:
           fetch-depth: 1    # 최근 커밋 하나만 가져와서 속도 향상 및 네트워크 부하 감소
 
         # 👇 [추가] 이전 테스트 결과 찌꺼기(HTML 등) 삭제
+      - name: "Create cypress.env.json (secret CYPRESS_ENV_JSON)"
+        env:
+          CYPRESS_ENV_JSON: ${{ secrets.CYPRESS_ENV_JSON }}
+        run: |
+          # for specs that read passwords from cypress.env.json (04 sommyeong / 08 analysis). Value lives only in the repo secret and is masked in logs
+          if ([string]::IsNullOrWhiteSpace($env:CYPRESS_ENV_JSON)) { Write-Host "::warning::Secret CYPRESS_ENV_JSON is empty - specs that read passwords from cypress.env.json will fail to log in"; exit 0 }
+          try { $null = $env:CYPRESS_ENV_JSON | ConvertFrom-Json } catch { Write-Host "::error::Secret CYPRESS_ENV_JSON is not valid JSON"; exit 1 }
+          [System.IO.File]::WriteAllText((Join-Path (Get-Location) 'cypress.env.json'), $env:CYPRESS_ENV_JSON, (New-Object System.Text.UTF8Encoding($false)))
+          Write-Host "cypress.env.json created"
+
       - name: Clean Previous Reports
         run: | 
           Remove-Item -Path "cypress/reports" -Recurse -Force -ErrorAction SilentlyContinue
@@ -253,6 +263,10 @@ jobs:
           if-no-files-found: ignore
 
       # 👇 [수정됨] 경로를 'cypress/reports' 전체로 변경하여 파일 누락 방지
+      - name: "Remove cypress.env.json"
+        if: always()
+        run: Remove-Item -Path "cypress.env.json" -Force -ErrorAction SilentlyContinue
+
       - name: 📂 리포트 데이터 업로드
         if: always()
         uses: actions/upload-artifact@v6
@@ -297,6 +311,16 @@ jobs:
         with:
           clean: true       # 이전 작업 찌꺼기 강제 삭제
           fetch-depth: 1    # 최근 커밋 하나만 가져와서 속도 향상 및 네트워크 부하 감소
+
+      - name: "Create cypress.env.json (secret CYPRESS_ENV_JSON)"
+        env:
+          CYPRESS_ENV_JSON: ${{ secrets.CYPRESS_ENV_JSON }}
+        run: |
+          # for specs that read passwords from cypress.env.json (04 sommyeong / 08 analysis). Value lives only in the repo secret and is masked in logs
+          if ([string]::IsNullOrWhiteSpace($env:CYPRESS_ENV_JSON)) { Write-Host "::warning::Secret CYPRESS_ENV_JSON is empty - specs that read passwords from cypress.env.json will fail to log in"; exit 0 }
+          try { $null = $env:CYPRESS_ENV_JSON | ConvertFrom-Json } catch { Write-Host "::error::Secret CYPRESS_ENV_JSON is not valid JSON"; exit 1 }
+          [System.IO.File]::WriteAllText((Join-Path (Get-Location) 'cypress.env.json'), $env:CYPRESS_ENV_JSON, (New-Object System.Text.UTF8Encoding($false)))
+          Write-Host "cypress.env.json created"
 
       - name: Cypress Run (Sequential Task Specs)
         run: |
@@ -374,6 +398,10 @@ jobs:
               Write-Host "🎉 All specified tests have finished successfully."
               exit 0
           }
+
+      - name: "Remove cypress.env.json"
+        if: always()
+        run: Remove-Item -Path "cypress.env.json" -Force -ErrorAction SilentlyContinue
 
       - name: 📂 리포트 데이터 업로드 (Restart Spec)
         if: always()
