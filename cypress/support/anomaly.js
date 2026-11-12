@@ -174,6 +174,21 @@ const isDisabled = ($b) => $b.is(':disabled') || $b.hasClass('v-btn--disabled');
 
 const loginAdmin = () => login(ADMIN_ID(), ADMIN_PW());
 
+// [CRM .27 접속 기록] Node task(crmTraffic, cypress.config.js)로 로그인 → 조회 — 네트워크 오류 시 10초 간격 최대 3회
+//   required=true  : 끝내 실패하면 테스트 실패 (접속 기록이 꼭 있어야 하는 시나리오)
+//   required=false : 끝내 실패해도 경고만 남기고 진행 (이미 있는 경보로 진행할 수 있는 시나리오)
+//   반환 : { ok, attempts, login, inquiry, cookie, error } — 비밀번호는 Node 쪽에서 cypress.env.json 을 직접 읽음
+const crmTraffic = (userId, name, required = true) =>
+  cy.task('crmTraffic', { userId }, { timeout: 180000 }).then((r) => {
+    cy.log(`CRM(.27) ${userId} : ${r.ok ? '✅ 접속 기록 발생' : '❌ 실패'} (로그인 ${r.login} · 조회 ${r.inquiry} · ${r.attempts}회 시도)`);
+    const saved = name ? cy.writeFile(`cypress/probe/${name}.json`, { userId, ...r, at: new Date().toISOString() }) : cy.wrap(null);
+    return saved.then(() => {
+      if (!r.ok && required) throw new Error(`CRM(.27) ${userId} 접속 기록을 만들지 못했습니다 (${r.attempts}회 시도) — ${r.error}`);
+      if (!r.ok) cy.log(`⚠️ CRM(.27) 접속 실패 — 이미 있는 경보로 계속 진행 (${r.error})`);
+      return cy.wrap(r);
+    });
+  });
+
 // [실행이력] 정책 카드 오른쪽 클릭 > 「실행이력」 창을 읽고 닫음 (관리자 화면)
 //   반환 : [{ at: '실행 시각', status: '성공' 등 }] (실행 시각 오름차순)
 //   2.9.7 : 같은 탐지 구간을 다시 실행하면 그 줄의 실행 시각이 새 시각으로 바뀜 (줄 수는 그대로일 수 있음)
@@ -230,4 +245,4 @@ const runNowAndWait = (policy, prefix, tries = 10) => {
   });
 };
 
-module.exports = { ADMIN_ID, ADMIN_PW, ignoreErrors, dumpScreen, activeDialog, confirmIfAny, goAnomaly, policyTotal, searchPolicy, policyName, policySelect, policyActive, dialogSwitch, setDialogSwitch, thresholdInput, login, loginAdmin, dismissInputNotice, isDisabled, runHistory, runNowAndWait };
+module.exports = { ADMIN_ID, ADMIN_PW, ignoreErrors, dumpScreen, activeDialog, confirmIfAny, goAnomaly, policyTotal, searchPolicy, policyName, policySelect, policyActive, dialogSwitch, setDialogSwitch, thresholdInput, login, loginAdmin, dismissInputNotice, isDisabled, runHistory, runNowAndWait, crmTraffic };

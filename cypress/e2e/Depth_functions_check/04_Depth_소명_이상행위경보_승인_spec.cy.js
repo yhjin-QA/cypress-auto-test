@@ -76,16 +76,9 @@ describe('04_Depth_소명_이상행위경보_승인', () => {
 
     // ---------- 2. 접속 기록 발생 (CRM .27 리눅스_VIP고객, user014) ----------
     //   브라우저 이동 없이 요청으로 로그인 → 화면 조회 (세션 쿠키는 cy.request 가 이어 줌)
-    cy.request({ method: 'POST', url: 'http://10.10.54.27/crm/login.jsp', form: true,
-      body: { empId: USER_ID, empPw: Cypress.env('CRM27_PW') }, followRedirect: false, failOnStatusCode: false, log: false })
-      .then((res) => {
-        cy.log(`CRM 로그인 응답: ${res.status}`);
-        cy.writeFile('cypress/probe/D04_2_CRM27_상태.json', { login: res.status, location: res.headers.location || null, at: stamp() });
-        expect(res.status, 'CRM(.27) 로그인 응답').to.be.oneOf([200, 302]);
-      });
-    cy.request({ method: 'GET', url: 'http://10.10.54.27/crm/soc_matrix.jsp', qs: { action: 'massive_inquiry', _ts: Date.now() }, failOnStatusCode: false })
-      .its('status').should('eq', 200);
-    cy.wait(60000); // 수집 → 적재 대기
+    // [2026-11-12] Node task 로 요청 (네트워크 오류 시 10초 간격 최대 3회) — CI 에서 .27 연결이 잠깐 끊겨 실패한 적 있음
+    //   끝내 실패해도 이미 있는 경보로 진행 (오늘 경보가 없으면 더 오래된 경보를 씀)
+    A.crmTraffic(USER_ID, 'D04_2_CRM27_상태', false).then((r) => { if (r.ok) cy.wait(60000); }); // 수집 → 적재 대기
 
     // ---------- 3. 즉시실행 → 경보 생성 확인 (관리자) ----------
     A.loginAdmin();

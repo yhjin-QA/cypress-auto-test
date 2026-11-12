@@ -5,6 +5,43 @@ const dateInputs = () =>
     .filter((i, el) => el.innerText.trim() === 'event')
     .closest('.v-input');
 
+// [2026-11-12] 운영 이력 표에서 조건에 맞는 행이 있는 쪽으로 이동
+//   소명·분석 자동화가 「추가」 운영 이력(이상행위 정책 생성·가져오기 등)을 하루에도 여러 건 남겨,
+//   오토유저 추가/삭제 행이 1쪽(25행) 밖으로 밀릴 수 있음 → 다음 쪽(›)으로 넘기며 찾음 (최대 maxPages 쪽)
+//   넘겨 본 쪽들의 행 글자는 cypress/probe/<name>_쪽별행.json 에 남김 (못 찾으면 그 파일로 원인 확인)
+const goToPageWith = (match, name, maxPages = 15) => {
+  const seen = [];
+  const rowText = (tr) => tr.textContent.replace(/\s+/g, ' ').trim();
+  const step = (page) => {
+    cy.get('tbody tr', { timeout: 10000 }).filter(':visible').then(($rows) => {
+      const rows = $rows.toArray();
+      seen.push({ page, rows: rows.map(rowText) });
+      if (rows.some((tr) => match(Cypress.$(tr)))) {
+        cy.log(`🔎 운영 이력 ${page}쪽에서 대상 행 찾음`);
+        cy.writeFile(`cypress/probe/${name}_쪽별행.json`, { found: page, seen });
+        return;
+      }
+      const $next = Cypress.$('button:visible, .v-pagination__navigation:visible')
+        .filter((i, e) => /^(chevron_right|navigate_next|keyboard_arrow_right|›|>)$/.test((e.innerText || '').trim())).last();
+      const disabled = !$next.length || $next.is(':disabled') || $next.hasClass('v-btn--disabled') || $next.hasClass('v-pagination__navigation--disabled');
+      if (disabled || page >= maxPages) {
+        const pager = Cypress.$('button:visible').toArray().map((e) => (e.innerText || '').trim()).filter(Boolean).slice(-15);
+        cy.writeFile(`cypress/probe/${name}_쪽별행.json`, { found: null, nextButton: $next.length ? 'disabled' : 'not found', pager, seen }).then(() => {
+          throw new Error(`운영 이력 ${page}쪽까지 넘겨 봤지만 대상 행이 없습니다 — cypress/probe/${name}_쪽별행.json 확인`);
+        });
+        return;
+      }
+      const first = rowText(rows[0]);
+      cy.wrap($next).click({ force: true });
+      // 표가 다음 쪽 내용으로 바뀔 때까지
+      cy.get('tbody tr', { timeout: 10000 }).filter(':visible').first().should(($r) => expect(rowText($r[0]), '다음 쪽으로 바뀜').not.to.eq(first));
+      cy.wait(800);
+      step(page + 1);
+    });
+  };
+  step(1);
+};
+
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /*!********************************!*\
@@ -272,6 +309,10 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
     });
     cy.wait(1000); // 표 렌더링 안정화
 
+    // [2026-11-12] 1쪽에 없으면 다음 쪽으로 넘기며 찾음 (분석·소명 자동화의 「추가」 이력 때문에 밀릴 수 있음)
+    goToPageWith(($tr) => [...$tr.find('span.ellipsis')].some((s) => cellText(Cypress.$(s)) === TARGET_TEXT)
+      && cellText($tr.find('a.font-weight-bold')) === EVENT_TEXT, 'D14OL_추가');
+
     // 2. [대상] = 오토유저 AND [이벤트] = 추가 인 행을 찾아 별칭으로 저장 (재렌더링 시 자동 재조회)
     cy.get('tbody tr', { timeout: 10000 })
       .filter(':visible')
@@ -351,6 +392,10 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
       expect(texts.every((t) => t === DEL_EVENT_TEXT), `모든 행 이벤트 = ${DEL_EVENT_TEXT} (현재: ${[...new Set(texts)].join(', ')})`).to.be.true;
     });
     cy.wait(1000);
+
+    // [2026-11-12] 1쪽에 없으면 다음 쪽으로 넘기며 찾음
+    goToPageWith(($tr) => [...$tr.find('span.ellipsis')].some((s) => cellTextDel(Cypress.$(s)) === DEL_TARGET_TEXT)
+      && cellTextDel($tr.find('a.font-weight-bold')) === DEL_EVENT_TEXT, 'D14OL_삭제');
 
     // 2. [대상] = 오토유저 AND [이벤트] = 삭제 인 가장 최근 행
     cy.get('tbody tr', { timeout: 10000 })

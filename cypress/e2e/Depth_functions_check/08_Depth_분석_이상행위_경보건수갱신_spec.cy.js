@@ -69,18 +69,9 @@ describe('08_Depth_분석_이상행위_경보건수갱신', () => {
     // ---------- 2. 접속 (CRM .27) : 적용 대상 아닌 user013 → 대상 user014 순서 ----------
     //   [2026-11-11] 두 계정을 같은 쿠키로 이어 로그인하면 앞 계정(user013) 세션이 남아 user014 접속이 안 생김
     //               → 계정마다 쿠키를 비우고 로그인
-    cy.clearAllCookies();
-    cy.request({ method: 'POST', url: 'http://10.10.54.27/crm/login.jsp', form: true,
-      body: { empId: OTHER_ID, empPw: Cypress.env('CRM27_PW') }, followRedirect: false, failOnStatusCode: false, log: false })
-      .then((res) => cy.log(`CRM 로그인(${OTHER_ID}) 응답 ${res.status} ${res.headers.location || ''}`));
-    cy.request({ method: 'GET', url: 'http://10.10.54.27/crm/soc_matrix.jsp', qs: { action: 'massive_inquiry', _ts: Date.now() }, failOnStatusCode: false })
-      .then((res) => cy.log(`CRM 조회(${OTHER_ID}) 응답 ${res.status}`));
-    cy.clearAllCookies();
-    cy.request({ method: 'POST', url: 'http://10.10.54.27/crm/login.jsp', form: true,
-      body: { empId: USER_ID, empPw: Cypress.env('CRM27_PW') }, followRedirect: false, failOnStatusCode: false, log: false })
-      .its('status').should('be.oneOf', [200, 302]);
-    cy.request({ method: 'GET', url: 'http://10.10.54.27/crm/soc_matrix.jsp', qs: { action: 'massive_inquiry', _ts: Date.now() }, failOnStatusCode: false })
-      .its('status').should('eq', 200);
+    // [2026-11-12] Node task 로 요청 (계정마다 따로 로그인 → 세션이 섞이지 않음, 네트워크 오류 시 10초 간격 최대 3회)
+    A.crmTraffic(OTHER_ID, 'D08C_2_CRM27_user013', false);   // 적용 대상 아님 (대조용) — 실패해도 진행
+    A.crmTraffic(USER_ID, 'D08C_2_CRM27_user014', true);     // 적용 대상 — 건수 증가 확인에 꼭 필요
     cy.wait(60000); // 수집 → 적재 대기
 
     // ---------- 3. 즉시실행 (관리자) — 전후로 실행이력 비교 ----------

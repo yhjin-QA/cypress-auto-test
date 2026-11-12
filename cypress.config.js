@@ -280,10 +280,57 @@ module.exports = defineConfig({
                       console.error("PostgreSQL 접속 종료 에러:", err);
                     }
                   }
-                }
+                },
                 // ==========================================
 
-
+                // ==========================================
+                // [2026-11-12] CRM(.27 리눅스_VIP고객) 접속 기록 발생 — 로그인 → 조회를 Node 에서 수행
+                //   cy.request 는 네트워크 오류(ETIMEDOUT 등)를 한 번 만나면 바로 실패해서 (2026-11-12 CI 반려 실패)
+                //   여기서 요청마다 20초 제한 · 실패 시 gapMs 간격으로 attempts 회까지 다시 시도하고, 결과를 그대로 돌려줌 (예외 안 냄)
+                //   비밀번호는 config.env.CRM27_PW (cypress.env.json) 에서 직접 읽음 → 브라우저·명령 로그를 거치지 않음
+                //   반환 : { ok, attempts, login(상태 코드), inquiry(상태 코드), cookie(세션 쿠키 받았는지), error }
+                // ==========================================
+                crmTraffic({ userId, attempts = 3, gapMs = 10000 }) {
+                  const http = require('http');
+                  const querystring = require('querystring');
+                  const CRM_HOST = '10.10.54.27';
+                  const send = (opts, body) => new Promise((resolve, reject) => {
+                    const r = http.request({ host: CRM_HOST, port: 80, timeout: 20000, ...opts }, (res) => {
+                      res.resume();
+                      res.on('end', () => resolve({ status: res.statusCode, cookies: (res.headers['set-cookie'] || []).map((c) => c.split(';')[0]) }));
+                    });
+                    r.on('timeout', () => r.destroy(new Error('응답 없음 (20초)')));
+                    r.on('error', reject);
+                    if (body) r.write(body);
+                    r.end();
+                  });
+                  const once = async () => {
+                    const body = querystring.stringify({ empId: userId, empPw: config.env.CRM27_PW || '' });
+                    const login = await send({ method: 'POST', path: '/crm/login.jsp',
+                      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(body) } }, body);
+                    const cookie = login.cookies.join('; ');
+                    const inquiry = await send({ method: 'GET', path: `/crm/soc_matrix.jsp?action=massive_inquiry&_ts=${Date.now()}`,
+                      headers: cookie ? { Cookie: cookie } : {} });
+                    return { login: login.status, inquiry: inquiry.status, cookie: !!cookie };
+                  };
+                  return (async () => {
+                    let lastError = '';
+                    let last = { login: null, inquiry: null, cookie: false };
+                    for (let i = 1; i <= attempts; i += 1) {
+                      try {
+                        last = await once();
+                        if ([200, 302].includes(last.login) && last.inquiry === 200) return { ok: true, attempts: i, ...last, error: null };
+                        lastError = `응답 코드 — 로그인 ${last.login} / 조회 ${last.inquiry}`;
+                      } catch (e) {
+                        lastError = `${e.code || ''} ${e.message}`.trim();
+                      }
+                      console.log(`⚠️ CRM(.27) ${userId} 접속 기록 ${i}/${attempts}회 실패 : ${lastError}`);
+                      if (i < attempts) await new Promise((done) => setTimeout(done, gapMs));
+                    }
+                    return { ok: false, attempts, ...last, error: lastError };
+                  })();
+                }
+                // ==========================================
 
       }); // task 블록 종료
 
