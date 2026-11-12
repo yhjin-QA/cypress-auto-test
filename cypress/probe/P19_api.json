@@ -1,0 +1,44 @@
+[
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/approval/explanation-request/access",
+    "st": 200,
+    "req": null,
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":{\"canEdit\":true}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/detection/alerts?desc=false&mode=explanations&page=1&size=20&truncate=day&viewMode=auto",
+    "st": 200,
+    "req": null,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"size\":20,\"page\":1,\"totalCount\":1,\"viewMode\":\"user\",\"content\":[{\"group_value\":\"2625\",\"max_severity\":3,\"alert_count\":7,\"count_minor\":7,\"first_slot\":\"2026-07-06T15:00:00.000+00:00\",\"policy_names\":\"auto_소명_반려, auto_소명_승인, auto_소명_접속량 과다\",\"count_major\":0,\"last_slot\":\"2026-11-11T15:00:00.000+00:00\",\"last_created\":\"2026-11-12T05:08:00.054+00:00\",\"policy_count\":3,\"count_critical\":0}]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/detection/alerts/by-metric?key=user_id&mode=explanations&value=2625",
+    "st": 200,
+    "req": null,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":[{\"severity\":3,\"slot_start_time\":\"2026-11-11T15:00:00.000+00:00\",\"policy_id\":36,\"messageDetailParts\":[{\"type\":\"TEXT\",\"text\":\"[탐지 내용] 로그인한 접속을 집계 단위마다 건수로 셉니다.\\n[판단 기준] 집계 단위의 접속 건수가 임계값 이상\\n[확인 사항] 담당 업무 범위에서 나올 수 있는 양인지, 특정 시간대에 몰려 있지는 않은지 근거 데이터로 확인하세요. 도구로 연달아 부른 흔적인지도 보세요.\\n[참고] 개인정보를 조회한 양은 「개인정보 사용량 과다」 정책이 따로 봅니다.\"}],\"messageParts\":[{\"type\":\"NAME\",\"text\":\"사원_14 (user014)\",\"key\":\"user_id\"},{\"type\":\"TEXT\",\"text\":\"님이 \"},{\"type\":\"NAME\",\"text\":\"리눅스_VIP고객\",\"key\":\"bsn_id\"},{\"type\":\"TEXT\",\"text\":\"에서 \"},{\"type\":\"VALUE\",\"text\":\"17\",\"key\":\"acc_cnt\"},{\"type\":\"TEXT\",\"text\":\"건 접속했습니다\"}],\"alert_message\":\"${user_id}님이 ${bsn_id}에서 ${acc_cnt}건 접속했습니다\",\"policy_name\":\"auto_소명_접속량 과다\",\"created_at\":\"2026-11-12T05:08:00.054+00:00\",\"alert_message_detail\":\"[탐지 내용] 로그인한 접속을 집계 단위마다 건수로 셉니다.\\n[판단 기준] 집계 단위의 접속 건수가 임계값 이상\\n[확인 사항] 담당 업무 범위에서 나올 수 있는 양인지, 특정 시간대에 몰려 있지는 않은지 근거 데이터로 확인하세요. 도구로 연달아 부른 흔적인지도 보세요.\\n[참고] 개인정보를 조회한 양은 「개인정보 사용량 과다」 정책이 따로 봅니다.\",\"slot_end_time\":\"2026-11-12T15:00:00.000+00:00\",\"where_config\":\"{\\\"rules\\\": [{\\\"type\\\": \\\"boolean\\\", \\\"field\\\": \\\"is_authenticated\\\", \\\"label\\\": \\\"로그인 사용자만\\\", \\\"value\\\": true, \\\"operator\\\": \\\"EQUALS\\\"}, {\\\"type\\\": \\\"number\\\", \\\"field\\\": \\\"user_id\\\", \\\"label\\\": \\\"com.analyze.word.explanationUserFilter\\\", \\\"value\\\": 0, \\\"operator\\\": \\\"NOT_EQUALS\\\"}, {\\\"type\\\": \\\"number\\\", \\\"field\\\": \\\"user_id\\\", \\\"label\\\": \\\"사용자\\\", \\\"value\\\": [2625], \\\"operator\\\": \\\"IN\\\"}], \\\"condition\\\": \\\"AND\\\"}\",\"policy_version\":3,\"execution_id\":\"P36_V3_RT_20261112\",\"updated_at\":\"2026-11-12T05:51:00.062+00:00\",\"having_config\":\"{\\\"alias\\\": \\\"acc_cnt\\\", \\\"label\\\": \\\"com.analyze.word.kitMetric_access\\\", \\\"operator\\\": \\\">=\\\", \\\"threshold\\\": 1, \\\"aggregateType\\\": \\\"COUNT\\\", \\\"deviationTwoSided\\\": false, \\\"excludeBelowMinValue\\\": false, \\\"excludeUserWithoutHistory\\\": false}\",\"id\":162,\"alert_hash\":\"ef262cab79c1b57393fdf360ad3a378e68fea46ad564ab2ae709c11e9d6a1841\",\"metrics_json_text\":\"{\\\"bsn_id\\\": 5, \\\"acc_cnt\\\": 17, \\\"user_id\\\": 2625, \\\"user_account\\\": \\\"user014\\\"}\",\"target_dataset\":\"ACCESS_LOG\"},{\"severity\":3,\"slot_start_time\":\"2026-11-11T15:00:00.000+00:00\",\"policy_id\":38,\"messageDetailParts\":[{\"type\":\"TEXT\",\"text\":\"[탐지 내용] 로그인한 접속을 집계 단위마다 건수로 셉니다.\\n[판단 기준] 집계 단위의 접속 건수가 임계값 이상\\n[확인 사항] 담당 업무 범위에서 나올 수 있는 양인지, 특정 시간대에 몰려 있지는 않은지 근거 데이터로 확인하세요. 도구로 연달아 부른 흔적인지도 보세요.\\n[참고] 개인정보를 조회한 양은 「개인정보 사용량 과다」 정책이 따로 봅니다.\"}],\"messageParts\":[{\"type\":\"NAME\",\"text\":\"사원_14 (user014)\",\"key\":\"user_id\"},{\"type\":\"TEXT\",\"text\":\"님이 \"},{\"type\":\"NAME"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/detection/alerts?desc=false&mode=explanations&page=1&size=20&truncate=day&viewMode=mine",
+    "st": 200,
+    "req": null,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"ownScope\":true,\"size\":20,\"page\":1,\"totalCount\":0,\"viewMode\":\"flat\",\"content\":[]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/approval/explanation-request/pending",
+    "st": 200,
+    "req": null,
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":[]}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/detection/alerts?desc=false&mode=explanations&page=1&size=20&truncate=day&viewMode=flat",
+    "st": 200,
+    "req": null,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"size\":20,\"page\":1,\"totalCount\":1,\"viewMode\":\"user\",\"content\":[{\"group_value\":\"2625\",\"max_severity\":3,\"alert_count\":7,\"count_minor\":7,\"first_slot\":\"2026-07-06T15:00:00.000+00:00\",\"policy_names\":\"auto_소명_반려, auto_소명_승인, auto_소명_접속량 과다\",\"count_major\":0,\"last_slot\":\"2026-11-11T15:00:00.000+00:00\",\"last_created\":\"2026-11-12T05:08:00.054+00:00\",\"policy_count\":3,\"count_critical\":0}]}}"
+  }
+]

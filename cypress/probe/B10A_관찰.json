@@ -1,0 +1,29 @@
+{
+  "B10A_URI검색": {
+    "입력": "http://10.10.54.34/employee.php",
+    "요청": "https://10.10.54.21:18443/logcatch/pams/action-type/policy-list {\"limit\":10,\"offset\":0,\"sortInfo\":\"\",\"map\":{\"uriLike\":\"http://10.10.54.34/employee.php\",\"bsnIdList\":[],\"actionTypeList\":[]}}",
+    "결과수": 1
+  },
+  "B10A_없는주소검색": {
+    "입력": "/zz_auto_없는주소_zz/none",
+    "요청": "https://10.10.54.21:18443/logcatch/pams/action-type/policy-list {\"limit\":10,\"offset\":0,\"sortInfo\":\"\",\"map\":{\"uriLike\":\"/zz_auto_없는주소_zz/none\",\"bsnIdList\":[],\"actionTypeList\":[]}}",
+    "결과수": 0
+  },
+  "B10A_관찰_입력직후검색": {
+    "입력": "http://10.10.54.34/employee.php",
+    "요청에_입력값": false,
+    "결과수": 16,
+    "요청": "https://10.10.54.21:18443/logcatch/pams/action-type/policy-list {\"limit\":10,\"offset\":0,\"sortInfo\":\"\",\"map\":{\"uriLike\":\"\",\"bsnIdList\":[],\"actionTypeList\":[]}}"
+  },
+  "B10A_관찰_Enter검색": "Enter 로는 검색 요청이 없음",
+  "B10A_행위유형검색": {
+    "고름": "조회",
+    "요청": "https://10.10.54.21:18443/logcatch/pams/action-type/policy-list {\"limit\":10,\"offset\":0,\"sortInfo\":\"\",\"map\":{\"uriLike\":\"\",\"bsnIdList\":[],\"actionTypeList\":[1]}}",
+    "결과수": 3
+  },
+  "B10A_업무시스템검색": {
+    "고름": "Apache_PHP_WAS",
+    "요청": "https://10.10.54.21:18443/logcatch/pams/action-type/policy-list {\"limit\":10,\"offset\":0,\"sortInfo\":\"\",\"map\":{\"uriLike\":\"\",\"bsnIdList\":[11],\"actionTypeList\":[]}}",
+    "결과수": 3
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "url": "https://10.10.54.21:18443/logcatch/detect/privacyTypeDefinition/detectionType",
+  "headlines": [
+    "검색 조건"
+  ],
+  "tree": [],
+  "tables": [
+    {
+      "th": [
+        "arrow_upward 유형 코드",
+        "arrow_upward 유형 명",
+        "arrow_upward 정보주체 설정",
+        "arrow_upward 주체 우선순위",
+        "arrow_upward 식별 우선순위",
+        "arrow_upward 활성화",
+        "arrow_upward 등록일시",
+        "arrow_upward 수정일시"
+      ],
+      "rows": 23,
+      "first": [
+        "주민등록번호 1 활성 2026-06-25 09:58:35 2026-06-25 09:58:35",
+        "계좌 번호 1 활성 2026-06-25 09:58:35 2026-06-25 09:58:35",
+        "이름 1 활성 2026-06-25 09:58:35 2026-06-25 09:58:35"
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "type": "text",
+      "aria": "개인정보 유형 명",
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "checkbox",
+      "aria": "정보주체만 조회",
+      "val": "",
+      "checked": "false"
+    },
+    {
+      "type": "checkbox",
+      "aria": "삭제된 유형 포함",
+      "val": "",
+      "checked": "false"
+    },
+    {
+      "type": "text",
+      "aria": "",
+      "val": "",
+      "checked": null
+    }
+  ],
+  "buttons": [
+    "개인정보 식별 유형 정의",
+    "식별 정규식 정의",
+    "식별 키워드 정의",
+    "검색",
+    "add",
+    "chevron_left",
+    "1",
+    "chevron_right"
+  ],
+  "tabs": [],
+  "paging": [
+    "1-0 of 0"
+  ]
+}

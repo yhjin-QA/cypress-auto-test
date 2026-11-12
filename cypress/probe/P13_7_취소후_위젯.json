@@ -1,0 +1,43 @@
+{
+  "sections": [
+    "전체 현황 visibility 숨김 8개 보기 edit 레이아웃 편집"
+  ],
+  "count": 2,
+  "cards": [
+    {
+      "cls": "anomaly-widget-card widget_content v-card v-card--flat v-sheet theme--dark",
+      "visible": true,
+      "title": "클러스터 토폴로지",
+      "body": "▶ 시작 ⛢ 클러스터 토폴로지 상단 ▶ 시작 버튼을 누르면 실시간 모니터링이 켜집니다.",
+      "actions": [
+        "anomaly-widget-card__export.anomaly-widget-card__enlarge|zoom_out_map",
+        "v-icon.material-icons.theme--dark|zoom_out_map",
+        "anomaly-widget-card__export.anomaly-widget-card__hide|visibility",
+        "v-icon.material-icons.theme--dark|visibility"
+      ]
+    },
+    {
+      "cls": "anomaly-widget-card widget_content v-card v-card--flat v-sheet theme--dark",
+      "visible": true,
+      "title": "개인정보 유형별 사용자",
+      "body": "12000 10000 8000 6000 4000 2000 0 사용량 10,608 4,420 15 사원_14 (user014) 사원_13 (user013) 미등록사용자()",
+      "actions": [
+        "anomaly-widget-card__export.anomaly-widget-card__enlarge|zoom_out_map",
+        "v-icon.material-icons.theme--dark|zoom_out_map",
+        "anomaly-widget-card__export.anomaly-widget-card__hide|visibility",
+        "v-icon.material-icons.theme--dark|visibility"
+      ]
+    }
+  ],
+  "buttons": [
+    "close",
+    "▶ 시작",
+    "사용자 이상행위 정책",
+    "사용자 이상행위 결과",
+    "사용자 이상행위 대시보드",
+    "외부 연동 설정",
+    "event 기간 오늘 arrow_drop_down",
+    "visibility 숨김 8개 보기",
+    "▶ 시작"
+  ]
+}

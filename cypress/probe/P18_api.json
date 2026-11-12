@@ -1,0 +1,162 @@
+[
+  {
+    "step": "필터 — 전처리 5개 화면",
+    "m": "GET",
+    "url": "/logcatch/api/v1/_admin/module/versions/logcatch-runner-booster",
+    "st": 302,
+    "req": null,
+    "body": "\"\""
+  },
+  {
+    "step": "필터 — 전처리 5개 화면",
+    "m": "GET",
+    "url": "/logcatch/api/v1/_admin/module/versions/logcatch-runner-booster",
+    "st": 200,
+    "req": null,
+    "body": "{\"version\":\"2.9.7.0\",\"productVersion\":\"2.9.7.0\",\"compiler\":\"Java 11.0.25\",\"date\":\"Thu Nov 05 18:02:39 KST 2026\",\"tag\":\"v2.9.7\",\"commit\":\"1a62433a2\",\"branch\":\"develop-2.9\"}"
+  },
+  {
+    "step": "필터 — 전처리 5개 화면",
+    "m": "GET",
+    "url": "/logcatch/api/v1/_admin/module/versions/logcatch-runner-booster",
+    "st": 200,
+    "req": null,
+    "body": "{\"version\":\"2.9.7.0\",\"productVersion\":\"2.9.7.0\",\"compiler\":\"Java 11.0.25\",\"date\":\"Thu Nov 05 18:02:39 KST 2026\",\"tag\":\"v2.9.7\",\"commit\":\"1a62433a2\",\"branch\":\"develop-2.9\"}"
+  },
+  {
+    "step": "검출 메뉴 관리 — URI",
+    "m": "GET",
+    "url": "/logcatch/api/v1/_admin/module/versions/logcatch-runner-booster",
+    "st": 302,
+    "req": null,
+    "body": "\"\""
+  },
+  {
+    "step": "검출 메뉴 관리 — URI",
+    "m": "GET",
+    "url": "/logcatch/api/v1/_admin/module/versions/logcatch-runner-booster",
+    "st": 200,
+    "req": null,
+    "body": "{\"version\":\"2.9.7.0\",\"productVersion\":\"2.9.7.0\",\"compiler\":\"Java 11.0.25\",\"date\":\"Thu Nov 05 18:02:39 KST 2026\",\"tag\":\"v2.9.7\",\"commit\":\"1a62433a2\",\"branch\":\"develop-2.9\"}"
+  },
+  {
+    "step": "검출 메뉴 관리 — URI",
+    "m": "GET",
+    "url": "/logcatch/api/v1/_admin/module/versions/logcatch-runner-booster",
+    "st": 200,
+    "req": null,
+    "body": "{\"version\":\"2.9.7.0\",\"productVersion\":\"2.9.7.0\",\"compiler\":\"Java 11.0.25\",\"date\":\"Thu Nov 05 18:02:39 KST 2026\",\"tag\":\"v2.9.7\",\"commit\":\"1a62433a2\",\"branch\":\"develop-2.9\"}"
+  },
+  {
+    "step": "검출 메뉴 관리 — URI",
+    "m": "GET",
+    "url": "/logcatch/api/v1/detect-menu-management?canConfirmPrivacy=false&countNeeded=true&hasMenuId=false&page=0&requireMenuRegistration=true&size=25&sort&totalCount=0",
+    "st": 200,
+    "req": null,
+    "body": "{\"code\":200,\"message\":\"Success\",\"totalCount\":3464,\"offset\":0,\"limit\":0,\"resultObject\":[{\"id\":2812,\"discoveredAt\":\"2026-06-24 17:18:48.216332\",\"bsnId\":14,\"uriId\":0,\"uri\":\"/\",\"uriNormalized\":\"/\",\"method\":\"GET\",\"canConfirmPrivacy\":false,\"excludedUriId\":0,\"bsnName\":\"Node.js_WAS\",\"menuId\":0,\"actionType\":0},{\"id\":11,\"discoveredAt\":\"2026-02-05 11:35:37.673818\",\"bsnId\":1,\"uriId\":0,\"uri\":\"/\",\"uriNormalized\":\"/\",\"method\":\"GET\",\"canConfirmPrivacy\":false,\"excludedUriId\":0,\"bsnName\":\"리눅스_배송관리\",\"menuId\":0,\"actionType\":0},{\"id\":216,\"discoveredAt\":\"2026-03-18 17:22:23.60433\",\"bsnId\":4,\"uriId\":0,\"uri\":\"/\",\"uriNormalized\":\"/\",\"method\":\"GET\",\"canConfirmPrivacy\":false,\"excludedUriId\":0,\"menuId\":0,\"actionType\":0},{\"id\":2550,\"discoveredAt\":\"2026-06-16 16:08:05.313568\",\"bsnId\":12,\"uriId\":0,\"uri\":\"/\",\"uriNormaliz"
+  },
+  {
+    "step": "검출 메뉴 관리 — URI",
+    "m": "GET",
+    "url": "/logcatch/api/v1/menu-sync/systems",
+    "st": 200,
+    "req": null,
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":[{\"bsnId\":1,\"nm\":\"리눅스_배송관리\",\"statusCd\":1},{\"bsnId\":2,\"nm\":\"윈도우_배송관리\",\"statusCd\":1},{\"bsnId\":3,\"nm\":\"JEUS_tester3\",\"statusCd\":1},{\"bsnId\":5,\"nm\":\"리눅스_VIP고객\",\"statusCd\":1},{\"bsnId\":7,\"nm\":\"JEUS_CRM고객관리\",\"statusCd\":1},{\"bsnId\":8,\"nm\":\"WebLogic_CRM고객관리\",\"statusCd\":1},{\"bsnId\":9,\"nm\":\"JBOSS_CRM고객관리\",\"statusCd\":1},{\"bsnId\":10,\"nm\":\"Embedded Tomcat_WAS\",\"statusCd\":1},{\"bsnId\":11,\"nm\":\"Apache_PHP_WAS\",\"statusCd\":1},{\"bsnId\":12,\"nm\":\"IIS_WAS\",\"statusCd\":1},{\"bsnId\":13,\"nm\":\"WebSphere_IBM_Liberty_CRM고객관리\",\"statusCd\":1},{\"bsnId\":14,\"nm\":\"Node.js_WAS\",\"statusCd\":1}]}"
+  },
+  {
+    "step": "검출 메뉴 관리 — URI",
+    "m": "GET",
+    "url": "/logcatch/api/v1/menu-sync/configs",
+    "st": 200,
+    "req": null,
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":[{\"bsnId\":1,\"isGlobal\":1,\"actionTypeExpression\":\"\",\"actionTypeCodeMap\":\"{}\",\"menuNameExpression\":\"#RequestHeader['test']\",\"expressions\":[{\"bsnid\":1,\"expression\":\"#RequestHeader['test']\",\"useexpression\":1,\"order\":1}]},{\"bsnId\":5,\"isGlobal\":1,\"actionTypeExpression\":\"#RequestHeader['test']\",\"actionTypeCodeMap\":\"{}\",\"menuNameExpression\":\"#RequestHeader['test']\",\"expressions\":[{\"bsnid\":5,\"expression\":\"#RequestHeader['test']\",\"useexpression\":1,\"order\":1}]},{\"bsnId\":0,\"isGlobal\":0,\"actionTypeExpression\":\"\",\"actionTypeCodeMap\":\"{}\",\"menuNameExpression\":\"\",\"expressions\":[{\"bsnid\":0,\"expression\":\"#RequestParam['action']\",\"useexpression\":1,\"order\":1}]},{\"bsnId\":8,\"isGlobal\":0,\"actionTypeExpression\":\"#RequestParam['action']\",\"actionTypeCodeMap\":\"{}\",\"menuNameE"
+  },
+  {
+    "step": "검출 메뉴 관리 — URI",
+    "m": "GET",
+    "url": "/logcatch/api/v1/menu-sync/configs",
+    "st": 200,
+    "req": null,
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":[{\"bsnId\":1,\"isGlobal\":1,\"actionTypeExpression\":\"\",\"actionTypeCodeMap\":\"{}\",\"menuNameExpression\":\"#RequestHeader['test']\",\"expressions\":[{\"bsnid\":1,\"expression\":\"#RequestHeader['test']\",\"useexpression\":1,\"order\":1}]},{\"bsnId\":5,\"isGlobal\":1,\"actionTypeExpression\":\"#RequestHeader['test']\",\"actionTypeCodeMap\":\"{}\",\"menuNameExpression\":\"#RequestHeader['test']\",\"expressions\":[{\"bsnid\":5,\"expression\":\"#RequestHeader['test']\",\"useexpression\":1,\"order\":1}]},{\"bsnId\":0,\"isGlobal\":0,\"actionTypeExpression\":\"\",\"actionTypeCodeMap\":\"{}\",\"menuNameExpression\":\"\",\"expressions\":[{\"bsnid\":0,\"expression\":\"#RequestParam['action']\",\"useexpression\":1,\"order\":1}]},{\"bsnId\":8,\"isGlobal\":0,\"actionTypeExpression\":\"#RequestParam['action']\",\"actionTypeCodeMap\":\"{}\",\"menuNameE"
+  },
+  {
+    "step": "검출 메뉴 관리 — URI",
+    "m": "GET",
+    "url": "/logcatch/api/v1/menu-sync/systems",
+    "st": 200,
+    "req": null,
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":[{\"bsnId\":1,\"nm\":\"리눅스_배송관리\",\"statusCd\":1},{\"bsnId\":2,\"nm\":\"윈도우_배송관리\",\"statusCd\":1},{\"bsnId\":3,\"nm\":\"JEUS_tester3\",\"statusCd\":1},{\"bsnId\":5,\"nm\":\"리눅스_VIP고객\",\"statusCd\":1},{\"bsnId\":7,\"nm\":\"JEUS_CRM고객관리\",\"statusCd\":1},{\"bsnId\":8,\"nm\":\"WebLogic_CRM고객관리\",\"statusCd\":1},{\"bsnId\":9,\"nm\":\"JBOSS_CRM고객관리\",\"statusCd\":1},{\"bsnId\":10,\"nm\":\"Embedded Tomcat_WAS\",\"statusCd\":1},{\"bsnId\":11,\"nm\":\"Apache_PHP_WAS\",\"statusCd\":1},{\"bsnId\":12,\"nm\":\"IIS_WAS\",\"statusCd\":1},{\"bsnId\":13,\"nm\":\"WebSphere_IBM_Liberty_CRM고객관리\",\"statusCd\":1},{\"bsnId\":14,\"nm\":\"Node.js_WAS\",\"statusCd\":1}]}"
+  },
+  {
+    "step": "개인정보 유형 정의 — 식",
+    "m": "GET",
+    "url": "/logcatch/api/v1/_admin/module/versions/logcatch-runner-booster",
+    "st": 302,
+    "req": null,
+    "body": "\"\""
+  },
+  {
+    "step": "개인정보 유형 정의 — 식",
+    "m": "GET",
+    "url": "/logcatch/api/v1/_admin/module/versions/logcatch-runner-booster",
+    "st": 302,
+    "req": null,
+    "body": "\"\""
+  },
+  {
+    "step": "개인정보 유형 정의 — 식",
+    "m": "GET",
+    "url": "/logcatch/api/v1/_admin/module/versions/logcatch-runner-booster",
+    "st": 200,
+    "req": null,
+    "body": "{\"version\":\"2.9.7.0\",\"productVersion\":\"2.9.7.0\",\"compiler\":\"Java 11.0.25\",\"date\":\"Thu Nov 05 18:02:39 KST 2026\",\"tag\":\"v2.9.7\",\"commit\":\"1a62433a2\",\"branch\":\"develop-2.9\"}"
+  },
+  {
+    "step": "개인정보 유형 정의 — 식",
+    "m": "GET",
+    "url": "/logcatch/api/v1/_admin/module/versions/logcatch-runner-booster",
+    "st": 200,
+    "req": null,
+    "body": "{\"version\":\"2.9.7.0\",\"productVersion\":\"2.9.7.0\",\"compiler\":\"Java 11.0.25\",\"date\":\"Thu Nov 05 18:02:39 KST 2026\",\"tag\":\"v2.9.7\",\"commit\":\"1a62433a2\",\"branch\":\"develop-2.9\"}"
+  },
+  {
+    "step": "개인정보 유형 정의 — 식",
+    "m": "GET",
+    "url": "/logcatch/api/v1/privacy-type/types?deleteYn=false&onlyDataSubjectYn=false&typeNameKeywords=",
+    "st": 200,
+    "req": null,
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":[{\"id\":1,\"codeId\":20001,\"codeAlias\":\"주민등록번호\",\"msgId\":\"common.code.scan.filter.option.type.resident.registration\",\"dataSubjectYn\":true,\"activeYn\":true,\"dataPriority\":1,\"identPriority\":1,\"createDate\":\"2026-06-25T09:58:35.678951\",\"modifyDate\":\"2026-06-25T09:58:35.678951\",\"deleteYn\":false},{\"id\":14,\"codeId\":20014,\"codeAlias\":\"계좌번호\",\"msgId\":\"common.code.scan.filter.option.type.bank.account.number\",\"dataSubjectYn\":true,\"activeYn\":true,\"dataPriority\":1,\"identPriority\":1,\"createDate\":\"2026-06-25T09:58:35.678951\",\"modifyDate\":\"2026-06-25T09:58:35.678951\",\"deleteYn\":false},{\"id\":16,\"codeId\":20016,\"codeAlias\":\"이름\",\"msgId\":\"common.code.scan.filter.option.type.name\",\"dataSubjectYn\":true,\"activeYn\":true,\"dataPriority\":1,\"identPriority\":1,\"createDate\":\"2026-06-25"
+  },
+  {
+    "step": "개인정보 유형 정의 — 식",
+    "m": "GET",
+    "url": "/logcatch/api/v1/privacy-type/types?deleteYn=false&onlyDataSubjectYn=true&typeNameKeywords=",
+    "st": 200,
+    "req": null,
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":[{\"id\":1,\"codeId\":20001,\"codeAlias\":\"주민등록번호\",\"msgId\":\"common.code.scan.filter.option.type.resident.registration\",\"dataSubjectYn\":true,\"activeYn\":true,\"dataPriority\":1,\"identPriority\":1,\"createDate\":\"2026-06-25T09:58:35.678951\",\"modifyDate\":\"2026-06-25T09:58:35.678951\",\"deleteYn\":false},{\"id\":14,\"codeId\":20014,\"codeAlias\":\"계좌번호\",\"msgId\":\"common.code.scan.filter.option.type.bank.account.number\",\"dataSubjectYn\":true,\"activeYn\":true,\"dataPriority\":1,\"identPriority\":1,\"createDate\":\"2026-06-25T09:58:35.678951\",\"modifyDate\":\"2026-06-25T09:58:35.678951\",\"deleteYn\":false},{\"id\":16,\"codeId\":20016,\"codeAlias\":\"이름\",\"msgId\":\"common.code.scan.filter.option.type.name\",\"dataSubjectYn\":true,\"activeYn\":true,\"dataPriority\":1,\"identPriority\":1,\"createDate\":\"2026-06-25"
+  },
+  {
+    "step": "행위유형 관리 — 정책 관",
+    "m": "GET",
+    "url": "/logcatch/api/v1/_admin/module/versions/logcatch-runner-booster",
+    "st": 302,
+    "req": null,
+    "body": "\"\""
+  },
+  {
+    "step": "행위유형 관리 — 정책 관",
+    "m": "GET",
+    "url": "/logcatch/api/v1/_admin/module/versions/logcatch-runner-booster",
+    "st": 200,
+    "req": null,
+    "body": "{\"version\":\"2.9.7.0\",\"productVersion\":\"2.9.7.0\",\"compiler\":\"Java 11.0.25\",\"date\":\"Thu Nov 05 18:02:39 KST 2026\",\"tag\":\"v2.9.7\",\"commit\":\"1a62433a2\",\"branch\":\"develop-2.9\"}"
+  },
+  {
+    "step": "행위유형 관리 — 정책 관",
+    "m": "GET",
+    "url": "/logcatch/api/v1/_admin/module/versions/logcatch-runner-booster",
+    "st": 200,
+    "req": null,
+    "body": "{\"version\":\"2.9.7.0\",\"productVersion\":\"2.9.7.0\",\"compiler\":\"Java 11.0.25\",\"date\":\"Thu Nov 05 18:02:39 KST 2026\",\"tag\":\"v2.9.7\",\"commit\":\"1a62433a2\",\"branch\":\"develop-2.9\"}"
+  }
+]

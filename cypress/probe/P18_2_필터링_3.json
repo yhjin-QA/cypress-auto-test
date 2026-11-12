@@ -1,0 +1,102 @@
+{
+  "url": "https://10.10.54.21:18443/logcatch/detect/filter/preprocessingFilteringPolicy",
+  "headlines": [
+    "Excluded SQL",
+    "특정 SQL",
+    "등록 필터 상세 보기",
+    "변경 이력"
+  ],
+  "tree": [],
+  "tables": [
+    {
+      "th": [
+        "arrow_upward 특정 SQL",
+        "arrow_upward 설명",
+        "업무시스템",
+        "Log Tracer",
+        "삭제"
+      ],
+      "rows": 1,
+      "first": [
+        "No data available"
+      ]
+    },
+    {
+      "th": [
+        "arrow_upward 발생 일시",
+        "arrow_upward 관리자",
+        "arrow_upward IP",
+        "arrow_upward 조건"
+      ],
+      "rows": 1,
+      "first": [
+        "No data available"
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "type": "text",
+      "aria": "특정 SQL",
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": "설명",
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": "업무시스템 할당",
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": "Log Tracer",
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": "",
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": "",
+      "val": "",
+      "checked": null
+    }
+  ],
+  "buttons": [
+    "전처리 파일 구분 설정",
+    "전처리 필터링 정책",
+    "전처리 사용자 계정 탐색 설정",
+    "전처리 디코더 설정",
+    "전처리 인코더 설정",
+    "keyboard_arrow_down",
+    "저장",
+    "keyboard_arrow_down",
+    "chevron_left",
+    "1",
+    "chevron_right",
+    "keyboard_arrow_down",
+    "chevron_left",
+    "1",
+    "chevron_right"
+  ],
+  "tabs": [
+    "사용자 IP 제외",
+    "화면 (URI) 제외",
+    "특정 SQL 제외",
+    "CONTENT-TYPE 제외"
+  ],
+  "paging": [
+    "1-0 of 0",
+    "1-0 of 0"
+  ]
+}

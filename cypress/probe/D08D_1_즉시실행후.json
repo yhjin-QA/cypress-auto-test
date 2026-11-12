@@ -1,0 +1,124 @@
+{
+  "url": "https://10.10.54.21:18443/logcatch/analyze/customAnomalyBehaviorPolicy",
+  "headlines": [
+    "정책 목록 (1) 1/1"
+  ],
+  "buttons": [
+    "점검",
+    "이력",
+    "현황",
+    "leak_add 자산",
+    "assignment 보고",
+    "보관",
+    "verified_user 분석",
+    "policy 검출",
+    "운영",
+    "소명",
+    "info",
+    "wb_sunny",
+    "ADMIN 님",
+    "사용자 이상행위 정책",
+    "사용자 이상행위 결과",
+    "사용자 이상행위 대시보드",
+    "외부 연동 설정",
+    "전체 비우기",
+    "search 검색",
+    "전체",
+    "ON",
+    "OFF",
+    "사용",
+    "미사용",
+    "심각",
+    "경계",
+    "주의",
+    "접속 기록 기준 탐지",
+    "개인정보 사용 기준 탐지",
+    "folder 폴더 필터",
+    "lightbulb_outline",
+    "folder_open 폴더 이동",
+    "play_arrow 즉시실행",
+    "toggle_on 사용 ON",
+    "toggle_off 사용 OFF",
+    "delete 삭제",
+    "content_copy 복사",
+    "save_alt 내보내기",
+    "publish 가져오기",
+    "settings_backup_restore 기본 정책 복원",
+    "사용자 모드",
+    "전문가 모드",
+    "▦ 카드 ▾",
+    "add 새 정책",
+    "flip_to_back",
+    "chevron_left",
+    "chevron_right",
+    "닫기"
+  ],
+  "inputs": [
+    {
+      "type": "text",
+      "aria": null,
+      "ph": "정책명 / 설명 / 라벨 검색",
+      "val": "auto_소명_접속량 과다",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": null,
+      "ph": "탐지 대상",
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": null,
+      "ph": "범주",
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": null,
+      "ph": "라벨",
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "checkbox",
+      "aria": "이 페이지 전체 선택 (1건)",
+      "ph": null,
+      "val": "",
+      "checked": "false"
+    },
+    {
+      "type": "checkbox",
+      "aria": "정책 선택auto_소명_접속량 과다",
+      "ph": null,
+      "val": "",
+      "checked": "false"
+    },
+    {
+      "type": "checkbox",
+      "aria": "끄기 (auto_소명_접속량 과다)",
+      "ph": null,
+      "val": "",
+      "checked": "true"
+    },
+    {
+      "type": "text",
+      "aria": null,
+      "ph": null,
+      "val": "",
+      "checked": null
+    }
+  ],
+  "th": [],
+  "rows": [],
+  "cards": [
+    "check_box_outline_blank #36 v3 flip_to_back auto_소명_접속량 과다 얼마나(사용량) 주의 실시간 2026-11-12 14:59:34 집계 단위 동안 접속한 건수가 정한 기준 이상인 사용자를 찾습니다. 통상 업무량을 넘어선 접속을 확"
+  ],
+  "menus": [],
+  "dialogs": [],
+  "snack": [
+    "1건 즉시 실행을 요청했습니다. 최대 1분 안에 실행되며, 결과는 「마지막 실행」 열에 나타납니다. 닫기"
+  ]
+}

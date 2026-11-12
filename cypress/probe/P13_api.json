@@ -1,0 +1,236 @@
+[
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/dashboards/1",
+    "st": 200,
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":{\"id\":1,\"name\":\"메인)점검대시보드\",\"description\":\"점검 대시보드 입니다.\",\"useYn\":\"Y\",\"deleteYn\":\"N\",\"data\":{\"layouts\":[{\"breakpoint\":\"md\",\"rowHeight\":20,\"numberOfCols\":12,\"items\":[{\"id\":1,\"widgetId\":1,\"x\":0,\"y\":0,\"width\":12,\"height\":4,\"name\":\"\"},{\"id\":2,\"widgetId\":2,\"x\":0,\"y\":4,\"width\":2,\"height\":3,\"name\":\"\"},{\"id\":3,\"widgetId\":9256,\"x\":2,\"y\":4,\"width\":2,\"height\":3,\"name\":\"\"},{\"id\":4,\"widgetId\":4,\"x\":4,\"y\":4,\"width\":2,\"height\":3,\"name\":\"\"},{\"id\":5,\"widgetId\":5,\"x\":6,\"y\":4,\"width\":2,\"height\":3,\"name\":\"\"},{\"id\":6,\"widgetId\":6,\"x\":8,\"y\":4,\"width\":2,\"height\":3,\"name\":\"\"},{\"id\":7,\"widgetId\":7,\"x\":10,\"y\":4,\"width\":2,\"height\":3,\"name\":\"\"},{\"id\":8,\"widgetId\":8,\"x\":0,\"y\":7,\"width\":4,\"height\":10,\"name\":\"dashboard.word.userPrivacyAccessStatus\"},{\"id\":9,\"widgetId\":9,\"x\":4,\"y\":7,\"width\":4,\"height\":10,\"name\":\"dashboard.word.deptPrivacyAccessTop10\"},{\"id\":10,\"widgetId\":10,\"x\":8,\"y\":7,\"width\":4,\"height\":10,\"name\":\"dashboard.word.IpPrivacyAccessTop10\"},{\"id\":11,\"widgetId\":11,\"x\":0,\"y\":17,\"width\":4,\"height\":10,\"name\":\"dashboard.word.taskSystemPrivacyTypeStatus\"},{\"id\":12,\"widgetId\":12,\"x\":4,\"y\":17,\"width\":4,\"height\":10,\"name\":\"dashboard.word.unUserPrivacyAccessStatusTop10\"},{\"id\":13,\"widgetId\":13,\"x\":8,\"y\":17,\"width\":4,\"height\":10,\"name\":\"dashboard.word.anomalyTypeStatus\"}]}]},\"createDateStr\":\"2024-11-04 16:35:12\"}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/widgets?ids=1&ids=2&ids=9256&ids=4&ids=5&ids=6&ids=7&ids=8&ids=9&ids=10&ids=11&ids=12&ids=13",
+    "st": 200,
+    "body": "{\"code\":200,\"message\":\"Success\",\"totalCount\":13,\"offset\":0,\"limit\":0,\"resultObject\":[{\"id\":1,\"name\":\"검색 옵션\",\"description\":\"메인 대시보드 검색옵션\",\"type\":1,\"useYn\":\"Y\",\"deleteYn\":\"N\",\"createUser\":{\"tempStringId\":\"1\",\"userName\":\"Admin\",\"loginId\":\"admin\"},\"data\":{\"linkPage\":\"\",\"linkComponent\":\"\",\"linkPath\":\"\",\"note\":\"conditions : [\\r\\n    'dateRangePeriod',\\r\\n    'taskSystem',\\r\\n    'realtimeInterval'\\r\\n]\"},\"refId\":0,\"createDateStr\":\"2024-11-04 16:37:03\"},{\"id\":2,\"name\":\"점검대시보드) 개인정보 사용량\",\"description\":\"점검대시보드) 개인정보 사용 이력이 검출된 횟수\",\"type\":2,\"useYn\":\"Y\",\"deleteYn\":\"N\",\"createUser\":{\"tempStringId\":\"1\",\"userName\":\"Admin\",\"loginId\":\"admin\"},\"data\":{\"linkPage\":\"/record/privacy/privacyAccessLog\",\"linkComponent\":\"\",\"query\":\"\",\"note\":\"\"},\"refId\":1,\"createDateStr\":\"2024-11-04 16:43:03\"},{\"id\":4,\"name\":\"점검대시보드) 업무시간 외 접근\",\"description\":\"점검대시보드) 업무시간 외 접근 건수\",\"type\":2,\"useYn\":\"Y\",\"deleteYn\":\"N\",\"createUser\":{\"tempStringId\":\"1\",\"userName\":\"Admin\",\"loginId\":\"admin\"},\"data\":{\"linkPage\":\"/record/accessLog/anomalyBehaviorLog\",\"linkComponent\":\"\",\"query\":\"\",\"note\":\"alertStandardTypeCd:2\"},\"refId\":3,\"createDateStr\":\"2024-11-04 16:43:03\"},{\"id\":5,\"name\":\"점검대시보드) 접근 IP 주소\",\"description\":\"점검대시보드) 개인정보에 접근한 IP 건수\",\"type\":2,\"useYn\":\"Y\",\"deleteYn\":\"N\",\"createUser\":{\"tempStringId\":\"1\",\"userName\":\"Admin\",\"loginId\":\"admin\"},\"data\":{\"linkPage\":\"/record/accessLog/comprehensiveLog\",\"linkComponent\":\"\",\"query\":\"\",\"note\":\"\"},\"refId\":4,\"createDateStr\":\"2024-11-04 16:43:03\"},{\"id\":6,\"name\":\"점검대시보드) 개인정보 접근 사용자\",\"descript"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/widgets/1?deptId=&endDate=20261112&interval=0&intervalUnit=&search=%5Bobject%20Object%5D&startDate=20261105&userAccount=&userId=&userIp=",
+    "st": 200,
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":{\"id\":1,\"name\":\"검색 옵션\",\"description\":\"메인 대시보드 검색옵션\",\"type\":1,\"useYn\":\"Y\",\"deleteYn\":\"N\",\"data\":{\"linkPage\":\"\",\"linkComponent\":\"\",\"linkPath\":\"\",\"note\":\"conditions : [\\r\\n    'dateRangePeriod',\\r\\n    'taskSystem',\\r\\n    'realtimeInterval'\\r\\n]\"},\"refId\":0,\"createDateStr\":\"2024-11-04 16:37:03\",\"_note\":{\"conditions\":[\"dateRangePeriod\",\"taskSystem\",\"realtimeInterval\"]}}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/detection/alerts?page=1&size=200&viewMode=flat",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"size\":200,\"page\":1,\"totalCount\":0,\"viewMode\":\"flat\",\"content\":[]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/chart-data/_axis-availability",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"PERIOD\":true,\"HOUR\":true,\"DOW\":true,\"USER\":true,\"IP\":false,\"DEPT\":false,\"BSN\":true,\"MENU\":false,\"URI\":false}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/rule-limits",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"burstBucketSeconds\":{\"default\":60,\"min\":1,\"max\":86400},\"percentile\":{\"default\":95,\"min\":1,\"max\":99},\"repeatMinCount\":{\"default\":2,\"min\":2},\"deviationMetric\":{\"default\":\"Z_SCORE\"},\"excludeUserWithoutHistory\":{\"default\":false},\"emptyGuardFields\":[{\"field\":\"dept_id\",\"kind\":\"NUMBER\"},{\"field\":\"user_id\",\"kind\":\"NUMBER\"},{\"field\":\"user_account\",\"kind\":\"TEXT\"},{\"field\":\"user_ip\",\"kind\":\"TEXT\"},{\"field\":\"bsn_id\",\"kind\":\"NUMBER\"},{\"field\":\"menu_id\",\"kind\":\"NUMBER\"},{\"field\":\"uri\",\"kind\":\"TEXT\"},{\"field\":\"uri_pattern\",\"kind\":\"TEXT\"},{\"field\":\"user_action_type\",\"kind\":\"NUMBER\"},{\"field\":\"privacy_type\",\"kind\":\"NUMBER\"},{\"field\":\"access_hour\",\"kind\":\"NULL\"},{\"field\":\"day_of_week\",\"kind\":\"NULL\"},{\"field\":\"user_status\",\"kind\":\"NULL\"}],\"excludeBelowMinValue\":{\"default\":false},\"minCurrentValue\":{\"default\":0,\"min\":0,\"max\":1000000000},\"applyGlobalAverage\":{\"default\":false},\"timeUnitSeconds\":{\"MINUTES\":60,\"WEEKS\":604800,\"DAYS\":86400,\"HOURS\":3600},\"timeUnits\":[\"MINUTES\",\"HOURS\",\"DAYS\",\"WEEKS\",\"MONTHS\"],\"monthDays\":{\"1\":{\"min\":28,\"max\":31},\"2\":{\"min\":59,\"max\":62},\"3\":{\"min\":89,\"max\":92},\"4\":{\"min\":120,\"max\":123},\"5\":{\"min\":150,\"max\":153},\"6\":{\"min\":181,\"max\":184},\"7\":{\"min\":212,\"max\":215},\"8\":{\"min\":242,\"max\":245},\"9\":{\"min\":273,\"max\":276},\"10\":{\"min\":303,\"max\":306},\"11\":{\"min\":334,\"max\":337},\"12\":{\"min\":365,\"max\":366},\"13\":{\"min\":393,\"max\":397},\"14\":{\"min\":424,\"max\":428},\"15\":{\"min\":454,\"max\":458},\"16\":{\"min\":485,\"max\":489},\"17\":{\"min\":515,\"max\":519},\"18\":{"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/dashboards/code/anomaly-monitor",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":4,\"code\":\"anomaly-monitor\",\"name\":\"이상행위 모니터링\",\"description\":\"정책별 자동 생성 차트 전용 대시보드\",\"useYn\":\"Y\",\"deleteYn\":\"N\",\"data\":\"{\\\"layouts\\\":[{\\\"items\\\":[],\\\"rowHeight\\\":7,\\\"breakpoint\\\":\\\"md\\\",\\\"numberOfCols\\\":12}],\\\"policyOrderRepacked\\\":true,\\\"tileWidthRepacked\\\":true}\",\"createDate\":\"2026-06-25T09:59:11.63135\",\"createUser\":0,\"modifyDate\":\"2026-11-12T13:02:08.229485\",\"modifyUser\":0,\"revision\":\"20261112130208229485\",\"widgets\":[]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/dashboards/code/anomaly-monitor-overview",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":3,\"code\":\"anomaly-monitor-overview\",\"name\":\"이상행위 모니터링\",\"description\":\"클러스터 토폴로지 + 정책별 분석\",\"useYn\":\"Y\",\"deleteYn\":\"N\",\"data\":\"{\\\"layouts\\\": [{\\\"items\\\": [{\\\"x\\\": 0, \\\"y\\\": 0, \\\"id\\\": 1, \\\"name\\\": \\\"클러스터 토폴로지\\\", \\\"width\\\": 12, \\\"height\\\": 4, \\\"widgetId\\\": 9001}, {\\\"x\\\": 0, \\\"y\\\": 4, \\\"id\\\": 2, \\\"name\\\": \\\"com.analyze.word.alertsBySeverity\\\", \\\"width\\\": 3, \\\"height\\\": 4, \\\"widgetId\\\": 9096}, {\\\"x\\\": 3, \\\"y\\\": 4, \\\"id\\\": 3, \\\"name\\\": \\\"com.analyze.word.alertsByCategory\\\", \\\"width\\\": 3, \\\"height\\\": 4, \\\"widgetId\\\": 9097}, {\\\"x\\\": 6, \\\"y\\\": 4, \\\"id\\\": 5, \\\"name\\\": \\\"com.analyze.word.alertsByBsn\\\", \\\"width\\\": 3, \\\"height\\\": 4, \\\"widgetId\\\": 9090}, {\\\"x\\\": 9, \\\"y\\\": 4, \\\"id\\\": 6, \\\"name\\\": \\\"com.analyze.word.alertsByDept\\\", \\\"width\\\": 3, \\\"height\\\": 4, \\\"widgetId\\\": 9091}, {\\\"x\\\": 0, \\\"y\\\": 8, \\\"id\\\": 7, \\\"name\\\": \\\"com.analyze.word.alertsTrendDaily\\\", \\\"width\\\": 6, \\\"height\\\": 4, \\\"widgetId\\\": 9092}, {\\\"x\\\": 6, \\\"y\\\": 8, \\\"id\\\": 8, \\\"name\\\": \\\"com.analyze.word.alertsSeverityTrendDaily\\\", \\\"width\\\": 6, \\\"height\\\": 4, \\\"widgetId\\\": 9093}, {\\\"x\\\": 0, \\\"y\\\": 12, \\\"id\\\": 9, \\\"name\\\": \\\"com.analyze.word.alertsByPolicy\\\", \\\"width\\\": 4, \\\"height\\\": 4, \\\"widgetId\\\": 9094}, {\\\"x\\\": 4, \\\"y\\\": 12, \\\"id\\\": 10, \\\"name\\\": \\\"com.analyze.word.alertsByDow\\\", \\\"width\\\": 4, \\\"height\\\": 4, \\\"widgetId\\\": 9095}, {\\\"x\\\": 8, \\\"y\\\": 12, \\\"id\\\": 4, \\\"name\\\": \\\"성명 사용자 TOP10\\\", \\\"limit\\\": 5, \\\"width\\\": 4, \\\"height\\\": 4, \\\"widgetId\\\": 9098, \\\"privacyTypeId\\\": 20001}], "
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/rule-limits",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"burstBucketSeconds\":{\"default\":60,\"min\":1,\"max\":86400},\"percentile\":{\"default\":95,\"min\":1,\"max\":99},\"repeatMinCount\":{\"default\":2,\"min\":2},\"deviationMetric\":{\"default\":\"Z_SCORE\"},\"excludeUserWithoutHistory\":{\"default\":false},\"emptyGuardFields\":[{\"field\":\"dept_id\",\"kind\":\"NUMBER\"},{\"field\":\"user_id\",\"kind\":\"NUMBER\"},{\"field\":\"user_account\",\"kind\":\"TEXT\"},{\"field\":\"user_ip\",\"kind\":\"TEXT\"},{\"field\":\"bsn_id\",\"kind\":\"NUMBER\"},{\"field\":\"menu_id\",\"kind\":\"NUMBER\"},{\"field\":\"uri\",\"kind\":\"TEXT\"},{\"field\":\"uri_pattern\",\"kind\":\"TEXT\"},{\"field\":\"user_action_type\",\"kind\":\"NUMBER\"},{\"field\":\"privacy_type\",\"kind\":\"NUMBER\"},{\"field\":\"access_hour\",\"kind\":\"NULL\"},{\"field\":\"day_of_week\",\"kind\":\"NULL\"},{\"field\":\"user_status\",\"kind\":\"NULL\"}],\"excludeBelowMinValue\":{\"default\":false},\"minCurrentValue\":{\"default\":0,\"min\":0,\"max\":1000000000},\"applyGlobalAverage\":{\"default\":false},\"timeUnitSeconds\":{\"MINUTES\":60,\"WEEKS\":604800,\"DAYS\":86400,\"HOURS\":3600},\"timeUnits\":[\"MINUTES\",\"HOURS\",\"DAYS\",\"WEEKS\",\"MONTHS\"],\"monthDays\":{\"1\":{\"min\":28,\"max\":31},\"2\":{\"min\":59,\"max\":62},\"3\":{\"min\":89,\"max\":92},\"4\":{\"min\":120,\"max\":123},\"5\":{\"min\":150,\"max\":153},\"6\":{\"min\":181,\"max\":184},\"7\":{\"min\":212,\"max\":215},\"8\":{\"min\":242,\"max\":245},\"9\":{\"min\":273,\"max\":276},\"10\":{\"min\":303,\"max\":306},\"11\":{\"min\":334,\"max\":337},\"12\":{\"min\":365,\"max\":366},\"13\":{\"min\":393,\"max\":397},\"14\":{\"min\":424,\"max\":428},\"15\":{\"min\":454,\"max\":458},\"16\":{\"min\":485,\"max\":489},\"17\":{\"min\":515,\"max\":519},\"18\":{"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/chart-data/_axis-availability",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"PERIOD\":true,\"HOUR\":true,\"DOW\":true,\"USER\":true,\"IP\":false,\"DEPT\":false,\"BSN\":true,\"MENU\":false,\"URI\":false}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/widgets/9001",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":9001,\"code\":\"CLUSTER_TOPOLOGY_W\",\"name\":\"com.analyze.word.clusterTopology\",\"description\":\"Master/Worker 실시간 토폴로지\",\"type\":2,\"classificationCode\":\"GLOBAL_CLUSTER\",\"useYn\":\"Y\",\"deleteYn\":\"N\",\"refId\":9001,\"createDate\":\"2026-04-28T08:59:01.505306\",\"createUser\":0,\"modifyDate\":\"2026-11-06T17:12:37.007031\",\"modifyUser\":0,\"unusableTimeAxes\":[]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/widgets/9097",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":9097,\"code\":\"OVERVIEW_ALERT_CATEGORY_W\",\"name\":\"com.analyze.word.alertsByCategory\",\"description\":\"com.analyze.desc.alertsByCategory\",\"type\":2,\"classificationCode\":\"OVERVIEW_ALERT\",\"useYn\":\"Y\",\"deleteYn\":\"N\",\"refId\":9097,\"createDate\":\"2026-11-06T17:12:37.007031\",\"createUser\":0,\"modifyDate\":\"2026-11-06T17:12:37.007031\",\"modifyUser\":0,\"unusableTimeAxes\":[]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/widgets/9096",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":9096,\"code\":\"OVERVIEW_ALERT_SEVERITY_W\",\"name\":\"com.analyze.word.alertsBySeverity\",\"description\":\"com.analyze.desc.alertsBySeverity\",\"type\":2,\"classificationCode\":\"OVERVIEW_ALERT\",\"useYn\":\"Y\",\"deleteYn\":\"N\",\"refId\":9096,\"createDate\":\"2026-11-06T17:12:37.007031\",\"createUser\":0,\"modifyDate\":\"2026-11-06T17:12:37.007031\",\"modifyUser\":0,\"unusableTimeAxes\":[]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/widgets/9090",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":9090,\"code\":\"OVERVIEW_ALERT_BSN_W\",\"name\":\"com.analyze.word.alertsByBsn\",\"description\":\"com.analyze.desc.alertsByBsn\",\"type\":2,\"classificationCode\":\"OVERVIEW_ALERT\",\"useYn\":\"Y\",\"deleteYn\":\"N\",\"refId\":9090,\"createDate\":\"2026-11-06T17:12:37.007031\",\"createUser\":0,\"modifyDate\":\"2026-11-06T17:12:37.007031\",\"modifyUser\":0,\"unusableTimeAxes\":[]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/widgets/9091",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":9091,\"code\":\"OVERVIEW_ALERT_DEPT_W\",\"name\":\"com.analyze.word.alertsByDept\",\"description\":\"com.analyze.desc.alertsByDept\",\"type\":2,\"classificationCode\":\"OVERVIEW_ALERT\",\"useYn\":\"Y\",\"deleteYn\":\"N\",\"refId\":9091,\"createDate\":\"2026-11-06T17:12:37.007031\",\"createUser\":0,\"modifyDate\":\"2026-11-06T17:12:37.007031\",\"modifyUser\":0,\"unusableTimeAxes\":[]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/widgets/9092",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":9092,\"code\":\"OVERVIEW_ALERT_DAILY_W\",\"name\":\"com.analyze.word.alertsTrendDaily\",\"description\":\"com.analyze.desc.alertsTrendDaily\",\"type\":2,\"classificationCode\":\"OVERVIEW_ALERT\",\"useYn\":\"Y\",\"deleteYn\":\"N\",\"refId\":9092,\"createDate\":\"2026-11-06T17:12:37.007031\",\"createUser\":0,\"modifyDate\":\"2026-11-06T17:12:37.007031\",\"modifyUser\":0,\"unusableTimeAxes\":[]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/widgets/9095",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":9095,\"code\":\"OVERVIEW_ALERT_DOW_W\",\"name\":\"com.analyze.word.alertsByDow\",\"description\":\"com.analyze.desc.alertsByDow\",\"type\":2,\"classificationCode\":\"OVERVIEW_ALERT\",\"useYn\":\"Y\",\"deleteYn\":\"N\",\"refId\":9095,\"createDate\":\"2026-11-06T17:12:37.007031\",\"createUser\":0,\"modifyDate\":\"2026-11-06T17:12:37.007031\",\"modifyUser\":0,\"unusableTimeAxes\":[]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/widgets/9093",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":9093,\"code\":\"OVERVIEW_ALERT_SEVERITY_DAILY_W\",\"name\":\"com.analyze.word.alertsSeverityTrendDaily\",\"description\":\"com.analyze.desc.alertsSeverityTrendDaily\",\"type\":2,\"classificationCode\":\"OVERVIEW_ALERT\",\"useYn\":\"Y\",\"deleteYn\":\"N\",\"refId\":9093,\"createDate\":\"2026-11-06T17:12:37.007031\",\"createUser\":0,\"modifyDate\":\"2026-11-06T17:12:37.007031\",\"modifyUser\":0,\"unusableTimeAxes\":[]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/widgets/9094",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":9094,\"code\":\"OVERVIEW_ALERT_POLICY_W\",\"name\":\"com.analyze.word.alertsByPolicy\",\"description\":\"com.analyze.desc.alertsByPolicy\",\"type\":2,\"classificationCode\":\"OVERVIEW_ALERT\",\"useYn\":\"Y\",\"deleteYn\":\"N\",\"refId\":9094,\"createDate\":\"2026-11-06T17:12:37.007031\",\"createUser\":0,\"modifyDate\":\"2026-11-06T17:12:37.007031\",\"modifyUser\":0,\"unusableTimeAxes\":[]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/widgets/9098",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":9098,\"code\":\"OVERVIEW_PRIVACY_TYPE_USER_TEMPLATE_W\",\"name\":\"com.analyze.word.privacyTypeUsers\",\"description\":\"privacyTypeId/limit prop 으로 N variant 재사용\",\"type\":2,\"classificationCode\":\"OVERVIEW_PRIVACY\",\"useYn\":\"Y\",\"deleteYn\":\"N\",\"refId\":9098,\"createDate\":\"2026-04-30T19:46:38.113026\",\"createUser\":0,\"modifyDate\":\"2026-11-06T17:12:37.007031\",\"modifyUser\":0,\"unusableTimeAxes\":[]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/policies?size=200",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"content\":[{\"id\":1,\"version\":1,\"name\":\"인사연동 안 된 계정 접속\",\"code\":\"ACCOUNT-01\",\"description\":\"로그인했지만 인사연동에 등록되지 않은 계정의 접속 기록을 찾습니다. 퇴직자·임시 계정이거나 사용자 동기화가 빠진 경우일 수 있습니다.\",\"isActive\":false,\"severity\":3,\"label\":\"com.analyze.word.policyLabelBuiltin\",\"category\":\"WHO\",\"batchCron\":\"0 0 1 * * ?\",\"alertMessage\":\"인사연동 안 된 계정 ${user_account}의 접속이 ${cnt}건입니다\",\"alertMessageDetail\":\"[탐지 내용] 로그인했지만 인사연동에 없는 계정의 접속 기록입니다.\\n[판단 기준] 인사연동 안 된 계정의 접속이 한 건이라도 있으면 잡습니다\\n[확인 사항] 퇴직자나 임시 계정인지, 사용자 정보 동기화가 빠진 것인지 확인하세요.\",\"ruleConfig\":{\"where\":{\"rules\":[{\"type\":\"boolean\",\"field\":\"is_authenticated\",\"value\":true,\"operator\":\"EQUALS\"},{\"type\":\"number\",\"field\":\"user_id\",\"value\":0,\"operator\":\"EQUALS\"}],\"condition\":\"AND\"},\"having\":{\"alias\":\"cnt\",\"label\":\"com.analyze.word.kitMetric_access\",\"operator\":\">=\",\"threshold\":1,\"aggregateType\":\"COUNT\"},\"userParams\":[],\"aggregation\":{\"groupBy\":[\"bsn_id\",\"user_account\",\"user_ip\"],\"timeUnit\":\"DAYS\",\"timeWindow\":1},\"targetDataset\":\"ACCESS_LOG\"},\"createdAt\":\"2026-11-06T17:12:37.225525\",\"updatedAt\":\"2026-11-06T17:12:37.225525\",\"defaultPerspective\":{\"x\":\"IP\",\"y\":\"NONE\",\"type\":\"pie\"},\"explanationRequired\":false,\"executionLogRetentionDays\":90,\"realtimeEnabled\":true,\"alertNotifyEnabled\":false,\"instantBaseline\":false,\"profileStale\":true,\"baselineReadiness\":\"NOT_APPLICABLE\"},{\"id\":2,\"version\":1,\"name\":\"퇴직·휴직자 계정 접속\",\"code\":\"ACCOUNT-02\",\"description\":\"인사연동의 사용자 상태가 고른 상태인 사용자의 접속을 찾습니다. 퇴직자 계정이 살아 있거나, 휴직 · 휴가 중에 계정을 빌려 쓴 경우일 수 있습니다.\",\"isActive\":"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/chart-data/9001/_transient?from=2026-11-12&to=2026-11-12",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":\"181eadf6-d562-4dca-8c74-21dfe03e479e\",\"title\":\"com.analyze.word.clusterTopology\",\"chartType\":\"topologyChart\",\"chartTypeCd\":1003,\"version\":1794456198302,\"analyzeDate\":\"2026-11-12 13:03:18\",\"isRealtime\":true,\"chartId\":9001,\"chartOptions\":{\"_export\":{\"enabled\":false},\"interval\":10000,\"_perspective\":{\"enabled\":false},\"windowSeconds\":300,\"agentCollapseByGroup\":false,\"agentCollapseThreshold\":10},\"chartOptionsAsJson\":\"{\\\"_export\\\": {\\\"enabled\\\": false}, \\\"interval\\\": 10000, \\\"_perspective\\\": {\\\"enabled\\\": false}, \\\"windowSeconds\\\": 300, \\\"agentCollapseByGroup\\\": false, \\\"agentCollapseThreshold\\\": 10}\",\"chartDataSets\":[{\"id\":\"1\",\"name\":\"cluster-topology\",\"chartDatas\":[]}],\"truncated\":false,\"seq\":0}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/chart-data/9096/_transient?from=2026-11-12&to=2026-11-12",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":\"edc26a82-ac6a-44ba-9eaa-b06a528cee56\",\"title\":\"com.analyze.word.alertsBySeverity\",\"chartType\":\"pieBasicChart\",\"chartTypeCd\":500,\"version\":1794456198301,\"analyzeDate\":\"2026-11-12 13:03:18\",\"isRealtime\":true,\"chartId\":9096,\"chartOptions\":{\"chart\":{\"type\":\"pie\",\"height\":\"90%\"},\"colors\":[\"#5B8FF9\",\"#5AD8A6\",\"#F6BD16\",\"#E8684A\",\"#6DC8EC\",\"#9270CA\",\"#FF9D4D\",\"#269A99\",\"#5D7092\",\"#FF99C3\"],\"legend\":{\"position\":\"bottom\"},\"_perspective\":{\"enabled\":false,\"defaultType\":\"pie\"},\"_seriesLabel\":\"com.word.alert_count\"},\"chartOptionsAsJson\":\"{\\\"chart\\\": {\\\"type\\\": \\\"pie\\\", \\\"height\\\": \\\"90%\\\"}, \\\"colors\\\": [\\\"#5B8FF9\\\", \\\"#5AD8A6\\\", \\\"#F6BD16\\\", \\\"#E8684A\\\", \\\"#6DC8EC\\\", \\\"#9270CA\\\", \\\"#FF9D4D\\\", \\\"#269A99\\\", \\\"#5D7092\\\", \\\"#FF99C3\\\"], \\\"legend\\\": {\\\"position\\\": \\\"bottom\\\"}, \\\"_perspective\\\": {\\\"enabled\\\": false, \\\"defaultType\\\": \\\"pie\\\"}, \\\"_seriesLabel\\\": \\\"com.word.alert_count\\\"}\",\"chartDataSets\":[],\"truncated\":false,\"seq\":0}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/chart-data/9090/_transient?from=2026-11-12&to=2026-11-12",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":\"64734677-2efb-4336-9bd3-331342aa1da6\",\"title\":\"com.analyze.word.alertsByBsn\",\"chartType\":\"pieBasicChart\",\"chartTypeCd\":500,\"version\":1794456198302,\"analyzeDate\":\"2026-11-12 13:03:18\",\"isRealtime\":true,\"chartId\":9090,\"chartOptions\":{\"chart\":{\"type\":\"pie\",\"height\":\"90%\"},\"colors\":[\"#5B8FF9\",\"#5AD8A6\",\"#F6BD16\",\"#E8684A\",\"#6DC8EC\",\"#9270CA\",\"#FF9D4D\",\"#269A99\",\"#5D7092\",\"#FF99C3\"],\"legend\":{\"position\":\"bottom\"},\"_perspective\":{\"enabled\":false,\"defaultType\":\"pie\"},\"_seriesLabel\":\"com.word.alert_count\"},\"chartOptionsAsJson\":\"{\\\"chart\\\": {\\\"type\\\": \\\"pie\\\", \\\"height\\\": \\\"90%\\\"}, \\\"colors\\\": [\\\"#5B8FF9\\\", \\\"#5AD8A6\\\", \\\"#F6BD16\\\", \\\"#E8684A\\\", \\\"#6DC8EC\\\", \\\"#9270CA\\\", \\\"#FF9D4D\\\", \\\"#269A99\\\", \\\"#5D7092\\\", \\\"#FF99C3\\\"], \\\"legend\\\": {\\\"position\\\": \\\"bottom\\\"}, \\\"_perspective\\\": {\\\"enabled\\\": false, \\\"defaultType\\\": \\\"pie\\\"}, \\\"_seriesLabel\\\": \\\"com.word.alert_count\\\"}\",\"chartDataSets\":[],\"truncated\":false,\"seq\":0}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/chart-data/9097/_transient?from=2026-11-12&to=2026-11-12",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":\"589d60c0-9dd1-4d84-960f-2d1506b99cdb\",\"title\":\"com.analyze.word.alertsByCategory\",\"chartType\":\"pieBasicChart\",\"chartTypeCd\":500,\"version\":1794456198302,\"analyzeDate\":\"2026-11-12 13:03:18\",\"isRealtime\":true,\"chartId\":9097,\"chartOptions\":{\"chart\":{\"type\":\"pie\",\"height\":\"90%\"},\"colors\":[\"#5B8FF9\",\"#5AD8A6\",\"#F6BD16\",\"#E8684A\",\"#6DC8EC\",\"#9270CA\",\"#FF9D4D\",\"#269A99\",\"#5D7092\",\"#FF99C3\"],\"legend\":{\"position\":\"bottom\"},\"_perspective\":{\"enabled\":false,\"defaultType\":\"pie\"},\"_seriesLabel\":\"com.word.alert_count\"},\"chartOptionsAsJson\":\"{\\\"chart\\\": {\\\"type\\\": \\\"pie\\\", \\\"height\\\": \\\"90%\\\"}, \\\"colors\\\": [\\\"#5B8FF9\\\", \\\"#5AD8A6\\\", \\\"#F6BD16\\\", \\\"#E8684A\\\", \\\"#6DC8EC\\\", \\\"#9270CA\\\", \\\"#FF9D4D\\\", \\\"#269A99\\\", \\\"#5D7092\\\", \\\"#FF99C3\\\"], \\\"legend\\\": {\\\"position\\\": \\\"bottom\\\"}, \\\"_perspective\\\": {\\\"enabled\\\": false, \\\"defaultType\\\": \\\"pie\\\"}, \\\"_seriesLabel\\\": \\\"com.word.alert_count\\\"}\",\"chartDataSets\":[],\"truncated\":false,\"seq\":0}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/chart-data/9092/_transient?from=2026-11-12&to=2026-11-12",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":\"a8c57b91-cf6b-4b11-a718-495acca868ae\",\"title\":\"com.analyze.word.alertsTrendDaily\",\"chartType\":\"lineBasicChart\",\"chartTypeCd\":400,\"version\":1794456198312,\"analyzeDate\":\"2026-11-12 13:03:18\",\"isRealtime\":true,\"chartId\":9092,\"chartOptions\":{\"chart\":{\"type\":\"area\",\"height\":\"90%\"},\"colors\":[\"#5B8FF9\",\"#5AD8A6\",\"#F6BD16\",\"#E8684A\",\"#6DC8EC\",\"#9270CA\",\"#FF9D4D\",\"#269A99\",\"#5D7092\",\"#FF99C3\"],\"_seriesLabel\":\"com.word.alert_count\",\"_perspective\":{\"enabled\":false,\"defaultX\":\"PERIOD\",\"defaultType\":\"area\"}},\"chartOptionsAsJson\":\"{\\\"chart\\\": {\\\"type\\\": \\\"area\\\", \\\"height\\\": \\\"90%\\\"}, \\\"colors\\\": [\\\"#5B8FF9\\\", \\\"#5AD8A6\\\", \\\"#F6BD16\\\", \\\"#E8684A\\\", \\\"#6DC8EC\\\", \\\"#9270CA\\\", \\\"#FF9D4D\\\", \\\"#269A99\\\", \\\"#5D7092\\\", \\\"#FF99C3\\\"], \\\"_seriesLabel\\\": \\\"com.word.alert_count\\\", \\\"_perspective\\\": {\\\"enabled\\\": false, \\\"defaultX\\\": \\\"PERIOD\\\", \\\"defaultType\\\": \\\"area\\\"}}\",\"chartDataSets\":[],\"truncated\":false,\"seq\":0}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/chart-data/9091/_transient?from=2026-11-12&to=2026-11-12",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":\"be3e6002-6136-4fec-b954-a4d8b112eeb7\",\"title\":\"com.analyze.word.alertsByDept\",\"chartType\":\"pieBasicChart\",\"chartTypeCd\":500,\"version\":1794456198312,\"analyzeDate\":\"2026-11-12 13:03:18\",\"isRealtime\":true,\"chartId\":9091,\"chartOptions\":{\"chart\":{\"type\":\"pie\",\"height\":\"90%\"},\"colors\":[\"#5B8FF9\",\"#5AD8A6\",\"#F6BD16\",\"#E8684A\",\"#6DC8EC\",\"#9270CA\",\"#FF9D4D\",\"#269A99\",\"#5D7092\",\"#FF99C3\"],\"legend\":{\"position\":\"bottom\"},\"_perspective\":{\"enabled\":false,\"defaultType\":\"pie\"},\"_seriesLabel\":\"com.word.alert_count\"},\"chartOptionsAsJson\":\"{\\\"chart\\\": {\\\"type\\\": \\\"pie\\\", \\\"height\\\": \\\"90%\\\"}, \\\"colors\\\": [\\\"#5B8FF9\\\", \\\"#5AD8A6\\\", \\\"#F6BD16\\\", \\\"#E8684A\\\", \\\"#6DC8EC\\\", \\\"#9270CA\\\", \\\"#FF9D4D\\\", \\\"#269A99\\\", \\\"#5D7092\\\", \\\"#FF99C3\\\"], \\\"legend\\\": {\\\"position\\\": \\\"bottom\\\"}, \\\"_perspective\\\": {\\\"enabled\\\": false, \\\"defaultType\\\": \\\"pie\\\"}, \\\"_seriesLabel\\\": \\\"com.word.alert_count\\\"}\",\"chartDataSets\":[],\"truncated\":false,\"seq\":0}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/chart-data/9093/_transient?from=2026-11-12&to=2026-11-12",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":\"e4d5e1dc-c0d4-46d9-b8fa-ddd5e4fd2bd3\",\"title\":\"com.analyze.word.alertsSeverityTrendDaily\",\"chartType\":\"lineBasicChart\",\"chartTypeCd\":400,\"version\":1794456198365,\"analyzeDate\":\"2026-11-12 13:03:18\",\"isRealtime\":true,\"chartId\":9093,\"chartOptions\":{\"chart\":{\"type\":\"line\",\"height\":\"90%\"},\"colors\":[\"#E8684A\",\"#F6BD16\",\"#5B8FF9\",\"#5AD8A6\",\"#6DC8EC\",\"#9270CA\",\"#FF9D4D\",\"#269A99\",\"#5D7092\",\"#FF99C3\"],\"_perspective\":{\"enabled\":false,\"defaultX\":\"PERIOD\",\"defaultType\":\"line\"}},\"chartOptionsAsJson\":\"{\\\"chart\\\": {\\\"type\\\": \\\"line\\\", \\\"height\\\": \\\"90%\\\"}, \\\"colors\\\": [\\\"#E8684A\\\", \\\"#F6BD16\\\", \\\"#5B8FF9\\\", \\\"#5AD8A6\\\", \\\"#6DC8EC\\\", \\\"#9270CA\\\", \\\"#FF9D4D\\\", \\\"#269A99\\\", \\\"#5D7092\\\", \\\"#FF99C3\\\"], \\\"_perspective\\\": {\\\"enabled\\\": false, \\\"defaultX\\\": \\\"PERIOD\\\", \\\"defaultType\\\": \\\"line\\\"}}\",\"chartDataSets\":[],\"truncated\":false,\"seq\":0}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/chart-data/9094/_transient?from=2026-11-12&to=2026-11-12",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":\"17ec97e1-9bb6-4e9d-81e3-2343c434f78b\",\"title\":\"com.analyze.word.alertsByPolicy\",\"chartType\":\"barBasicChart\",\"chartTypeCd\":200,\"version\":1794456198372,\"analyzeDate\":\"2026-11-12 13:03:18\",\"isRealtime\":true,\"chartId\":9094,\"chartOptions\":{\"chart\":{\"type\":\"bar\",\"height\":\"90%\"},\"colors\":[\"#5B8FF9\",\"#5AD8A6\",\"#F6BD16\",\"#E8684A\",\"#6DC8EC\",\"#9270CA\",\"#FF9D4D\",\"#269A99\",\"#5D7092\",\"#FF99C3\"],\"legend\":{\"show\":false},\"_seriesLabel\":\"com.word.alert_count\",\"_defaultLimit\":10,\"_perspective\":{\"enabled\":false,\"defaultType\":\"bar\"}},\"chartOptionsAsJson\":\"{\\\"chart\\\": {\\\"type\\\": \\\"bar\\\", \\\"height\\\": \\\"90%\\\"}, \\\"colors\\\": [\\\"#5B8FF9\\\", \\\"#5AD8A6\\\", \\\"#F6BD16\\\", \\\"#E8684A\\\", \\\"#6DC8EC\\\", \\\"#9270CA\\\", \\\"#FF9D4D\\\", \\\"#269A99\\\", \\\"#5D7092\\\", \\\"#FF99C3\\\"], \\\"legend\\\": {\\\"show\\\": false}, \\\"_seriesLabel\\\": \\\"com.word.alert_count\\\", \\\"_defaultLimit\\\": 10, \\\"_perspective\\\": {\\\"enabled\\\": false, \\\"defaultType\\\": \\\"bar\\\"}}\",\"chartDataSets\":[],\"truncated\":false,\"seq\":0}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/chart-data/9095/_transient?from=2026-11-12&to=2026-11-12",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":\"a93bc2b6-b6b8-497f-a300-f605ab6dcafc\",\"title\":\"com.analyze.word.alertsByDow\",\"chartType\":\"columnBasicChart\",\"chartTypeCd\":300,\"version\":1794456198373,\"analyzeDate\":\"2026-11-12 13:03:18\",\"isRealtime\":true,\"chartId\":9095,\"chartOptions\":{\"chart\":{\"type\":\"bar\",\"height\":\"90%\"},\"colors\":[\"#5B8FF9\",\"#5AD8A6\",\"#F6BD16\",\"#E8684A\",\"#6DC8EC\",\"#9270CA\",\"#FF9D4D\",\"#269A99\",\"#5D7092\",\"#FF99C3\"],\"plotOptions\":{\"bar\":{\"distributed\":true,\"borderRadius\":2}},\"legend\":{\"show\":false},\"_seriesLabel\":\"com.word.alert_count\",\"_perspective\":{\"enabled\":false,\"defaultX\":\"DOW\",\"defaultType\":\"column\"}},\"chartOptionsAsJson\":\"{\\\"chart\\\": {\\\"type\\\": \\\"bar\\\", \\\"height\\\": \\\"90%\\\"}, \\\"colors\\\": [\\\"#5B8FF9\\\", \\\"#5AD8A6\\\", \\\"#F6BD16\\\", \\\"#E8684A\\\", \\\"#6DC8EC\\\", \\\"#9270CA\\\", \\\"#FF9D4D\\\", \\\"#269A99\\\", \\\"#5D7092\\\", \\\"#FF99C3\\\"], \\\"plotOptions\\\": {\\\"bar\\\": {\\\"distributed\\\": true, \\\"borderRadius\\\": 2}}, \\\"legend\\\": {\\\"show\\\": false}, \\\"_seriesLabel\\\": \\\"com.word.alert_count\\\", \\\"_perspective\\\": {\\\"enabled\\\": false, \\\"defaultX\\\": \\\"DOW\\\", \\\"defaultType\\\": \\\"column\\\"}}\",\"chartDataSets\":[],\"truncated\":false,\"seq\":0}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/chart-data/9098/_transient?from=2026-11-12&limit=5&privacyTypeId=20001&to=2026-11-12",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"id\":\"16294db3-c671-4db6-9e48-42fea5cd0963\",\"title\":\"com.analyze.word.privacyTypeUsers\",\"chartType\":\"columnBasicChart\",\"chartTypeCd\":300,\"version\":1794456198376,\"analyzeDate\":\"2026-11-12 13:03:18\",\"isRealtime\":false,\"chartId\":9098,\"chartOptions\":{\"chart\":{\"type\":\"bar\",\"height\":\"90%\",\"toolbar\":{\"show\":false}},\"legend\":{\"show\":false},\"_export\":{\"enabled\":false},\"_drillDown\":{\"params\":{\"privacyType\":\"itemParams.privacyTypeId\",\"userAccount\":\"categoryId\"},\"specialDialog\":\"privacy\"},\"dataLabels\":{\"style\":{\"colors\":[\"#fff\"],\"fontSize\":\"10px\",\"fontWeight\":\"700\"},\"enabled\":true,\"offsetY\":0,\"dropShadow\":{\"top\":1,\"blur\":1,\"left\":1,\"enabled\":true,\"opacity\":0.45}},\"plotOptions\":{\"bar\":{\"dataLabels\":{\"position\":\"center\"},\"horizontal\":false,\"distributed\":true,\"borderRadius\":2}},\"_perspective\":{\"enabled\":false},\"_layoutParams\":{\"limit\":{\"label\":\"Top\",\"default\":10,\"options\":[{\"label\":\"Top 5\",\"value\":5},{\"label\":\"Top 10\",\"value\":10},{\"label\":\"Top 20\",\"value\":20},{\"label\":\"Top 50\",\"value\":50}]},\"privacyTypeId\":{\"label\":\"com.analyze.word.kitTool_privacy_type\",\"default\":20001,\"lookupApi\":\"/api/v1/policy-codes?category=scan_object_option_type&minId=20000\"}}},\"chartOptionsAsJson\":\"{\\\"chart\\\": {\\\"type\\\": \\\"bar\\\", \\\"height\\\": \\\"90%\\\", \\\"toolbar\\\": {\\\"show\\\": false}}, \\\"legend\\\": {\\\"show\\\": false}, \\\"_export\\\": {\\\"enabled\\\": false}, \\\"_drillDown\\\": {\\\"params\\\": {\\\"privacyType\\\": \\\"itemParams.privacyTypeId\\\", \\\"userAccount\\\": \\\"categoryId\\\"}, \\\"specialDialog\\\": \\\""
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/lookup/user-by-login?ids=user014%2Cuser013",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":[{\"value\":\"user013\",\"label\":\"사원_13\"},{\"value\":\"user014\",\"label\":\"사원_14\"}]}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/policy-codes?category=scan_object_option_type&minId=20000",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":[{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20001,\"code\":\"주민등록번호\",\"name\":\"common.code.scan.filter.option.type.resident.registration\",\"sortOrder\":20001},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20002,\"code\":\"외국인등록번호\",\"name\":\"common.code.scan.filter.option.type.foreign.registration\",\"sortOrder\":20002},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20003,\"code\":\"신용카드번호\",\"name\":\"common.code.scan.filter.option.type.credit.card\",\"sortOrder\":20003},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20004,\"code\":\"사업자등록번호\",\"name\":\"common.code.scan.filter.option.type.business.registration\",\"sortOrder\":20004},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20005,\"code\":\"조합주민번호\",\"name\":\"common.code.scan.filter.option.type.company.registration\",\"sortOrder\":20005},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20006,\"code\":\"여권번호(신)\",\"name\":\"common.code.scan.filter.option.type.new.passport\",\"sortOrder\":20006},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20007,\"code\":\"여권번호(구)\",\"name\":\"common.code.scan.filter.option.type.old.passport\",\"sortOrder\":20007},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20008,\"code\":\"군번\",\"name\":\"common.code.scan.filter.option.type.military.number\",\"sortOrder\":20008},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20009,\"code\":\"의료보험번호\",\"name\":\"common.co"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/policy-codes?category=scan_object_option_type&minId=20000",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":[{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20001,\"code\":\"주민등록번호\",\"name\":\"common.code.scan.filter.option.type.resident.registration\",\"sortOrder\":20001},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20002,\"code\":\"외국인등록번호\",\"name\":\"common.code.scan.filter.option.type.foreign.registration\",\"sortOrder\":20002},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20003,\"code\":\"신용카드번호\",\"name\":\"common.code.scan.filter.option.type.credit.card\",\"sortOrder\":20003},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20004,\"code\":\"사업자등록번호\",\"name\":\"common.code.scan.filter.option.type.business.registration\",\"sortOrder\":20004},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20005,\"code\":\"조합주민번호\",\"name\":\"common.code.scan.filter.option.type.company.registration\",\"sortOrder\":20005},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20006,\"code\":\"여권번호(신)\",\"name\":\"common.code.scan.filter.option.type.new.passport\",\"sortOrder\":20006},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20007,\"code\":\"여권번호(구)\",\"name\":\"common.code.scan.filter.option.type.old.passport\",\"sortOrder\":20007},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20008,\"code\":\"군번\",\"name\":\"common.code.scan.filter.option.type.military.number\",\"sortOrder\":20008},{\"categoryId\":41600,\"category\":\"scan_object_option_type\",\"codeId\":20009,\"code\":\"의료보험번호\",\"name\":\"common.co"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/topology/snapshot?agentCollapseThreshold=10&windowSeconds=300",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"generatedAt\":\"2026-11-12T13:03:52.654027\",\"nodes\":[{\"nodeId\":\"localhost.localdomain\",\"nodeName\":\"localhost.localdomain\",\"nodeRole\":\"MASTER\",\"cpu\":0.83,\"mem\":80.91,\"disk\":8.25,\"cpuCoreCount\":16,\"memTotalBytes\":22502858752,\"memUsedBytes\":18206584832,\"diskTotalBytes\":75094818816,\"diskUsedBytes\":6196441088,\"status\":\"WARN\",\"metricTime\":\"2026-11-12T13:03:52.562246\",\"retirable\":false},{\"nodeId\":\"agent-group\",\"nodeName\":\"AGENT ×13\",\"nodeRole\":\"AGENT_GROUP\",\"status\":\"DOWN\",\"metricTime\":\"2026-11-12T13:03:34.174738\",\"retirable\":false}],\"edges\":[],\"meta\":{\"windowSeconds\":300,\"source\":\"logcatch.node_metric_ts\",\"agentCount\":13,\"agentCollapseThreshold\":10,\"agentCollapsed\":true,\"agentGroups\":[{\"groupNodeId\":\"agent-group\",\"count\":13,\"worstStatus\":\"DOWN\",\"cpuStats\":{},\"memStats\":{},\"diskStats\":{},\"memberIds\":[\"agent-1\",\"agent-2\",\"agent-3\",\"agent-4\",\"agent-5\",\"agent-6\",\"agent-7\",\"agent-8\",\"agent-9\",\"agent-10\",\"agent-11\",\"agent-12\",\"agent-13\"],\"worstMemberIds\":[\"agent-2\",\"agent-5\",\"agent-7\",\"agent-11\",\"agent-13\"]}]},\"canRetire\":true}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/rule-limits",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"burstBucketSeconds\":{\"default\":60,\"min\":1,\"max\":86400},\"percentile\":{\"default\":95,\"min\":1,\"max\":99},\"repeatMinCount\":{\"default\":2,\"min\":2},\"deviationMetric\":{\"default\":\"Z_SCORE\"},\"excludeUserWithoutHistory\":{\"default\":false},\"emptyGuardFields\":[{\"field\":\"dept_id\",\"kind\":\"NUMBER\"},{\"field\":\"user_id\",\"kind\":\"NUMBER\"},{\"field\":\"user_account\",\"kind\":\"TEXT\"},{\"field\":\"user_ip\",\"kind\":\"TEXT\"},{\"field\":\"bsn_id\",\"kind\":\"NUMBER\"},{\"field\":\"menu_id\",\"kind\":\"NUMBER\"},{\"field\":\"uri\",\"kind\":\"TEXT\"},{\"field\":\"uri_pattern\",\"kind\":\"TEXT\"},{\"field\":\"user_action_type\",\"kind\":\"NUMBER\"},{\"field\":\"privacy_type\",\"kind\":\"NUMBER\"},{\"field\":\"access_hour\",\"kind\":\"NULL\"},{\"field\":\"day_of_week\",\"kind\":\"NULL\"},{\"field\":\"user_status\",\"kind\":\"NULL\"}],\"excludeBelowMinValue\":{\"default\":false},\"minCurrentValue\":{\"default\":0,\"min\":0,\"max\":1000000000},\"applyGlobalAverage\":{\"default\":false},\"timeUnitSeconds\":{\"MINUTES\":60,\"WEEKS\":604800,\"DAYS\":86400,\"HOURS\":3600},\"timeUnits\":[\"MINUTES\",\"HOURS\",\"DAYS\",\"WEEKS\",\"MONTHS\"],\"monthDays\":{\"1\":{\"min\":28,\"max\":31},\"2\":{\"min\":59,\"max\":62},\"3\":{\"min\":89,\"max\":92},\"4\":{\"min\":120,\"max\":123},\"5\":{\"min\":150,\"max\":153},\"6\":{\"min\":181,\"max\":184},\"7\":{\"min\":212,\"max\":215},\"8\":{\"min\":242,\"max\":245},\"9\":{\"min\":273,\"max\":276},\"10\":{\"min\":303,\"max\":306},\"11\":{\"min\":334,\"max\":337},\"12\":{\"min\":365,\"max\":366},\"13\":{\"min\":393,\"max\":397},\"14\":{\"min\":424,\"max\":428},\"15\":{\"min\":454,\"max\":458},\"16\":{\"min\":485,\"max\":489},\"17\":{\"min\":515,\"max\":519},\"18\":{"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/policies/lookup",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":[{\"code\":\"LOCATION-05\",\"name\":\"IP 접속 집중\",\"id\":12},{\"code\":\"VOLUME-01\",\"name\":\"auto_소명_반려\",\"id\":38},{\"code\":\"VOLUME-01\",\"name\":\"auto_소명_승인\",\"id\":37},{\"code\":\"VOLUME-01\",\"name\":\"auto_소명_접속량 과다\",\"id\":36},{\"code\":\"VOLUME-02\",\"name\":\"개인정보 사용량 과다\",\"id\":26},{\"code\":\"VOLUME-09\",\"name\":\"개인정보 사용량 집단 평균 대비 과다\",\"id\":33},{\"code\":\"VOLUME-06\",\"name\":\"개인정보 사용량 평소 대비 급증\",\"id\":30},{\"code\":\"VOLUME-04\",\"name\":\"개인정보 한 번에 다수 조회\",\"id\":28},{\"code\":\"LOCATION-07\",\"name\":\"단시간 IP 인증 요청 집중\",\"id\":14},{\"code\":\"LOCATION-03\",\"name\":\"단시간 다중 IP 접속\",\"id\":10},{\"code\":\"ACTION-05\",\"name\":\"단시간 다중 화면 조회\",\"id\":23},{\"code\":\"ACCOUNT-03\",\"name\":\"단일 IP 다중 계정 접속\",\"id\":3},{\"code\":\"ACTION-06\",\"name\":\"단일 메뉴 단시간 집중 조회\",\"id\":24},{\"code\":\"SUBJECT-03\",\"name\":\"동일 정보주체 반복 조회\",\"id\":17},{\"code\":\"VOLUME-11\",\"name\":\"부서 접속량 순위\",\"id\":35},{\"code\":\"ACCOUNT-04\",\"name\":\"비로그인 사용자 개인정보 조회\",\"id\":4},{\"code\":\"LOCATION-01\",\"name\":\"비인가 IP 대역 접속\",\"id\":8},{\"code\":\"LOCATION-06\",\"name\":\"신규 IP 접속\",\"id\":13},{\"code\":\"SUBJECT-04\",\"name\":\"신규 개인정보 유형 조회\",\"id\":18},{\"code\":\"ACTION-03\",\"name\":\"신규 메뉴 접속\",\"id\":21},{\"code\":\"TIME-03\",\"name\":\"신규 시간대 접속\",\"id\":7},{\"code\":\"ACTION-02\",\"name\":\"신규 업무시스템 접속\",\"id\":20},{\"code\":\"ACTION-04\",\"name\":\"신규 행위 유형 사용\",\"id\":22},{\"code\":\"TIME-02\",\"name\":\"업무시간 외 개인정보 조회\",\"id\":6},{\"code\":\"TIME-01\",\"name\":\"업무시간 외 접속\",\"id\":5},{\"code\":\"SUBJECT-02\",\"name\":\"열람 제한 개인정보 조회\",\"id\":16},{\"code\":\"ACCOUNT-01\",\"name\":\"인사연동 안 된 계정 접속\",\"id\":1},{\"code\":\"VOLUME-01\",\"name\":\"접속량 과다\",\"id\":25},{\"code\":\"VOLUME-08\",\"name\":"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/detection/alerts?page=1&size=25&truncate=day&viewMode=policy",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"size\":25,\"page\":1,\"totalCount\":0,\"viewMode\":\"policy\",\"content\":[]}}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/rule-limits",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"burstBucketSeconds\":{\"default\":60,\"min\":1,\"max\":86400},\"percentile\":{\"default\":95,\"min\":1,\"max\":99},\"repeatMinCount\":{\"default\":2,\"min\":2},\"deviationMetric\":{\"default\":\"Z_SCORE\"},\"excludeUserWithoutHistory\":{\"default\":false},\"emptyGuardFields\":[{\"field\":\"dept_id\",\"kind\":\"NUMBER\"},{\"field\":\"user_id\",\"kind\":\"NUMBER\"},{\"field\":\"user_account\",\"kind\":\"TEXT\"},{\"field\":\"user_ip\",\"kind\":\"TEXT\"},{\"field\":\"bsn_id\",\"kind\":\"NUMBER\"},{\"field\":\"menu_id\",\"kind\":\"NUMBER\"},{\"field\":\"uri\",\"kind\":\"TEXT\"},{\"field\":\"uri_pattern\",\"kind\":\"TEXT\"},{\"field\":\"user_action_type\",\"kind\":\"NUMBER\"},{\"field\":\"privacy_type\",\"kind\":\"NUMBER\"},{\"field\":\"access_hour\",\"kind\":\"NULL\"},{\"field\":\"day_of_week\",\"kind\":\"NULL\"},{\"field\":\"user_status\",\"kind\":\"NULL\"}],\"excludeBelowMinValue\":{\"default\":false},\"minCurrentValue\":{\"default\":0,\"min\":0,\"max\":1000000000},\"applyGlobalAverage\":{\"default\":false},\"timeUnitSeconds\":{\"MINUTES\":60,\"WEEKS\":604800,\"DAYS\":86400,\"HOURS\":3600},\"timeUnits\":[\"MINUTES\",\"HOURS\",\"DAYS\",\"WEEKS\",\"MONTHS\"],\"monthDays\":{\"1\":{\"min\":28,\"max\":31},\"2\":{\"min\":59,\"max\":62},\"3\":{\"min\":89,\"max\":92},\"4\":{\"min\":120,\"max\":123},\"5\":{\"min\":150,\"max\":153},\"6\":{\"min\":181,\"max\":184},\"7\":{\"min\":212,\"max\":215},\"8\":{\"min\":242,\"max\":245},\"9\":{\"min\":273,\"max\":276},\"10\":{\"min\":303,\"max\":306},\"11\":{\"min\":334,\"max\":337},\"12\":{\"min\":365,\"max\":366},\"13\":{\"min\":393,\"max\":397},\"14\":{\"min\":424,\"max\":428},\"15\":{\"min\":454,\"max\":458},\"16\":{\"min\":485,\"max\":489},\"17\":{\"min\":515,\"max\":519},\"18\":{"
+  }
+]

@@ -1,0 +1,84 @@
+{
+  "url": "https://10.10.54.21:18443/logcatch/approval/submit/anomaly-alerts",
+  "headlines": [
+    "경보 (합계 7건)"
+  ],
+  "buttons": [
+    "점검",
+    "이력",
+    "현황",
+    "leak_add 자산",
+    "assignment 보고",
+    "보관",
+    "verified_user 분석",
+    "policy 검출",
+    "운영",
+    "소명",
+    "info",
+    "wb_sunny",
+    "ADMIN 님",
+    "이상행위 경보",
+    "소명 요청 자동화",
+    "전체 사용자",
+    "내 경보만",
+    "search 검색",
+    "전체",
+    "심각",
+    "경계",
+    "주의",
+    "오늘",
+    "1주일",
+    "1개월",
+    "3개월",
+    "1년",
+    "history제외",
+    "mail_outline 소명 요청",
+    "chevron_left",
+    "chevron_right"
+  ],
+  "inputs": [
+    {
+      "type": "text",
+      "aria": null,
+      "ph": "정책 선택",
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": null,
+      "ph": "메시지 + 정책명 검색",
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "date",
+      "aria": null,
+      "ph": null,
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "date",
+      "aria": null,
+      "ph": null,
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": null,
+      "ph": null,
+      "val": "",
+      "checked": null
+    }
+  ],
+  "th": [],
+  "rows": [],
+  "cards": [
+    "chevron_right check_box_outline_blank 주의 person 사원_14 (user014) 7 auto_소명_반려, auto_소명_승인, auto_소명_접속량 과다 mail_outline 소명 요청"
+  ],
+  "menus": [],
+  "dialogs": [],
+  "snack": []
+}

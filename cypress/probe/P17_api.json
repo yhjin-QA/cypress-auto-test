@@ -1,0 +1,30 @@
+[
+  {
+    "who": "관리자 — 탭 전환 · 설정 카드 (",
+    "m": "GET",
+    "url": "/logcatch/api/v1/approval/explanation-request/access",
+    "st": 200,
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":{\"canEdit\":true}}"
+  },
+  {
+    "who": "관리자 — 탭 전환 · 설정 카드 (",
+    "m": "GET",
+    "url": "/logcatch/api/v1/anomaly/detection/alerts?desc=false&mode=explanations&page=1&size=20&truncate=day&viewMode=auto",
+    "st": 200,
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"size\":20,\"page\":1,\"totalCount\":1,\"viewMode\":\"user\",\"content\":[{\"group_value\":\"2625\",\"max_severity\":3,\"alert_count\":7,\"count_minor\":7,\"first_slot\":\"2026-07-06T15:00:00.000+00:00\",\"policy_names\":\"auto_소명_반려, auto_소명_승인, auto_소명_접속량 과다\",\"count_major\":0,\"last_slot\":\"2026-11-11T15:00:00.000+00:00\",\"last_created\":\"2026-11-12T05:08:00.054+00:00\",\"policy_count\":3,\"count_critical\":0}]}}"
+  },
+  {
+    "who": "관리자 — 탭 전환 · 설정 카드 (",
+    "m": "GET",
+    "url": "/logcatch/api/v1/approval/explanation-request/access",
+    "st": 200,
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":{\"canEdit\":true}}"
+  },
+  {
+    "who": "관리자 — 탭 전환 · 설정 카드 (",
+    "m": "GET",
+    "url": "/logcatch/api/v1/approval/explanation-request/schedule",
+    "st": 200,
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":{\"id\":1,\"classificationCode\":\"explanations\",\"enabled\":true,\"thresholdDays\":1,\"resendIntervalDays\":1,\"sendHour\":10,\"attachExcel\":true,\"updatedBy\":1,\"updatedAt\":\"2026-10-08 17:28:41\"}}"
+  }
+]

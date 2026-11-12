@@ -200,10 +200,29 @@ describe('04_Depth_소명_요청자동화', () => {
         const poll = (left) => cy.request({ url: MAILPIT, failOnStatusCode: false }).then((res) => {
           const fresh = ((res.body && res.body.messages) || []).filter((m) => !before.includes(m.ID) && /소명/.test(m.Subject || ''));
           if (fresh.length < n && left > 0) { cy.wait(5000); poll(left - 1); return; }
-          const list = fresh.map((m) => ({ subject: m.Subject, to: (m.To || []).map((x) => x.Address), attachments: m.Attachments, created: m.Created }));
+          const list = fresh.map((m) => ({ id: m.ID, subject: m.Subject, to: (m.To || []).map((x) => x.Address), attachments: m.Attachments, created: m.Created }));
           cy.writeFile('cypress/probe/D04A_4_새메일.json', { sent: n, mails: list });
           expect(fresh.length, `Mailpit 새 소명 메일 수 = 발송 완료 ${n}건`).to.eq(n);
           if (n > 0 && ORIG.attachExcel) list.forEach((m) => expect(m.attachments, `「${m.subject}」 엑셀 첨부`).to.be.greaterThan(0));
+          // [2026-11-12] 메일 본문 · 첨부 (사용자 확인 내용 기준)
+          //   「아래 내용을 확인 후 로그캐치에 접속하여 소명해 주시기 바랍니다.」 · [ 업무 시스템 ] · [ 부서 ] · [ 사용자 ] · [ 발생 기간 ] · [ 정책 위반 사항 ]
+          //   [ 심각 ] / [ 경계 ] / [ 주의 ] N건 · 「[자동 안내] <임계 기간>일이 경과한 미소명 이상행위가 있어 소명을 요청드립니다.」 · 첨부 이상행위_이력.xlsx
+          list.forEach((m) => {
+            cy.request({ url: `http://10.10.54.26:8025/api/v1/message/${m.id}`, failOnStatusCode: false }).then((r) => {
+              const body = String((r.body && (r.body.Text || r.body.HTML)) || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+              const files = ((r.body && r.body.Attachments) || []).map((a) => ({ name: a.FileName, type: a.ContentType, size: a.Size }));
+              const sev = ['심각', '경계', '주의'].map((k) => parseInt((body.match(new RegExp(`\\[\\s*${k}\\s*\\]\\s*[:：∶]?\\s*(\\d+)\\s*건`)) || [])[1] || '-1', 10));
+              cy.writeFile(`cypress/probe/D04A_4_메일본문_${m.to[0] || 'unknown'}.json`, { to: m.to, files, sev, body: body.slice(0, 2000) });
+              const user = (m.to[0] || '').split('@')[0];
+              expect(body, '안내 문구').to.include('소명해 주시기 바랍니다');
+              ['업무 시스템', '부서', '사용자', '발생 기간', '정책 위반 사항'].forEach((k) => expect(body, `[ ${k} ] 항목`).to.match(new RegExp(`\\[\\s*${k}\\s*\\]`)));
+              if (user) expect(body, '[ 사용자 ] 에 받는 사람 계정').to.include(`(${user})`);
+              sev.forEach((v, i) => expect(v, `[ ${['심각', '경계', '주의'][i]} ] 건수`).to.be.at.least(0));
+              expect(sev.reduce((a, b) => a + b, 0), '위험도별 건수 합').to.be.greaterThan(0);
+              expect(body, '자동 안내 문구의 임계 기간').to.include(`${ORIG.thresholdDays}일이 경과한 미소명 이상행위`);
+              if (ORIG.attachExcel) expect(files.map((x) => x.name), '첨부 파일').to.include('이상행위_이력.xlsx');
+            });
+          });
         });
         poll(6);
       });

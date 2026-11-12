@@ -1,0 +1,45 @@
+{
+  "url": "https://10.10.54.21:18443/logcatch/analyze/profiling/result",
+  "headlines": [],
+  "buttons": [
+    "점검",
+    "이력",
+    "현황",
+    "leak_add 자산",
+    "assignment 보고",
+    "보관",
+    "verified_user 분석",
+    "policy 검출",
+    "운영",
+    "소명",
+    "info",
+    "wb_sunny",
+    "ADMIN 님",
+    "프로파일링 정책",
+    "프로파일링 결과",
+    "▦ 카드 ▾",
+    "expand_more 더 보기 24 / 62"
+  ],
+  "inputs": [
+    {
+      "type": "text",
+      "aria": "프로파일 정책",
+      "ph": null,
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": "검색",
+      "ph": "이름 · 사용자 계정 · 부서 · 업무시스템으로 찾기",
+      "val": "",
+      "checked": null
+    }
+  ],
+  "th": [],
+  "rows": [],
+  "cards": [],
+  "menus": [],
+  "dialogs": [],
+  "snack": []
+}

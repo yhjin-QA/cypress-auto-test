@@ -1,0 +1,64 @@
+{
+  "url": "https://10.10.54.21:18443/logcatch/approval/submit/explanation-automation",
+  "headlines": [
+    "알림"
+  ],
+  "buttons": [
+    "확인",
+    "점검",
+    "이력",
+    "현황",
+    "leak_add 자산",
+    "assignment 보고",
+    "보관",
+    "verified_user 분석",
+    "policy 검출",
+    "운영",
+    "소명",
+    "info",
+    "wb_sunny",
+    "ADMIN 님",
+    "이상행위 경보",
+    "소명 요청 자동화",
+    "save 저장",
+    "send 지금 실행"
+  ],
+  "inputs": [
+    {
+      "type": "checkbox",
+      "aria": null,
+      "ph": null,
+      "val": "",
+      "checked": "true"
+    },
+    {
+      "type": "number",
+      "aria": null,
+      "ph": null,
+      "val": "0",
+      "checked": null
+    },
+    {
+      "type": "number",
+      "aria": null,
+      "ph": null,
+      "val": "1",
+      "checked": null
+    },
+    {
+      "type": "checkbox",
+      "aria": null,
+      "ph": null,
+      "val": "",
+      "checked": "true"
+    }
+  ],
+  "th": [],
+  "rows": [],
+  "cards": [],
+  "menus": [],
+  "dialogs": [
+    "알림 미소명 임계 기간은 1~365일 사이여야 합니다. 확인"
+  ],
+  "snack": []
+}

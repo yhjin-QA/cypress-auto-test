@@ -1,0 +1,93 @@
+{
+  "url": "https://10.10.54.21:18443/logcatch/analyze/customAnomalyBehaviorPolicyResult",
+  "headlines": [
+    "경보 (정책 0건)"
+  ],
+  "buttons": [
+    "점검",
+    "이력",
+    "현황",
+    "leak_add 자산",
+    "assignment 보고",
+    "보관",
+    "verified_user 분석",
+    "policy 검출",
+    "운영",
+    "소명",
+    "info",
+    "wb_sunny",
+    "ADMIN 님",
+    "사용자 이상행위 정책",
+    "사용자 이상행위 결과",
+    "사용자 이상행위 대시보드",
+    "외부 연동 설정",
+    "search 검색",
+    "전체",
+    "심각",
+    "경계",
+    "주의",
+    "오늘",
+    "최근 7일",
+    "최근 30일",
+    "3개월",
+    "1년",
+    "사용",
+    "미사용",
+    "visibility_off제외",
+    "history제외",
+    "list",
+    "policy 정책",
+    "person",
+    "business",
+    "dns",
+    "menu_book",
+    "link",
+    "language",
+    "⏳ 그룹 > 타임라인 ▾",
+    "chevron_left",
+    "chevron_right"
+  ],
+  "inputs": [
+    {
+      "type": "text",
+      "aria": null,
+      "ph": "정책 선택",
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": null,
+      "ph": "메시지 + 정책명 검색",
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "date",
+      "aria": null,
+      "ph": null,
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "date",
+      "aria": null,
+      "ph": null,
+      "val": "",
+      "checked": null
+    },
+    {
+      "type": "text",
+      "aria": null,
+      "ph": null,
+      "val": "",
+      "checked": null
+    }
+  ],
+  "th": [],
+  "rows": [],
+  "cards": [],
+  "menus": [],
+  "dialogs": [],
+  "snack": []
+}

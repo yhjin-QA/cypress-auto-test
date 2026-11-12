@@ -1,0 +1,170 @@
+{
+  "sections": [
+    "전체 현황 visibility_off 숨김 8 표시중 edit 레이아웃 편집"
+  ],
+  "count": 10,
+  "cards": [
+    {
+      "cls": "anomaly-widget-card widget_content v-card v-card--flat v-sheet theme--dark",
+      "visible": true,
+      "title": "클러스터 토폴로지",
+      "body": "▶ 시작 ⛢ 클러스터 토폴로지 상단 ▶ 시작 버튼을 누르면 실시간 모니터링이 켜집니다.",
+      "actions": [
+        "anomaly-widget-card__export.anomaly-widget-card__enlarge|zoom_out_map",
+        "v-icon.material-icons.theme--dark|zoom_out_map",
+        "anomaly-widget-card__export.anomaly-widget-card__hide|visibility",
+        "v-icon.material-icons.theme--dark|visibility"
+      ]
+    },
+    {
+      "cls": "anomaly-widget-card widget_content v-card v-card--flat v-sheet theme--dark anomaly-widget-card--hidden",
+      "visible": true,
+      "title": "위험도별 경보",
+      "body": "bar_chart 선택한 기간에 이상행위가 없습니다.",
+      "actions": [
+        "anomaly-widget-card__export.anomaly-widget-card__enlarge|zoom_out_map",
+        "v-icon.material-icons.theme--dark|zoom_out_map",
+        "anomaly-widget-card__export.anomaly-widget-card__hide.is-active|visibility_off",
+        "v-icon.material-icons.theme--dark|visibility_off"
+      ]
+    },
+    {
+      "cls": "anomaly-widget-card widget_content v-card v-card--flat v-sheet theme--dark anomaly-widget-card--hidden",
+      "visible": true,
+      "title": "범주별 경보",
+      "body": "bar_chart 선택한 기간에 이상행위가 없습니다.",
+      "actions": [
+        "anomaly-widget-card__export.anomaly-widget-card__enlarge|zoom_out_map",
+        "v-icon.material-icons.theme--dark|zoom_out_map",
+        "anomaly-widget-card__export.anomaly-widget-card__hide.is-active|visibility_off",
+        "v-icon.material-icons.theme--dark|visibility_off"
+      ]
+    },
+    {
+      "cls": "anomaly-widget-card widget_content v-card v-card--flat v-sheet theme--dark anomaly-widget-card--hidden",
+      "visible": true,
+      "title": "업무시스템별 경보",
+      "body": "bar_chart 선택한 기간에 이상행위가 없습니다.",
+      "actions": [
+        "anomaly-widget-card__export.anomaly-widget-card__enlarge|zoom_out_map",
+        "v-icon.material-icons.theme--dark|zoom_out_map",
+        "anomaly-widget-card__export.anomaly-widget-card__hide.is-active|visibility_off",
+        "v-icon.material-icons.theme--dark|visibility_off"
+      ]
+    },
+    {
+      "cls": "anomaly-widget-card widget_content v-card v-card--flat v-sheet theme--dark anomaly-widget-card--hidden",
+      "visible": true,
+      "title": "부서별 경보",
+      "body": "bar_chart 선택한 기간에 이상행위가 없습니다.",
+      "actions": [
+        "anomaly-widget-card__export.anomaly-widget-card__enlarge|zoom_out_map",
+        "v-icon.material-icons.theme--dark|zoom_out_map",
+        "anomaly-widget-card__export.anomaly-widget-card__hide.is-active|visibility_off",
+        "v-icon.material-icons.theme--dark|visibility_off"
+      ]
+    },
+    {
+      "cls": "anomaly-widget-card widget_content v-card v-card--flat v-sheet theme--dark anomaly-widget-card--hidden",
+      "visible": true,
+      "title": "일자별 경보 추이",
+      "body": "bar_chart 선택한 기간에 이상행위가 없습니다.",
+      "actions": [
+        "anomaly-widget-card__export.anomaly-widget-card__enlarge|zoom_out_map",
+        "v-icon.material-icons.theme--dark|zoom_out_map",
+        "anomaly-widget-card__export.anomaly-widget-card__hide.is-active|visibility_off",
+        "v-icon.material-icons.theme--dark|visibility_off"
+      ]
+    },
+    {
+      "cls": "anomaly-widget-card widget_content v-card v-card--flat v-sheet theme--dark anomaly-widget-card--hidden",
+      "visible": true,
+      "title": "위험도별 일자 추이",
+      "body": "bar_chart 선택한 기간에 데이터가 없습니다.",
+      "actions": [
+        "anomaly-widget-card__export.anomaly-widget-card__enlarge|zoom_out_map",
+        "v-icon.material-icons.theme--dark|zoom_out_map",
+        "anomaly-widget-card__export.anomaly-widget-card__hide.is-active|visibility_off",
+        "v-icon.material-icons.theme--dark|visibility_off"
+      ]
+    },
+    {
+      "cls": "anomaly-widget-card widget_content v-card v-card--flat v-sheet theme--dark anomaly-widget-card--hidden",
+      "visible": true,
+      "title": "정책별 경보",
+      "body": "bar_chart 선택한 기간에 이상행위가 없습니다.",
+      "actions": [
+        "anomaly-widget-card__export.anomaly-widget-card__enlarge|zoom_out_map",
+        "v-icon.material-icons.theme--dark|zoom_out_map",
+        "anomaly-widget-card__export.anomaly-widget-card__hide.is-active|visibility_off",
+        "v-icon.material-icons.theme--dark|visibility_off"
+      ]
+    },
+    {
+      "cls": "anomaly-widget-card widget_content v-card v-card--flat v-sheet theme--dark anomaly-widget-card--hidden",
+      "visible": true,
+      "title": "요일별 경보",
+      "body": "bar_chart 선택한 기간에 이상행위가 없습니다.",
+      "actions": [
+        "anomaly-widget-card__export|file_download",
+        "v-icon.material-icons.theme--dark|file_download",
+        "anomaly-widget-card__export.anomaly-widget-card__enlarge|zoom_out_map",
+        "v-icon.material-icons.theme--dark|zoom_out_map",
+        "anomaly-widget-card__export.anomaly-widget-card__hide.is-active|visibility_off",
+        "v-icon.material-icons.theme--dark|visibility_off"
+      ]
+    },
+    {
+      "cls": "anomaly-widget-card widget_content v-card v-card--flat v-sheet theme--dark",
+      "visible": true,
+      "title": "개인정보 유형별 사용자",
+      "body": "12000 10000 8000 6000 4000 2000 0 사용량 10,608 4,420 15 사원_14 (user014) 사원_13 (user013) 미등록사용자()",
+      "actions": [
+        "anomaly-widget-card__export.anomaly-widget-card__enlarge|zoom_out_map",
+        "v-icon.material-icons.theme--dark|zoom_out_map",
+        "anomaly-widget-card__export.anomaly-widget-card__hide|visibility",
+        "v-icon.material-icons.theme--dark|visibility"
+      ]
+    }
+  ],
+  "buttons": [
+    "점검",
+    "이력",
+    "현황",
+    "leak_add 자산",
+    "assignment 보고",
+    "보관",
+    "verified_user 분석",
+    "policy 검출",
+    "운영",
+    "소명",
+    "info",
+    "wb_sunny",
+    "ADMIN 님",
+    "사용자 이상행위 정책",
+    "사용자 이상행위 결과",
+    "사용자 이상행위 대시보드",
+    "외부 연동 설정",
+    "event 기간 오늘 arrow_drop_down",
+    "visibility_off 숨김 8 표시중",
+    "▶ 시작",
+    "zoom_out_map",
+    "visibility_off",
+    "zoom_out_map",
+    "visibility_off",
+    "zoom_out_map",
+    "visibility_off",
+    "zoom_out_map",
+    "visibility_off",
+    "zoom_out_map",
+    "visibility_off",
+    "zoom_out_map",
+    "visibility_off",
+    "zoom_out_map",
+    "visibility_off",
+    "file_download",
+    "zoom_out_map",
+    "visibility_off",
+    "edit 레이아웃 편집"
+  ]
+}
