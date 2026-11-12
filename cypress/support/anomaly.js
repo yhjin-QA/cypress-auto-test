@@ -216,7 +216,9 @@ const runHistory = (policy, name) => {
 //   2.9.7 : 즉시실행은 요청만 받고 「최대 1분 안에」 따로 실행됨
 //   → 기다리지 않으면 경보가 시험 도중에 늦게 생겨 건수 비교가 어긋남 (2026-11-12 승인·반려 실패 원인)
 //   prefix : 덤프 이름 앞머리 (예 'D04_3_0' → D04_3_0_즉시실행후 / _실행이력_전 / _실행이력_후)
-const runNowAndWait = (policy, prefix, tries = 10) => {
+//   required=false : 새 실행 기록이 끝내 안 생겨도 실패하지 않고 진행
+//     [2026-11-12] 처리할 새 접속 기록이 없으면 즉시실행을 요청해도 실행 기록이 새로 생기지 않음 (대시보드 시나리오에서 확인)
+const runNowAndWait = (policy, prefix, tries = 10, required = true) => {
   const last = (a) => (a.length ? a[a.length - 1] : { at: '', status: '' });
   runHistory(policy, `${prefix}_실행이력_전`).then((before) => {
     goAnomaly('사용자 이상행위 정책');
@@ -237,6 +239,7 @@ const runNowAndWait = (policy, prefix, tries = 10) => {
         if (fresh && /실패|오류/.test(a.status)) throw new Error(`즉시실행 결과가 「${a.status}」 입니다 (실행 시각 ${a.at})`);
         if (left > 0) { poll(left - 1); return; }
         runHistory(policy, `${prefix}_실행이력_후`);
+        if (!required) { cy.log(`ℹ️ 새 실행 기록 없음 (최근 ${b.at || '없음'}) — 처리할 새 접속 기록이 없는 것으로 보고 진행`); return; }
         expect(fresh, `즉시실행 뒤 새 실행 기록 (최근 ${b.at || '없음'} → ${a.at || '없음'})`).to.be.true;
         expect(a.status, '새 실행 기록의 상태').to.match(/성공/);
       });
