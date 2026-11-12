@@ -32,14 +32,35 @@ describe('08_Basic_분석_이상행위', () => {
       expect(total).to.be.greaterThan(0);
       cy.wrap(total).as('total');
 
-      A.searchPolicy('접속량');
+      // 검색 대상은 정책명·설명·라벨 (입력칸 「정책명 / 설명 / 라벨 검색」)
+      //   [2026-11-12] 「접속량 과다」를 복사한 전용 정책(auto_소명_승인 등)은 이름에 「접속량」이 없고 설명에만 있어 함께 검색됨
+      //   → 카드에는 설명·라벨이 보이지 않으므로, 검색 응답(정책 목록 API)의 각 정책에 검색어가 들어 있는지로 확인
+      const KW = '접속량';
+      cy.intercept('GET', new RegExp(`/api/v1/anomaly/policies\\?.*keyword=${encodeURIComponent(KW)}`)).as('kwSearch');
+      A.searchPolicy(KW);
       A.policyTotal().then((n) => {
-        expect(n, '「접속량」 검색 건수').to.be.within(1, total);
+        expect(n, `「${KW}」 검색 건수`).to.be.within(1, total - 1);
       });
       A.policyName(POLICY).should('be.visible');
-      cy.get('.policy-card-name, table.v-datatable tbody td').filter(':visible').each(($e) => {
-        // 카드 보기일 때만 이름에 검색어 포함 여부 확인 (목록 보기는 td 가 여러 개)
-        if ($e.hasClass('policy-card-name')) expect($e.text()).to.include('접속량');
+      cy.wait('@kwSearch').then(({ response }) => {
+        // 응답 안의 정책 배열 (가장 큰 객체 배열)
+        const arrays = [];
+        const walk = (v, d) => {
+          if (Array.isArray(v)) { if (v.length && typeof v[0] === 'object') arrays.push(v); return; }
+          if (v && typeof v === 'object' && d < 3) Object.values(v).forEach((x) => walk(x, d + 1));
+        };
+        walk(response && response.body, 0);
+        const list = arrays.sort((a, b) => b.length - a.length)[0] || [];
+        const nameOf = (p) => p.name || p.policyName || p.title || p.id;
+        const miss = list.filter((p) => !JSON.stringify(p).includes(KW)).map(nameOf);
+        cy.log(`검색 응답 정책 ${list.length}건 : ${list.map(nameOf).join(', ')}`);
+        expect(list.length, '검색 응답의 정책 수').to.be.greaterThan(0);
+        expect(miss, `검색어 「${KW}」가 이름·설명·라벨 어디에도 없는 정책`).to.deep.eq([]);
+      });
+      cy.get('body').then(($b) => {                         // 카드 보기일 때만 기록 (목록 보기면 0개)
+        const $n = $b.find('.policy-card-name:visible');
+        const byName = $n.toArray().filter((e) => e.innerText.includes(KW)).length;
+        cy.log(`카드 ${$n.length}개 중 이름 일치 ${byName}개 · 설명/라벨 일치 ${$n.length - byName}개`);
       });
       A.searchPolicy('');
       A.policyTotal().should('eq', total);

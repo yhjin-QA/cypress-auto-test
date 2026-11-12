@@ -58,7 +58,7 @@
       "type": "text",
       "aria": null,
       "ph": "정책명 / 설명 / 라벨 검색",
-      "val": "auto_소명_반려",
+      "val": "auto_소명_승인",
       "checked": null
     },
     {
@@ -91,14 +91,14 @@
     },
     {
       "type": "checkbox",
-      "aria": "정책 선택auto_소명_반려",
+      "aria": "정책 선택auto_소명_승인",
       "ph": null,
       "val": "",
       "checked": "false"
     },
     {
       "type": "checkbox",
-      "aria": "끄기 (auto_소명_반려)",
+      "aria": "끄기 (auto_소명_승인)",
       "ph": null,
       "val": "",
       "checked": "true"
@@ -114,7 +114,7 @@
   "th": [],
   "rows": [],
   "cards": [
-    "check_box_outline_blank #38 v2 flip_to_back auto_소명_반려 얼마나(사용량) 주의 실시간 2026-11-11 16:24:52 집계 단위 동안 접속한 건수가 정한 기준 이상인 사용자를 찾습니다. 통상 업무량을 넘어선 접속을 확인하기 "
+    "check_box_outline_blank #37 v2 flip_to_back auto_소명_승인 얼마나(사용량) 주의 실시간 2026-11-12 10:50:25 집계 단위 동안 접속한 건수가 정한 기준 이상인 사용자를 찾습니다. 통상 업무량을 넘어선 접속을 확인하기 "
   ],
   "menus": [],
   "dialogs": [],

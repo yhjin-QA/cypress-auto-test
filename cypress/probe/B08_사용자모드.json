@@ -4,7 +4,7 @@
     "정책 취급 help_outline",
     "탐지 기준 help_outline",
     "적용 대상 help_outline",
-    "정책 목록 (3) 1/1"
+    "정책 목록 (4) 1/1"
   ],
   "buttons": [
     "전문가 모드로 열기",
@@ -19,7 +19,6 @@
     "점검",
     "이력",
     "현황",
-    "contact_mail 소명하기",
     "leak_add 자산",
     "assignment 보고",
     "보관",
@@ -177,7 +176,7 @@
     },
     {
       "type": "checkbox",
-      "aria": "이 페이지 전체 선택 (3건)",
+      "aria": "이 페이지 전체 선택 (4건)",
       "ph": null,
       "val": "",
       "checked": "false"
@@ -225,6 +224,20 @@
       "checked": "false"
     },
     {
+      "type": "checkbox",
+      "aria": "정책 선택auto_소명_접속량 과다",
+      "ph": null,
+      "val": "",
+      "checked": "false"
+    },
+    {
+      "type": "checkbox",
+      "aria": "켜기 (auto_소명_접속량 과다)",
+      "ph": null,
+      "val": "",
+      "checked": "false"
+    },
+    {
       "type": "text",
       "aria": null,
       "ph": null,
@@ -235,9 +248,10 @@
   "th": [],
   "rows": [],
   "cards": [
-    "check_box_outline_blank #25 v1 flip_to_back 접속량 과다 얼마나(사용량) 기본 주의 실시간 2026-11-06 17:12:37 집계 단위 동안 접속한 건수가 정한 기준 이상인 사용자를 찾습니다. 통상 업무량을 넘어선 접속을 확인하기 위",
+    "check_box_outline_blank #25 v9 flip_to_back 접속량 과다 얼마나(사용량) 기본 주의 실시간 2026-11-10 18:04:02 집계 단위 동안 접속한 건수가 정한 기준 이상인 사용자를 찾습니다. 통상 업무량을 넘어선 접속을 확인하기 위",
     "check_box_outline_blank #29 v1 flip_to_back 접속량 평소 대비 급증 얼마나(사용량) 기본 주의 실시간 2026-11-06 17:12:37 기준선 기간의 평소 접속량과 이번 접속량을 견줘, 평소보다 크게 늘어난 사용자를 찾습니다. 비교 ",
-    "check_box_outline_blank #32 v1 flip_to_back 접속량 집단 평균 대비 과다 얼마나(사용량) 기본 주의 실시간 2026-11-06 17:12:37 사용자의 접속 건수를 같은 비교 집단(부서 또는 업무시스템) 사용자들의 평균과 견줘, 평균보"
+    "check_box_outline_blank #32 v1 flip_to_back 접속량 집단 평균 대비 과다 얼마나(사용량) 기본 주의 실시간 2026-11-06 17:12:37 사용자의 접속 건수를 같은 비교 집단(부서 또는 업무시스템) 사용자들의 평균과 견줘, 평균보",
+    "check_box_outline_blank #36 v3 flip_to_back auto_소명_접속량 과다 얼마나(사용량) 주의 실시간 2026-11-11 15:13:53 집계 단위 동안 접속한 건수가 정한 기준 이상인 사용자를 찾습니다. 통상 업무량을 넘어선 접속을 확"
   ],
   "menus": [],
   "dialogs": [

@@ -1,7 +1,7 @@
 {
-  "url": "https://10.10.54.21:18443/logcatch/analyze/customAnomalyBehaviorPolicyResult?keyword=auto_%EC%86%8C%EB%AA%85_%EB%B0%98%EB%A0%A4&dateFrom=2025-11-12&dateTo=2026-11-11&dataMode=policy",
+  "url": "https://10.10.54.21:18443/logcatch/analyze/customAnomalyBehaviorPolicyResult?keyword=auto_%EC%86%8C%EB%AA%85_%EB%B0%98%EB%A0%A4&dateFrom=2025-11-13&dateTo=2026-11-12&dataMode=policy",
   "headlines": [
-    "경보 (정책 1개 그룹 / 합계 4건)"
+    "경보 (정책 1개 그룹 / 합계 5건)"
   ],
   "buttons": [
     "점검",
@@ -67,14 +67,14 @@
       "type": "date",
       "aria": null,
       "ph": null,
-      "val": "2025-11-12",
+      "val": "2025-11-13",
       "checked": null
     },
     {
       "type": "date",
       "aria": null,
       "ph": null,
-      "val": "2026-11-11",
+      "val": "2026-11-12",
       "checked": null
     },
     {
@@ -88,7 +88,7 @@
   "th": [],
   "rows": [],
   "cards": [
-    "chevron_right 주의 v2 auto_소명_반려 4 (2회 실행) 2026-07-07 00:00 ~ 2026-11-11 00:00"
+    "chevron_right 주의 v2 auto_소명_반려 5 (3회 실행) 2026-07-07 00:00 ~ 2026-11-12 00:00"
   ],
   "menus": [],
   "dialogs": [],

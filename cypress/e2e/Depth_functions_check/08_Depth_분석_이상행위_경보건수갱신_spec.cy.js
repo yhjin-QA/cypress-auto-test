@@ -26,28 +26,10 @@ const yearAlerts = () => {
 };
 // 오늘 이 정책 경보 줄들의 접속 건수 목록
 const todayCounts = () => cy.get('body').then(($b) => {
-  const rows = $b.find('table tbody tr:visible').toArray().filter((e) => e.innerText.includes(POLICY) && e.innerText.includes(today()));
+  // [2026-11-12] 탐지 시작 칸(5번째)으로 비교 — 글 전체로 찾으면 전날 경보의 「탐지 종료」(오늘 00:00:00)까지 잡힘
+  const rows = $b.find('table tbody tr:visible').toArray().filter((e) => e.innerText.includes(POLICY) && Cypress.$(e).find('td').eq(4).text().trim() === today());
   return rows.map((e) => parseInt((e.innerText.replace(/\s+/g, ' ').match(/(\d+)\s*건\s*접속/) || [])[1] || '-1', 10));
 });
-// [실행이력] 정책 카드 오른쪽 클릭 > 실행이력 창의 글자를 읽고 닫음
-const readHistory = (name) => {
-  A.goAnomaly('사용자 이상행위 정책');
-  A.searchPolicy(POLICY);
-  A.policyName(POLICY).closest('.policy-card, tr').rightclick({ force: true });
-  cy.wait(1200);
-  cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile, [role="menuitem"], div', /^\s*(history\s*)?실행이력\s*$/).click({ force: true });
-  cy.wait(2500);
-  A.dumpScreen(name);
-  // 실행이력 표 : 실행 시각 · 탐지 구간 · 상태 · 오류 → 실행 시각 목록만 뽑음
-  return cy.get('.v-dialog--active').filter(':visible').last().then(($d) => {
-    const t = $d[0].innerText.replace(/\s+/g, ' ');
-    const runs = [...t.matchAll(/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\s*~/g)].map((m) => m[1]).sort();
-    cy.writeFile(`cypress/probe/${name}.json`, { runs, text: t.slice(0, 3000) });
-    cy.get('body').type('{esc}', { force: true });
-    cy.wait(800);
-    return cy.wrap(runs);                                   // cy 명령 뒤에는 cy.wrap 으로 값을 돌려줌
-  });
-};
 const restorePolicy = () => {
   A.loginAdmin();
   A.goAnomaly('사용자 이상행위 정책');
@@ -103,27 +85,16 @@ describe('08_Depth_분석_이상행위_경보건수갱신', () => {
 
     // ---------- 3. 즉시실행 (관리자) — 전후로 실행이력 비교 ----------
     A.loginAdmin();
-    readHistory('D08C_3_실행이력_전').as('histBefore');
-    A.goAnomaly('사용자 이상행위 정책');
-    A.searchPolicy(POLICY);
-    A.policySelect(POLICY).check({ force: true });
-    cy.contains('.toolbar-action-btn', '즉시실행').click({ force: true });
-    A.activeDialog().contains('button', '확인').click({ force: true });
-    cy.wait(2000);
-    A.policyActive(POLICY).should('have.attr', 'aria-checked', 'true');
-    cy.wait(60000);
-    // [실행이력] 즉시실행 뒤 이력 창 내용이 바뀌었는지 (새 실행 기록)
-    readHistory('D08C_3_실행이력_후').then((after) => {
-      cy.get('@histBefore').then((before) => {
-        const last = (a) => a[a.length - 1] || '';
-        cy.log(`실행이력 : ${before.length}건 (최근 ${last(before)}) → ${after.length}건 (최근 ${last(after)})`);
-        expect(last(after) > last(before), '즉시실행 뒤 더 최근 실행 기록이 생김').to.be.true;
-        // 새 기록은 이번 실행 중(최근 15분 안)에 생긴 것
-        const p = (n) => String(n).padStart(2, '0');
-        const d = new Date(Date.now() - 15 * 60000);
-        const since = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-        expect(last(after) >= since, `최근 실행 기록 시각(${last(after)}) ≥ ${since}`).to.be.true;
-      });
+    // [2026-11-12] 즉시실행 뒤 60초 고정 대기로는 실행이 아직 안 된 때가 있어(10:57 실패), 실행이력에 새 기록(성공)이 생길 때까지 반복 확인
+    //   공통 helper A.runNowAndWait : 실행이력 전 → 즉시실행 → 15초마다 실행이력 확인 (최대 약 5분)
+    A.runNowAndWait(POLICY, 'D08C_3');
+    // [실행이력] 새 기록은 이번 실행 중(최근 15분 안)에 생긴 것
+    A.runHistory(POLICY).then((runs) => {
+      const last = runs.length ? runs[runs.length - 1].at : '';
+      const p = (n) => String(n).padStart(2, '0');
+      const d = new Date(Date.now() - 15 * 60000);
+      const since = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+      expect(last >= since, `최근 실행 기록 시각(${last}) ≥ ${since}`).to.be.true;
     });
     // (설계용 덤프) 결과 탭 : 정책이 켜져 있어 기본 화면에 보임
     A.goAnomaly('사용자 이상행위 결과');

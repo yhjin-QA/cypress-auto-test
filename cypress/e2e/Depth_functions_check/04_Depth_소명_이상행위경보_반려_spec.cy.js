@@ -90,15 +90,9 @@ describe('04_Depth_소명_이상행위경보_반려', () => {
 
     // ---------- 3. 즉시실행 → 경보 생성 확인 (관리자) ----------
     A.loginAdmin();
-    A.goAnomaly('사용자 이상행위 정책');
-    A.searchPolicy(POLICY);
-    A.policySelect(POLICY).check({ force: true });
-    cy.contains('.toolbar-action-btn', '즉시실행').click({ force: true });
-    A.activeDialog().contains('button', '확인').click({ force: true });
-    cy.wait(2000);
-    A.policyActive(POLICY).should('have.attr', 'aria-checked', 'true');
-
-    A.dumpScreen('D04_3_0_즉시실행후');
+    // [2026-11-12] 즉시실행은 「최대 1분 안에」 따로 실행됨 → 실행이력에 새 기록(성공)이 생길 때까지 기다린 뒤 진행
+    //   (안 기다리면 오늘 경보가 신청 도중에 늦게 생겨 경보 건수 비교가 어긋남)
+    A.runNowAndWait(POLICY, 'D04_3_0');
     // 즉시실행 직후에는 탭 전환이 한 번에 안 될 때가 있어, 결과 화면 주소가 될 때까지 다시 누름
     const goResult = (left) => {
       cy.get('.v-btn__content').filter(':visible').contains('사용자 이상행위 결과').click({ force: true });
@@ -159,8 +153,9 @@ describe('04_Depth_소명_이상행위경보_반려', () => {
     // ---------- 4. 사전 조건 : 소명 결재선 정책 (관리자, 조회만) ----------
     go('line');
     cy.contains('.c-headline', '결재 정책 목록').should('exist');
-    cy.get('table tbody tr').filter(':visible').then(($rows) => {
-      const ok = [...$rows].some((tr) => {
+    // [2026-11-12] 목록 데이터(approval-line API)가 늦게 올 때가 있어 한 번 읽고 끝내지 않고 최대 20초 다시 확인
+    cy.get('table tbody tr', { timeout: 20000 }).should(($rows) => {
+      const ok = $rows.toArray().filter((tr) => Cypress.dom.isVisible(tr)).some((tr) => {
         const tds = [...tr.querySelectorAll('td')].map((td) => td.innerText.trim());
         return tds[0] === '소명' && tds.includes('사용');
       });
@@ -236,8 +231,17 @@ describe('04_Depth_소명_이상행위경보_반려', () => {
         go('submit');
         cy.contains('button.sev-filter-btn', /^\s*1년\s*$/).click({ force: true });
         cy.wait(3000);
-        cy.get('.v-toolbar__title, .c-headline').filter(':visible').contains('경보').invoke('text')
-          .then((t) => expect(parseInt((t.match(/(\d+)건/) || [])[1] || '0', 10), '신청 후 소명 대상 경보 건수').to.eq(n - 1));
+        cy.get('.v-toolbar__title, .c-headline').filter(':visible').contains('경보').invoke('text').then((t) => {
+          // [2026-11-12] 건수(n-1)는 그사이 다른 경보가 새로 생기면 어긋나므로 기록만 하고, 신청한 그 경보가 목록에서 빠졌는지로 확인
+          const n2 = parseInt((t.match(/(\d+)건/) || [])[1] || '0', 10);
+          cy.log(`소명 대상 경보 ${n} → ${n2}건`);
+          cy.get('@alertStart').then((start) => {
+            const $rows = Cypress.$('table tbody tr:visible');
+            if (n2 > 0) expect($rows.length, '소명 대상 목록 표시').to.be.greaterThan(0);
+            const left = $rows.filter((k, e) => e.innerText.includes(POLICY) && Cypress.$(e).find('td').eq(4).text().trim() === start).length;
+            expect(left, `신청한 경보(${POLICY} · 탐지 시작 ${start})가 소명 대상 목록에 남은 수`).to.eq(0);
+          });
+        });
       });
     };
     go('mySubmissions');
@@ -340,7 +344,8 @@ describe('04_Depth_소명_이상행위경보_반려', () => {
     A.dumpScreen('D04R_7_반려후_신청자_경보목록');
     // 반려된 경보는 신청자의 소명 대상 목록으로 되돌아옴 (2.9.7 확인) → 다시 소명 신청 가능
     cy.get('@alertStart').then((start) => {
-      cy.get('table tbody tr').filter(':visible').filter((i, e) => e.innerText.includes(POLICY) && e.innerText.includes(start))
+      // [2026-11-12] 탐지 시작 칸(5번째)으로 비교 — 글 전체로 찾으면 전날 경보의 「탐지 종료」(같은 시각)까지 잡힘
+      cy.get('table tbody tr').filter(':visible').filter((i, e) => e.innerText.includes(POLICY) && Cypress.$(e).find('td').eq(4).text().trim() === start)
         .should('have.length', 1).find('button.alert-inline-explain').should('exist');
     });
   });

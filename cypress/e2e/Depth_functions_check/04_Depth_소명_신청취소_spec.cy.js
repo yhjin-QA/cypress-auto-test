@@ -29,6 +29,11 @@ const search = () => { cy.contains('.v-btn__content, button', '검색').click({ 
 const yearAlerts = () => { go('submit'); cy.contains('button.sev-filter-btn', /^\s*1년\s*$/).click({ force: true }); cy.wait(3000); };
 const alertCount = () => cy.get('.v-toolbar__title, .c-headline').filter(':visible').contains('경보').invoke('text')
   .then((t) => parseInt((t.match(/(\d+)\s*건/) || [])[1] || '0', 10));
+// 결재함 문서 줄의 신청일 (줄 맨 앞 「YYYY-MM-DD HH:mm」)
+const submittedAt = (e) => (e.innerText.match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}/) || [])[0];
+// 소명 대상(신청) 목록에서 이 정책·이 탐지 시작의 경보 줄 (탐지 시작 칸으로 비교 — 다른 경보의 탐지 종료와 겹치지 않게)
+const alertRowsOf = ($b, start) => $b.find('table tbody tr:visible').filter((i, e) =>
+  e.innerText.includes(POLICY) && Cypress.$(e).find('td').eq(4).text().trim() === start);
 // 결재함의 이 정책 문서 줄 (start 를 주면 그 경보의 문서만)
 const docRowsOf = ($b, start, status) => $b.find('tr.ag-row:visible').filter((i, e) =>
   e.innerText.includes(POLICY) && (!start || e.innerText.includes(`발생 ${start}`))
@@ -105,7 +110,11 @@ describe('04_Depth_소명_신청취소', () => {
     cy.wait(1500); A.confirmIfAny(); cy.wait(2500);
     cy.get('@alertsBefore').then((n) => {
       yearAlerts();
-      alertCount().should('eq', n - 1);                                   // 신청한 경보는 목록에서 빠짐
+      // 신청한 경보는 목록에서 빠짐 — [2026-11-12] 건수는 그사이 다른 경보가 생기면 어긋나므로 기록만, 그 경보 줄로 확인
+      alertCount().then((n2) => cy.log(`소명 대상 경보 ${n} → ${n2}건`));
+      cy.get('@alertStart').then((start) => cy.get('body').then(($b) => {
+        expect(alertRowsOf($b, start).length, `신청한 경보(탐지 시작 ${start})가 소명 대상 목록에 남은 수`).to.eq(0);
+      }));
     });
 
     // ---------- 2. 신청 결재 > 문서 상세 > 신청 취소 ----------
@@ -114,6 +123,8 @@ describe('04_Depth_소명_신청취소', () => {
       cy.get('body').then(($b) => {
         const $doc = docRowsOf($b, start, '신청');
         expect($doc.length, `방금 신청한 문서 (발생 ${start})`).to.eq(1);
+        // [2026-11-12] 같은 경보에 이전 문서(반려·취소)가 여러 개 있을 수 있어, 이번 문서는 신청일로 구분
+        cy.wrap(submittedAt($doc[0])).as('docAt');
         cancelDoc($doc.first(), 'D04C_2');
       });
     });
@@ -125,19 +136,24 @@ describe('04_Depth_소명_신청취소', () => {
       cy.get('body').then(($b) => {
         const $r = docRowsOf($b, start);
         const sts = $r.toArray().map((e) => Cypress.$(e).find('.ag-status').text().trim());
-        cy.log(`취소 후 문서 상태 : ${sts.join(', ') || '(목록에서 사라짐)'}`);
+        cy.log(`이 경보(발생 ${start})의 문서 상태 : ${sts.join(', ') || '(없음)'}`);
         // 2.9.7 : 「신청 취소」 → 확인창 「결재 취소 — 결재를 취소 하시겠습니까?」 → 문서 상태 「취소」
-        expect(sts, '취소한 문서의 결재 상태').to.deep.eq(['취소']);
+        cy.get('@docAt').then((at) => {
+          const mine = $r.toArray().filter((e) => submittedAt(e) === at).map((e) => Cypress.$(e).find('.ag-status').text().trim());
+          expect(mine, `취소한 문서(신청 ${at})의 결재 상태`).to.deep.eq(['취소']);
+        });
+        expect(sts.filter((s) => s === '신청').length, '이 경보의 결재 대기(신청) 문서 수').to.eq(0);
       });
     });
     // 경보가 소명 대상 목록으로 되돌아옴
     cy.get('@alertsBefore').then((n) => {
       yearAlerts();
-      alertCount().should('eq', n);
-      cy.get('@alertStart').then((start) => {
-        cy.get('table tbody tr').filter(':visible').filter((i, e) => e.innerText.includes(POLICY) && e.innerText.includes(start))
-          .should('have.length', 1).find('button.alert-inline-explain').should('exist');
-      });
+      alertCount().then((n2) => cy.log(`소명 대상 경보 ${n2}건 (신청 전 ${n}건)`));
+      cy.get('@alertStart').then((start) => cy.get('body').then(($b) => {
+        const $a = alertRowsOf($b, start);
+        expect($a.length, `취소한 경보(탐지 시작 ${start})가 소명 대상 목록에 다시 있음`).to.eq(1);
+        expect($a.find('button.alert-inline-explain').length, '그 경보의 「소명」 버튼').to.be.greaterThan(0);
+      }));
     });
     A.dumpScreen('D04C_3_경보목록_취소후');
 

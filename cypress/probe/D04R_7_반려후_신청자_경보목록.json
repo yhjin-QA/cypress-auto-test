@@ -1,7 +1,7 @@
 {
-  "url": "https://10.10.54.21:18443/logcatch/approval/submit/anomaly-alerts?dateFrom=2025-11-12&dateTo=2026-11-11&dataMode=flat",
+  "url": "https://10.10.54.21:18443/logcatch/approval/submit/anomaly-alerts?dateFrom=2025-11-13&dateTo=2026-11-12&dataMode=flat",
   "headlines": [
-    "경보 (7건)"
+    "경보 (8건)"
   ],
   "buttons": [
     "이력",
@@ -46,14 +46,14 @@
       "type": "date",
       "aria": null,
       "ph": null,
-      "val": "2025-11-12",
+      "val": "2025-11-13",
       "checked": null
     },
     {
       "type": "date",
       "aria": null,
       "ph": null,
-      "val": "2026-11-11",
+      "val": "2026-11-12",
       "checked": null
     },
     {
@@ -74,12 +74,12 @@
     "소명"
   ],
   "rows": [
-    "check_box_outline_blank 주의 v2 auto_소명_반려 person 사원_14 (user014)님이 dns 리눅스_VIP고객에서 19건 접속했습니다 2026-11-11 00:00:00 2026-11-12 00:00:00 소명",
+    "check_box_outline_blank 주의 v2 auto_소명_승인 person 사원_14 (user014)님이 dns 리눅스_VIP고객에서 5건 접속했습니다 2026-11-12 00:00:00 2026-11-13 00:00:00 소명",
+    "check_box_outline_blank 주의 v2 auto_소명_반려 person 사원_14 (user014)님이 dns 리눅스_VIP고객에서 6건 접속했습니다 2026-11-12 00:00:00 2026-11-13 00:00:00 소명",
+    "check_box_outline_blank 주의 v2 auto_소명_반려 person 사원_14 (user014)님이 dns 리눅스_VIP고객에서 22건 접속했습니다 2026-11-11 00:00:00 2026-11-12 00:00:00 소명",
     "check_box_outline_blank 주의 v2 auto_소명_반려 person 사원_14 (user014)님이 dns 리눅스_VIP고객에서 4건 접속했습니다 2026-10-14 00:00:00 2026-10-15 00:00:00 소명",
     "check_box_outline_blank 주의 v2 auto_소명_반려 person 사원_14 (user014)님이 dns 리눅스_VIP고객에서 20건 접속했습니다 2026-09-14 00:00:00 2026-09-15 00:00:00 소명",
-    "check_box_outline_blank 주의 v2 auto_소명_반려 person 사원_14 (user014)님이 dns 리눅스_VIP고객에서 6건 접속했습니다 2026-07-07 00:00:00 2026-07-08 00:00:00 소명",
-    "check_box_outline_blank 주의 v2 auto_소명_승인 person 사원_14 (user014)님이 dns 리눅스_VIP고객에서 4건 접속했습니다 2026-10-14 00:00:00 2026-10-15 00:00:00 소명",
-    "check_box_outline_blank 주의 v2 auto_소명_승인 person 사원_14 (user014)님이 dns 리눅스_VIP고객에서 20건 접속했습니다 2026-09-14 00:00:00 2026-09-15 00:00:00 소명"
+    "check_box_outline_blank 주의 v2 auto_소명_반려 person 사원_14 (user014)님이 dns 리눅스_VIP고객에서 6건 접속했습니다 2026-07-07 00:00:00 2026-07-08 00:00:00 소명"
   ],
   "cards": [],
   "menus": [],

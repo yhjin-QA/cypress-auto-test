@@ -174,4 +174,60 @@ const isDisabled = ($b) => $b.is(':disabled') || $b.hasClass('v-btn--disabled');
 
 const loginAdmin = () => login(ADMIN_ID(), ADMIN_PW());
 
-module.exports = { ADMIN_ID, ADMIN_PW, ignoreErrors, dumpScreen, activeDialog, confirmIfAny, goAnomaly, policyTotal, searchPolicy, policyName, policySelect, policyActive, dialogSwitch, setDialogSwitch, thresholdInput, login, loginAdmin, dismissInputNotice, isDisabled };
+// [실행이력] 정책 카드 오른쪽 클릭 > 「실행이력」 창을 읽고 닫음 (관리자 화면)
+//   반환 : [{ at: '실행 시각', status: '성공' 등 }] (실행 시각 오름차순)
+//   2.9.7 : 같은 탐지 구간을 다시 실행하면 그 줄의 실행 시각이 새 시각으로 바뀜 (줄 수는 그대로일 수 있음)
+const runHistory = (policy, name) => {
+  goAnomaly('사용자 이상행위 정책');
+  searchPolicy(policy);
+  policyName(policy).closest('.policy-card, tr').rightclick({ force: true });
+  cy.wait(1200);
+  cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile, [role="menuitem"], div', /^\s*(history\s*)?실행이력\s*$/).click({ force: true });
+  cy.wait(2500);
+  if (name) dumpScreen(name);
+  return cy.get('.v-dialog--active').filter(':visible').last().then(($d) => {
+    const t = $d[0].innerText.replace(/\s+/g, ' ');
+    const re = /(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\s*~\s*\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\s*(.*?)(?=\s\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\s+\d{4}-|\s총\s|$)/g;
+    const runs = [...t.matchAll(re)].map((m) => ({ at: m[1], status: m[2].replace(/check_circle_outline|error_outline|highlight_off|cancel|sync|schedule/g, '').trim() }))
+      .sort((a, b) => (a.at < b.at ? -1 : 1));
+    if (name) cy.writeFile(`cypress/probe/${name}.json`, { runs, text: t.slice(0, 3000) });
+    cy.get('body').type('{esc}', { force: true });
+    cy.wait(800);
+    return cy.wrap(runs);
+  });
+};
+
+// [즉시실행] 정책 선택 → 「즉시실행」 → 실행이력에 새 실행 기록(성공)이 생길 때까지 기다림
+//   2.9.7 : 즉시실행은 요청만 받고 「최대 1분 안에」 따로 실행됨
+//   → 기다리지 않으면 경보가 시험 도중에 늦게 생겨 건수 비교가 어긋남 (2026-11-12 승인·반려 실패 원인)
+//   prefix : 덤프 이름 앞머리 (예 'D04_3_0' → D04_3_0_즉시실행후 / _실행이력_전 / _실행이력_후)
+const runNowAndWait = (policy, prefix, tries = 10) => {
+  const last = (a) => (a.length ? a[a.length - 1] : { at: '', status: '' });
+  runHistory(policy, `${prefix}_실행이력_전`).then((before) => {
+    goAnomaly('사용자 이상행위 정책');
+    searchPolicy(policy);
+    policySelect(policy).check({ force: true });
+    cy.contains('.toolbar-action-btn', '즉시실행').click({ force: true });
+    activeDialog().contains('button', '확인').click({ force: true });
+    cy.wait(2000);
+    policyActive(policy).should('have.attr', 'aria-checked', 'true');
+    dumpScreen(`${prefix}_즉시실행후`);
+    const poll = (left) => {
+      cy.wait(15000);
+      runHistory(policy).then((after) => {
+        const b = last(before); const a = last(after);
+        cy.log(`🕒 실행이력 최근 ${b.at || '(없음)'} → ${a.at || '(없음)'} ${a.status}`);
+        const fresh = a.at > b.at;
+        if (fresh && /성공/.test(a.status)) { runHistory(policy, `${prefix}_실행이력_후`); return; }
+        if (fresh && /실패|오류/.test(a.status)) throw new Error(`즉시실행 결과가 「${a.status}」 입니다 (실행 시각 ${a.at})`);
+        if (left > 0) { poll(left - 1); return; }
+        runHistory(policy, `${prefix}_실행이력_후`);
+        expect(fresh, `즉시실행 뒤 새 실행 기록 (최근 ${b.at || '없음'} → ${a.at || '없음'})`).to.be.true;
+        expect(a.status, '새 실행 기록의 상태').to.match(/성공/);
+      });
+    };
+    poll(tries);
+  });
+};
+
+module.exports = { ADMIN_ID, ADMIN_PW, ignoreErrors, dumpScreen, activeDialog, confirmIfAny, goAnomaly, policyTotal, searchPolicy, policyName, policySelect, policyActive, dialogSwitch, setDialogSwitch, thresholdInput, login, loginAdmin, dismissInputNotice, isDisabled, runHistory, runNowAndWait };

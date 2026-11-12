@@ -57,7 +57,7 @@
       "type": "text",
       "aria": null,
       "ph": "정책명 / 설명 / 라벨 검색",
-      "val": "auto_임시_IO_1111_173452",
+      "val": "auto_임시_IO_1112_093723",
       "checked": null
     },
     {
@@ -90,14 +90,14 @@
     },
     {
       "type": "checkbox",
-      "aria": "정책 선택auto_임시_IO_1111_173452",
+      "aria": "정책 선택auto_임시_IO_1112_093723",
       "ph": null,
       "val": "",
       "checked": "false"
     },
     {
       "type": "checkbox",
-      "aria": "켜기 (auto_임시_IO_1111_173452)",
+      "aria": "켜기 (auto_임시_IO_1112_093723)",
       "ph": null,
       "val": "",
       "checked": "false"
@@ -113,7 +113,7 @@
   "th": [],
   "rows": [],
   "cards": [
-    "check_box_outline_blank #42 v1 flip_to_back auto_임시_IO_1111_173452 얼마나(사용량) 주의 새벽 정산 2026-11-11 17:35:24 집계 단위 동안 접속한 건수가 정한 기준 이상인 사용자를 찾습니다. 통상 업무량을"
+    "check_box_outline_blank #44 v1 flip_to_back auto_임시_IO_1112_093723 얼마나(사용량) 주의 새벽 정산 2026-11-12 09:37:53 집계 단위 동안 접속한 건수가 정한 기준 이상인 사용자를 찾습니다. 통상 업무량을"
   ],
   "menus": [],
   "dialogs": [],

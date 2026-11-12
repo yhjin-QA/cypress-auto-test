@@ -29,14 +29,14 @@
       "type": "text",
       "aria": "",
       "ph": null,
-      "val": "2026-10-11 00:00:00",
+      "val": "2026-10-12 00:00:00",
       "checked": null
     },
     {
       "type": "text",
       "aria": "",
       "ph": null,
-      "val": "2026-11-11 23:59:59",
+      "val": "2026-11-12 23:59:59",
       "checked": null
     },
     {
@@ -92,12 +92,12 @@
     "결재 상태"
   ],
   "rows": [
-    "check_box_outline_blank 2026-11-11 18:05 AI개발2팀, 개발그룹 사원_14 (user014) 소명 people_outline 사원_1 위임 replay 재신청 3/3auto_소명_반려 소명 (발생 2026-07-07 00:00:00) 신"
+    "check_box_outline_blank 2026-11-12 09:22 AI개발2팀, 개발그룹 사원_14 (user014) 소명 people_outline 사원_1 위임 replay 재신청 4/4auto_소명_반려 소명 (발생 2026-07-07 00:00:00) 신"
   ],
   "cards": [],
   "menus": [],
   "dialogs": [
-    "close 결재 상세 소명 신청 replay 재신청 3/3 auto_소명_반려 소명 (발생 2026-07-07 00:00:00) person 사원_14 (user014) business AI개발2팀,개발그룹 report_problem 소명 대상 이상행위 주의 auto_소명_반려 label 사원_14 (user014)님이 label 리눅스_VIP고객에서 6건 접속했습니다 2026-07-07 00:00:00 chevron_right attach_file 첨부파일 0 첨부된 파일이 없습니다. description 신청 내용 business 부서 AI개발2팀,개발그룹 person 신청자 사원_14 (user014) 소명 상세 [자동화] 부재중 위임 시나리오 — 2026-11-11 18:03:45 (user014) how_to_reg 진행 인원 사 사원_14 (user014) 신청자 신청 사 사원_1 (user001) 요청됨 search 결재 진행 현황 상세 보기 반려 승인"
+    "close 결재 상세 소명 신청 replay 재신청 4/4 auto_소명_반려 소명 (발생 2026-07-07 00:00:00) person 사원_14 (user014) business AI개발2팀,개발그룹 report_problem 소명 대상 이상행위 주의 auto_소명_반려 label 사원_14 (user014)님이 label 리눅스_VIP고객에서 6건 접속했습니다 2026-07-07 00:00:00 chevron_right attach_file 첨부파일 0 첨부된 파일이 없습니다. description 신청 내용 business 부서 AI개발2팀,개발그룹 person 신청자 사원_14 (user014) 소명 상세 [자동화] 부재중 위임 시나리오 — 2026-11-12 09:20:36 (user014) how_to_reg 진행 인원 사 사원_14 (user014) 신청자 신청 사 사원_1 (user001) 요청됨 search 결재 진행 현황 상세 보기 반려 승인"
   ],
   "snack": []
 }

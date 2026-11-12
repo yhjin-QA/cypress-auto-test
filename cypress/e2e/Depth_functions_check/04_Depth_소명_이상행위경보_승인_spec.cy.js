@@ -89,15 +89,9 @@ describe('04_Depth_소명_이상행위경보_승인', () => {
 
     // ---------- 3. 즉시실행 → 경보 생성 확인 (관리자) ----------
     A.loginAdmin();
-    A.goAnomaly('사용자 이상행위 정책');
-    A.searchPolicy(POLICY);
-    A.policySelect(POLICY).check({ force: true });
-    cy.contains('.toolbar-action-btn', '즉시실행').click({ force: true });
-    A.activeDialog().contains('button', '확인').click({ force: true });
-    cy.wait(2000);
-    A.policyActive(POLICY).should('have.attr', 'aria-checked', 'true');
-
-    A.dumpScreen('D04_3_0_즉시실행후');
+    // [2026-11-12] 즉시실행은 「최대 1분 안에」 따로 실행됨 → 실행이력에 새 기록(성공)이 생길 때까지 기다린 뒤 진행
+    //   (안 기다리면 오늘 경보가 신청 도중에 늦게 생겨 경보 건수 비교가 어긋남)
+    A.runNowAndWait(POLICY, 'D04_3_0');
     // 즉시실행 직후에는 탭 전환이 한 번에 안 될 때가 있어, 결과 화면 주소가 될 때까지 다시 누름
     const goResult = (left) => {
       cy.get('.v-btn__content').filter(':visible').contains('사용자 이상행위 결과').click({ force: true });
@@ -158,8 +152,9 @@ describe('04_Depth_소명_이상행위경보_승인', () => {
     // ---------- 4. 사전 조건 : 소명 결재선 정책 (관리자, 조회만) ----------
     go('line');
     cy.contains('.c-headline', '결재 정책 목록').should('exist');
-    cy.get('table tbody tr').filter(':visible').then(($rows) => {
-      const ok = [...$rows].some((tr) => {
+    // [2026-11-12] 목록 데이터(approval-line API)가 늦게 올 때가 있어 한 번 읽고 끝내지 않고 최대 20초 다시 확인
+    cy.get('table tbody tr', { timeout: 20000 }).should(($rows) => {
+      const ok = $rows.toArray().filter((tr) => Cypress.dom.isVisible(tr)).some((tr) => {
         const tds = [...tr.querySelectorAll('td')].map((td) => td.innerText.trim());
         return tds[0] === '소명' && tds.includes('사용');
       });
@@ -168,74 +163,102 @@ describe('04_Depth_소명_이상행위경보_승인', () => {
 
     // ---------- 5. 소명 신청 (신청자 user014 본인) ----------
     A.login(USER_ID, Cypress.env('LC_USER014_PW'));
-    go('submit');
-    cy.contains('button.sev-filter-btn', /^\s*1년\s*$/).click({ force: true });
-    cy.wait(3000);
-    cy.get('.v-toolbar__title, .c-headline').filter(':visible').contains('경보').invoke('text').then((t) => {
-      const n = parseInt((t.match(/(\d+)건/) || [])[1] || '0', 10);
-      cy.log(`소명 대상 경보 ${n}건`);
-      cy.wrap(n).as('alertsBefore');
-      // 이 정책의 경보만 셈 (다른 전용 정책의 경보는 다른 시나리오 몫)
-      const mine = Cypress.$('table tbody tr:visible').filter((i, e) => e.innerText.includes(POLICY)).length;
-      cy.log(`그중 ${POLICY} 경보 ${mine}건`);
-      if (mine === 0) {
-        // 제품 문제가 아니라 테스트 데이터 소진 (하루 단위 정책이라 같은 날 여러 번 돌리면 그날 몫을 다 씀) → 건너뜀(Pending)
-        cy.log(`⏭️ ${POLICY} 소명 대상 경보 0건 — 오늘 몫을 이미 사용했습니다. 이번 실행은 건너뜁니다.`);
-        cy.writeFile('cypress/probe/D04_경보소진.json', { at: stamp(), spec: Cypress.spec.name });
-        cy.then(() => test.skip());
-      }
-    });
-    cy.get('table tbody tr').filter(':visible').filter((i, e) => e.innerText.includes(POLICY)).first().as('alertRow');
-    cy.get('@alertRow').find('td').eq(4).invoke('text').then((t) => cy.wrap(t.trim()).as('alertStart'));
-    cy.get('@alertRow').find('button.alert-inline-explain').click({ force: true });
-    cy.wait(2000);
-    A.activeDialog().within(() => {
-      cy.contains('이상행위 소명 신청').should('exist');
-      cy.contains(POLICY).should('exist');
-      cy.contains('.ad-meta-val', USER_DEPT).should('exist');
-      cy.contains('.ad-meta-val', `(${USER_ID})`).should('exist');
-      // 결재선 : 신청자 → 부서장
-      cy.contains('.ad-tl-name', `(${USER_ID})`).should('contain', '신청자');
-      cy.contains('.ad-tl-name', `(${HEAD_ID})`).should('exist');
-    });
-    // [필수 입력 검증] 소명 사유를 비운 채 「신청」 → 신청되지 않고 창이 그대로 있어야 함 (경보를 쓰지 않는 확인)
-    A.activeDialog().find('textarea[placeholder*="소명 사유"]').clear({ force: true });
-    A.activeDialog().find('.approval-action-bar button').filter((i, e) => e.innerText.trim() === '신청').first().then(($b) => {
-      if (A.isDisabled($b)) { cy.log('✅ 소명 사유 미입력 → 「신청」 버튼 비활성'); return; }
-      cy.wrap($b).click({ force: true });
-      cy.wait(1500);
-      A.dumpScreen('D04_5a0_사유없이_신청');
-      A.dismissInputNotice('textarea[placeholder*="소명 사유"]');
-    });
-    A.activeDialog().should('contain', '이상행위 소명 신청').find('textarea[placeholder*="소명 사유"]').should('exist');
-    cy.log('✅ 소명 사유 없이는 신청되지 않음');
-    const reason = `[자동화] ${POLICY} 경보 소명 — ${stamp()} 신청 (${USER_ID})`;
-    cy.wrap(reason).as('reason');
-    A.activeDialog().find('textarea[placeholder*="소명 사유"]').clear({ force: true }).type(reason, { force: true });
-    A.dumpScreen('D04_5a_소명신청_작성');
-    mailSnapshot('mailsBeforeSubmit');
-    A.activeDialog().find('.approval-action-bar button').filter((i, e) => e.innerText.trim() === '신청').first().click({ force: true });
-    cy.wait(1500);
-    A.dumpScreen('D04_5b_신청클릭후');
-    dialogHtml('D04_5b_신청클릭후');
-    A.confirmIfAny();
-    cy.wait(2500);
-    A.dumpScreen('D04_5c_신청완료후');
-    newMails('mailsBeforeSubmit', 'D04_5_메일_신청후'); // [1차] 기록만 — 발송 형태 확인 후 검증으로 전환
-
-    // 신청 결재함에 방금 신청한 문서가 있는지
-    go('mySubmissions');
-    cy.contains('.v-btn__content, button', '검색').click({ force: true });
-    cy.wait(2500);
-    A.dumpScreen('D04_5d_신청결재함');
-    docRow().should('contain', POLICY).find('.ag-status').should('have.text', '신청');
-    cy.get('@alertsBefore').then((n) => {
-      // 신청한 경보는 소명 대상 목록에서 빠짐
+    // [2026-11-12] 앞선 실행이 신청 직후 실패해 결재 대기 문서가 남아 있으면 그 문서를 재사용 (반려 스크립트와 같은 방식)
+    //   → 대기 문서가 쌓이지 않고, 그날 경보를 새로 쓰지 않음
+    const submitNew = () => {
       go('submit');
       cy.contains('button.sev-filter-btn', /^\s*1년\s*$/).click({ force: true });
       cy.wait(3000);
-      cy.get('.v-toolbar__title, .c-headline').filter(':visible').contains('경보').invoke('text')
-        .then((t) => expect(parseInt((t.match(/(\d+)건/) || [])[1] || '0', 10), '신청 후 소명 대상 경보 건수').to.eq(n - 1));
+      cy.get('.v-toolbar__title, .c-headline').filter(':visible').contains('경보').invoke('text').then((t) => {
+        const n = parseInt((t.match(/(\d+)건/) || [])[1] || '0', 10);
+        cy.log(`소명 대상 경보 ${n}건`);
+        cy.wrap(n).as('alertsBefore');
+        // 이 정책의 경보만 셈 (다른 전용 정책의 경보는 다른 시나리오 몫)
+        const mine = Cypress.$('table tbody tr:visible').filter((i, e) => e.innerText.includes(POLICY)).length;
+        cy.log(`그중 ${POLICY} 경보 ${mine}건`);
+        if (mine === 0) {
+          // 제품 문제가 아니라 테스트 데이터 소진 (하루 단위 정책이라 같은 날 여러 번 돌리면 그날 몫을 다 씀) → 건너뜀(Pending)
+          cy.log(`⏭️ ${POLICY} 소명 대상 경보 0건 — 오늘 몫을 이미 사용했습니다. 이번 실행은 건너뜁니다.`);
+          cy.writeFile('cypress/probe/D04_경보소진.json', { at: stamp(), spec: Cypress.spec.name });
+          cy.then(() => test.skip());
+        }
+      });
+      cy.get('table tbody tr').filter(':visible').filter((i, e) => e.innerText.includes(POLICY)).first().as('alertRow');
+      cy.get('@alertRow').find('td').eq(4).invoke('text').then((t) => cy.wrap(t.trim()).as('alertStart'));
+      cy.get('@alertRow').find('button.alert-inline-explain').click({ force: true });
+      cy.wait(2000);
+      A.activeDialog().within(() => {
+        cy.contains('이상행위 소명 신청').should('exist');
+        cy.contains(POLICY).should('exist');
+        cy.contains('.ad-meta-val', USER_DEPT).should('exist');
+        cy.contains('.ad-meta-val', `(${USER_ID})`).should('exist');
+        // 결재선 : 신청자 → 부서장
+        cy.contains('.ad-tl-name', `(${USER_ID})`).should('contain', '신청자');
+        cy.contains('.ad-tl-name', `(${HEAD_ID})`).should('exist');
+      });
+      // [필수 입력 검증] 소명 사유를 비운 채 「신청」 → 신청되지 않고 창이 그대로 있어야 함 (경보를 쓰지 않는 확인)
+      A.activeDialog().find('textarea[placeholder*="소명 사유"]').clear({ force: true });
+      A.activeDialog().find('.approval-action-bar button').filter((i, e) => e.innerText.trim() === '신청').first().then(($b) => {
+        if (A.isDisabled($b)) { cy.log('✅ 소명 사유 미입력 → 「신청」 버튼 비활성'); return; }
+        cy.wrap($b).click({ force: true });
+        cy.wait(1500);
+        A.dumpScreen('D04_5a0_사유없이_신청');
+        A.dismissInputNotice('textarea[placeholder*="소명 사유"]');
+      });
+      A.activeDialog().should('contain', '이상행위 소명 신청').find('textarea[placeholder*="소명 사유"]').should('exist');
+      cy.log('✅ 소명 사유 없이는 신청되지 않음');
+      const reason = `[자동화] ${POLICY} 경보 소명 — ${stamp()} 신청 (${USER_ID})`;
+      cy.wrap(reason).as('reason');
+      A.activeDialog().find('textarea[placeholder*="소명 사유"]').clear({ force: true }).type(reason, { force: true });
+      A.dumpScreen('D04_5a_소명신청_작성');
+      mailSnapshot('mailsBeforeSubmit');
+      A.activeDialog().find('.approval-action-bar button').filter((i, e) => e.innerText.trim() === '신청').first().click({ force: true });
+      cy.wait(1500);
+      A.dumpScreen('D04_5b_신청클릭후');
+      dialogHtml('D04_5b_신청클릭후');
+      A.confirmIfAny();
+      cy.wait(2500);
+      A.dumpScreen('D04_5c_신청완료후');
+      newMails('mailsBeforeSubmit', 'D04_5_메일_신청후'); // [1차] 기록만 — 발송 형태 확인 후 검증으로 전환
+
+      // 신청 결재함에 방금 신청한 문서가 있는지
+      go('mySubmissions');
+      cy.contains('.v-btn__content, button', '검색').click({ force: true });
+      cy.wait(2500);
+      A.dumpScreen('D04_5d_신청결재함');
+      docRow().should('contain', POLICY).find('.ag-status').should('have.text', '신청');
+      cy.get('@alertsBefore').then((n) => {
+        // 신청한 경보는 소명 대상 목록에서 빠짐
+        go('submit');
+        cy.contains('button.sev-filter-btn', /^\s*1년\s*$/).click({ force: true });
+        cy.wait(3000);
+        cy.get('.v-toolbar__title, .c-headline').filter(':visible').contains('경보').invoke('text').then((t) => {
+          // [2026-11-12] 건수(n-1)는 그사이 다른 경보가 새로 생기면 어긋나므로 기록만 하고, 신청한 그 경보가 목록에서 빠졌는지로 확인
+          const n2 = parseInt((t.match(/(\d+)건/) || [])[1] || '0', 10);
+          cy.log(`소명 대상 경보 ${n} → ${n2}건`);
+          cy.get('@alertStart').then((start) => {
+            const $rows = Cypress.$('table tbody tr:visible');
+            if (n2 > 0) expect($rows.length, '소명 대상 목록 표시').to.be.greaterThan(0);
+            const left = $rows.filter((k, e) => e.innerText.includes(POLICY) && Cypress.$(e).find('td').eq(4).text().trim() === start).length;
+            expect(left, `신청한 경보(${POLICY} · 탐지 시작 ${start})가 소명 대상 목록에 남은 수`).to.eq(0);
+          });
+        });
+      });
+    };
+    go('mySubmissions');
+    cy.contains('.v-btn__content, button', '검색').click({ force: true });
+    cy.wait(2500);
+    cy.get('body').then(($b) => {
+      const $wait = $b.find('table tbody tr:visible').filter((i, e) => e.innerText.includes(POLICY) && Cypress.$(e).find('.ag-status').text().trim() === '신청');
+      const m = $wait.length ? $wait.first().find('td.ag-title').text().match(/발생 (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/) : null;
+      if (m) {
+        cy.log(`♻️ 결재 대기 문서 재사용 (발생 ${m[1]})`);
+        cy.wrap(m[1]).as('alertStart');
+        cy.wrap('[자동화]').as('reason'); // 앞선 실행에서 쓴 사유(앞머리)만 확인
+      } else {
+        cy.log('🆕 결재 대기 문서 없음 → 새로 소명 신청');
+        submitNew();
+      }
     });
 
     // ---------- 6. 승인 (부서장 user001) ----------
