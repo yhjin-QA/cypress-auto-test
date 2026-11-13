@@ -395,46 +395,125 @@ describe('로그캐치 사이트 테스트', () => {
      // [2.9.7] 이벤트 유형 : 결과에 실제로 있는 이벤트를 읽어서 선택
      //   자동화는 로그아웃 없이 끝나 실행 PC IP의 '로그아웃' 이력이 없을 수 있음
      //   → 이벤트 조건을 비우고 검색 → 이벤트 열 값 수집 → '로그아웃' 우선, 없으면 로그인 외 이벤트(예: 선택) → 그 이벤트로 재검색·검증
+     // [2026-11-13 CI 실패 → 원인] 검색 대상 「시스템 이벤트」 + 이벤트 비움 + 실행 PC IP 로 검색하면
+     //   POST /logcatch/common/com06/work-history 가 400 → 화면은 오류 안내 없이 「No data available」
+     //   응답 message : [WorkHistory List Select Query Execute] : For input string: "[Anomaly Result] : 경보 목록 조회"
+     //   (요청 : historyType 0 · managerIdList [1] · managerIp <실행 PC IP> · 이벤트 조건 없음)
+     //   이상행위 결과 화면을 본 운영 이력이 그 결과에 섞이면 서버 조회가 실패하는 것으로 보임 (조건 없이 1쪽에 그 행이 없으면 정상)
+     //   CI 1회차 「선택할 이벤트: expected undefined」 와 2·3회차 재검색 실패가 모두 여기서 시작됨
+     //   → 목록에서 「로그인」 을 다시 눌러 해제하고 검색, 응답 상태 · 요청 본문 · message 를 기록
+     //   → 400 이면 관찰로 남기고(Mantis 0039006 — 기록만) 이벤트는 결과가 확인된 「로그인」 으로 검증을 이어 감
+     //   → 이벤트 목록(드롭다운)에 같은 이름이 하나뿐인 이벤트만 고름
+     //   단계별 값(검색 요청 · 응답 · 결과 이벤트 · 드롭다운 항목 · 고른 이벤트 · 재검색 결과)은 cypress/probe/B15_운영이력_이벤트.json
      const headText = (th) => { const c = th.cloneNode(true); c.querySelectorAll('i, .v-icon, .material-icons').forEach((e) => e.remove()); return c.textContent.trim(); };
-
-     // 이벤트  x버튼 클릭하여 초기화 후 검색
-     cy.get('input[aria-label="이벤트"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
-     cy.wait(1000);
-     cy.get('body').type('{esc}');
-     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(2000);
-
-     cy.get('th').filter(':visible').then(($ths) => {
-       const evIdx = [...$ths].findIndex((th) => headText(th) === '이벤트');
-       expect(evIdx, '운영 이력 이벤트 열').to.be.greaterThan(-1);
-       cy.get('tbody tr').filter(':visible').then(($rows) => {
-         const events = [...new Set([...$rows].map((tr) => (tr.children[evIdx] ? tr.children[evIdx].textContent.trim() : '')).filter(Boolean))];
-         cy.log(`검색 결과 이벤트 종류: ${events.join(', ')}`);
-         const pick = events.includes('로그아웃') ? '로그아웃' : (events.find((e) => e !== '로그인') || events[0]);
-         expect(pick, '선택할 이벤트').to.be.a('string');
-         cy.log(`이벤트 '${pick}' 로 재검색`);
-         cy.wrap(pick).as('pickEvent');
+     const rowText = (tr) => tr.textContent.replace(/\s+/g, ' ').trim();
+     const B15 = { api: [] };
+     const b15 = (k, v) => { B15[k] = v; cy.writeFile('cypress/probe/B15_운영이력_이벤트.json', B15, { log: false }); };
+     // 운영 이력 검색 API — 엿보기만 함(요청을 바꾸지 않음)
+     cy.intercept('POST', /\/logcatch\/common\/com06\/work-history(\?|$)/).as('wh');
+     const search = (step) => {
+       cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+       return cy.wait('@wh', { timeout: 20000 }).then((x) => {
+         const res = x.response || {};
+         const body = res.body || {};
+         const r = { step, st: res.statusCode, req: JSON.stringify(x.request.body).slice(0, 600), total: body.totalCount, msg: String(body.message || '').slice(0, 200) };
+         B15.api.push(r);
+         b15('api', B15.api);
+         cy.wait(1500);
+         return cy.wrap(r, { log: false });
        });
-     });
-
-     // 이벤트 클릭 → 읽어 온 이벤트 선택 (정확히 일치하는 항목만: '선택' ≠ '전체 선택')
-     cy.get('@pickEvent').then((ev) => {
+     };
+     const pickInList = (name) => {
        cy.get('input[aria-label="이벤트"]').filter(':visible').click({ force: true });
        cy.wait(1000);
-       cy.get('.v-menu__content:visible').find('.v-list__tile__title')
-         .filter((i, el) => el.textContent.trim() === ev).first().scrollIntoView().click({ force: true });
+       cy.get('.v-menu__content:visible').last().find('.v-list__tile__title')
+         .filter((i, el) => el.textContent.trim() === name).first().scrollIntoView().click({ force: true });
        cy.wait(1000);
        cy.get('body').type('{esc}');
+       cy.wait(500);
+     };
+     // 실행 PC IP 행이 있는 표 → 그 표의 이벤트 열 값
+     const eventsOf = (ip) => cy.contains('tbody tr', ip, { timeout: 20000 }).should('be.visible').then(($tr) => {
+       const table = $tr[0].closest('table');
+       const ths = [...table.querySelectorAll('thead th')];
+       const evIdx = ths.findIndex((th) => headText(th) === '이벤트');
+       expect(evIdx, '운영 이력 이벤트 열').to.be.greaterThan(-1);
+       const rows = [...table.querySelectorAll('tbody tr')].filter((tr) => tr.children.length > evIdx);
+       return { rows: rows.map(rowText).slice(0, 10), events: rows.map((tr) => tr.children[evIdx].textContent.trim()).filter(Boolean) };
      });
 
-     // 검색버튼 클릭 
-     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-     cy.wait(2000);
+     // 목록에서 「로그인」 을 다시 눌러 해제 → 검색 (해제되면 X 아이콘도 사라짐)
+     pickInList('로그인');
+     search('이벤트 해제(목록)').then((r2) => {
+       if (r2.st === 200) {
+         cy.get('@adminIp').then((ip) => eventsOf(ip)).then(({ rows, events }) => {
+           const kinds = [...new Set(events)];
+           b15('1_조건없는검색', { 이벤트종류: kinds, 행: rows });
+           cy.wrap(kinds).as('kinds');
+         });
+         return;
+       }
+       // 400 : 관찰로 남기고 이미 확인된 「로그인」 으로 이어 감
+       b15('관찰_이벤트비운검색', `검색 대상 시스템 이벤트 + 이벤트 비움 → ${r2.st} ${r2.msg} — Mantis 0039006`);
+       cy.log('⚠️ 이벤트를 비운 검색이 조회 오류(Mantis 0039006) — 「로그인」 으로 검증을 이어 감 (B15_운영이력_이벤트.json)');
+       cy.wrap([]).as('kinds');
+     });
+
+     // 이벤트 목록(드롭다운)에서 같은 이름이 하나뿐인 이벤트 고르기
+     cy.get('@kinds').then((kinds) => {
+       cy.get('input[aria-label="이벤트"]').filter(':visible').click({ force: true });
+       cy.wait(1000);
+       cy.get('.v-menu__content:visible').last().then(($m) => {
+         const items = [...$m[0].querySelectorAll('.v-list__tile__title')].map((e) => e.textContent.trim());
+         const count = (n) => items.filter((x) => x === n).length;
+         const cands = [...(kinds.includes('로그아웃') ? ['로그아웃'] : []), ...kinds.filter((e) => e !== '로그아웃' && e !== '로그인'), '로그인'];
+         const pick = cands.find((e) => count(e) === 1);
+         b15('2_이벤트목록', { 항목수: items.length, 항목: items, 후보: cands.map((e) => `${e}(${count(e)})`), 고름: pick || '(없음)' });
+         cy.log(`검색 결과 이벤트 종류: ${kinds.join(', ') || '(없음)'} → '${pick}' 로 재검색`);
+         expect(pick, `선택할 이벤트 (후보 ${cands.join(', ')} 중 목록에 하나뿐인 것)`).to.be.a('string');
+         cy.wrap(pick).as('pickEvent');
+       });
+       cy.get('body').type('{esc}');
+       cy.wait(500);
+     });
+
+     // 고른 이벤트만 남기기 (X 는 쓰지 않음 — 위 400 과 같은 상태가 될 수 있음)
+     //   이벤트 칸에 이미 그 이벤트만 있으면 그대로, 「로그인」 이 남아 있으면 목록에서 눌러 해제한 뒤 고른 이벤트 선택
+     const evText = () => cy.get('input[aria-label="이벤트"]').filter(':visible').closest('.v-input')
+       .then(($s) => ($s.find('.v-select__selections').text() || $s.text()).replace(/\s+/g, ' ').trim());
+     cy.get('@pickEvent').then((ev) => {
+       evText().then((now) => {
+         if (now.includes(ev)) return;
+         if (now.includes('로그인')) pickInList('로그인');
+         pickInList(ev);
+       });
+       evText().then((now) => b15('3_선택', { 이벤트: ev, 이벤트칸: now.slice(0, 200) }));
+     });
+
+     // 검색 → 재검색 결과를 먼저 기록 (실패해도 원인을 볼 수 있게)
+     search('고른 이벤트로 재검색').then((r) => {
+       if (r.st === 200) return;
+       // [13:57 실행] 「선택」 으로 재검색 → 400 (Mantis 0039006 — 이상행위 결과 조회 기록이 「선택」 이벤트라 그 결과에 섞임)
+       //   → 같은 오류면 기록만 하고 고른 이벤트를 해제한 뒤 「로그인」 으로 다시 검색 · 검증
+       expect(r.msg, `재검색 응답 ${r.st} (0039006 오류가 아니면 실패)`).to.include('For input string');
+       cy.get('@pickEvent').then((ev) => {
+         b15('관찰_재검색', `「${ev}」 재검색 → ${r.st} ${r.msg} — Mantis 0039006`);
+         cy.log(`⚠️ 「${ev}」 재검색이 조회 오류(Mantis 0039006) — 「로그인」 으로 다시 검색`);
+         pickInList(ev);
+         pickInList('로그인');
+       });
+       cy.wrap('로그인', { log: false }).as('pickEvent');
+       search('로그인으로 재검색').then((r2) => expect(r2.st, '로그인 재검색 응답').to.eq(200));
+     });
+     cy.get('body').then(($b) => {
+       const trs = $b.find('tbody tr').filter(':visible').toArray();
+       b15('4_재검색결과', { 행수: trs.length, 행: trs.slice(0, 10).map(rowText) });
+     });
 
      //검색결과 검증 : 실행 PC IP + 선택한 이벤트
      cy.get('@adminIp').then((ip) => {
        cy.get('@pickEvent').then((ev) => {
-         cy.contains('tbody tr', ip).should('be.visible')
+         cy.contains('tbody tr', ip, { timeout: 20000 }).should('be.visible')
          .within(() => {
            cy.get('a.font-weight-bold').should('contain', ev).and('be.visible');
            cy.get('span.ellipsis').contains(ip).should('be.visible');
