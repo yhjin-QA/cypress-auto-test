@@ -1,9 +1,0 @@
-{
-  "selectall": "check_box 전체 선택 1 / 1",
-  "buttons": [
-    "소명 요청 자동화",
-    "선택 해제",
-    "mail_outline 1명 일괄 소명 요청",
-    "mail_outline 소명 요청"
-  ]
-}
