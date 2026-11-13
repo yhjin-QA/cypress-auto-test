@@ -57,25 +57,43 @@ const ANOMALY_URL = {
   '사용자 이상행위 대시보드': '/logcatch/analyze/customAnomalyBehaviorPolicyDashboard'
 };
 //   [2026-11-11] 결과 화면을 주소로 바로 열면 탭·내용 없이 빈 화면으로 뜰 때가 있음(같은 날 2회 관찰)
-//     → 탭 버튼이 안 보이면 새로 고침 1회, 그래도 없으면 정책 화면으로 들어가 탭 버튼을 눌러 이동
+//   [2026-11-12] 정책 화면도 탭 버튼만 있고 내용(검색칸 · 목록)이 비어 있는 채로 뜬 적 있음 (다크대비 대시보드 실행)
+//     → 탭 버튼 + 화면 내용(READY)이 보일 때까지 최대 12초 → 안 되면 새로 고침 → 그래도 없으면 정책 화면을 거쳐 탭 버튼으로 이동
+const vis = (e) => !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
+const btnText = ($b, re) => $b.find('button, .v-btn').toArray().some((e) => vis(e) && re.test((e.innerText || '').replace(/\s+/g, ' ').trim()));
+const READY = {
+  '사용자 이상행위 정책': ($b) => $b.find('input[placeholder="정책명 / 설명 / 라벨 검색"]').toArray().some(vis),
+  '사용자 이상행위 결과': ($b) => btnText($b, /^최근 30일$/),
+  '사용자 이상행위 대시보드': ($b) => btnText($b, /기간|숨김\s*\d+\s*개|▶\s*시작|■\s*정지/)
+};
 const goAnomaly = (tab) => {
   const name = tab || '사용자 이상행위 정책';
   const hasTab = ($b) => $b.find('.v-btn__content:visible').toArray().some((e) => e.innerText.trim() === name);
+  const ok = ($b) => hasTab($b) && (!READY[name] || READY[name]($b));
+  const waitReady = (left) => cy.get('body', { log: false }).then(($b) => {
+    if (ok($b) || left <= 0) return cy.wrap(ok($b), { log: false });
+    cy.wait(1000, { log: false });
+    return waitReady(left - 1);
+  });
   cy.visit(ANOMALY_URL[name] || ANOMALY_URL['사용자 이상행위 정책']);
-  cy.wait(3500);
-  cy.get('body').then(($b) => {
-    if (hasTab($b)) return;
+  cy.wait(2500);
+  waitReady(12).then((ready) => {
+    if (ready) return;
     cy.log(`↻ 「${name}」 화면이 비어 있음 → 새로 고침`);
-    cy.reload(); cy.wait(5000);
-    cy.get('body').then(($b2) => {
-      if (hasTab($b2) || name === '사용자 이상행위 정책') return;
+    cy.reload(); cy.wait(3000);
+    waitReady(15).then((ready2) => {
+      if (ready2) return;
       cy.log(`↻ 정책 화면을 거쳐 「${name}」 탭으로 이동`);
       cy.visit(ANOMALY_URL['사용자 이상행위 정책']); cy.wait(4000);
-      cy.get('.v-btn__content', { timeout: 20000 }).filter(':visible').contains(name).click({ force: true });
-      cy.wait(3000);
+      if (name !== '사용자 이상행위 정책') {
+        cy.get('.v-btn__content', { timeout: 20000 }).filter(':visible').contains(name).click({ force: true });
+        cy.wait(3000);
+      }
+      waitReady(15);
     });
   });
   cy.get('.v-btn__content', { timeout: 20000 }).filter(':visible').contains(name).should('exist');
+  if (READY[name]) cy.get('body', { timeout: 20000 }).should(($b) => expect(READY[name]($b), `「${name}」 화면 내용이 보임`).to.eq(true));
 };
 
 const policyTotal = () => cy.get('.v-toolbar__title').filter(':visible').contains('정책 목록')

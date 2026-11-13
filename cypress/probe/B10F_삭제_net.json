@@ -85,17 +85,17 @@
   },
   {
     "m": "GET",
-    "url": "/logcatch/doc/test/meta",
-    "st": 200,
-    "req": null,
-    "body": "[{\"msg\":\"com.word.quickGuideDownload\",\"path\":\"LogCatch_v3.0_quick_사용자메뉴얼\"},{\"msg\":\"com.word.userGuideDownload\",\"path\":\"LOGCATCH_운영가이드\"}]"
-  },
-  {
-    "m": "GET",
     "url": "/logcatch/doc/test/meta/LogCatch_v3.0_quick_%EC%82%AC%EC%9A%A9%EC%9E%90%EB%A9%94%EB%89%B4%EC%96%BC",
     "st": 200,
     "req": null,
     "body": "{\"code\":200,\"message\":\"Success\",\"totalCount\":0,\"offset\":0,\"limit\":0,\"resultObject\":[]}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/doc/test/meta",
+    "st": 200,
+    "req": null,
+    "body": "[{\"msg\":\"com.word.quickGuideDownload\",\"path\":\"LogCatch_v3.0_quick_사용자메뉴얼\"},{\"msg\":\"com.word.userGuideDownload\",\"path\":\"LOGCATCH_운영가이드\"}]"
   },
   {
     "m": "GET",
@@ -135,155 +135,23 @@
   {
     "m": "GET",
     "url": "/logcatch/common/message",
-    "req": null,
-    "body": null
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/common/timezone",
-    "st": 200,
-    "req": null,
-    "body": "{\"locale\":\"ko\",\"timezone\":\"Asia/Seoul\"}"
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/doc/test/meta/LOGCATCH_%EC%9A%B4%EC%98%81%EA%B0%80%EC%9D%B4%EB%93%9C",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"totalCount\":0,\"offset\":0,\"limit\":0,\"resultObject\":[]}"
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/common/message",
     "st": 200,
     "req": null,
     "body": "{\"code\":200,\"message\":\"Success\",\"resultObject\":[{\"msgId\":\"com.word.inspection\",\"localeId\":1,\"msg\":\"점검\"},{\"msgId\":\"com.word.inspection_inspectionDashboard\",\"localeId\":1,\"msg\":\"점검 대시보드\"},{\"msgId\":\"com.word.inspection_assetDashboard\",\"localeId\":1,\"msg\":\"자산 대시보드\"},{\"msgId\":\"com.word.record\",\"localeId\":1,\"msg\":\"이력\"},{\"msgId\":\"com.word.record_accessLog\",\"localeId\":1,\"msg\":\"접속기록 이력\"},{\"msgId\":\"com.word.record_accessLog_integratedLog\",\"localeId\":1,\"msg\":\"통합\"},{\"msgId\":\"com.word.record_accessLog_webLog\","
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/common/shared/symbol-code/all",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"resultObject\":{\"1000\":[{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":0,\"codeAlias\":\"critical\",\"msg\":\"critical\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":1,\"codeAlias\":\"Major\",\"msg\":\"Major\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":2,\"codeAlias\":\"Minor\",\"msg\":\"Minor\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":3,\"codeAlias\":\""
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/common/com04/ui-options",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":{\"title\":\"LOG CATCH\",\"menu\":{\"route\":{\"to\":{\"main\":\"/\"}},\"auto-open\":false,\"fast-move\":false,\"bottom-open\":false,\"side\":{\"width\":80},\"task-log-interval\":10000,\"task-schedule-interval\":10000},\"i18n\":{\"locale\":\"ko\"},\"develop\":{\"login\":{\"id\":\"\",\"pw\":\"\",\"mode-auto-submit\":\"false\",\"mode-auto-submit-delay\":\"3\"}},\"document\":{\"includes\":{\"0\":{\"msg\":\"com.word.quickGuideDownload\",\"path\":\"LogCatch_v3.0_quick_사용자메뉴얼\"},\"1\":{\"msg\":\"com.word.userGuideDownload\",\"path\":\""
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/doc/test/meta/LOGCATCH_%EC%9A%B4%EC%98%81%EA%B0%80%EC%9D%B4%EB%93%9C",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"totalCount\":0,\"offset\":0,\"limit\":0,\"resultObject\":[]}"
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/common/shared/symbol-code/all",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"resultObject\":{\"1000\":[{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":0,\"codeAlias\":\"critical\",\"msg\":\"critical\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":1,\"codeAlias\":\"Major\",\"msg\":\"Major\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":2,\"codeAlias\":\"Minor\",\"msg\":\"Minor\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":3,\"codeAlias\":\""
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/common/com04/ui-options",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":{\"title\":\"LOG CATCH\",\"menu\":{\"route\":{\"to\":{\"main\":\"/\"}},\"auto-open\":false,\"fast-move\":false,\"bottom-open\":false,\"side\":{\"width\":80},\"task-log-interval\":10000,\"task-schedule-interval\":10000},\"i18n\":{\"locale\":\"ko\"},\"develop\":{\"login\":{\"id\":\"\",\"pw\":\"\",\"mode-auto-submit\":\"false\",\"mode-auto-submit-delay\":\"3\"}},\"document\":{\"includes\":{\"0\":{\"msg\":\"com.word.quickGuideDownload\",\"path\":\"LogCatch_v3.0_quick_사용자메뉴얼\"},\"1\":{\"msg\":\"com.word.userGuideDownload\",\"path\":\""
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/doc/test/meta/LogCatch_v3.0_quick_%EC%82%AC%EC%9A%A9%EC%9E%90%EB%A9%94%EB%89%B4%EC%96%BC",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"totalCount\":0,\"offset\":0,\"limit\":0,\"resultObject\":[]}"
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/common/message",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"resultObject\":[{\"msgId\":\"com.word.inspection\",\"localeId\":1,\"msg\":\"점검\"},{\"msgId\":\"com.word.inspection_inspectionDashboard\",\"localeId\":1,\"msg\":\"점검 대시보드\"},{\"msgId\":\"com.word.inspection_assetDashboard\",\"localeId\":1,\"msg\":\"자산 대시보드\"},{\"msgId\":\"com.word.record\",\"localeId\":1,\"msg\":\"이력\"},{\"msgId\":\"com.word.record_accessLog\",\"localeId\":1,\"msg\":\"접속기록 이력\"},{\"msgId\":\"com.word.record_accessLog_integratedLog\",\"localeId\":1,\"msg\":\"통합\"},{\"msgId\":\"com.word.record_accessLog_webLog\","
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/doc/test/meta/LOGCATCH_%EC%9A%B4%EC%98%81%EA%B0%80%EC%9D%B4%EB%93%9C",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"totalCount\":0,\"offset\":0,\"limit\":0,\"resultObject\":[]}"
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/common/com04/ui-options",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":{\"title\":\"LOG CATCH\",\"menu\":{\"route\":{\"to\":{\"main\":\"/\"}},\"auto-open\":false,\"fast-move\":false,\"bottom-open\":false,\"side\":{\"width\":80},\"task-log-interval\":10000,\"task-schedule-interval\":10000},\"i18n\":{\"locale\":\"ko\"},\"develop\":{\"login\":{\"id\":\"\",\"pw\":\"\",\"mode-auto-submit\":\"false\",\"mode-auto-submit-delay\":\"3\"}},\"document\":{\"includes\":{\"0\":{\"msg\":\"com.word.quickGuideDownload\",\"path\":\"LogCatch_v3.0_quick_사용자메뉴얼\"},\"1\":{\"msg\":\"com.word.userGuideDownload\",\"path\":\""
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/common/shared/symbol-code/all",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"resultObject\":{\"1000\":[{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":0,\"codeAlias\":\"critical\",\"msg\":\"critical\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":1,\"codeAlias\":\"Major\",\"msg\":\"Major\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":2,\"codeAlias\":\"Minor\",\"msg\":\"Minor\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":3,\"codeAlias\":\""
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/doc/test/meta/LogCatch_v3.0_quick_%EC%82%AC%EC%9A%A9%EC%9E%90%EB%A9%94%EB%89%B4%EC%96%BC",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"totalCount\":0,\"offset\":0,\"limit\":0,\"resultObject\":[]}"
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/common/com04/ui-options",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":{\"title\":\"LOG CATCH\",\"menu\":{\"route\":{\"to\":{\"main\":\"/\"}},\"auto-open\":false,\"fast-move\":false,\"bottom-open\":false,\"side\":{\"width\":80},\"task-log-interval\":10000,\"task-schedule-interval\":10000},\"i18n\":{\"locale\":\"ko\"},\"develop\":{\"login\":{\"id\":\"\",\"pw\":\"\",\"mode-auto-submit\":\"false\",\"mode-auto-submit-delay\":\"3\"}},\"document\":{\"includes\":{\"0\":{\"msg\":\"com.word.quickGuideDownload\",\"path\":\"LogCatch_v3.0_quick_사용자메뉴얼\"},\"1\":{\"msg\":\"com.word.userGuideDownload\",\"path\":\""
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/common/message",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"resultObject\":[{\"msgId\":\"com.word.inspection\",\"localeId\":1,\"msg\":\"점검\"},{\"msgId\":\"com.word.inspection_inspectionDashboard\",\"localeId\":1,\"msg\":\"점검 대시보드\"},{\"msgId\":\"com.word.inspection_assetDashboard\",\"localeId\":1,\"msg\":\"자산 대시보드\"},{\"msgId\":\"com.word.record\",\"localeId\":1,\"msg\":\"이력\"},{\"msgId\":\"com.word.record_accessLog\",\"localeId\":1,\"msg\":\"접속기록 이력\"},{\"msgId\":\"com.word.record_accessLog_integratedLog\",\"localeId\":1,\"msg\":\"통합\"},{\"msgId\":\"com.word.record_accessLog_webLog\","
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/common/com04/password-rule",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"resultObject\":{\"passwordMinSize\":9,\"passwordMaxSize\":16,\"oldPasswordLogCount\":1,\"useNumberSpecialChar\":2,\"useUpperChar\":\"false\",\"useLowerChar\":\"true\",\"useStraightChar\":0,\"useSameChar\":0,\"usePhoneNumber\":\"true\",\"useEmailAddr\":\"true\",\"useFirstCharPassword\":\"true\"}}"
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/doc/test/meta/LogCatch_v3.0_quick_%EC%82%AC%EC%9A%A9%EC%9E%90%EB%A9%94%EB%89%B4%EC%96%BC",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"totalCount\":0,\"offset\":0,\"limit\":0,\"resultObject\":[]}"
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/doc/test/meta",
-    "st": 200,
-    "req": null,
-    "body": "[{\"msg\":\"com.word.quickGuideDownload\",\"path\":\"LogCatch_v3.0_quick_사용자메뉴얼\"},{\"msg\":\"com.word.userGuideDownload\",\"path\":\"LOGCATCH_운영가이드\"}]"
   },
   {
     "m": "GET",
     "url": "/logcatch/common/com05/get-login-token",
     "st": 200,
     "req": null,
-    "body": "{\"code\":200,\"message\":\"9a642f04-a665-4857-bfce-637352061985\"}"
+    "body": "{\"code\":200,\"message\":\"33d9df77-b496-4859-8abf-62e055327905\"}"
   },
   {
     "m": "POST",
     "url": "/logcatch/oauth/token",
     "st": 200,
-    "req": "------WebKitFormBoundaryHF9fq90Vwu6t1U6c\r\nContent-Disposition: form-data; name=\"grant_type\"\r\n\r\npassword\r\n------WebKitFormBoundaryHF9fq90Vwu6t1U6c\r\nContent-Disposition: form-data; name=\"username\"\r\n\r\nadmin\r\n------WebKitFormBoundaryHF9fq90Vwu6t1U6c\r\nContent-Disposition: form-data; name=\"password\"\r\n\r\n__9a642f04-a665-4857-bfce-637352061985__Manager1!\r\n------WebKitFormBoundaryHF9fq90Vwu6t1U6c--\r\n",
-    "body": "{\"access_token\":\"bc684863-47af-43a4-8d81-cefa6f1351ab\",\"token_type\":\"bearer\",\"refresh_token\":\"c0948b79-5cbd-492d-bc18-91a35799c7ec\",\"expires_in\":99990288,\"scope\":\"all\"}"
+    "req": "------WebKitFormBoundaryvSR6N95KlBoBBeUs\r\nContent-Disposition: form-data; name=\"grant_type\"\r\n\r\npassword\r\n------WebKitFormBoundaryvSR6N95KlBoBBeUs\r\nContent-Disposition: form-data; name=\"username\"\r\n\r\nadmin\r\n------WebKitFormBoundaryvSR6N95KlBoBBeUs\r\nContent-Disposition: form-data; name=\"password\"\r\n\r\n__33d9df77-b496-4859-8abf-62e055327905__Manager1!\r\n------WebKitFormBoundaryvSR6N95KlBoBBeUs--\r\n",
+    "body": "{\"access_token\":\"74f775d7-f519-4ade-9f73-54ec5abbca41\",\"token_type\":\"bearer\",\"refresh_token\":\"0bee42e8-1be2-4fe6-ab06-3c6a781b514d\",\"expires_in\":99998676,\"scope\":\"all\"}"
   },
   {
     "m": "GET",
@@ -311,7 +179,7 @@
     "url": "/logcatch/api/v1/mfa/status",
     "st": 200,
     "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":{\"sid\":\"A1SYCsgZi9FMXX6P0aqQxA\",\"state\":\"MFA_NOT_REQUIRED\",\"enrollmentRestartRequired\":false,\"passwordAllowed\":false,\"accountEmailRequired\":false,\"enrollmentStepUpRequired\":false,\"enrollFields\":[],\"enrollableMethods\":[],\"developmentOnly\":false,\"remainingAttempts\":5},\"resultCode\":\"SUCCESS\"}"
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":{\"sid\":\"2f5Qmrq9zig0WbkKsYea3Q\",\"state\":\"MFA_NOT_REQUIRED\",\"enrollmentRestartRequired\":false,\"passwordAllowed\":false,\"accountEmailRequired\":false,\"enrollmentStepUpRequired\":false,\"enrollFields\":[],\"enrollableMethods\":[],\"developmentOnly\":false,\"remainingAttempts\":5},\"resultCode\":\"SUCCESS\"}"
   },
   {
     "m": "GET",
@@ -329,23 +197,23 @@
   },
   {
     "m": "GET",
-    "url": "/logcatch/alert/info?Authorization=bc684863-47af-43a4-8d81-cefa6f1351ab&t=1794469014353",
+    "url": "/logcatch/alert/info?Authorization=74f775d7-f519-4ade-9f73-54ec5abbca41&t=1794475467447",
     "st": 200,
     "req": null,
-    "body": "{\"entropy\":-805950025,\"origins\":[\"*:*\"],\"cookie_needed\":true,\"websocket\":true}"
+    "body": "{\"entropy\":127269782,\"origins\":[\"*:*\"],\"cookie_needed\":true,\"websocket\":true}"
   },
   {
     "m": "GET",
-    "url": "/logcatch/progress/info?Authorization=bc684863-47af-43a4-8d81-cefa6f1351ab&t=1794469014354",
+    "url": "/logcatch/progress/info?Authorization=74f775d7-f519-4ade-9f73-54ec5abbca41&t=1794475467447",
     "st": 200,
     "req": null,
-    "body": "{\"entropy\":694993080,\"origins\":[\"*:*\"],\"cookie_needed\":true,\"websocket\":true}"
+    "body": "{\"entropy\":1837110126,\"origins\":[\"*:*\"],\"cookie_needed\":true,\"websocket\":true}"
   },
   {
     "m": "POST",
     "url": "/logcatch/common/com05/file/download",
     "st": 200,
-    "req": "{\"map\":{\"sessionId\":\"hiyazm6kdpw\",\"managerId\":1}}",
+    "req": "{\"map\":{\"sessionId\":\"v8urpt8fo17\",\"managerId\":1}}",
     "body": "{\"code\":200,\"message\":\"Success\"}"
   },
   {
@@ -378,6 +246,13 @@
   },
   {
     "m": "GET",
+    "url": "/logcatch/common/shared/symbol-code/all",
+    "st": 200,
+    "req": null,
+    "body": "{\"code\":200,\"message\":\"Success\",\"resultObject\":{\"1000\":[{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":0,\"codeAlias\":\"critical\",\"msg\":\"critical\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":1,\"codeAlias\":\"Major\",\"msg\":\"Major\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":2,\"codeAlias\":\"Minor\",\"msg\":\"Minor\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":3,\"codeAlias\":\""
+  },
+  {
+    "m": "GET",
     "url": "/logcatch/common/com04/ui-options",
     "st": 200,
     "req": null,
@@ -385,10 +260,17 @@
   },
   {
     "m": "GET",
-    "url": "/logcatch/common/shared/symbol-code/all",
+    "url": "/logcatch/doc/test/meta/LOGCATCH_%EC%9A%B4%EC%98%81%EA%B0%80%EC%9D%B4%EB%93%9C",
     "st": 200,
     "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"resultObject\":{\"1000\":[{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":0,\"codeAlias\":\"critical\",\"msg\":\"critical\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":1,\"codeAlias\":\"Major\",\"msg\":\"Major\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":2,\"codeAlias\":\"Minor\",\"msg\":\"Minor\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":3,\"codeAlias\":\""
+    "body": "{\"code\":200,\"message\":\"Success\",\"totalCount\":0,\"offset\":0,\"limit\":0,\"resultObject\":[]}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/common/com04/ui-options",
+    "st": 200,
+    "req": null,
+    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":{\"title\":\"LOG CATCH\",\"menu\":{\"route\":{\"to\":{\"main\":\"/\"}},\"auto-open\":false,\"fast-move\":false,\"bottom-open\":false,\"side\":{\"width\":80},\"task-log-interval\":10000,\"task-schedule-interval\":10000},\"i18n\":{\"locale\":\"ko\"},\"develop\":{\"login\":{\"id\":\"\",\"pw\":\"\",\"mode-auto-submit\":\"false\",\"mode-auto-submit-delay\":\"3\"}},\"document\":{\"includes\":{\"0\":{\"msg\":\"com.word.quickGuideDownload\",\"path\":\"LogCatch_v3.0_quick_사용자메뉴얼\"},\"1\":{\"msg\":\"com.word.userGuideDownload\",\"path\":\""
   },
   {
     "m": "GET",
@@ -399,20 +281,6 @@
   },
   {
     "m": "GET",
-    "url": "/logcatch/doc/test/meta/LOGCATCH_%EC%9A%B4%EC%98%81%EA%B0%80%EC%9D%B4%EB%93%9C",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"totalCount\":0,\"offset\":0,\"limit\":0,\"resultObject\":[]}"
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/common/com04/ui-options",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"etcData\":{\"title\":\"LOG CATCH\",\"menu\":{\"route\":{\"to\":{\"main\":\"/\"}},\"auto-open\":false,\"fast-move\":false,\"bottom-open\":false,\"side\":{\"width\":80},\"task-log-interval\":10000,\"task-schedule-interval\":10000},\"i18n\":{\"locale\":\"ko\"},\"develop\":{\"login\":{\"id\":\"\",\"pw\":\"\",\"mode-auto-submit\":\"false\",\"mode-auto-submit-delay\":\"3\"}},\"document\":{\"includes\":{\"0\":{\"msg\":\"com.word.quickGuideDownload\",\"path\":\"LogCatch_v3.0_quick_사용자메뉴얼\"},\"1\":{\"msg\":\"com.word.userGuideDownload\",\"path\":\""
-  },
-  {
-    "m": "GET",
     "url": "/logcatch/doc/test/meta/LogCatch_v3.0_quick_%EC%82%AC%EC%9A%A9%EC%9E%90%EB%A9%94%EB%89%B4%EC%96%BC",
     "st": 200,
     "req": null,
@@ -445,13 +313,6 @@
     "st": 200,
     "req": null,
     "body": "{\"code\":200,\"message\":\"Success\",\"totalCount\":0,\"offset\":0,\"limit\":0,\"resultObject\":[]}"
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/common/shared/symbol-code/all",
-    "st": 200,
-    "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"resultObject\":{\"1000\":[{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":0,\"codeAlias\":\"critical\",\"msg\":\"critical\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":1,\"codeAlias\":\"Major\",\"msg\":\"Major\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":2,\"codeAlias\":\"Minor\",\"msg\":\"Minor\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":3,\"codeAlias\":\""
   },
   {
     "m": "GET",
@@ -469,17 +330,10 @@
   },
   {
     "m": "GET",
-    "url": "/logcatch/progress/info?Authorization=bc684863-47af-43a4-8d81-cefa6f1351ab&t=1794469023409",
+    "url": "/logcatch/common/shared/symbol-code/all",
     "st": 200,
     "req": null,
-    "body": "{\"entropy\":-1513386343,\"origins\":[\"*:*\"],\"cookie_needed\":true,\"websocket\":true}"
-  },
-  {
-    "m": "GET",
-    "url": "/logcatch/alert/info?Authorization=bc684863-47af-43a4-8d81-cefa6f1351ab&t=1794469023408",
-    "st": 200,
-    "req": null,
-    "body": "{\"entropy\":-443758086,\"origins\":[\"*:*\"],\"cookie_needed\":true,\"websocket\":true}"
+    "body": "{\"code\":200,\"message\":\"Success\",\"resultObject\":{\"1000\":[{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":0,\"codeAlias\":\"critical\",\"msg\":\"critical\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":1,\"codeAlias\":\"Major\",\"msg\":\"Major\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":2,\"codeAlias\":\"Minor\",\"msg\":\"Minor\",\"subGroupId\":0,\"localeId\":1},{\"categoryId\":1000,\"categoryName\":\"alert_level\",\"codeId\":3,\"codeAlias\":\""
   },
   {
     "m": "GET",
@@ -487,6 +341,20 @@
     "st": 200,
     "req": null,
     "body": "{\"code\":200,\"message\":\"Success\",\"resultObject\":[{\"msgId\":\"com.word.inspection\",\"localeId\":1,\"msg\":\"점검\"},{\"msgId\":\"com.word.inspection_inspectionDashboard\",\"localeId\":1,\"msg\":\"점검 대시보드\"},{\"msgId\":\"com.word.inspection_assetDashboard\",\"localeId\":1,\"msg\":\"자산 대시보드\"},{\"msgId\":\"com.word.record\",\"localeId\":1,\"msg\":\"이력\"},{\"msgId\":\"com.word.record_accessLog\",\"localeId\":1,\"msg\":\"접속기록 이력\"},{\"msgId\":\"com.word.record_accessLog_integratedLog\",\"localeId\":1,\"msg\":\"통합\"},{\"msgId\":\"com.word.record_accessLog_webLog\","
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/alert/info?Authorization=74f775d7-f519-4ade-9f73-54ec5abbca41&t=1794475476537",
+    "st": 200,
+    "req": null,
+    "body": "{\"entropy\":278115899,\"origins\":[\"*:*\"],\"cookie_needed\":true,\"websocket\":true}"
+  },
+  {
+    "m": "GET",
+    "url": "/logcatch/progress/info?Authorization=74f775d7-f519-4ade-9f73-54ec5abbca41&t=1794475476537",
+    "st": 200,
+    "req": null,
+    "body": "{\"entropy\":1618933091,\"origins\":[\"*:*\"],\"cookie_needed\":true,\"websocket\":true}"
   },
   {
     "m": "GET",
@@ -520,7 +388,7 @@
     "m": "POST",
     "url": "/logcatch/common/com05/file/download",
     "st": 200,
-    "req": "{\"map\":{\"sessionId\":\"gyrdfdwv80b\",\"managerId\":1}}",
+    "req": "{\"map\":{\"sessionId\":\"ii7ac3j8bzg\",\"managerId\":1}}",
     "body": "{\"code\":200,\"message\":\"Success\"}"
   },
   {
@@ -590,7 +458,7 @@
     "m": "POST",
     "url": "/logcatch/pams/filter/object",
     "st": 200,
-    "req": "{\"scanObjectGroupId\":11,\"scanObjectGroupNm\":\"Excluded SQL\",\"scanObjectGroupTypeCd\":102,\"uiUseYn\":\"Y\",\"scanObjectVal\":\"SELECT 1 FROM auto_임시_검출_163700\",\"scanObjectDesc\":\"auto_임시_검출_설명 (Basic 자동화)\",\"scanObjectOptionTypeCd\":0,\"bsnIdList\":[1],\"logTraceIdList\":[]}",
+    "req": "{\"scanObjectGroupId\":11,\"scanObjectGroupNm\":\"Excluded SQL\",\"scanObjectGroupTypeCd\":102,\"uiUseYn\":\"Y\",\"scanObjectVal\":\"SELECT 1 FROM auto_임시_검출_182433\",\"scanObjectDesc\":\"auto_임시_검출_설명 (Basic 자동화)\",\"scanObjectOptionTypeCd\":0,\"bsnIdList\":[1],\"logTraceIdList\":[]}",
     "body": "{\"code\":200,\"message\":\"Success\"}"
   },
   {
@@ -602,16 +470,16 @@
   },
   {
     "m": "GET",
-    "url": "/logcatch/common/com06/work-history/before-after?id=287325&moduleType=1",
+    "url": "/logcatch/common/com06/work-history/before-after?id=287607&moduleType=1",
     "st": 200,
     "req": null,
-    "body": "{\"code\":200,\"message\":\"Success\",\"resultObject\":{\"beforeData\":\"\",\"afterData\":\"{\\\"Filter List\\\":\\\"SELECT 1 FROM auto_임시_검출_163700\\\",\\\"Description\\\":\\\"SQL not covered by Logcollector\\\",\\\"Filter Group Type\\\":\\\"Optional.empty\\\",\\\"Filter Name\\\":\\\"Excluded SQL\\\"}\"}}"
+    "body": "{\"code\":200,\"message\":\"Success\",\"resultObject\":{\"beforeData\":\"\",\"afterData\":\"{\\\"Filter List\\\":\\\"SELECT 1 FROM auto_임시_검출_182433\\\",\\\"Description\\\":\\\"SQL not covered by Logcollector\\\",\\\"Filter Group Type\\\":\\\"Optional.empty\\\",\\\"Filter Name\\\":\\\"Excluded SQL\\\"}\"}}"
   },
   {
     "m": "POST",
     "url": "/logcatch/pams/filter/object",
     "st": 200,
-    "req": "{\"scanObjectGroupId\":11,\"scanObjectGroupNm\":\"Excluded SQL\",\"scanObjectGroupTypeCd\":102,\"uiUseYn\":\"Y\",\"scanObjectVal\":\"SELECT 1 FROM auto_임시_검출_163700\",\"scanObjectDesc\":\"auto_임시_검출_설명 (Basic 자동화)\",\"scanObjectOptionTypeCd\":0,\"bsnIdList\":[1],\"logTraceIdList\":[]}",
+    "req": "{\"scanObjectGroupId\":11,\"scanObjectGroupNm\":\"Excluded SQL\",\"scanObjectGroupTypeCd\":102,\"uiUseYn\":\"Y\",\"scanObjectVal\":\"SELECT 1 FROM auto_임시_검출_182433\",\"scanObjectDesc\":\"auto_임시_검출_설명 (Basic 자동화)\",\"scanObjectOptionTypeCd\":0,\"bsnIdList\":[1],\"logTraceIdList\":[]}",
     "body": "{\"code\":200,\"message\":\"Success\"}"
   },
   {
@@ -623,7 +491,7 @@
   },
   {
     "m": "POST",
-    "url": "/logcatch/pams/filter/object/9174",
+    "url": "/logcatch/pams/filter/object/9177",
     "st": 200,
     "req": "{}",
     "body": "{\"code\":200,\"message\":\"Success\"}"

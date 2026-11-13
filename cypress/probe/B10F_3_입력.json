@@ -29,7 +29,8 @@
     "저장",
     "chevron_left",
     "1",
-    "chevron_right"
+    "chevron_right",
+    "2"
   ],
   "inputs": [
     {
@@ -120,7 +121,7 @@
       "type": "text",
       "aria": "특정 SQL",
       "ph": null,
-      "val": "SELECT 1 FROM auto_임시_검출_163700",
+      "val": "SELECT 1 FROM auto_임시_검출_182433",
       "checked": null
     },
     {
@@ -172,9 +173,11 @@
   ],
   "rows": [
     "No data available",
+    "2026-11-12 16:37:54 Admin(admin) 10.10.0.72 Delete",
+    "2026-11-12 16:37:46 Admin(admin) 10.10.0.72 Add",
+    "2026-11-12 16:37:32 Admin(admin) 10.10.0.72 Add",
     "2026-11-12 16:24:40 Admin(admin) 10.10.0.72 Delete",
-    "2026-11-12 16:24:32 Admin(admin) 10.10.0.72 Add",
-    "2026-11-12 16:24:20 Admin(admin) 10.10.0.72 Add"
+    "2026-11-12 16:24:32 Admin(admin) 10.10.0.72 Add"
   ],
   "cards": [],
   "menus": [

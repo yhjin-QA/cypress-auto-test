@@ -1,0 +1,99 @@
+{
+  "profile": "[기본] 업무시스템·사용자 계정·사용자 기준선",
+  "profileRows": [
+    {
+      "row": "#20 신규 업무시스템 접속 주의 미사용 chevron_right",
+      "badges": [
+        {
+          "text": "주의",
+          "fg": "#1e88e5",
+          "bg": "#1e334c",
+          "ratio": 3.51,
+          "font": "12px 700"
+        },
+        {
+          "text": "미사용",
+          "fg": "#8a97ab",
+          "bg": "#293446",
+          "ratio": 4.24,
+          "font": "12px 700"
+        }
+      ]
+    },
+    {
+      "row": "#29 접속량 평소 대비 급증 주의 미사용 chevron_right",
+      "badges": [
+        {
+          "text": "주의",
+          "fg": "#1e88e5",
+          "bg": "#1e334c",
+          "ratio": 3.51,
+          "font": "12px 700"
+        },
+        {
+          "text": "미사용",
+          "fg": "#8a97ab",
+          "bg": "#293446",
+          "ratio": 4.24,
+          "font": "12px 700"
+        }
+      ]
+    },
+    {
+      "row": "#30 개인정보 사용량 평소 대비 급증 경계 미사용 chevron_right",
+      "badges": [
+        {
+          "text": "경계",
+          "fg": "#fb8c00",
+          "bg": "#343335",
+          "ratio": 5.3,
+          "font": "12px 700"
+        },
+        {
+          "text": "미사용",
+          "fg": "#8a97ab",
+          "bg": "#293446",
+          "ratio": 4.24,
+          "font": "12px 700"
+        }
+      ]
+    }
+  ],
+  "alertHeaders": [
+    {
+      "header": "chevron_right check_box_outline_blank 주의 person 사원_14 (user014) 8 auto_소명_반려, auto_소명_접속량 과다 mail_outline 소명 요청",
+      "badges": [
+        {
+          "text": "주의",
+          "fg": "#1e88e5",
+          "bg": "#1e334c",
+          "ratio": 3.51,
+          "font": "12px 700"
+        }
+      ]
+    }
+  ],
+  "severityRadio": [
+    {
+      "text": "심각",
+      "fg": "#94a3b8",
+      "bg": "#1e293b",
+      "ratio": 5.71,
+      "font": "12px 700"
+    },
+    {
+      "text": "경계",
+      "fg": "#94a3b8",
+      "bg": "#1e293b",
+      "ratio": 5.71,
+      "font": "12px 700"
+    },
+    {
+      "text": "주의",
+      "fg": "#42a5f5",
+      "bg": "#1e3c5d",
+      "ratio": 4.27,
+      "font": "12px 700"
+    }
+  ]
+}

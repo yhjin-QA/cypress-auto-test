@@ -1,5 +1,5 @@
 {
-  "url": "https://10.10.54.21:18443/logcatch/analyze/customAnomalyBehaviorPolicyResult?keyword=auto_%EC%86%8C%EB%AA%85_%EC%A0%91%EC%86%8D%EB%9F%89%20%EA%B3%BC%EB%8B%A4&dateFrom=2026-10-14&dateTo=2026-11-12&dataMode=policy",
+  "url": "https://10.10.54.21:18443/logcatch/analyze/customAnomalyBehaviorPolicyResult?keyword=auto_%EC%86%8C%EB%AA%85_%EC%A0%91%EC%86%8D%EB%9F%89%20%EA%B3%BC%EB%8B%A4&dateFrom=2026-10-15&dateTo=2026-11-13&dataMode=policy",
   "headlines": [
     "경보 (정책 1개 그룹 / 합계 3건)"
   ],
@@ -67,14 +67,14 @@
       "type": "date",
       "aria": null,
       "ph": null,
-      "val": "2026-10-14",
+      "val": "2026-10-15",
       "checked": null
     },
     {
       "type": "date",
       "aria": null,
       "ph": null,
-      "val": "2026-11-12",
+      "val": "2026-11-13",
       "checked": null
     },
     {
@@ -88,7 +88,7 @@
   "th": [],
   "rows": [],
   "cards": [
-    "chevron_right 주의 v3 auto_소명_접속량 과다 3 (3회 실행) 2026-10-14 00:00 ~ 2026-11-12 00:00"
+    "chevron_right 주의 v3 auto_소명_접속량 과다 3 (3회 실행) 2026-11-11 00:00 ~ 2026-11-13 00:00"
   ],
   "menus": [],
   "dialogs": [],

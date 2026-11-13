@@ -30,6 +30,26 @@ const t = (e) => (e ? (e.innerText || '') : '').replace(/\s+/g, ' ').trim();
 const shown = (e) => !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
 let ORIG = null;      // 시작할 때 읽은 설정 (after 에서 되돌릴 기준)
 let schedule = null;  // 마지막으로 받은 설정 API 응답
+const p2 = (n) => String(n).padStart(2, '0');
+const ymd = (d) => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+const mailText = (r) => String((r.body && (r.body.Text || r.body.HTML)) || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+// 자동 소명 요청 메일 본문 · 첨부 검사 (지금 실행 메일 · 오늘 예약 발송 메일 공통)
+//   「아래 내용을 확인 후 로그캐치에 접속하여 소명해 주시기 바랍니다.」 · [ 업무 시스템 ] · [ 부서 ] · [ 사용자 ] · [ 발생 기간 ] · [ 정책 위반 사항 ]
+//   [ 심각 ] / [ 경계 ] / [ 주의 ] N건 · 「[자동 안내] <임계 기간>일이 경과한 미소명 이상행위가 있어 소명을 요청드립니다.」 · 첨부 이상행위_이력.xlsx
+const checkAutoMail = (r, to, tag) => {
+  const body = mailText(r);
+  const files = ((r.body && r.body.Attachments) || []).map((a) => ({ name: a.FileName, type: a.ContentType, size: a.Size }));
+  const sev = ['심각', '경계', '주의'].map((k) => parseInt((body.match(new RegExp(`\\[\\s*${k}\\s*\\]\\s*[:：∶]?\\s*(\\d+)\\s*건`)) || [])[1] || '-1', 10));
+  cy.writeFile(`cypress/probe/D04A_4_메일본문_${tag}_${to || 'unknown'}.json`, { to, files, sev, body: body.slice(0, 2000) });
+  const user = (to || '').split('@')[0];
+  expect(body, '안내 문구').to.include('소명해 주시기 바랍니다');
+  ['업무 시스템', '부서', '사용자', '발생 기간', '정책 위반 사항'].forEach((k) => expect(body, `[ ${k} ] 항목`).to.match(new RegExp(`\\[\\s*${k}\\s*\\]`)));
+  if (user) expect(body, '[ 사용자 ] 에 받는 사람 계정').to.include(`(${user})`);
+  sev.forEach((v, i) => expect(v, `[ ${['심각', '경계', '주의'][i]} ] 건수`).to.be.at.least(0));
+  expect(sev.reduce((a, b) => a + b, 0), '위험도별 건수 합').to.be.greaterThan(0);
+  expect(body, '자동 안내 문구의 임계 기간').to.include(`${ORIG.thresholdDays}일이 경과한 미소명 이상행위`);
+  if (ORIG.attachExcel) expect(files.map((x) => x.name), '첨부 파일').to.include('이상행위_이력.xlsx');
+};
 
 // ---- 화면
 // [2026-11-12] 화면은 서버 값을 받기 전에 기본값(7일 · 7일 · 9시 · 꺼짐)을 먼저 그림
@@ -204,25 +224,32 @@ describe('04_Depth_소명_요청자동화', () => {
           cy.writeFile('cypress/probe/D04A_4_새메일.json', { sent: n, mails: list });
           expect(fresh.length, `Mailpit 새 소명 메일 수 = 발송 완료 ${n}건`).to.eq(n);
           if (n > 0 && ORIG.attachExcel) list.forEach((m) => expect(m.attachments, `「${m.subject}」 엑셀 첨부`).to.be.greaterThan(0));
-          // [2026-11-12] 메일 본문 · 첨부 (사용자 확인 내용 기준)
-          //   「아래 내용을 확인 후 로그캐치에 접속하여 소명해 주시기 바랍니다.」 · [ 업무 시스템 ] · [ 부서 ] · [ 사용자 ] · [ 발생 기간 ] · [ 정책 위반 사항 ]
-          //   [ 심각 ] / [ 경계 ] / [ 주의 ] N건 · 「[자동 안내] <임계 기간>일이 경과한 미소명 이상행위가 있어 소명을 요청드립니다.」 · 첨부 이상행위_이력.xlsx
+          // 메일 본문 · 첨부 (checkAutoMail)
           list.forEach((m) => {
-            cy.request({ url: `http://10.10.54.26:8025/api/v1/message/${m.id}`, failOnStatusCode: false }).then((r) => {
-              const body = String((r.body && (r.body.Text || r.body.HTML)) || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
-              const files = ((r.body && r.body.Attachments) || []).map((a) => ({ name: a.FileName, type: a.ContentType, size: a.Size }));
-              const sev = ['심각', '경계', '주의'].map((k) => parseInt((body.match(new RegExp(`\\[\\s*${k}\\s*\\]\\s*[:：∶]?\\s*(\\d+)\\s*건`)) || [])[1] || '-1', 10));
-              cy.writeFile(`cypress/probe/D04A_4_메일본문_${m.to[0] || 'unknown'}.json`, { to: m.to, files, sev, body: body.slice(0, 2000) });
-              const user = (m.to[0] || '').split('@')[0];
-              expect(body, '안내 문구').to.include('소명해 주시기 바랍니다');
-              ['업무 시스템', '부서', '사용자', '발생 기간', '정책 위반 사항'].forEach((k) => expect(body, `[ ${k} ] 항목`).to.match(new RegExp(`\\[\\s*${k}\\s*\\]`)));
-              if (user) expect(body, '[ 사용자 ] 에 받는 사람 계정').to.include(`(${user})`);
-              sev.forEach((v, i) => expect(v, `[ ${['심각', '경계', '주의'][i]} ] 건수`).to.be.at.least(0));
-              expect(sev.reduce((a, b) => a + b, 0), '위험도별 건수 합').to.be.greaterThan(0);
-              expect(body, '자동 안내 문구의 임계 기간').to.include(`${ORIG.thresholdDays}일이 경과한 미소명 이상행위`);
-              if (ORIG.attachExcel) expect(files.map((x) => x.name), '첨부 파일').to.include('이상행위_이력.xlsx');
-            });
+            cy.request({ url: `http://10.10.54.26:8025/api/v1/message/${m.id}`, failOnStatusCode: false }).then((r) => checkAutoMail(r, m.to[0], '지금실행'));
           });
+          // [2026-11-12] 재발송 주기(1일) 안이면 지금 실행은 0건 (매일 sendHour 시 예약 발송 · 수동 소명 요청 뒤에는 늘 0건)
+          //   → 0건이면 Mailpit 에서 오늘 온 자동 소명 요청 메일(「N일이 경과한 미소명 이상행위」)을 찾아 같은 본문 검사
+          if (n === 0) {
+            const today = ymd(new Date());
+            const cands = ((res.body && res.body.messages) || []).filter((m) => /소명/.test(m.Subject || '') && m.Created && ymd(new Date(m.Created)) === today).slice(0, 10);
+            const pick = (k) => {
+              if (k >= cands.length) {
+                cy.writeFile('cypress/probe/D04A_4_오늘자동메일.json', { today, 후보: cands.length, 결과: '오늘 자동 발송 메일 없음 — 본문 검사 건너뜀' });
+                cy.log('⏭️ 오늘 자동 발송 메일이 없어 본문 검사 건너뜀');
+                return;
+              }
+              const m = cands[k];
+              cy.request({ url: `http://10.10.54.26:8025/api/v1/message/${m.ID}`, failOnStatusCode: false }).then((r) => {
+                if (!/일이 경과한 미소명 이상행위/.test(mailText(r))) { pick(k + 1); return; }
+                const to = ((m.To || [])[0] || {}).Address;
+                cy.writeFile('cypress/probe/D04A_4_오늘자동메일.json', { today, id: m.ID, subject: m.Subject, to, created: m.Created });
+                cy.log(`📨 지금 실행 0건 → 오늘 자동 발송 메일로 본문 확인 (${to} · ${m.Created})`);
+                checkAutoMail(r, to, '오늘자동');
+              });
+            };
+            pick(0);
+          }
         });
         poll(6);
       });

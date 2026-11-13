@@ -1,0 +1,71 @@
+{
+  "url": "https://10.10.54.21:18443/logcatch/detect/menu/management/bulkReg",
+  "headlines": [
+    "업무시스템 목록 (Master)"
+  ],
+  "buttons": [
+    "점검",
+    "이력",
+    "현황",
+    "leak_add 자산",
+    "assignment 보고",
+    "보관",
+    "verified_user 분석",
+    "policy 검출",
+    "운영",
+    "소명",
+    "info",
+    "wb_sunny",
+    "ADMIN 님",
+    "메뉴 관리",
+    "URI 관리",
+    "URI 관리 룰",
+    "URI 관리 일괄 등록",
+    "표준 템플릿 다운로드",
+    "엑셀 업로드",
+    "chevron_left",
+    "chevron_right",
+    "save 일괄 저장"
+  ],
+  "inputs": [
+    {
+      "type": "text",
+      "aria": "Rows per page:",
+      "ph": null,
+      "val": "",
+      "checked": null
+    }
+  ],
+  "th": [
+    "업무시스템 명 ((필수))",
+    "키",
+    "메뉴 명",
+    "행위구분 추출:",
+    "키 1 (test)"
+  ],
+  "rows": [
+    "리눅스_배송관리 170 Depth_Test_20260522 조회",
+    "리눅스_배송관리 174 조회",
+    "리눅스_배송관리 176 조회",
+    "리눅스_배송관리 177 조회",
+    "리눅스_배송관리 178 조회",
+    "리눅스_배송관리 179 조회"
+  ],
+  "cards": [],
+  "menus": [
+    "리눅스_배송관리",
+    "윈도우_배송관리",
+    "JEUS_tester3",
+    "리눅스_VIP고객",
+    "JEUS_CRM고객관리",
+    "WebLogic_CRM고객관리",
+    "JBOSS_CRM고객관리",
+    "Embedded Tomcat_WAS",
+    "Apache_PHP_WAS",
+    "IIS_WAS",
+    "WebSphere_IBM_Liberty_CRM고객관리",
+    "Node.js_WAS"
+  ],
+  "dialogs": [],
+  "snack": []
+}

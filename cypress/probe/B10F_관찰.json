@@ -1,9 +1,9 @@
 {
   "B10F_시작": {
     "label": 0,
-    "histTotal": 3,
+    "histTotal": 6,
     "histTop": [
-      "2026-11-12 16:24:40",
+      "2026-11-12 16:37:54",
       "Admin(admin)",
       "10.10.0.72",
       "Delete"
@@ -30,27 +30,27 @@
   "B10F_관찰_등록안내": "저장인데 「삭제했습니다.」",
   "B10F_등록뒤_입력칸": "(비움)",
   "B10F_등록_변경이력": [
-    "2026-11-12 16:37:32",
+    "2026-11-12 18:25:06",
     "Admin(admin)",
     "10.10.0.72",
     "Add"
   ],
-  "B10F_변경이력_상세": "변경 이력 상세 보기 종류 값 No data available 종류 값 Filter List SELECT 1 FROM auto_임시_검출_163700 Description SQL not covered by Logcollector Filter Group Type Optional.empty Filter Name Excluded SQL 확인",
+  "B10F_변경이력_상세": "변경 이력 상세 보기 종류 값 No data available 종류 값 Filter List SELECT 1 FROM auto_임시_검출_182433 Description SQL not covered by Logcollector Filter Group Type Optional.empty Filter Name Excluded SQL 확인",
   "B10F_변경이력_상세에_값": true,
   "B10F_관찰_변경이력상세_Optional": "「Optional.empty」 보임",
   "B10F_중복_안내": "삭제했습니다.",
   "B10F_같은값_다시등록": "막힘 (1건)",
-  "B10F_관찰_같은값_변경이력": "4 → 5 (맨 위 2026-11-12 16:37:46 Admin(admin) 10.10.0.72 Add)",
+  "B10F_관찰_같은값_변경이력": "7 → 8 (맨 위 2026-11-12 18:25:17 Admin(admin) 10.10.0.72 Add)",
   "B10F_삭제_확인창": "삭제 삭제하시겠습니까? 취소 확인",
   "B10F_삭제_안내": "삭제했습니다.",
   "B10F_삭제_변경이력": {
     "top": [
-      "2026-11-12 16:37:54",
+      "2026-11-12 18:25:25",
       "Admin(admin)",
       "10.10.0.72",
       "Delete"
     ],
-    "histTotal": 6
+    "histTotal": 9
   },
   "B10F_탭_사용자 IP 제외": {
     "label": 0,

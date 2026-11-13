@@ -5,7 +5,7 @@
     "resendIntervalDays": "1",
     "sendHour": "10",
     "attachExcel": true,
-    "updatedAt": "2026-11-12 15:53:44"
+    "updatedAt": "2026-11-12 17:18:07"
   },
   "api": {
     "id": 1,
@@ -16,6 +16,6 @@
     "sendHour": 10,
     "attachExcel": true,
     "updatedBy": 1,
-    "updatedAt": "2026-11-12 15:53:44"
+    "updatedAt": "2026-11-12 17:18:07"
   }
 }

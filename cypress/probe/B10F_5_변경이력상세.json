@@ -31,7 +31,8 @@
     "저장",
     "chevron_left",
     "1",
-    "chevron_right"
+    "chevron_right",
+    "2"
   ],
   "inputs": [
     {
@@ -92,16 +93,16 @@
   ],
   "rows": [
     "No data available",
-    "Filter List SELECT 1 FROM auto_임시_검출_163700",
+    "Filter List SELECT 1 FROM auto_임시_검출_182433",
     "Description SQL not covered by Logcollector",
     "Filter Group Type Optional.empty",
     "Filter Name Excluded SQL",
-    "SELECT 1 FROM auto_임시_검출_163700 auto_임시_검출_설명 (Basic 자동화) 리눅스_배송관리"
+    "SELECT 1 FROM auto_임시_검출_182433 auto_임시_검출_설명 (Basic 자동화) 리눅스_배송관리"
   ],
   "cards": [],
   "menus": [],
   "dialogs": [
-    "변경 이력 상세 보기 종류 값 No data available 종류 값 Filter List SELECT 1 FROM auto_임시_검출_163700 Description SQL not covered by Logcollector Filter Group Type Optional.empty Filter Name Excluded SQL 확인"
+    "변경 이력 상세 보기 종류 값 No data available 종류 값 Filter List SELECT 1 FROM auto_임시_검출_182433 Description SQL not covered by Logcollector Filter Group Type Optional.empty Filter Name Excluded SQL 확인"
   ],
   "snack": []
 }

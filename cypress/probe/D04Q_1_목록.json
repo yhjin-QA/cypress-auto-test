@@ -1,7 +1,7 @@
 {
   "url": "https://10.10.54.21:18443/logcatch/approval/submit/anomaly-alerts",
   "headlines": [
-    "경보 (합계 7건)"
+    "경보 (합계 6건)"
   ],
   "buttons": [
     "점검",
@@ -76,7 +76,7 @@
   "th": [],
   "rows": [],
   "cards": [
-    "chevron_right check_box_outline_blank 주의 person 사원_14 (user014) 7 auto_소명_반려, auto_소명_승인, auto_소명_접속량 과다 mail_outline 소명 요청"
+    "chevron_right check_box_outline_blank 주의 person 사원_14 (user014) 6 auto_소명_반려, auto_소명_접속량 과다 mail_outline 소명 요청"
   ],
   "menus": [],
   "dialogs": [],

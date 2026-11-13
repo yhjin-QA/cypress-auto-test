@@ -2,7 +2,7 @@
   "url": "https://10.10.54.21:18443/logcatch/approval/submit/anomaly-alerts",
   "headlines": [
     "소명 요청",
-    "경보 (합계 7건)"
+    "경보 (합계 6건)"
   ],
   "buttons": [
     "취소",
@@ -46,7 +46,7 @@
       "type": "textarea",
       "aria": null,
       "ph": "소명 요청 사유·안내를 입력하세요 (선택, 최대 300자)",
-      "val": "[자동화] 수동 소명 요청 시나리오 2026-11-12 16:04:15",
+      "val": "[자동화] 수동 소명 요청 시나리오 2026-11-12 18:23:41",
       "checked": null
     },
     {
@@ -95,11 +95,11 @@
   "th": [],
   "rows": [],
   "cards": [
-    "chevron_right check_box 주의 person 사원_14 (user014) 7 auto_소명_반려, auto_소명_승인, auto_소명_접속량 과다 mail_outline 소명 요청"
+    "chevron_right check_box 주의 person 사원_14 (user014) 6 auto_소명_반려, auto_소명_접속량 과다 mail_outline 소명 요청"
   ],
   "menus": [],
   "dialogs": [
-    "close 소명 요청 mail_outline 선택한 사용자에게 이상행위 소명을 요청하는 메일을 발송하고 요청 기록을 남깁니다. 요청 대상 1명 person 사원_14 auto_소명_반려, auto_소명_승인, auto_소명_접속량 과다 7건 정보관리 책임자 의견 39 / 300 이상행위 이력 엑셀 파일 첨부 취소 send 소명 요청 발송"
+    "close 소명 요청 mail_outline 선택한 사용자에게 이상행위 소명을 요청하는 메일을 발송하고 요청 기록을 남깁니다. 요청 대상 1명 person 사원_14 auto_소명_반려, auto_소명_접속량 과다 6건 정보관리 책임자 의견 39 / 300 이상행위 이력 엑셀 파일 첨부 취소 send 소명 요청 발송"
   ],
   "snack": []
 }
