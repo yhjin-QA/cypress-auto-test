@@ -133,6 +133,36 @@
       "mantis": "0038952",
       "screen": "operate/task/logView",
       "target": "mtk1"
+    },
+    {
+      "mantis": "0039005",
+      "screen": "analyze/profiling/policy",
+      "target": "pu-row",
+      "fg": "#1e88e5"
+    },
+    {
+      "mantis": "0039005",
+      "screen": "analyze/profiling/policy",
+      "target": "pu-row",
+      "fg": "#8a97ab"
+    },
+    {
+      "mantis": "0039005",
+      "screen": "approval/submit/anomaly-alerts",
+      "target": "mr-2",
+      "fg": "#1e88e5"
+    },
+    {
+      "mantis": "0039005",
+      "target": "severity-radio-label",
+      "fg": "#42a5f5"
+    },
+    {
+      "mantis": "0039005",
+      "screen": "approval/submit/anomaly-alerts",
+      "target": "td",
+      "fg": "#1e88e5",
+      "bg": "#11223d"
     }
   ]
 }
