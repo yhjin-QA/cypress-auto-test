@@ -667,16 +667,18 @@ describe('로그캐치 사이트 테스트', () => {
        cy.get('.menuable__content__active').filter(':visible').last().then(($menu) => {
          const titles = [...$menu.find('.v-list__tile__title')].map((el) => el.textContent.trim());
          const hits = titles.filter((t) => SQLP.test(t)).sort();
-         if (hits.length && (titles.length === prevCount || attempt >= 10)) {
+         // [2026-11-16] ParsingException/Timeout 파일이 날마다 늘어 10번 스크롤로는 끝까지 못 감 → 목록이 더 늘지 않을 때까지(최대 60번) 내림
+         const done = titles.length === prevCount || attempt >= 60;
+         if (hits.length && done) {
            const pick = hits[hits.length - 1];
-           cy.log(`SQLPARSER 로그 파일 선택: ${pick} (후보 ${hits.length}개)`);
+           cy.log(`SQLPARSER 로그 파일 선택: ${pick} (후보 ${hits.length}개 / 목록 ${titles.length}개)`);
            cy.wrap($menu).contains('.v-list__tile__title', pick).click({ force: true });
-         } else if (attempt < 10) {
+         } else if (!done) {
            $menu[0].scrollTop = $menu[0].scrollHeight;   // 끝까지 내려 다음 항목 렌더링
            cy.wait(500);
            collectSqlparser(attempt + 1, titles.length);
          } else {
-           throw new Error(`SQLPARSER_2001_YYYYMMDD.log 파일 없음 - 목록: ${titles.join(', ')}`);
+           throw new Error(`SQLPARSER_2001_YYYYMMDD.log 파일 없음 (목록 ${titles.length}개, 끝까지 확인) - 마지막 10개: ${titles.slice(-10).join(', ')}`);
          }
        });
      };

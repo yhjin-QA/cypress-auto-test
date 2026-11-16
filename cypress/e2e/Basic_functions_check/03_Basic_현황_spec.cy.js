@@ -405,30 +405,43 @@ cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
 // 업무 시스템 - 리눅스_배송관리 선택
 ////////////////////////////
 
-// [2.9.7] 부서 별: 업무시스템 리눅스_배송관리 선택 (그룹 '인사팀'은 시작일을 넓혀야 노출됨)
-// [2.9.7] 그룹 목록도 조회 기간 안의 사용 이력 기준 → 업무시스템·그룹을 고르기 전에 시작일을 300일 전으로 넓힘
-selectStartDateDaysAgo(300);
-selectSystemInRange('리눅스_배송관리');
-
-
-
-cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
-
-// [2.9.7] 기간은 selectSystemInRange 에서 업무시스템이 나오는 범위로 이미 맞춤 → 60일 재설정 생략
-// selectStartDateDaysAgo(60);
-    
-    // 조건 입력 
-    // 그룹별 클릭하는 코드 
-    // [2.9.7] 그룹 '인사팀' 선택 — 부서 별은 그룹이 필수(미선택 시 '부서를 선택해 주세요.' 알림)라 없으면 실패 처리
-    cy.get('input[aria-label="그룹"]').closest('.v-input').filter(':visible').first().find('.v-input__slot').click({ force: true });
-    cy.wait(1500);
-    cy.get('.menuable__content__active').filter(':visible').last().then(($m) => {
-      const names = [...$m.find('.v-list__tile__title')].map((el) => el.textContent.trim());
-      cy.log(`그룹 목록: ${names.join(', ')}`);
-      expect(names.some((n) => n.includes('인사팀')), `그룹 목록에 '인사팀' (목록: ${names.join(', ') || 'No data'})`).to.be.true;
-    });
-    cy.get('.menuable__content__active').filter(':visible').last()
-      .contains('.v-list__tile__title', '인사팀').scrollIntoView().click({ force: true });
+// [2026-11-16] 부서 별: 리눅스_배송관리(.22, Oracle 인사연동 · 자동 접속 기록 없음) → 리눅스_VIP고객(.27 CRM, Maria 인사연동 · crmTraffic 매일 접속 기록)
+//   인사연동이 돌 때마다 그룹이 새 id 로 다시 만들어지고 기존 그룹은 비활성(-1)이 되어, 접속 기록이 오래된 그룹('인사팀')이 목록에서 빠짐
+//   → 매일 접속 기록이 쌓이는 리눅스_VIP고객으로 바꾸고, 기대 부서(UI1팀)가 없으면 관찰로 기록한 뒤 목록 첫 그룹으로 진행 (목록이 비면 실패)
+const DEPT_SYS = '리눅스_VIP고객';
+const DEPT_EXPECT = 'UI1팀';
+// 그룹 목록도 기간 안에 데이터가 있어야 나옴 → 시작일을 150 → 240 → 365일 전으로 넓혀 가며 그룹 목록이 찰 때까지 다시 고름
+const DEPT_RANGES = [150, 240, 365];   // 2026-11-16 확인 : 7월 초부터 넣어야 그룹 목록이 보임 (약 140일 전)
+const pickDeptInRange = (idx = 0) => {
+  selectStartDateDaysAgo(DEPT_RANGES[idx]);
+  cy.wait(1500);
+  // 이미 고른 업무시스템을 다시 누르면 선택이 풀리므로(다중 선택), 칩에 없을 때만 고름
+  cy.get('input[aria-label="업무시스템"]').closest('.v-input').filter(':visible').first().then(($sys) => {
+    if (!$sys.text().includes(DEPT_SYS.slice(0, 6))) selectSystemInRange(DEPT_SYS);
+    else cy.log(`업무시스템 '${DEPT_SYS}' 이미 선택됨`);
+  });
+  cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
+  cy.get('input[aria-label="그룹"]').closest('.v-input').filter(':visible').first().find('.v-input__slot').click({ force: true });
+  cy.wait(1500);
+  cy.get('body').then(($b) => {
+    const $m = $b.find('.menuable__content__active').filter(':visible').last();
+    const names = $m.find('.v-list__tile__title').toArray().map((el) => el.textContent.trim()).filter((t) => t && !/no data/i.test(t));
+    cy.log(`그룹 목록(${DEPT_SYS}, 시작일 ${DEPT_RANGES[idx]}일 전): ${names.join(', ') || '없음'}`);
+    if (!names.length) {
+      cy.get('body').type('{esc}');
+      cy.wait(500);
+      if (idx + 1 < DEPT_RANGES.length) { pickDeptInRange(idx + 1); return; }
+      cy.writeFile('cypress/probe/B03_부서별_그룹목록.json', { 업무시스템: DEPT_SYS, 기대: DEPT_EXPECT, 목록: [], 시작일: DEPT_RANGES[idx], at: new Date().toISOString() }, { log: false });
+      throw new Error(`그룹 목록 (${DEPT_SYS}) 이 ${DEPT_RANGES[idx]}일 범위까지 비어 있음 — 접속 기록 · 인사연동 그룹 확인 필요`);
+    }
+    cy.writeFile('cypress/probe/B03_부서별_그룹목록.json', { 업무시스템: DEPT_SYS, 기대: DEPT_EXPECT, 목록: names, 시작일: DEPT_RANGES[idx], at: new Date().toISOString() }, { log: false });
+    const pick = names.includes(DEPT_EXPECT) ? DEPT_EXPECT : names[0];
+    if (pick !== DEPT_EXPECT) cy.log(`⚠️ [관찰] 그룹 목록에 '${DEPT_EXPECT}' 없음 → '${pick}' 로 진행 (인사연동 그룹 재생성 영향 가능)`);
+    cy.wrap(pick, { log: false }).as('deptPick');
+    cy.wrap($m.find('.v-list__tile__title').filter((k, el) => el.textContent.trim() === pick).first()).scrollIntoView().click({ force: true });
+  });
+};
+pickDeptInRange();
     cy.wait(1000);
     cy.get('body').type('{esc}');
 
@@ -442,6 +455,17 @@ cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
     cy.get('div[title="이상행위 유형별 현황"]').should('be.visible').and('contain.text', '이상행위 유형별 현황');
     cy.get('div[title="업무시스템별 개인정보 사용 현황"]').should('be.visible').and('contain.text', '업무시스템별 개인정보 사용 현황');
 
+    // [2026-11-16] 리눅스_VIP고객 은 매일 접속 기록이 있으므로 '개인정보 사용량' 카드 숫자가 있어야 함 (값은 기록만)
+    // 카드 제목 요소에서 위로 올라가며 「개인정보 사용량 … N 건」 숫자가 함께 있는 가장 가까운 상위 요소를 찾음
+    cy.contains('개인정보 사용량').then(($t) => {
+      let el = $t[0]; let n;
+      for (let k = 0; k < 6 && el && !n; k += 1) {
+        n = ((el.innerText || '').replace(/\s+/g, ' ').match(/개인정보 사용량\s*([\d,]+)\s*건/) || [])[1];
+        el = el.parentElement;
+      }
+      cy.get('@deptPick').then((pick) => cy.log(`부서 별 ${DEPT_SYS} · ${pick} — 개인정보 사용량 ${n}`));
+      expect(n, '부서 별 개인정보 사용량 숫자').to.match(/^[\d,]+$/);
+    });
     cy.log('✅ 부서 별 탭 진입 및 데이터 출력 확인 완료!');
 
     
