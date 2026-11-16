@@ -191,7 +191,9 @@ describe('04_Depth_소명_다건신청_증빙첨부', () => {
       yearAlerts();
       alertCount().should('eq', n);
       cy.get('@starts').then((starts) => starts.forEach((s) =>
-        cy.get('table tbody tr').filter(':visible').filter((i, e) => e.innerText.includes(POLICY) && e.innerText.includes(s))
+        // [2026-11-16] 행 전체 글자로 찾으면 전날 경보의 「탐지 종료」(= 이 경보 탐지 시작)까지 걸려 2건이 됨
+        //   (경보가 11-11 · 11-12 · 11-13 처럼 하루씩 이어질 때) → 정책명 칸(2) · 탐지 시작 칸(4)만 비교
+        cy.get('table tbody tr').filter(':visible').filter((i, e) => Cypress.$(e).find('td').eq(2).text().includes(POLICY) && Cypress.$(e).find('td').eq(4).text().trim() === s)
           .should('have.length', 1).find('button.alert-inline-explain').should('exist')));
     });
     A.dumpScreen('D04M_4_경보목록_원복');
