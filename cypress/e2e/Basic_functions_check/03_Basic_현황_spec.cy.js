@@ -415,10 +415,18 @@ const DEPT_RANGES = [150, 240, 365];   // 2026-11-16 확인 : 7월 초부터 넣
 const pickDeptInRange = (idx = 0) => {
   selectStartDateDaysAgo(DEPT_RANGES[idx]);
   cy.wait(1500);
-  // 이미 고른 업무시스템을 다시 누르면 선택이 풀리므로(다중 선택), 칩에 없을 때만 고름
+  // [2026-11-16] 정보사용자 별 탭에서 고른 '리눅스_배송관리'가 부서 별 탭에도 남아 있어 칩이 「(+1)」 로 보였음
+  //   → 업무시스템 선택을 지우기(X) 한 뒤 리눅스_VIP고객 하나만 고름 (다중 선택이라 다시 누르면 풀리므로 항상 비우고 시작)
   cy.get('input[aria-label="업무시스템"]').closest('.v-input').filter(':visible').first().then(($sys) => {
-    if (!$sys.text().includes(DEPT_SYS.slice(0, 6))) selectSystemInRange(DEPT_SYS);
-    else cy.log(`업무시스템 '${DEPT_SYS}' 이미 선택됨`);
+    const $x = $sys.find('.v-input__icon--clear i, i.material-icons').filter((i, e) => /^(clear|close|cancel)$/.test((e.textContent || '').trim()));
+    cy.log(`업무시스템 칩 (지우기 전): ${$sys.text().replace(/\s+/g, ' ').trim().slice(0, 60)}`);
+    if ($x.length) { cy.wrap($x.first()).click({ force: true }); cy.wait(1200); }
+  });
+  cy.get('body').type('{esc}');
+  selectSystemInRange(DEPT_SYS);
+  cy.get('input[aria-label="업무시스템"]').closest('.v-input').filter(':visible').first().should(($sys) => {
+    const txt = $sys.text().replace(/\s+/g, ' ');
+    expect(txt, '업무시스템 칩 = 리눅스_VIP고객 하나').to.include(DEPT_SYS.slice(0, 6)).and.not.match(/\(\+\d+\)/);
   });
   cy.get('input[aria-label="그룹"]').filter(':visible').should('be.visible');
   cy.get('input[aria-label="그룹"]').closest('.v-input').filter(':visible').first().find('.v-input__slot').click({ force: true });

@@ -8,7 +8,7 @@
 //   2. 서버 : tbh_opr_work_<기대 날짜>.csv.gz 있음 · 머리 1줄 + 행 수 = DB 의 그날 운영 이력 건수 (원본 삭제 없음)
 //   3. 서버 : 정기 백업 로그에 「work-history archived: <기대 날짜>」
 //   압축이 꺼져 있으면(설정을 누가 바꿈) 확인을 건너뛰고 기록만 남김
-//   정기 백업은 0039024 (restoreDel FileExistsException) 로 「Backup End」 없이 끝나지만 압축은 그 앞 단계라 영향 없음
+//   4. [관찰 0039024] 같은 정기 백업 로그의 「Backup End」 여부 · FileExistsException 대상 기록 (압축은 그 앞 단계라 판정에 영향 없음)
 // ==========================================================================
 const A = require('../../support/anomaly');
 
@@ -86,6 +86,13 @@ describe('07_1_Depth_보관_운영이력보관_압축확인', () => {
         ssh(`grep -l "work-history archived: ${s.기대날짜}" /home/logcatch/proc/backup/${ym}/*/log/BACKUP_*.log 2>/dev/null | tail -n 1`).then((o) => {
           note('D07C_백업로그', o || '(없음)');
           expect(o, `정기 백업 로그에 「work-history archived: ${s.기대날짜}」`).to.match(/BACKUP_\d+\.log$/);
+          // [관찰 0039024] 같은 정기 백업이 「Backup End」까지 갔는지 — restoreDel FileExistsException 으로 끝나면 기록만 (해결되면 expect 로 바꿈)
+          ssh(`grep -c "Backup End" ${o}; grep -m1 -o "FileExistsException: Destination '[^']*'" ${o}`).then((r) => {
+            const end = Number(r.split('\n')[0]) > 0;
+            const exist = (r.match(/FileExistsException: Destination '([^']*)'/) || [])[1] || null;
+            note('D07C_정기백업종료', { 로그: o, BackupEnd: end, FileExists: exist });
+            if (!end) cy.log(`⚠️ [관찰 0039024] 정기 백업이 Backup End 없이 끝남${exist ? ` — FileExistsException ${exist}` : ''}`);
+          });
         });
       });
     });
