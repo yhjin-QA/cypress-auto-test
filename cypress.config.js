@@ -284,6 +284,34 @@ module.exports = defineConfig({
                 // ==========================================
 
                 // ==========================================
+                // [2026-11-16] MariaDB(.26 logcatch_demo) 쿼리 — 인사연동 자동화 원본 (Oracle 172.16.200.16 대신)
+                //   12 · 14 Depth 가 auto_인사연동_Maria 정책의 원본 logcatch_demo.employees 에 테스트 사원을 넣고 지울 때 사용
+                //   계정은 cypress.env.json 의 MARIA26_USER · MARIA26_PW (없으면 실패 메시지를 돌려줌 — 비밀번호는 로그에 남기지 않음)
+                //   mysql2 패키지 필요 : npm i -D mysql2
+                //   반환 : SELECT → 행 배열 / 그 밖 → { affected } / 오류 → { error }
+                // ==========================================
+                async queryMariaDB(query) {
+                  let mysql;
+                  try { mysql = require('mysql2/promise'); } catch (e) { return { error: 'mysql2 패키지가 없습니다 — npm i -D mysql2' }; }
+                  if (!config.env.MARIA26_USER || !config.env.MARIA26_PW) return { error: 'cypress.env.json 에 MARIA26_USER · MARIA26_PW 가 없습니다' };
+                  let conn;
+                  try {
+                    conn = await mysql.createConnection({
+                      host: config.env.MARIA26_HOST || '10.10.54.26', port: 3306, database: 'logcatch_demo',
+                      user: config.env.MARIA26_USER, password: config.env.MARIA26_PW, connectTimeout: 10000
+                    });
+                    console.log(`\n🐬 MariaDB(.26) 쿼리 실행 중: ${query}\n`);
+                    const [rows] = await conn.query(query);
+                    return Array.isArray(rows) ? rows : { affected: rows.affectedRows };
+                  } catch (err) {
+                    console.error('\n❌ MariaDB 접속 또는 쿼리 실패:\n', err.message);
+                    return { error: err.message };
+                  } finally {
+                    if (conn) { try { await conn.end(); } catch (e) { /* ignore */ } }
+                  }
+                },
+
+                // ==========================================
                 // [2026-11-12] CRM(.27 리눅스_VIP고객) 접속 기록 발생 — 로그인 → 조회를 Node 에서 수행
                 //   cy.request 는 네트워크 오류(ETIMEDOUT 등)를 한 번 만나면 바로 실패해서 (2026-11-12 CI 반려 실패)
                 //   여기서 요청마다 20초 제한 · 실패 시 gapMs 간격으로 attempts 회까지 다시 시도하고, 결과를 그대로 돌려줌 (예외 안 냄)

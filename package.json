@@ -21,6 +21,7 @@
     "cypress-axe": "^1.7.0",
     "cypress-mochawesome-reporter": "^4.0.2",
     "cypress-real-events": "^1.15.0",
+    "mysql2": "^3.24.6",
     "node-ssh": "^13.2.1"
   },
   "dependencies": {
