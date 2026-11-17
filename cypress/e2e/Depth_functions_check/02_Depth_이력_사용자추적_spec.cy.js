@@ -199,7 +199,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // 리스트에서 '리눅스_배송관리'가 나타날 때까지 기다리고 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_배송관리', { timeout: 10000 }).should('be.visible').click({ force: true });
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_배송관리', { timeout: 10000 }).scrollIntoView().should('be.visible').click({ force: true });
     cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
@@ -227,7 +227,7 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
      // 리스트에서 '윈도우_배송관리'가 나타날 때까지 기다리고 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '윈도우_배송관리', { timeout: 10000 }).should('be.visible').click({ force: true });
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '윈도우_배송관리', { timeout: 10000 }).scrollIntoView().should('be.visible').click({ force: true });
     cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
@@ -265,13 +265,16 @@ describe('로그캐치 사이트 테스트', () => {
     
 
 
-    // 부서 : 총무팀 -------------------------------------------------------------------------------------------
+    // [2026-11-17] 부서 조회를 리눅스_배송관리 Oracle 인사 부서(총무팀 · 인사팀 · 영업팀 · 기술지원팀) → 리눅스_VIP고객 Maria 인사 부서(UI1팀 · AI개발1팀 · 전략기획팀 · 인프라지원팀)로 변경
+    //   Oracle(172.16.200.16) 응답 · 인사연동 그룹 재생성(0039028)에 흔들리지 않게 (11-16 야간 '총무팀' 목록에서 잘려 실패)
+    // 부서 : UI1팀 -------------------------------------------------------------------------------------------
     // 부서/소속 클릭하여 리스트 열기
     cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
     cy.wait(1000);
 
-    // 리스트에서 '총무팀'가 나타날 때까지 기다리고 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '총무팀', { timeout: 10000 }).should('be.visible').click({ force: true });
+    // [2026-11-17] 부서 목록이 길어져 'UI1팀'이 목록 창 아래로 잘려 보이지 않음(11-16 야간 실패) → 목록 안에서 스크롤한 뒤 클릭
+    // 리스트에서 'UI1팀'가 나타날 때까지 기다리고 클릭
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'UI1팀', { timeout: 10000 }).scrollIntoView().should('be.visible').click({ force: true });
     cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
@@ -281,15 +284,15 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // [검증] 검색 결과 검증
-    cy.get('tbody tr', { timeout: 10000 }).contains('총무팀').should('be.visible');
+    cy.get('tbody tr', { timeout: 10000 }).contains('UI1팀').should('be.visible');
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('총무팀').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
+    cy.get('a').contains('UI1팀').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
      //---------------------------------------------------------------------------------------------------------------
 
-    // 부서 : 인사팀 -------------------------------------------------------------------------------------------
+    // 부서 : AI개발1팀 -------------------------------------------------------------------------------------------
     // 2번째부터는 선택 초기화 필요 
     // 선택한 부서/소속 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="부서/소속"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
@@ -299,8 +302,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
     cy.wait(1000);
 
-    // 리스트에서 '인사팀'가 나타날 때까지 기다리고 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '인사팀', { timeout: 10000 }).should('be.visible').click({ force: true });
+    // 리스트에서 'AI개발1팀'가 나타날 때까지 기다리고 클릭
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', 'AI개발1팀', { timeout: 10000 }).scrollIntoView().should('be.visible').click({ force: true });
     cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
@@ -310,16 +313,16 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // [검증] 검색 결과 검증
-    cy.get('tbody tr', { timeout: 10000 }).contains('인사팀').should('be.visible');
+    cy.get('tbody tr', { timeout: 10000 }).contains('AI개발1팀').should('be.visible');
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('인사팀').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
+    cy.get('a').contains('AI개발1팀').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
      //---------------------------------------------------------------------------------------------------------------
 
 
-     // 부서 : 영업팀  -------------------------------------------------------------------------------------------
+     // 부서 : 전략기획팀  -------------------------------------------------------------------------------------------
     // 2번째부터는 선택 초기화 필요 
     // 선택한 부서/소속 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="부서/소속"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
@@ -329,8 +332,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
     cy.wait(1000);
 
-    // 리스트에서 '영업팀'가 나타날 때까지 기다리고 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '영업팀', { timeout: 10000 }).should('be.visible').click({ force: true });
+    // 리스트에서 '전략기획팀'가 나타날 때까지 기다리고 클릭
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '전략기획팀', { timeout: 10000 }).scrollIntoView().should('be.visible').click({ force: true });
     cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
@@ -340,15 +343,15 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // [검증] 검색 결과 검증
-    cy.get('tbody tr', { timeout: 10000 }).contains('영업팀').should('be.visible');
+    cy.get('tbody tr', { timeout: 10000 }).contains('전략기획팀').should('be.visible');
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('영업팀').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
+    cy.get('a').contains('전략기획팀').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
      //---------------------------------------------------------------------------------------------------------------
 
-     // 부서 : 기술지원팀  -------------------------------------------------------------------------------------------
+     // 부서 : 인프라지원팀  -------------------------------------------------------------------------------------------
     // 2번째부터는 선택 초기화 필요 
     // 선택한 부서/소속 x버튼 클릭하여 초기화 
     cy.get('input[aria-label="부서/소속"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
@@ -358,8 +361,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
     cy.wait(1000);
 
-    // 리스트에서 '기술지원팀'가 나타날 때까지 기다리고 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '기술지원팀', { timeout: 10000 }).should('be.visible').click({ force: true });
+    // 리스트에서 '인프라지원팀'가 나타날 때까지 기다리고 클릭
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '인프라지원팀', { timeout: 10000 }).scrollIntoView().should('be.visible').click({ force: true });
     cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
@@ -369,11 +372,11 @@ describe('로그캐치 사이트 테스트', () => {
     cy.wait(1000);
 
     // [검증] 검색 결과 검증
-    cy.get('tbody tr', { timeout: 10000 }).contains('기술지원팀').should('be.visible');
+    cy.get('tbody tr', { timeout: 10000 }).contains('인프라지원팀').should('be.visible');
 
     // 첫 번째 행 정밀 검증
     cy.get('tbody tr').filter(':visible').first().within(() => {
-    cy.get('a').contains('기술지원팀').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
+    cy.get('a').contains('인프라지원팀').should('be.visible').and(($el) => expect($el, '글자색').to.have.css('color', TEXT_COLOR()));
      });
      //---------------------------------------------------------------------------------------------------------------
 
@@ -750,16 +753,16 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     cy.wait(1000);
 
     // 리스트에서 '리눅스_VIP고객'가 나타날 때까지 기다리고 클릭
-    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_VIP고객', { timeout: 10000 }).should('be.visible').click({ force: true });
+    cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '리눅스_VIP고객', { timeout: 10000 }).scrollIntoView().should('be.visible').click({ force: true });
     cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
     cy.get('body').type('{esc}');
 
-    // 부서/소속 - 총무팀
+    // 부서/소속 - 서비스기획팀
     // 부서/소속 클릭하여 리스트 열기
     cy.get('input[aria-label="부서/소속"]').filter(':visible').click({ force: true });
     cy.wait(1000);
-    // 리스트에서 '총무팀'가 나타날 때까지 기다리고 클릭
+    // 리스트에서 '서비스기획팀'가 나타날 때까지 기다리고 클릭
     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', '서비스기획팀', { timeout: 10000 }).scrollIntoView().should('be.visible').click({ force: true });
     cy.wait(1000);
     // 3. 선택 후 메뉴 닫기 (필요시)
