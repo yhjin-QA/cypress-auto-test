@@ -357,6 +357,45 @@ module.exports = defineConfig({
                     }
                     return { ok: false, attempts, ...last, error: lastError };
                   })();
+                },
+                // ==========================================
+                // [2026-11-17] CRM(.27) 페이지 요청 — 로그인(선택) 후 path 를 GET/POST 하고 상태 · 본문 일부를 돌려줌
+                //   검출 데이터 생성(dlp_tester.jsp) 확인 · 자동화용. 비밀번호는 config.env.CRM27_PW 에서 직접 읽음 (로그 · 반환값에 넣지 않음)
+                //   인자 : { userId(없으면 로그인 안 함), path, method='GET', form(객체, POST 본문), maxBody=200000 }
+                //   반환 : { ok, login, status, length, body, error }
+                // ==========================================
+                crmFetch({ userId, path, method = 'GET', form = null, maxBody = 200000 }) {
+                  const http = require('http');
+                  const querystring = require('querystring');
+                  const send = (opts, body) => new Promise((resolve, reject) => {
+                    const r = http.request({ host: '10.10.54.27', port: 80, timeout: 30000, ...opts }, (res) => {
+                      const chunks = [];
+                      res.on('data', (c) => chunks.push(c));
+                      res.on('end', () => resolve({ status: res.statusCode, cookies: (res.headers['set-cookie'] || []).map((c) => c.split(';')[0]), body: Buffer.concat(chunks).toString('utf8') }));
+                    });
+                    r.on('timeout', () => r.destroy(new Error('응답 없음 (30초)')));
+                    r.on('error', reject);
+                    if (body) r.write(body);
+                    r.end();
+                  });
+                  return (async () => {
+                    try {
+                      let cookie = '';
+                      let login = null;
+                      if (userId) {
+                        const lb = querystring.stringify({ empId: userId, empPw: config.env.CRM27_PW || '' });
+                        const l = await send({ method: 'POST', path: '/crm/login.jsp', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(lb) } }, lb);
+                        login = l.status;
+                        cookie = l.cookies.join('; ');
+                      }
+                      const fb = form ? querystring.stringify(form) : null;
+                      const headers = { ...(cookie ? { Cookie: cookie } : {}), ...(fb ? { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(fb) } : {}) };
+                      const r = await send({ method, path, headers }, fb);
+                      return { ok: r.status === 200, login, status: r.status, length: r.body.length, body: r.body.slice(0, maxBody), error: null };
+                    } catch (e) {
+                      return { ok: false, login: null, status: null, length: 0, body: '', error: `${e.code || ''} ${e.message}`.trim() };
+                    }
+                  })();
                 }
                 // ==========================================
 

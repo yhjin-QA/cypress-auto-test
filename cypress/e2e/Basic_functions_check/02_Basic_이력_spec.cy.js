@@ -43,6 +43,18 @@ describe('로그캐치 사이트 테스트', () => {
   
   it('로그캐치 기본동작 체크', () => {
 
+    // [2026-11-17] 검출 데이터 생성 — CRM(.27) 실시간 DLP 테스터(dlp_tester.jsp)에 「등록」 사용자 user001(AI개발2팀)로 개인정보가 든 채팅 메시지 전송
+    //   (손으로 하던 dlp_tester.jsp 전송과 같은 요청: POST action=send · chatMsg) → 이 스크립트가 뒤에서 오늘 날짜 「검출」 을 조회
+    //   값은 형식만 맞춘 가짜 (주민번호 체크섬 맞춤 · 테스트 카드번호). 비밀번호는 Node(crmFetch)가 cypress.env.json 에서 직접 읽음
+    cy.task('crmFetch', {
+      userId: 'user001', path: '/crm/dlp_tester.jsp', method: 'POST', maxBody: 0,
+      form: { action: 'send', chatMsg: `[자동화 검출 생성 ${new Date().toISOString()}] 주민번호 900101-1234568 / 휴대폰 010-1234-5678 / 이메일 auto.dlp@test.co.kr / 카드 4111-1111-1111-1111` },
+    }, { timeout: 90000, log: false }).then((r) => {
+      cy.log(`🧪 검출 데이터 생성 (dlp_tester.jsp) : 로그인 ${r.login} · 전송 ${r.status} ${r.error || ''}`);
+      cy.writeFile('cypress/probe/검출생성_dlp_tester.json', { at: new Date().toISOString(), login: r.login, status: r.status, error: r.error }, { log: false });
+      expect(r.status, 'dlp_tester.jsp 전송 응답 (200)').to.eq(200);
+    });
+
     // ==========================================
     // STEP 1: 로그인
     // ==========================================
@@ -526,9 +538,10 @@ const getFormattedDate = (offsetDays) => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
-// 🌟 [핵심 수정] 탐색할 타겟 날짜 목록 (7일 전 ~ 오늘, 총 8일)
+// 🌟 [핵심 수정] 탐색할 타겟 날짜 목록 (오늘 → 27일 전, 총 28일)
 // Array.from을 사용하여 -7부터 0까지 총 8개의 날짜를 자동으로 배열에 담습니다.
-const targetDates = Array.from({ length: 8 }, (_, i) => getFormattedDate(-7 + i));
+// [2026-11-17] 8일(7일 전 ~ 오늘) → 28일, 최근 날짜부터 탐색. 검출 데이터는 dlp_tester.jsp 로 수동 생성하므로 생성 후 8일이 지나면 실패했음 (기간 시작 = 한 달 전이라 28일은 항상 기간 안)
+const targetDates = Array.from({ length: 28 }, (_, i) => getFormattedDate(-i));
 cy.log(`🎯 순차 탐색할 날짜 목록: ${targetDates.join(', ')}`);
 
 
@@ -538,10 +551,12 @@ const scrollAndFindDate = (dateToFind, onFound, onMissing, retryCount = 0) => {
     const MAX_RETRIES = 5;
     cy.get('.v-menu__content:visible').first().as('dropdown');
     cy.get('@dropdown').then(($el) => {
-        const $foundItem = $el.find(`.v-list__tile__title:contains("${dateToFind}"):visible, .v-list-item__title:contains("${dateToFind}"):visible`);
+        // [2026-11-17] :visible 조건 제거 — 목록 안에 그려져 있지만 보이는 범위 밖인 날짜도 찾아서 스크롤 후 클릭
+        const $foundItem = $el.find(`.v-list__tile__title:contains("${dateToFind}"), .v-list-item__title:contains("${dateToFind}")`);
 
         if ($foundItem.length > 0) {
             cy.log(`🎉 화면에서 날짜 [${dateToFind}] 발견`);
+            $foundItem[0].scrollIntoView({ block: 'center' });
             cy.wrap($foundItem).first().click({ force: true });
             onFound();
         } else if (retryCount < MAX_RETRIES) {
@@ -561,9 +576,22 @@ const scrollAndFindDate = (dateToFind, onFound, onMissing, retryCount = 0) => {
 
 // 🌟 3. 하루씩 전진하며 탐색하는 재귀 로직
 // dateIndex: 탐색할 배열의 순서 / currentUIText: 현재 드롭다운에 표시된(클릭해서 열어야 할) 날짜
-const searchSequential = (dateIndex, currentUIText) => {
+// [2026-11-17] 오늘 날짜는 방금 만든 검출 데이터(dlp_tester.jsp)가 화면에 반영될 때까지 30초 간격으로 다시 검색 (최대 10회 · 약 5분)
+//   검출 반영은 몇 분 늦게 됨 (전송 1 ～ 2분 뒤 조회에서는 0건, 몇 분 뒤 화면 확인에서는 조회됨 — 2026-11-17)
+const TODAY_TRIES = 10;
+const retryToday = (todayTry) => {
+    cy.log(`⏳ 오늘(${targetDates[0]}) 검출 반영 대기 — 30초 후 다시 검색 (${todayTry + 1}/${TODAY_TRIES})`);
+    cy.get('body').type('{esc}');
+    cy.wait(30000);
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(3000);
+    cy.get('.v-select__selection').filter(':visible')
+        .filter((i, e) => /^\d{4}-\d{2}-\d{2}$/.test((e.innerText || '').trim())).first()
+        .invoke('text').then((txt) => searchSequential(0, txt.trim(), todayTry + 1));
+};
+const searchSequential = (dateIndex, currentUIText, todayTry = 0) => {
     if (dateIndex >= targetDates.length) {
-        cy.log('❌ 지정된 8일 치 기간(7일 전~오늘) 내에 검출 데이터가 없습니다.');
+        cy.log('❌ 최근 28일(오늘 ~ 27일 전) 안에 검출 데이터가 없습니다.');
         cy.get('tbody:visible a:contains("검출")').should('be.visible'); // 의도적 실패
         return;
     }
@@ -589,11 +617,12 @@ const searchSequential = (dateIndex, currentUIText) => {
                     cy.wait(1000);
                 } else {
                     cy.log(`⚠️ [${dateToFind}] 검색 결과 없음. 다음 날짜로 재검색합니다.`);
-                    searchSequential(dateIndex + 1, dateToFind);
+                    if (dateIndex === 0 && todayTry < TODAY_TRIES) retryToday(todayTry);
+                    else searchSequential(dateIndex + 1, dateToFind);
                 }
             });
         },
-        () => searchSequential(dateIndex + 1, currentUIText)
+        () => ((dateIndex === 0 && todayTry < TODAY_TRIES) ? retryToday(todayTry) : searchSequential(dateIndex + 1, currentUIText))
     );
 };
 
