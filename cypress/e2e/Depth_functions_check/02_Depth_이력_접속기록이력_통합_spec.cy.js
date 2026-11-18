@@ -529,7 +529,19 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
             }
         }
 
-  cy.wait('@doubtMenus', { timeout: 10000 }); // 데이터 로딩 완료까지 대기      
+  // [2026-11-18] doubt-menus 요청은 행(메뉴 등록 상태 · 팝업 단계)에 따라 안 나갈 때가 있음 (11-18 05시 정기 실행 3회 모두 「No request」, 단독 실행은 통과)
+  //   → 요청이 나가면 응답까지 기다리고, 10초 안에 안 나가면 기록만 남기고 다음 단계(저장 버튼 확인)로 진행
+  const waitDoubtMenus = (left) => cy.get('@doubtMenus.all', { log: false }).then((xs) => {
+    if (xs.length) { cy.wait('@doubtMenus', { timeout: 10000 }); return; }
+    if (left <= 0) {
+      cy.log(`ℹ️ doubt-menus 요청 없음 — 접속 메뉴 "${menuText}" 행`);
+      cy.writeFile('cypress/probe/D02T_doubtMenus_없음.json', { at: new Date().toISOString(), menuText, isUnregisteredMenu });
+      return;
+    }
+    cy.wait(1000, { log: false });
+    waitDoubtMenus(left - 1);
+  });
+  waitDoubtMenus(10);
 
   cy.get('button.v-btn.success--text')
   .filter(':visible')

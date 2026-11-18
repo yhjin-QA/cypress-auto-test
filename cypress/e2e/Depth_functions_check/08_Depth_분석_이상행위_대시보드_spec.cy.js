@@ -117,38 +117,56 @@ describe('08_Depth_분석_이상행위_대시보드', () => {
     A.loginAdmin();
     A.runNowAndWait(POLICY, 'D08D_1', 6, false);
 
-    // ---------- 2. 결과 탭 : 최근 30일 · 이 정책 경보 건수 ----------
-    A.goAnomaly('사용자 이상행위 결과');
-    cy.contains('button', /^\s*최근 30일\s*$/).click({ force: true });
-    cy.wait(2000);
-    cy.get('input[placeholder="메시지 + 정책명 검색"]').clear({ force: true }).type(POLICY, { force: true });
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    cy.wait(3000);
-    A.dumpScreen('D08D_2_결과_30일');
-    cy.wrap(results, { timeout: 15000 }).should((r) => {
-      expect(r.filter((x) => x.keyword === POLICY && x.from === from30 && x.to === today).length, `결과 탭 조회 (${from30} ~ ${today}, ${POLICY})`).to.be.greaterThan(0);
-    }).then((r) => {
-      const last = r.filter((x) => x.keyword === POLICY && x.from === from30 && x.to === today).pop();
-      const row = last.content.find((c) => c.policy_name === POLICY);
-      const n = row ? Number(row.alert_count) : 0;
-      cy.log(`결과 탭 최근 30일 ${POLICY} 경보 ${n}건`);
-      if (n > 0) {
-        // 화면 묶음 머리글 「… auto_소명_접속량 과다 N (k회 실행) …」
-        cy.get('.incident-header').filter(':visible').filter((i, e) => t(e).includes(POLICY)).first()
-          .should(($h) => expect(t($h[0]), '결과 탭 묶음 머리글의 건수').to.match(new RegExp(`${POLICY}\\s+${n}\\s*\\(`)));
-      }
-      cy.wrap(n).as('resultCount');
-    });
-
-    // ---------- 3. 대시보드 : 최근 30일 → 위젯 숫자 대조 ----------
-    A.goAnomaly('사용자 이상행위 대시보드');
-    cy.wait(4000);
-    pickPeriod('최근 30일');
-    // 기간을 바꾸면 위젯 데이터를 그 기간으로 다시 불러옴
-    cy.wrap(charts, { timeout: 20000 }).should((c) => {
-      Object.keys(SUM_WIDGETS).forEach((id) => {
-        expect(c[id] && `${c[id].from}~${c[id].to}`, `${SUM_WIDGETS[id]} 데이터 기간`).to.eq(`${from30}~${today}`);
+    // [2026-11-18] 결과 탭 → 대시보드 순서로 읽는 사이에 실시간 정책이 오늘 경보를 새로 만들면 1건 차이 (11-18 05시 정기 실행 : 대시보드 6 · 결과 탭 5)
+    //   → 정책별 경보 건수가 결과 탭과 다르면 결과 탭 · 대시보드를 한 번 더 읽고 그 값으로 비교 (경보는 정책 × 사용자 × 하루 1건이라 두 번째는 고정)
+    const readResult = () => {
+      results.length = 0;
+      // ---------- 2. 결과 탭 : 최근 30일 · 이 정책 경보 건수 ----------
+      A.goAnomaly('사용자 이상행위 결과');
+      cy.contains('button', /^\s*최근 30일\s*$/).click({ force: true });
+      cy.wait(2000);
+      cy.get('input[placeholder="메시지 + 정책명 검색"]').clear({ force: true }).type(POLICY, { force: true });
+      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+      cy.wait(3000);
+      A.dumpScreen('D08D_2_결과_30일');
+      cy.wrap(results, { timeout: 15000 }).should((r) => {
+        expect(r.filter((x) => x.keyword === POLICY && x.from === from30 && x.to === today).length, `결과 탭 조회 (${from30} ~ ${today}, ${POLICY})`).to.be.greaterThan(0);
+      }).then((r) => {
+        const last = r.filter((x) => x.keyword === POLICY && x.from === from30 && x.to === today).pop();
+        const row = last.content.find((c) => c.policy_name === POLICY);
+        const n = row ? Number(row.alert_count) : 0;
+        cy.log(`결과 탭 최근 30일 ${POLICY} 경보 ${n}건`);
+        if (n > 0) {
+          // 화면 묶음 머리글 「… auto_소명_접속량 과다 N (k회 실행) …」
+          cy.get('.incident-header').filter(':visible').filter((i, e) => t(e).includes(POLICY)).first()
+            .should(($h) => expect(t($h[0]), '결과 탭 묶음 머리글의 건수').to.match(new RegExp(`${POLICY}\\s+${n}\\s*\\(`)));
+        }
+        cy.wrap(n).as('resultCount');
       });
+
+    };
+    const readDashboard = () => {
+      Object.keys(charts).forEach((k) => delete charts[k]);
+      // ---------- 3. 대시보드 : 최근 30일 → 위젯 숫자 대조 ----------
+      A.goAnomaly('사용자 이상행위 대시보드');
+      cy.wait(4000);
+      pickPeriod('최근 30일');
+      // 기간을 바꾸면 위젯 데이터를 그 기간으로 다시 불러옴
+      cy.wrap(charts, { timeout: 20000 }).should((c) => {
+        Object.keys(SUM_WIDGETS).forEach((id) => {
+          expect(c[id] && `${c[id].from}~${c[id].to}`, `${SUM_WIDGETS[id]} 데이터 기간`).to.eq(`${from30}~${today}`);
+        });
+      });
+    };
+    readResult();
+    readDashboard();
+    cy.get('@resultCount').then((n) => {
+      const mine = policySum(charts[9094].sets);
+      if (mine === n) return;
+      cy.writeFile('cypress/probe/D08D_3_첫비교_차이.json', { resultCount: n, policyBar: mine, at: new Date().toISOString() });
+      cy.log(`⚠️ 정책별 경보 ${mine}건 ≠ 결과 탭 ${n}건 — 읽는 사이 새 경보가 생겼을 수 있어 한 번 더 읽음`);
+      readResult();
+      readDashboard();
     });
     cy.get('@resultCount').then((n) => {
       const sums = Object.keys(SUM_WIDGETS).map((id) => ({ id, name: SUM_WIDGETS[id], sum: sumSets(charts[id].sets) }));
