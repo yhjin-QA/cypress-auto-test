@@ -111,12 +111,13 @@ describe('10_Depth_검출_URI 관리 일괄 등록_복합메뉴', () => {
     });
 
     // ---------- 4. 접속 기록 메뉴명 ----------
-    const q = `/logcatch/api/v1/access-log?startDate=${TODAY}%2000%3A00%3A00&endDate=${TODAY}%2023%3A59%3A59&hasParseError=false&logcatchMenuId=210508&page=0&privacyChk=false&returnRowCountType=1&size=50&sort&totalCount=0`;
+    const q = `/logcatch/api/v1/access-log?startDate=${TODAY}%2000%3A00%3A00&endDate=${TODAY}%2023%3A59%3A59&hasParseError=false&logcatchMenuId=210508&page=0&privacyChk=false&returnRowCountType=1&size=1000&sort&totalCount=0`;
     const poll = (left) => cy.request({ url: q, headers: AUTH, failOnStatusCode: false }).then((r) => {
       const rows = ((r.body && r.body.resultObject) || []).filter((x) => x.userAccount === 'user001' && REQ_URIS.includes(x.uri) && new Date(x.accessDate.replace(' ', 'T') + '+09:00').getTime() >= sentAt - 5000);
+      const all = (r.body && r.body.resultObject) || [];
       if (rows.length || left <= 0) {
-        note('D10U_6_접속기록', { API상태: r.status, 메뉴ID기대: MENU_ID, 행: rows.map((x) => ({ uri: x.uri, 시각: x.accessDate, 메뉴: x.menuName, menuId: x.menuId, 행위: x.actionType })) });
-        cy.then(() => expect(rows.length, '헤더 요청의 접속 기록 행 (최대 5분 대기)').to.be.greaterThan(0));
+        note('D10U_6_접속기록', { API상태: r.status, 전체행수: all.length, user001행수: all.filter((x) => x.userAccount === 'user001').length, 최신시각: all.map((x) => x.accessDate).sort().slice(-1)[0], 요청시각: new Date(sentAt).toISOString(), 메뉴ID기대: MENU_ID, 행: rows.map((x) => ({ uri: x.uri, 시각: x.accessDate, 메뉴: x.menuName, menuId: x.menuId, 행위: x.actionType })) });
+        cy.then(() => expect(rows.length, `헤더 요청의 접속 기록 행 (최대 3분 대기) [전체 ${all.length}행, user001 ${all.filter((x) => x.userAccount === 'user001').length}행, 최신 ${all.map((x) => x.accessDate).sort().slice(-1)[0]}, 요청 ${new Date(sentAt).toISOString()}]`).to.be.greaterThan(0));
         // 접속 기록 API 행에는 새 메뉴의 menuName이 비어 올 수 있어(이름 캐시) 메뉴ID로 판정한다. menuName이 오면 이름도 함께 확인
         cy.then(() => {
           expect(MENU_ID, '등록된 복합 메뉴 menuId').to.be.a('number');
