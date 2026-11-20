@@ -656,7 +656,7 @@ cy.get('body').then(($body) => {
     expect($row.find('.policy-name-cell').text().trim().length, `${tag} 정책명`).to.be.greaterThan(0);
 
     // 적재 테이블 - code 태그, 테이블명 형식
-    expect($row.find('.policy-table-cell code.table-code').text().trim(), `${tag} 적재 테이블`)
+    expect($row.find('code.table-code') /* [2.9.9.0] td 의 policy-table-cell 클래스 없어짐 */.text().trim(), `${tag} 적재 테이블`)
       .to.match(/^[a-z][a-z0-9_]*$/);
 
     // 분류 - 정해진 값 중 하나

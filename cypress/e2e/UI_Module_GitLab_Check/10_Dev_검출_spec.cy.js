@@ -560,7 +560,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('td', '등록된 메뉴 데이터가 없습니다.').should('be.visible');
 
     // 페이지네이션 영역 확인
-    cy.contains('Rows per page:').should('be.visible');
+    // [2.9.9.0] 쪽 표시 문구 한글화 : 'Rows per page:' → '페이지당 행 수:'
+    cy.contains(/Rows per page:|페이지당 행 수\s*:/).should('be.visible');
     cy.get('.v-select__selection--comma').filter(':visible').contains('10').should('be.visible');
     cy.get('button[aria-label="Previous page"]').should('exist').and('be.disabled');
     cy.get('button[aria-label="Next page"]').should('exist').and('be.disabled');

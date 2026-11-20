@@ -106,6 +106,9 @@ describe('로그캐치 사이트 테스트', () => {
 // ==========================================
 cy.log('🚀 점검 탭 클릭');
 cy.contains('button', '점검').click({ force: true });
+// [2.9.9.0] 로그인 첫 화면이 이상행위 대시보드로 바뀌고, '점검'을 누르면 하위 메뉴(점검 대시보드 / 이상행위 대시보드)가 열림
+cy.contains('.side-sub-menu-title', '점검 대시보드').should('be.visible').click({ force: true });
+cy.url({ timeout: 15000 }).should('include', '/inspection/inspectionDashboard');
 cy.wait(2000);
 cy.log('--- 화면 검증 시작 ---');
 

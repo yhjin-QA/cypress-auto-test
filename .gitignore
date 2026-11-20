@@ -13,3 +13,5 @@ cypress.env.json
 # 실행할 때마다 바뀌는 관찰 기록 · 작업 산출물 (Git 제외)
 cypress/probe/
 Claude outputs/
+# Claude 디버그용 리포트 zip (push 제외)
+cypress/e2e/Error_Claude Debug/
