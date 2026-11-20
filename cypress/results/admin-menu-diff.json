@@ -3,7 +3,14 @@
     "menu": "설정",
     "type": "added",
     "items": [
-      "사전 소명 설정"
+      "플로우 시스템"
+    ]
+  },
+  {
+    "menu": "설정",
+    "type": "removed",
+    "items": [
+      "커넥터"
     ]
   }
 ]

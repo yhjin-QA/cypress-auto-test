@@ -409,8 +409,9 @@ describe('로그캐치 사이트 테스트', () => {
     // ==========================================
     // STEP 1: 로그인
     // ==========================================
-    // 대상 서버: 실행 시 --env HOST=10.10.54.21 로 바꿀 수 있음 (기본 51)
-    const HOST = Cypress.env('TARGET_HOST') || Cypress.env('HOST') || '10.10.54.71';
+    // 대상 서버: 기본 .71 (GitLab 신규 빌드). 다른 서버는 실행 시 --env HOST=10.10.54.xx
+    // ※ TARGET_HOST(로컬 cypress.env.json 기본 .21)는 따르지 않는다 — 로컬 실행이 .21로 새던 문제 (2026-11-20)
+    const HOST = Cypress.env('HOST') || '10.10.54.71';
     cy.log(`🖥 대상 서버: ${HOST}`);
     cy.visit(`https://${HOST}:18443/logcatch/login`);
     cy.wait(4000); // 로딩 대기

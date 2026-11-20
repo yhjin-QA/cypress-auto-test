@@ -17,7 +17,7 @@
     "@cypress-audit/lighthouse": "^1.4.2",
     "axe-core": "^4.14.0",
     "cy2": "^4.0.9",
-    "cypress": "^15.8.1",
+    "cypress": "^15.21.2",
     "cypress-axe": "^1.7.0",
     "cypress-mochawesome-reporter": "^4.0.2",
     "cypress-real-events": "^1.15.0",
