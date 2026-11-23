@@ -84,8 +84,9 @@ describe('08_Depth_분석_이상행위_대시보드', () => {
   after(() => {
     cy.log('🧹 대시보드 원래대로 · 전용 정책 사용 OFF');
     A.loginAdmin();
-    restoreDashboard();
+    // [2026-11-23] 정책 OFF 를 먼저 — 대시보드 복원 중 화면 오류로 hook 이 멈춰도 실시간 정책이 켜진 채 남지 않게
     setActive(false);
+    restoreDashboard();
   });
 
   it('대시보드 경보 위젯 = 결과 탭 건수 · 기간 · 숨김 보기 · 확대 · 실시간 · 레이아웃 편집', { retries: 0 }, () => {
@@ -213,6 +214,7 @@ describe('08_Depth_분석_이상행위_대시보드', () => {
       const mineToday = policySum(charts[9094].sets);
       cy.log(`오늘 ${POLICY} 경보 ${mineToday}건 (최근 30일 ${n}건)`);
       expect(mineToday, '오늘 건수 ≤ 최근 30일 건수').to.be.at.most(n);
+      cy.wrap(mineToday).as('todayCount');
     });
 
     // ---------- 6. 위젯 확대 → 닫기 ----------
@@ -265,5 +267,101 @@ describe('08_Depth_분석_이상행위_대시보드', () => {
     cy.get('@cardsBeforeEdit').then((n) => cards().should('have.length', n));
     periodBtn().should('contain', '오늘');
     A.dumpScreen('D08D_9_끝');
+
+    // ---------- 9. [2.9.9.0] 새 화면 연계 : 이력 > 이상행위 탭 · 점검 > 이상행위 대시보드 ----------
+    //   전용 정책이 켜져 있는 지금 (경보 있음) 같은 경보가 새 화면에도 같은 건수로 보이는지
+    //   (1) 이력 > 접속기록 이력 > 이상행위 탭 : 최근 30일 · 정책명 검색 → 정책 묶음 건수 = 분석 결과 탭 건수
+    //   (2) 같은 탭 「오늘」 → 기간 조건이 요청에 실리는지 · 오늘 건수 = 대시보드 오늘 건수
+    //       (Basic 02 관찰 : 「최근 7일」을 눌러도 요청에 기간 조건이 없었음 — 경보가 있는 여기서 결과로 확인)
+    //   (3) 점검 > 이상행위 대시보드 : 켜진 정책이 있으므로 「정책이 없어 접속기록 기준」 안내가 없어야 함 · 오늘 경보 합계 = 오늘 건수
+    const tabReq = [];
+    // 응답을 가로채지 않고 끝난 뒤 기록 (화면 이동·종료 때 연결이 끊겨도 테스트가 실패하지 않게)
+    cy.intercept({ method: 'GET', url: /\/api\/v1\/anomaly\/detection\/alerts\?/ }, (req) => {
+      req.on('after:response', (res) => {
+        const u = new URL(req.url);
+        tabReq.push({ url: decodeURIComponent(req.url.replace(/^https?:\/\/[^/]+/, '')), viewMode: u.searchParams.get('viewMode'), from: u.searchParams.get('dateFrom'),
+          to: u.searchParams.get('dateTo'), keyword: u.searchParams.get('keyword'), sev: u.searchParams.get('severities'),
+          total: res.body && res.body.data ? res.body.data.totalCount : null, content: (res.body && res.body.data && res.body.data.content) || [] });
+      });
+    });
+    const tabBtn = (re) => cy.get('button, .v-btn').filter((i, e) => shown(e) && re.test(t(e))).first();
+    const tabSearch = () => cy.get('.v-btn').filter((i, e) => shown(e) && /검색$/.test(t(e))).last().click({ force: true });
+    const countOf = (r) => { const row = (r.content || []).find((c) => c.policy_name === POLICY); return row ? Number(row.alert_count) : 0; };
+
+    cy.visit('/logcatch/record/accessLog/fileDownloadLog');
+    cy.wait(4000);
+    cy.get('.tab-btn').contains('이상행위').click({ force: true });
+    cy.url({ timeout: 15000 }).should('include', '/record/accessLog/anomalyResult');
+    cy.wait(3000);
+    // (1) 최근 30일 + 정책명
+    cy.then(() => { tabReq.length = 0; });
+    tabBtn(/^최근 30일$/).click({ force: true });
+    cy.get('input[placeholder="메시지 + 정책명 검색"]').filter(':visible').clear({ force: true }).type(POLICY, { force: true });
+    tabSearch();
+    cy.wait(3000);
+    A.dumpScreen('D08D_10_이력탭_30일');
+    cy.wrap(tabReq, { timeout: 20000 }).should((r) => expect(r.filter((x) => x.viewMode === 'policy').length, '이상행위 탭 검색 요청').to.be.greaterThan(0));
+    cy.get('@resultCount').then((n) => {
+      const last = tabReq.filter((x) => x.viewMode === 'policy').pop();
+      const m = countOf(last);
+      cy.writeFile('cypress/probe/D08D_10_이력탭_30일.json', { 요청: last.url, 기간조건: !!(last.from || /date|from|start/i.test(last.url.split('?')[1] || '')), 탭건수: m, 분석결과탭: n });
+      cy.log(`이력 이상행위 탭 ${POLICY} ${m}건 / 분석 결과 탭 최근 30일 ${n}건`);
+      expect(m, '이력 > 이상행위 탭 건수 = 분석 > 결과 탭 건수 (최근 30일)').to.eq(n);
+    });
+    // (1-2) 최근 7일 → 요청 기간 = 오늘-6 ~ 오늘 (Basic 02 에서 「최근 7일」 요청에 기간이 없던 관찰 재확인)
+    cy.then(() => { tabReq.length = 0; });
+    tabBtn(/^최근 7일$/).click({ force: true });
+    tabSearch();
+    cy.wait(3000);
+    cy.wrap(tabReq, { timeout: 20000 }).should((r) => expect(r.filter((x) => x.viewMode === 'policy').length, '이상행위 탭 「최근 7일」 검색 요청').to.be.greaterThan(0));
+    cy.then(() => {
+      const last = tabReq.filter((x) => x.viewMode === 'policy').pop();
+      cy.writeFile('cypress/probe/D08D_10b_이력탭_7일.json', { 요청: last.url, from: last.from, to: last.to, 기대: [daysAgo(6), today], 건수: countOf(last) });
+      cy.then(() => expect(`${last.from}~${last.to}`, '이상행위 탭 「최근 7일」 검색 요청 기간').to.eq(`${daysAgo(6)}~${today}`));
+    });
+    // (2) 오늘
+    cy.then(() => { tabReq.length = 0; });
+    tabBtn(/^오늘$/).click({ force: true });
+    tabSearch();
+    cy.wait(3000);
+    A.dumpScreen('D08D_11_이력탭_오늘');
+    cy.wrap(tabReq, { timeout: 20000 }).should((r) => expect(r.filter((x) => x.viewMode === 'policy').length, '이상행위 탭 「오늘」 검색 요청').to.be.greaterThan(0));
+    cy.get('@todayCount').then((td) => {
+      const last = tabReq.filter((x) => x.viewMode === 'policy').pop();
+      const m = countOf(last);
+      const hasPeriod = !!(last.from || /date|from|start/i.test(last.url.split('?')[1] || ''));
+      cy.writeFile('cypress/probe/D08D_11_이력탭_오늘.json', { 요청: last.url, 기간조건: hasPeriod, 탭건수: m, 대시보드오늘: td });
+      cy.log(`이력 이상행위 탭 「오늘」 ${m}건 / 대시보드 오늘 ${td}건 · 요청 기간조건 ${hasPeriod}`);
+      expect(hasPeriod, '이상행위 탭 「오늘」 검색 요청에 기간 조건').to.eq(true);
+      expect(m, '이력 > 이상행위 탭 「오늘」 건수 = 대시보드 오늘 건수').to.eq(td);
+    });
+    // (3) 점검 > 이상행위 대시보드
+    cy.then(() => { tabReq.length = 0; });
+    cy.get('body').type('{esc}');
+    cy.contains('button', '점검').click({ force: true });
+    cy.contains('.side-sub-menu-title', '이상행위 대시보드').click({ force: true });
+    cy.url({ timeout: 15000 }).should('include', '/inspection/anomalyMonitoringDashboard');
+    cy.wait(8000);
+    A.dumpScreen('D08D_12_점검_이상행위대시보드');
+    cy.get('body').should(($b) => expect(t($b[0]), '켜진 정책이 있을 때 「정책이 없어 접속기록 기준」 안내').not.to.include('활성화된 이상행위 정책이 없어'));
+    cy.get('@todayCount').then((td) => {
+      // 위험도별 조회(severities=1·2·3)만 합산 — 소명 대기 등 다른 조회는 제외
+      const flat = tabReq.filter((x) => x.viewMode === 'flat' && x.from === today && /^[123]$/.test(x.sev || ''));
+      const bySev = {};
+      flat.forEach((x) => { bySev[x.sev] = x.total; });
+      const sum = Object.values(bySev).reduce((a, v) => a + (Number(v) || 0), 0);
+      cy.get('body').then(($b) => {
+        const body = t($b[0]);
+        const card = Number((body.match(/오늘 이상행위\s*(\d+)\s*건/) || [])[1]);
+        cy.writeFile('cypress/probe/D08D_12_점검대시보드.json', { 위험도별: bySev, 합계: sum, 화면_오늘이상행위: card, 분석대시보드오늘: td, 보기버튼: ['이상행위', '접속기록'].filter((x) => body.includes(x)) });
+        cy.log(`점검 이상행위 대시보드 오늘 경보 ${JSON.stringify(bySev)} 합계 ${sum} · 카드 ${card} / 분석 대시보드 오늘 ${td}건`);
+        cy.then(() => {
+          expect(body, '제목 (켜진 정책이 있으면 이상행위 보기)').to.include('이상행위 모니터링 대시보드');
+          expect(Object.keys(bySev).sort(), '위험도별 경보 조회 (심각 · 경계 · 주의)').to.deep.equal(['1', '2', '3']);
+          expect(sum, '위험도별 오늘 경보 합계 = 분석 대시보드 오늘 건수').to.eq(td);
+          expect(card, '「오늘 이상행위」 카드 = 분석 대시보드 오늘 건수').to.eq(td);
+        });
+      });
+    });
   });
 });

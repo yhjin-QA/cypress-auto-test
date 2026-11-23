@@ -958,17 +958,16 @@ cy.get('tbody tr')
       cy.get('input[placeholder="YYYY-MM-DD"]').filter(':visible').first().invoke('val').then((start) => {
         expect(start, '최근 7일 선택 후 시작일').to.match(/^\d{4}-\d{2}-\d{2}$/);
         cy.get('.v-btn').filter((i, e) => vis(e) && /검색$/.test(tx(e))).last().click({ force: true });
-        cy.wait('@B02A_alerts', { timeout: 30000 }).then((x) => {
+        // [2026-11-23] 「심각」을 누를 때도 바로 조회가 나가므로, 검색 버튼 뒤의 마지막 요청으로 판정
+        cy.wait('@B02A_alerts', { timeout: 30000 });
+        cy.wait(2500);
+        cy.get('@B02A_alerts.all').then((all) => all[all.length - 1]).then((x) => {
           const url = decodeURIComponent(x.request.url);
           cy.writeFile('cypress/probe/B02A_이상행위탭_검색요청.json', { url, 응답: x.response.body && x.response.body.data && { totalCount: x.response.body.data.totalCount } });
           expect(x.response.statusCode, '이상행위 경보 검색').to.eq(200);
           expect(x.response.body.success, '응답 success').to.eq(true);
-          // [2026-11-23 관찰] 「최근 7일」로 날짜칸은 바뀌지만 검색 요청에 기간 조건이 없음 (severities 만 실림)
-          //   경보 0건이라 결과 차이로는 판단 불가 → 실패 대신 기록만 (경보 데이터가 생기면 Depth 에서 확인)
-          if (!new RegExp(start.replace(/-/g, '-?')).test(url)) {
-            cy.writeFile('cypress/probe/B02A_관찰_기간조건.json', { 시각: new Date().toISOString(), 시작일칸: start, 요청: url, 결과: '검색 요청에 기간 조건 없음' });
-            cy.log('⚠️ [관찰] 이상행위 탭 검색 요청에 기간 조건이 없음');
-          }
+          // [2026-11-23] 이전 관찰(기간 조건 없음)은 「심각」 클릭 때 나간 요청을 본 것 — Depth 08 에서 최근 7일 · 30일 · 오늘 모두 기간 전달 확인
+          expect(url, '검색 요청에 시작일 (최근 7일)').to.match(new RegExp(`dateFrom=${start}`));
           expect(url, '검색 요청에 위험도 조건').to.match(/severit/i);
           const n = (x.response.body.data && x.response.body.data.totalCount) || 0;
           if (n === 0) cy.get('body').should(($b) => expect($b.find('*').filter((i, e) => vis(e) && e.children.length === 0 && /데이터가 없습니다|경보가 없습니다|없습니다/.test(tx(e))).length, '0건 안내 문구').to.be.at.least(1));
