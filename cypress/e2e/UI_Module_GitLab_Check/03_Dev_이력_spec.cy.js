@@ -2525,6 +2525,37 @@ describe('로그캐치 사이트 테스트', () => {
 */
 
     // ==========================================
+    // [2.9.9.0 신규] 이력 > 접속기록 이력 > 이상행위 탭 (!1453) — 화면 구조 기준 cypress/probe/P299B_관찰.json
+    // ==========================================
+    {
+      const _t = (e) => (e.innerText || e.textContent || '').replace(/\s+/g, ' ').trim();
+      const _crumb = (text) => cy.get('.v-breadcrumbs').filter(':visible').should('contain.text', text);
+      cy.log('🚀 이력 > 접속기록 이력 > 이상행위 탭');
+      cy.visit('https://10.10.54.71:18443/logcatch/record/accessLog/fileDownloadLog');
+      cy.wait(4000);
+      cy.get('.tab-btn').filter(':visible').then(($b) => {
+        expect($b.toArray().map(_t), '접속기록 이력 탭').to.deep.equal(['통합', '파일 다운로드', '검출', '이상행위']);
+      });
+      cy.get('.tab-btn').contains('이상행위').click({ force: true });
+      cy.wait(4000);
+      cy.url().should('include', '/record/accessLog/anomalyResult');
+      cy.get('.tab-btn').contains('이상행위').closest('button').should('not.have.class', 'inactive');
+      _crumb('이상행위');
+      // 검색 조건 : 정책 선택 · 메시지 + 정책명 검색 · 기간(달력 2칸) · 검색 버튼
+      cy.get('input[placeholder="정책 선택"]').filter(':visible').should('have.attr', 'role', 'combobox');
+      cy.get('input[placeholder="메시지 + 정책명 검색"]').filter(':visible').should('be.visible');
+      cy.get('input[placeholder="YYYY-MM-DD"]').filter(':visible').should('have.length', 2);
+      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+      // 결과 제목 「경보 (정책 N건)」, 0건이면 「경보가 없습니다.」
+      cy.contains(/경보 \(정책 \d+건\)/).should('be.visible').invoke('text').then((txt) => {
+        const n = parseInt((txt.match(/정책 (\d+)건/) || [])[1], 10);
+        cy.log(`이상행위 경보 정책 ${n}건`);
+        if (n === 0) cy.contains('경보가 없습니다.').should('be.visible');
+      });
+      cy.log('✅ 이상행위 탭 확인 완료');
+    }
+
+    // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
     cy.log('🎉 이력 UI 테스트 시나리오 성공적으로 완료!');

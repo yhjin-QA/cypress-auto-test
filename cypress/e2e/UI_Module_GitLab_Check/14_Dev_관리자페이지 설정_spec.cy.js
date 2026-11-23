@@ -403,6 +403,63 @@ describe('로그캐치 사이트 테스트', () => {
 
 
     // ==========================================
+    // [2.9.9.0 신규] 설정 > 플로우 시스템 6개 탭 (커넥터는 이 아래 탭으로 이동, 0038675 접속 확인)
+    // 화면 구조 기준 cypress/probe/P299B_관찰.json · 추가/저장/삭제/실행 버튼은 누르지 않음
+    // ==========================================
+    {
+      const _t = (e) => (e.innerText || e.textContent || '').replace(/\s+/g, ' ').trim();
+      const _crumb = (text) => cy.get('.v-breadcrumbs').filter(':visible').should('contain.text', text);
+      cy.log('🚀 설정 > 플로우 시스템');
+      cy.get('.g-IConfig').should('be.visible').click({ force: true });
+      cy.wait(2000);
+      cy.contains('button.side-menu', '설정').should('be.visible').click({ force: true });
+      cy.wait(1500);
+      cy.get('.v-menu__content.menuable__content__active .v-list__tile__title').then(($m) => {
+        const items = $m.toArray().map(_t);
+        expect(items, '설정 하위 메뉴').to.include.members(['패스워드 규칙', '관리자', 'SMTP 설정', '재시작 설정', '플로우 시스템']);
+        expect(items, '설정 하위 메뉴 — 커넥터는 플로우 시스템 탭으로 이동').to.not.include('커넥터');
+      });
+      cy.contains('.v-list__tile__title', '플로우 시스템').closest('a, .v-list__tile').click({ force: true });
+      cy.wait(4000);
+      const TABS = [
+        { tab: '플로우', url: '/settings/connector/channelPolicy', title: '플로우 목록', th: ['이름', '노드 수', '개정', '이력기록', '사용 여부', '수정일시'] },
+        { tab: '커넥터', url: '/settings/connector/outboundConnector', title: '커넥터 설정 목록', th: ['이름', '프로토콜', '대상', '상태', '생성일'] },
+        { tab: '스케줄', url: '/settings/connector/flowSchedule', title: '스케줄 목록', th: ['스케줄 이름', '실행할 플로우', '실행 시점(cron)', '시간대', '사용', '다음 실행'] },
+        { tab: '재시도 정책', url: '/settings/connector/dispatchSchedule', title: '재시도 정책 목록', th: ['이름', '최대 시도 횟수', '상태', '생성일'] },
+        { tab: '실행 이력', url: '/settings/connector/outboundConnectorInstance', title: '실행 이력 목록', th: ['ID', '실행 상태', '플로우', '개정', '개시 경로', '플로우 사용처', '결과', '시도', '원 실행', '일시'], search: ['플로우', '개시 경로', '실행 상태'] },
+        { tab: '폴링 어댑터', url: '/dataWatch/watchPolicy', title: '폴링 어댑터 목록', th: ['이름', '상태', '커서 지연', '설명'] },
+      ];
+      cy.get('.tab-btn, .v-tabs__div').filter(':visible').then(($b) => {
+        expect($b.toArray().map(_t), '플로우 시스템 탭').to.deep.equal(TABS.map((x) => x.tab));
+      });
+      TABS.forEach((x) => {
+        cy.log(`--- 플로우 시스템 > ${x.tab} ---`);
+        cy.get('.tab-btn, .v-tabs__div').filter(':visible').filter((i, e) => _t(e) === x.tab).first().click({ force: true });
+        cy.wait(3000);
+        cy.url().should('include', x.url);
+        _crumb(x.tab);
+        cy.contains(x.title).should('be.visible');
+        cy.get('th').filter(':visible').then(($th) => {
+          const h = $th.toArray().map((e) => _t(e).replace(/arrow_upward|arrow_downward/g, '').trim()).filter(Boolean);
+          expect(h, `${x.tab} 표 머리`).to.include.members(x.th);
+        });
+        if (x.search) {
+          // 실행 이력 : 검색 조건 콤보 3개 + 검색 버튼 (추가 버튼 없음)
+          x.search.forEach((lb) => cy.get(`input[aria-label="${lb}"]`).filter(':visible').should('have.attr', 'role', 'combobox'));
+          cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+        } else {
+          // 추가(+) 버튼은 보이기만 확인 (누르지 않음)
+          cy.get('.v-btn .material-icons').filter(':visible').filter((i, e) => _t(e) === 'add').should('have.length.greaterThan', 0);
+        }
+        cy.get('input[aria-label="페이지당"]').filter(':visible').should('exist');
+      });
+      // 일반 모드로 복귀
+      cy.get('.g-IDashboard').should('be.visible').click({ force: true });
+      cy.wait(2000);
+      cy.log('✅ 플로우 시스템 6개 탭 확인 완료');
+    }
+
+    // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
     cy.log('🎉 모든 테스트 시나리오 성공적으로 완료!');
