@@ -31,7 +31,8 @@ describe('로그캐치 사이트 테스트', () => {
       'e is not defined',
       'Script error',
       'not valid JSON',
-      'ChunkLoadError'
+      'ChunkLoadError',
+      'ResizeObserver loop' // [2.9.9.0] 플로우 시스템 화면 크기 변경 시 브라우저 경고 (기능 영향 없음)
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -119,7 +120,10 @@ describe('로그캐치 사이트 테스트', () => {
     // STEP 12: 점검(대시보드) 서브메뉴 
     // ==========================================
     cy.log('🚀 점검 탭 클릭');
+    // [2.9.9.0] 관리자 로그인 첫 화면 = 점검 > 이상행위 대시보드, '점검'을 누르면 하위 메뉴(점검 대시보드 / 이상행위 대시보드)가 열림
     cy.contains('button', '점검').click({ force: true });
+    cy.contains('.side-sub-menu-title', '점검 대시보드').should('be.visible').click({ force: true });
+    cy.url({ timeout: 15000 }).should('include', '/inspection/inspectionDashboard');
     cy.wait(2000);
     cy.log('--- 화면 검증 시작 ---');
 
@@ -467,6 +471,108 @@ describe('로그캐치 사이트 테스트', () => {
    cy.log('✅ 5초 간격 실제 데이터 통신 검증 완료');
    cy.log('✅ 점검 대시보드 출력 및 차트 타이틀 확인 완료 ');
   
+    // ==========================================
+    // [2.9.9.0 Basic] 점검 > 이상행위 대시보드 — 기능 확인 (조회 전용)
+    //   .21 은 활성 이상행위 정책이 없어 「접속기록 모니터링 대시보드」로 표시됨
+    //   1) 요약 카드 3개  2) 「최근 7일 개인정보 사용」 = 업무시스템별 집계 API 합계
+    //   3) 사용자별 TOP 10 1위 = 사용자별 집계 API 합계 1위  4) 일시정지 ↔ 재개  5) 배속
+    //   6) 고급 조건 창 항목 · 취소  7) 크게 보기 창 열기 · 닫기
+    // ==========================================
+    {
+      const vis = (e) => !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
+      const tx = (e) => (e.innerText || e.textContent || '').replace(/\s+/g, ' ').trim();
+      const num = (s) => Number(String(s).replace(/[^\d]/g, ''));
+      const sumBy = (rows) => rows.reduce((m, r) => { m[r.dimName] = (m[r.dimName] || 0) + (Number(r.privacyCount) || 0); return m; }, {});
+      cy.intercept('GET', /statistics\/period-trend\/details\?dimension=bsn/).as('B13A_bsn');
+      cy.intercept('GET', /statistics\/period-trend\/details\?dimension=user/).as('B13A_user');
+      cy.get('body').type('{esc}');
+      cy.contains('button', '점검').click({ force: true });
+      cy.contains('.side-sub-menu-title', '이상행위 대시보드').should('be.visible').click({ force: true });
+      cy.url({ timeout: 15000 }).should('include', '/inspection/anomalyMonitoringDashboard');
+      cy.contains(/모니터링 대시보드/).should('be.visible');
+
+      // 1) 요약 카드
+      ['최근 7일 개인정보 사용', '오늘 접속기록', '개인정보 사용자'].forEach((l) => cy.contains(l).should('be.visible'));
+      ['사용자별 개인정보 사용량 TOP 10', '부서별 개인정보 사용량 TOP 10', '업무시스템별 개인정보 사용량 TOP 10'].forEach((l) => cy.contains('.board-title', l).should('be.visible'));
+
+      // 2) 카드 값 = 업무시스템별 집계 합계 (어제까지 7일)
+      cy.wait('@B13A_bsn', { timeout: 30000 }).then((x) => {
+        expect(x.response.statusCode, '업무시스템별 집계 API').to.eq(200);
+        const total = (x.response.body.resultObject || []).reduce((a, r) => a + (Number(r.privacyCount) || 0), 0);
+        // 숫자가 0 부터 올라가는 효과가 있어, 최종 값이 될 때까지 재시도
+        cy.contains('최근 7일 개인정보 사용', { timeout: 15000 }).should(($l) => {
+          let box = $l[0];
+          for (let i = 0; i < 4 && box && !/\d[\d,]*\s*건/.test(tx(box)); i += 1) box = box.parentElement;
+          const shown = num((tx(box).match(/(\d[\d,]*)\s*건/) || [])[1]);
+          expect(shown, '「최근 7일 개인정보 사용」 카드 = 업무시스템별 집계 합계').to.eq(total);
+        });
+        cy.log(`최근 7일 개인정보 사용 = API 합계 ${total}`);
+      });
+
+      // 3) 사용자별 TOP 10 1위 = API 합계 1위
+      cy.wait('@B13A_user', { timeout: 30000 }).then((x) => {
+        expect(x.response.statusCode, '사용자별 집계 API').to.eq(200);
+        const by = sumBy(x.response.body.resultObject || []);
+        const top = Object.entries(by).sort((a, b) => b[1] - a[1])[0];
+        if (!top || top[1] === 0) { cy.log('ℹ️ 최근 7일 사용자별 사용량 없음 — 1위 비교 생략'); return; }
+        cy.log(`사용자별 1위 API: ${top[0]} ${top[1]}`);
+        cy.contains('.board-title', '사용자별 개인정보 사용량 TOP 10').closest('header').parent().should(($p) => {
+          const text = tx($p[0]);
+          expect(text, '사용자별 TOP 10 에 API 1위 사용자').to.include(top[0]);
+          expect(text, '사용자별 TOP 10 에 API 1위 사용량').to.include(top[1].toLocaleString('en-US'));
+        });
+      });
+
+      // 4) 일시정지 ↔ 재개
+      cy.get('button').filter((i, e) => vis(e) && /일시정지$/.test(tx(e))).first().click({ force: true });
+      cy.contains('일시정지됨').should('be.visible');
+      cy.get('button').filter((i, e) => vis(e) && /재개$/.test(tx(e))).should('have.length.at.least', 1).first().click({ force: true });
+      cy.get('button').filter((i, e) => vis(e) && /일시정지$/.test(tx(e))).should('have.length.at.least', 1);
+      cy.contains('일시정지됨').should('not.exist');
+
+      // 5) 배속 버튼 0.5× · 1× · 2× (2× → 1× 로 되돌림)
+      ['0.5×', '1×', '2×'].forEach((s) => cy.get('button').filter((i, e) => vis(e) && tx(e) === s).should('have.length', 1));
+      cy.get('button').filter((i, e) => vis(e) && tx(e) === '2×').click({ force: true });
+      cy.wait(500);
+      cy.get('button').filter((i, e) => vis(e) && tx(e) === '1×').click({ force: true });
+
+      // 6) 고급 조건 창
+      cy.get('button').filter((i, e) => vis(e) && tx(e) === '고급 조건').click({ force: true });
+      ['처음 표시할 기록', '처음 표시할 기록 범위', '사용자별 묶음 간격', '접속기록 흐름 재개', '탐지 후 오른쪽 이동 대기시간'].forEach((l) => cy.contains(l).should('be.visible'));
+      ['기본값', '취소', '적용'].forEach((b) => cy.get('button').filter((i, e) => vis(e) && tx(e) === b).should('have.length.at.least', 1));
+      cy.get('input[aria-label^="탐지 후 오른쪽 이동 대기시간"]').should('have.attr', 'type', 'number');
+      cy.get('button').filter((i, e) => vis(e) && tx(e) === '취소').last().click({ force: true });
+      cy.get('body').should(($b) => expect($b.find('*').filter((i, e) => vis(e) && e.children.length === 0 && tx(e) === '사용자별 묶음 간격').length, '취소 후 고급 조건 창 닫힘').to.eq(0));
+
+      // 7) 크게 보기 (사용자별 TOP 10) — 같은 제목이 크게 한 번 더 보이면(창 · 겹침 화면) 열린 것으로 판단
+      const TT = '사용자별 개인정보 사용량 TOP 10';
+      const titles = ($b) => $b.find('*').filter((i, e) => vis(e) && e.children.length === 0 && tx(e) === TT).length;
+      cy.contains('.board-title', TT).closest('header').find('button[aria-label="크게 보기"]').scrollIntoView().click({ force: true });
+      cy.wait(1500);
+      cy.get('body').then(($b) => {
+        cy.writeFile('cypress/probe/B13A_크게보기.json', {
+          제목수: titles($b),
+          창: $b.find('.v-dialog--active, .v-overlay--active, [role=dialog], .modal, .board-expanded, .is-expanded, .fullscreen').filter((i, e) => vis(e)).toArray().map((e) => `${e.tagName}.${e.className}`.slice(0, 120)),
+          버튼: $b.find('button[aria-label]').filter((i, e) => vis(e)).toArray().map((e) => e.getAttribute('aria-label')).slice(0, 20),
+        });
+      });
+      cy.screenshot('B13A_크게보기', { capture: 'viewport' });
+      cy.get('body').should(($b) => {
+        const open = titles($b) >= 2 || $b.find('.v-dialog--active, [role=dialog]').filter((i, e) => vis(e) && tx(e).includes(TT)).length > 0;
+        expect(open, '「크게 보기」 로 사용자별 TOP 10 확대 화면').to.eq(true);
+      });
+      cy.get('body').type('{esc}');
+      cy.wait(1000);
+      cy.get('body').then(($b) => {
+        if (titles($b) >= 2) {
+          const c = $b.find('button').filter((i, e) => vis(e) && /close|닫기|축소|작게/.test(tx(e) + (e.getAttribute('aria-label') || ''))).last();
+          if (c.length) cy.wrap(c).click({ force: true });
+        }
+      });
+      cy.get('body').should(($b) => expect(titles($b), '확대 화면 닫힘').to.eq(1));
+      cy.log('✅ [2.9.9.0] 이상행위 대시보드 기능 확인 완료');
+    }
+
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================

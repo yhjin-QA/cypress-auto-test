@@ -15,3 +15,5 @@ cypress/probe/
 Claude outputs/
 # Claude 디버그용 리포트 zip (push 제외)
 cypress/e2e/Error_Claude Debug/
+# 조회용 probe 스펙 (로컬 확인용, admin 계정이 코드에 있음 — push 제외)
+cypress/e2e/Probe/

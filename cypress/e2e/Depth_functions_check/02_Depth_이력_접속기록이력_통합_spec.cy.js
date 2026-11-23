@@ -136,7 +136,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="사용자 IP"], input[aria-label="사용자 아이피"]').filter(':visible').should('be.visible'); // [2.9.9.0] 「사용자 아이피」 허용
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
   
@@ -199,7 +199,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"][role="combobox"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="사용자 IP"], input[aria-label="사용자 아이피"]').filter(':visible').should('be.visible'); // [2.9.9.0] 「사용자 아이피」 허용
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="접속 메뉴"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
@@ -1194,6 +1194,15 @@ cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.
             // --------------------------------------------------
             cy.log('✅ [Case B] 정상 사용자: referer 정보 검증');
             
+            // [2026-11-23] 로그인 페이지(/uat/uia/egovLoginUsr.do) 등 첫 진입 접속은 referer 헤더가 없음
+            //   (접속 아이디 「미등록 사용자()」) → referer 있으면 기존 검증, 없으면 host 확인
+            cy.get('.v-dialog--active').last().then(($d) => {
+              const hasRef = $d.find('tr').toArray().some((tr) => /(^|\s)referer(\s|$)/i.test(tr.innerText));
+              if (!hasRef) {
+                cy.log('ℹ️ referer 헤더 없는 접속(첫 진입) — host 로 확인');
+                cy.contains('tr', 'host').within(() => { cy.contains('10.10.54.22:8080').should('exist'); });
+                return;
+              }
             cy.contains('tr', 'referer', { timeout: 10000 }).should('be.visible')
               .within(() => {
                   // 1. IP 주소는 고정이므로 반드시 확인
@@ -1204,6 +1213,7 @@ cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.
                       expect(text).to.match(/\.do/); 
                   });
               });
+            });
         }
     });
 

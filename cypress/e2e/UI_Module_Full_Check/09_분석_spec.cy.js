@@ -652,16 +652,16 @@ cy.get('.v-dialog--active .rule-msg-card').within(() => {
     .should('be.visible');
 
   // '경보 메시지'는 '경보 메시지 상세'에도 포함되므로 정확히 일치로 확인
-  cy.contains('.caption.grey--text', /^\s*경보 메시지\s*$/).should('be.visible');
+  cy.contains('.caption.grey--text, .caption.muted--text', /^\s*경보 메시지\s*$/).should('be.visible');
   cy.contains('.msg-editor-placeholder', '[사용자]가 [업무시스템] 시스템에서 이상행위 탐지')
     .should('exist');
 
-  cy.contains('.caption.grey--text', '경보 메시지 상세').should('be.visible');
+  cy.contains('.caption.grey--text, .caption.muted--text', '경보 메시지 상세').should('be.visible');
   cy.contains('.msg-editor-placeholder', '탐지 사유 및 상세 내용을 기술합니다.')
     .should('exist');
 
   // 변수 삽입 안내
-  cy.contains('.caption.grey--text', '입력으로 변수 삽입').find('kbd').should('have.text', '$');
+  cy.contains('.caption.grey--text, .caption.muted--text', '입력으로 변수 삽입').find('kbd').should('have.text', '$');
 });
 
 // [신규] 2.9.6 기본 차트 관점 - X축 / Y축 / 차트 타입 기본값
@@ -670,7 +670,7 @@ cy.contains('.v-dialog--active .default-perspective-card .section-header', '기�
   .should('be.visible');
 cy.get('.v-dialog--active .default-perspective-card').within(() => {
   ['X축', 'Y축', '차트 타입'].forEach((l) => {
-    cy.contains('.caption.grey--text', l).should('be.visible');
+    cy.contains('.caption.grey--text, .caption.muted--text', l).should('be.visible');
   });
   cy.get('.v-select__selection--comma').eq(0).should('have.text', '기간');
   cy.get('.v-select__selection--comma').eq(1).should('have.text', '없음 (단일 series)');
@@ -717,9 +717,9 @@ cy.get('input[placeholder="정책 선택"]').should('exist');
 cy.get('input[placeholder="메시지 + 정책명 검색"]').should('exist');
 
 // [변경] From/To aria-label 삭제 → date-range-picker 내 type="date" 2개로 확인
-cy.get('.date-range-picker input[type="date"]').should('have.length', 2);
-cy.get('.date-range-picker input[type="date"]').eq(0).should('be.visible'); // From
-cy.get('.date-range-picker input[type="date"]').eq(1).should('be.visible'); // To
+cy.get('.date-range-picker input[placeholder="YYYY-MM-DD"] /* [2.9.9.0] type=date → 달력 입력 */').should('have.length', 2);
+cy.get('.date-range-picker input[placeholder="YYYY-MM-DD"] /* [2.9.9.0] type=date → 달력 입력 */').eq(0).should('be.visible'); // From
+cy.get('.date-range-picker input[placeholder="YYYY-MM-DD"] /* [2.9.9.0] type=date → 달력 입력 */').eq(1).should('be.visible'); // To
 cy.get('.date-range-sep').filter(':visible').contains('~').should('be.visible');
 
 cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
@@ -845,7 +845,7 @@ Cypress.Commands.add('verifyIncidentHeaderRows', (mode) => {
     if (rowCount === 0) {
       cy.log(`ℹ️ [${mode}] 모드 - 경보 데이터 0건, "데이터 없음" 상태 확인`);
       // [변경] 문구 확인 - 실제 클래스 기준으로 확인
-      cy.get('.text-xs-center.pa-4.grey--text').filter(':visible').contains('경보가 없습니다').should('be.visible');
+      cy.get('.text-xs-center.pa-4.grey--text, .text-xs-center.pa-4.muted--text') /* [2.9.9.0] grey→muted */.filter(':visible').contains('경보가 없습니다').should('be.visible');
       return;
     }
 
@@ -864,7 +864,7 @@ Cypress.Commands.add('verifyIncidentHeaderRows', (mode) => {
           cy.get('.incident-policy-name').invoke('text').then((text) => {
             expect(text.trim().length).to.be.greaterThan(0);
           });
-          cy.get('.caption.grey--text.ml-1').invoke('text').then((text) => {
+          cy.get('.caption.grey--text.ml-1, .caption.muted--text.ml-1').invoke('text').then((text) => {
             expect(text.trim()).to.match(/^\(\d+회 실행\)$/);
           });
           cy.get('.incident-window').invoke('text').then((text) => {
@@ -956,7 +956,7 @@ cy.get('@targetToggleBtn').find('span').first().invoke('text').then((currentLabe
 cy.get('.table-footer-right').filter(':visible').should('be.visible').within(() => {
   cy.get('.table-footer-size').should('be.visible');
   cy.get('.v-input__icon--append .material-icons').should('be.visible').and('contain.text', 'arrow_drop_down');
-  cy.contains('.caption.grey--text', '건').should('be.visible');
+  cy.contains('.caption.grey--text, .caption.muted--text', '건').should('be.visible');
 });
 
 // 기간 - 오늘 클릭

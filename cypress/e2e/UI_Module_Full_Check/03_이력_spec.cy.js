@@ -121,7 +121,8 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
+     // [2.9.9.0] 칸 이름이 「사용자 IP」 또는 「사용자 아이피」
+     cy.get('input[aria-label="사용자 IP"], input[aria-label="사용자 아이피"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
   
@@ -190,7 +191,13 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('--- 화면 검증 시작 ---');
     cy.get('.tab-btn').contains('파일 다운로드').closest('button').should('not.have.class', 'inactive');
     // 'c-headline' 클래스를 가진 요소 중에 '파일 다운로드' 글자가 존재하는지 확인
-    cy.contains('.c-headline', '파일 다운로드').should('exist');
+    // [2.9.9.0] 표 위 제목(c-headline '파일 다운로드')이 없어짐 → 제목 또는 상단 경로(breadcrumbs)에 '파일 다운로드'
+    cy.get('body').should(($b) => {
+      const T = '파일 다운로드';
+      const inHead = $b.find('.c-headline:visible').toArray().some((e) => e.innerText.includes(T));
+      const inCrumb = $b.find('.v-breadcrumbs:visible').text().includes(T);
+      expect(inHead || inCrumb, `제목 또는 경로에 ${T}`).to.be.true;
+    });
 
 
     // // 시작날짜 달력 아이콘확인
@@ -204,8 +211,13 @@ describe('로그캐치 사이트 테스트', () => {
 
      // 검색 조건 이름 입력란 확인
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="시작 IP"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="종료 IP"]').filter(':visible').should('be.visible');
+     // [2.9.9.0] 파일 다운로드 등 일부 탭은 IP 범위(시작 IP · 종료 IP) → 「사용자 아이피」 한 칸으로 바뀜 — 둘 중 하나면 통과
+     cy.get('body').should(($b) => {
+       const v = (sel) => $b.find(sel).filter(':visible').length;
+       const range = v('input[aria-label="시작 IP"]') > 0 && v('input[aria-label="종료 IP"]') > 0;
+       const single = v('input[aria-label="사용자 아이피"]') + v('input[aria-label="사용자 IP"]') > 0;
+       expect(range || single, 'IP 검색칸 (시작/종료 IP 또는 사용자 아이피)').to.be.true;
+     });
 
      cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
@@ -322,8 +334,13 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 계정"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
-     cy.get('input[aria-label="시작 IP"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="종료 IP"]').filter(':visible').should('be.visible');
+     // [2.9.9.0] 파일 다운로드 등 일부 탭은 IP 범위(시작 IP · 종료 IP) → 「사용자 아이피」 한 칸으로 바뀜 — 둘 중 하나면 통과
+     cy.get('body').should(($b) => {
+       const v = (sel) => $b.find(sel).filter(':visible').length;
+       const range = v('input[aria-label="시작 IP"]') > 0 && v('input[aria-label="종료 IP"]') > 0;
+       const single = v('input[aria-label="사용자 아이피"]') + v('input[aria-label="사용자 IP"]') > 0;
+       expect(range || single, 'IP 검색칸 (시작/종료 IP 또는 사용자 아이피)').to.be.true;
+     });
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI"]').parents('.v-input').find('.v-chip__content').contains('포함').should('be.visible');
@@ -380,7 +397,8 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="정보 사용자"][role="combobox"]').filter(':visible').should('be.visible');
      //cy.get('input[aria-label="정보 사용자"]:not([role="combobox"])').filter(':visible').should('be.visible');
      //cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
+     // [2.9.9.0] 칸 이름이 「사용자 IP」 또는 「사용자 아이피」
+     cy.get('input[aria-label="사용자 IP"], input[aria-label="사용자 아이피"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="접속 메뉴"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
@@ -1987,8 +2005,13 @@ describe('로그캐치 사이트 테스트', () => {
      // like버튼 확인 
      cy.get('.v-chip__content').filter(':visible').contains('like').should('be.visible');
      // IP입력란 확인인
-     cy.get('input[aria-label="시작 IP"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="종료 IP"]').filter(':visible').should('be.visible');
+     // [2.9.9.0] 파일 다운로드 등 일부 탭은 IP 범위(시작 IP · 종료 IP) → 「사용자 아이피」 한 칸으로 바뀜 — 둘 중 하나면 통과
+     cy.get('body').should(($b) => {
+       const v = (sel) => $b.find(sel).filter(':visible').length;
+       const range = v('input[aria-label="시작 IP"]') > 0 && v('input[aria-label="종료 IP"]') > 0;
+       const single = v('input[aria-label="사용자 아이피"]') + v('input[aria-label="사용자 IP"]') > 0;
+       expect(range || single, 'IP 검색칸 (시작/종료 IP 또는 사용자 아이피)').to.be.true;
+     });
      // 검색 버튼 확인
      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
      // 표 열 문구 확인 
@@ -2500,6 +2523,40 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 일반 점검페이지지 모드 복귀 완료');
 
 */
+
+    // ==========================================
+    // [2.9.9.0 신규] 이력 > 접속기록 이력 > 이상행위 탭 (!1453) — 화면 구조 기준 cypress/probe/P299B_관찰.json
+    // ==========================================
+    {
+      const _t = (e) => (e.innerText || e.textContent || '').replace(/\s+/g, ' ').trim();
+      const _crumb = (text) => cy.get('.v-breadcrumbs').filter(':visible').should('contain.text', text);
+      cy.log('🚀 이력 > 접속기록 이력 > 이상행위 탭');
+      cy.visit('https://10.10.54.21:18443/logcatch/record/accessLog/fileDownloadLog');
+      cy.wait(4000);
+      // 「그룹」 탭은 설정 > 이력 그룹화를 켠 서버에만 보임(.21 켜짐 · .71 꺼짐) → 있으면 기록만 하고 나머지 순서를 비교
+      cy.get('.tab-btn').filter(':visible').then(($b) => {
+        const tabs = $b.toArray().map(_t);
+        if (tabs.includes('그룹')) cy.log('ℹ️ 「그룹」 탭 있음 (이력 그룹화 사용 서버)');
+        expect(tabs.filter((x) => x !== '그룹'), '접속기록 이력 탭').to.deep.equal(['통합', '파일 다운로드', '검출', '이상행위']);
+      });
+      cy.get('.tab-btn').contains('이상행위').click({ force: true });
+      cy.wait(4000);
+      cy.url().should('include', '/record/accessLog/anomalyResult');
+      cy.get('.tab-btn').contains('이상행위').closest('button').should('not.have.class', 'inactive');
+      _crumb('이상행위');
+      // 검색 조건 : 정책 선택 · 메시지 + 정책명 검색 · 기간(달력 2칸) · 검색 버튼
+      cy.get('input[placeholder="정책 선택"]').filter(':visible').should('have.attr', 'role', 'combobox');
+      cy.get('input[placeholder="메시지 + 정책명 검색"]').filter(':visible').should('be.visible');
+      cy.get('input[placeholder="YYYY-MM-DD"]').filter(':visible').should('have.length', 2);
+      cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
+      // 결과 제목 「경보 (정책 N건)」, 0건이면 「경보가 없습니다.」
+      cy.contains(/경보 \(정책 \d+건\)/).should('be.visible').invoke('text').then((txt) => {
+        const n = parseInt((txt.match(/정책 (\d+)건/) || [])[1], 10);
+        cy.log(`이상행위 경보 정책 ${n}건`);
+        if (n === 0) cy.contains('경보가 없습니다.').should('be.visible');
+      });
+      cy.log('✅ 이상행위 탭 확인 완료');
+    }
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기

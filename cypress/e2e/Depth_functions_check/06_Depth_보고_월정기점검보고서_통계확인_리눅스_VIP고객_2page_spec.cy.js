@@ -42,6 +42,8 @@ describe('로그캐치 사이트 테스트', () => {
   // [2.9.7 보류] Mantis 0038961 — 통계가 정상 생성된 날짜(어제)도 현황 > 업무 시스템 별 조회가 400(No Data Found)이라
   //   업무시스템 목록에서 리눅스_VIP고객을 선택할 수 없음 → 이슈 해결 전까지 전체 skip (해결 후 it.skip → it 로 복원)
   //   참고: 0038962(조회 실패 시 이전 목록 잔존) — 수동 확인 시 이전 목록이 남아 정상처럼 보일 수 있음
+  // [2026-11-23] 2.9.9.0 재확인 → 재현: 현황 > 업무 시스템 별 2026-11-22 하루 조회가 GET 400 (search-condition/status-tasksystem)
+  //   업무시스템 목록 「데이터가 없습니다」 (같은 기간 이상행위 대시보드는 리눅스_VIP고객 244,951건 표시) → 다시 skip
   it.skip('로그캐치 배포점검목록 동작 체크', () => {
 
 
@@ -139,7 +141,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="사용자 IP"], input[aria-label="사용자 아이피"]').filter(':visible').should('be.visible'); // [2.9.9.0] 「사용자 아이피」 허용
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
   
@@ -202,7 +204,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"][role="combobox"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="사용자 IP"], input[aria-label="사용자 아이피"]').filter(':visible').should('be.visible'); // [2.9.9.0] 「사용자 아이피」 허용
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="접속 메뉴"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');

@@ -87,10 +87,19 @@ const readState = ($p) => {
   };
   const rows = (tb) => (tb ? [...tb.querySelectorAll('tbody tr')].filter((tr) => tr.querySelectorAll('td').length > 1).map((tr) => [...tr.querySelectorAll('td')].map(t)) : []);
   const pg = [...t(p).matchAll(/(\d+)\s*-\s*(\d+)\s*of\s*(\d+)/g)].map((m) => Number(m[3]));
+  // [2.9.9.0] 등록된 필터가 없으면 「등록 필터 상세 보기」 안에 「필터 목록 (N)」 · 목록 표가 아예 안 그려짐 (2026-11-23 .21 · 사용자 IP 제외 탭)
+  //   → 표가 변경 이력 1개뿐이면 목록 0건으로 보고, 그 표를 변경 이력으로 읽는다
+  const listMissing = !lab && tbs.length < 2;
+  if (listMissing) {
+    return { listMissing, label: 0, listTotal: 0, histTotal: pg[0], listHead: [], histHead: head(tbs[0]), list: [], hist: rows(tbs[0]) };
+  }
+  const listEmpty = rows(tbs[0]).length === 0;
   return {
+    listMissing,
     label: Number((lab.match(/\((\d+)\)/) || [])[1]),
-    listTotal: pg[0],
-    histTotal: pg[1],
+    // [2.9.9.0] 필터 목록이 비면 표 아래 「1-5 of N」 이 없어 첫 「of N」 이 변경 이력 것이 됨 → 목록이 비었으면 0 으로 보고 그다음을 이력으로
+    listTotal: listEmpty ? 0 : pg[0],
+    histTotal: listEmpty ? pg[0] : pg[1],
     listHead: head(tbs[0]),
     histHead: head(tbs[1]),
     list: rows(tbs[0]),
@@ -257,7 +266,8 @@ describe('10_Basic_검출_필터', () => {
 
     // ---------- 0. 화면 구성 · 실행 전 값 ----------
     state(T, (s) => {
-      expect(s.listHead.slice(0, 5), '필터 목록 머리').to.deep.eq(['특정 SQL', '설명', '업무시스템', 'Log Tracer', '삭제']);
+      // 목록이 0건이라 표가 안 그려지면 머리 확인은 등록 뒤로 미룸 (등록 뒤 state 에서 목록 행 · 값 확인)
+      if (!s.listMissing) expect(s.listHead.slice(0, 5), '필터 목록 머리').to.deep.eq(['특정 SQL', '설명', '업무시스템', 'Log Tracer', '삭제']);
       expect(s.histHead.slice(0, 4), '변경 이력 머리').to.deep.eq(['발생 일시', '관리자', 'IP', '조건']);
       expect(s.label, '필터 목록 (N) = 목록 전체 수').to.eq(s.listTotal);
       expect(s.list.filter((r) => r.join(' ').includes(PREFIX)).length, '남은 임시 값').to.eq(0);
@@ -301,7 +311,11 @@ describe('10_Basic_검출_필터', () => {
     saveBtn(T).click({ force: true });
     confirmAny('B10F_등록');
     // [관찰 2026-11-12] 등록(저장) 뒤 안내가 「삭제했습니다.」로 뜸 → 기록만 (Mantis 등록 대상)
-    waitSnack('B10F_등록').then((m) => note('B10F_관찰_등록안내', /삭제/.test(m) ? `저장인데 「${m}」` : (m || '(없음)')));
+    waitSnack('B10F_등록').then((m) => {
+      note('B10F_관찰_등록안내', /삭제/.test(m) ? `저장인데 「${m}」` : (m || '(없음)'));
+      // [2.9.9.0 해결 반영] Mantis 0038997 (!1484) — 관찰 → 확인 조건
+      expect(m || '', '등록(저장) 뒤 안내가 「삭제했습니다.」가 아님 (0038997)').to.not.match(/삭제/);
+    });
     cy.get('@base').then((b) => cy.get('@sys').then((sys) => {
       state(T, (s) => {
         expect(s.label, '등록 뒤 필터 수').to.eq(b.label + 1);
@@ -340,6 +354,8 @@ describe('10_Basic_검출_필터', () => {
         note('B10F_변경이력_상세에_값', t($d[0]).includes(SQL));
         // [관찰 2026-11-12] 상세에 「Filter Group Type : Optional.empty」 (Java Optional 문자열이 그대로 보임) → 기록만 (Mantis 등록 대상)
         note('B10F_관찰_변경이력상세_Optional', /Optional\.(empty|\[)/.test(t($d[0])) ? '「Optional.empty」 보임' : '안 보임');
+        // [2.9.9.0 해결 반영] Mantis 0038999 (!1497) — 관찰 → 확인 조건
+        expect(t($d[0]), '변경 이력 상세에 「Optional.empty」 없음 (0038999)').to.not.match(/Optional\.(empty|\[)/);
       }
     });
     closeTop();
@@ -404,7 +420,8 @@ describe('10_Basic_검출_필터', () => {
       state(T, (s) => {
         expect(s.label, `${T.label} 필터 목록 (N) = 목록 전체 수`).to.eq(s.listTotal);
         expect(s.list.length, `${T.label} 첫 쪽 행 수`).to.eq(Math.min(5, s.listTotal));
-        expect(s.listHead.slice(1, 5), `${T.label} 목록 머리`).to.deep.eq(['설명', '업무시스템', 'Log Tracer', '삭제']);
+        if (!s.listMissing) expect(s.listHead.slice(1, 5), `${T.label} 목록 머리`).to.deep.eq(['설명', '업무시스템', 'Log Tracer', '삭제']);
+        else cy.log(`ℹ️ ${T.label} 등록 필터 0건 — 목록 표가 그려지지 않음 (2.9.9.0)`);
         if (T.col) expect(s.listHead[0], `${T.label} 목록 첫 칸 머리`).to.eq(T.col);
         // [관찰] CONTENT-TYPE 제외 첫 칸 머리 : 아래 then 에서 기록만
         expect(s.histHead.slice(0, 4), `${T.label} 변경 이력 머리`).to.deep.eq(['발생 일시', '관리자', 'IP', '조건']);

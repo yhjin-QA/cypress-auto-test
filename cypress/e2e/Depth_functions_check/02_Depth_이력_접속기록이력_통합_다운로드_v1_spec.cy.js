@@ -127,6 +127,13 @@ describe('로그캐치 사이트 테스트', () => {
     // 이력 > 사용자 추척 서브메뉴 클릭 
     cy.log('--- 이력 > 사용자 추적 클릭 ---');
     // 설명: .v-list__tile__title 클래스 내의 '사용자 추적' 글자를 찾아 클릭
+    // [2.9.9.0] 첫 화면(이상행위 대시보드)에서 「이력」을 눌러도 하위 메뉴가 바로 안 펼쳐질 때가 있음 → 안 보이면 한 번 더 누름
+    cy.get('body').then(($b) => {
+      if (!$b.find('.v-list__tile__title:visible').filter((i, e) => e.innerText.trim() === '사용자 추적').length) {
+        cy.contains('button', '이력').click({ force: true });
+        cy.wait(1000);
+      }
+    });
     cy.contains('.v-list__tile__title', '사용자 추적').should('be.visible').click({ force: true });
     cy.wait(3000);
     cy.log('--- 화면 검증 시작 ---');
@@ -136,7 +143,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="사용자 IP"], input[aria-label="사용자 아이피"]').filter(':visible').should('be.visible'); // [2.9.9.0] 「사용자 아이피」 허용
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
   
@@ -202,7 +209,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"][role="combobox"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="사용자 IP"], input[aria-label="사용자 아이피"]').filter(':visible').should('be.visible'); // [2.9.9.0] 「사용자 아이피」 허용
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="접속 메뉴"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');

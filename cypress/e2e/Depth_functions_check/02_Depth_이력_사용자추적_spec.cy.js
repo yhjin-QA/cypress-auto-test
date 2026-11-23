@@ -138,7 +138,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="사용자 IP"], input[aria-label="사용자 아이피"]').filter(':visible').should('be.visible'); // [2.9.9.0] 「사용자 아이피」 허용
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
   
@@ -539,7 +539,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // [검증] 검색 결과 검증
     // 첫 번째 행 정밀 검증
-    cy.get('tbody tr').filter(':visible').first().should('contain', 'No matching records found');
+    cy.get('tbody tr').filter(':visible').first().invoke('text').should('match', /No matching records found|일치하는 데이터가 없습니다|데이터가 없습니다/); // [2.9.9.0] 0건 문구 한글화
     //---------------------------------------------------------------------------------------------------------------
 
     // 입력한 행위 유형 x버튼 클릭하여 초기화 
@@ -590,7 +590,7 @@ describe('로그캐치 사이트 테스트', () => {
 
     // [검증] 검색 결과 검증
     // 첫 번째 행 정밀 검증
-    cy.get('tbody tr').filter(':visible').first().should('contain', 'No matching records found');
+    cy.get('tbody tr').filter(':visible').first().invoke('text').should('match', /No matching records found|일치하는 데이터가 없습니다|데이터가 없습니다/); // [2.9.9.0] 0건 문구 한글화
     //-----------------------------------------------------------------------------------------------------------------------
 
     // 개인정보 유형 조회  - 휴대전화번호 -----------------------------------------------------------------------------------------
@@ -669,7 +669,7 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
      cy.wait(1000);
 
-     cy.get('.v-list__tile__title').contains('미등록').should('be.visible').click({ force: true });
+     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', /^\s*미등록\s*$/, { timeout: 10000 }).should('be.visible').click({ force: true });
      cy.wait(1000);
      cy.get('body').type('{esc}');
 
@@ -714,7 +714,8 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').click({ force: true });
      cy.wait(1000);
 
-     cy.get('.v-list__tile__title').contains('전체').should('be.visible').click({ force: true });
+     // [2026-11-23] 2.9.9.0: 숨은 다른 목록의 '전체'가 먼저 잡혀 실패 → 열린 목록에서 정확히 '전체'만
+     cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', /^\s*전체\s*$/, { timeout: 10000 }).should('be.visible').click({ force: true });
      cy.wait(1000);
 
      //검색버튼 클릭

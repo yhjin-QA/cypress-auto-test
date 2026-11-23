@@ -306,7 +306,7 @@ const waitForSystemList = (attempt = 1) => {
     if (attempt >= 5) {
       // 원인 구분용 에러 메시지: 목록이 비었는지 / 다른 항목만 있는지
       throw new Error(
-        items.length === 0 || $menu.text().includes('No data available')
+        items.length === 0 || /No data available|데이터가 없습니다/.test($menu.text()) /* [2.9.9.0] 빈 목록 문구 한글화 */
           ? `업무시스템 목록이 비어 있음 (No data available) - 조회 기간 안에 사용된 업무시스템이 없음(기간을 넓혀 확인)`
           : `"${TARGET_SYSTEM}" 없음 - 현재 목록: ${items.join(', ')}`
       );

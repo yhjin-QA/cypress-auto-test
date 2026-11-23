@@ -148,7 +148,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="사용자 IP"]').filter(':visible').should('be.visible');
+     cy.get('input[aria-label="사용자 IP"], input[aria-label="사용자 아이피"]').filter(':visible').should('be.visible'); // [2.9.9.0] 「사용자 아이피」 허용
      cy.get('input[aria-label="URI 주소"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="행위 유형"]').filter(':visible').should('be.visible');
   
@@ -208,8 +208,13 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
      cy.get('input[aria-label="업무시스템"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="정보 사용자"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 계정"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="시작 IP"]').filter(':visible').should('be.visible');
-     cy.get('input[aria-label="종료 IP"]').filter(':visible').should('be.visible');
+     // [2.9.9.0] 일부 탭은 IP 범위(시작 IP · 종료 IP) → 「사용자 아이피」 한 칸 — 둘 중 하나면 통과
+     cy.get('body').should(($b) => {
+       const v = (sel) => $b.find(sel).filter(':visible').length;
+       const range = v('input[aria-label="시작 IP"]') > 0 && v('input[aria-label="종료 IP"]') > 0;
+       const single = v('input[aria-label="사용자 아이피"]') + v('input[aria-label="사용자 IP"]') > 0;
+       expect(range || single, 'IP 검색칸 (시작/종료 IP 또는 사용자 아이피)').to.be.true;
+     });
      cy.get('input[aria-label="부서/소속"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="URI"]').filter(':visible').should('be.visible');
      cy.get('input[aria-label="사용자 상태"]').filter(':visible').should('be.visible');
@@ -379,96 +384,77 @@ cy.log(`✅ 시작 날짜 ${targetStr} 지정 성공`);
     cy.wait(1000);
 
     
-  // 🌟 1. 탐색할 날짜 배열 만들기 함수 (공통)
-const getFormattedDate = (offsetDays) => {
-    const d = new Date();
-    d.setDate(d.getDate() + offsetDays); // offsetDays가 음수면 과거, 0이면 오늘
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
-
-// 🌟 [핵심 수정] 탐색할 타겟 날짜 목록 (오늘 → 27일 전, 총 28일)
-// Array.from을 사용하여 -7부터 0까지 총 8개의 날짜를 자동으로 배열에 담습니다.
-// [2026-11-17] 8일(7일 전 ~ 오늘) → 28일, 최근 날짜부터 탐색. 검출 데이터는 dlp_tester.jsp 로 수동 생성하므로 생성 후 8일이 지나면 실패했음 (기간 시작 = 한 달 전이라 28일은 항상 기간 안)
-const targetDates = Array.from({ length: 28 }, (_, i) => getFormattedDate(-i));
-cy.log(`🎯 순차 탐색할 날짜 목록: ${targetDates.join(', ')}`);
-
-
-// 🌟 2. 날짜 선택 — [2.9.7] 드롭다운에 없는 날짜(데이터 없는 날)는 에러 대신 건너뜀 (Basic 02와 동일)
-const scrollAndFindDate = (dateToFind, onFound, onMissing, retryCount = 0) => {
-    const MAX_RETRIES = 5;
-    cy.get('.v-menu__content:visible').first().as('dropdown');
-    cy.get('@dropdown').then(($el) => {
-        // [2026-11-17] :visible 조건 제거 — 목록 안에 그려져 있지만 보이는 범위 밖인 날짜도 찾아서 스크롤 후 클릭
-        const $foundItem = $el.find(`.v-list__tile__title:contains("${dateToFind}"), .v-list-item__title:contains("${dateToFind}")`);
-        if ($foundItem.length > 0) {
-            cy.log(`🎉 화면에서 날짜 [${dateToFind}] 발견`);
-            $foundItem[0].scrollIntoView({ block: 'center' });
-            cy.wrap($foundItem).first().click({ force: true });
-            onFound();
-        } else if (retryCount < MAX_RETRIES) {
-            cy.log(`⏬ 날짜 [${dateToFind}] 탐색을 위해 스크롤 내리는 중... (${retryCount + 1})`);
-            cy.get('@dropdown').scrollTo('bottom', { duration: 500, ensureScrollable: false });
-            cy.wait(800);
-            scrollAndFindDate(dateToFind, onFound, onMissing, retryCount + 1);
-        } else {
-            cy.log(`⏭️ [${dateToFind}] 목록에 없음(해당 일자 데이터 없음) → 다음 날짜로`);
-            cy.get('body').type('{esc}');
-            cy.wait(500);
-            onMissing();
+  // [2.9.9.0] 검출 탭의 날짜가 「하루 단위 목록(v-select)」 → 「기간(시작 일시 ~ 종료 일시)」으로 바뀜 (2026-11-23 .21 확인)
+  //   위에서 기간 시작을 지정하고 검색했으므로, 그 기간 결과에서 검출 링크를 바로 찾는다 (클릭 없이 표시까지만 — 기존과 같음)
+  //   없으면 dlp_tester 로 만든 검출이 반영될 때까지 30초 간격 최대 10회(약 5분) 다시 검색
+  //   (이전 2.9.7 의 날짜별 순차 탐색 코드는 cypress/probe/bak/02_Depth_검출_spec.bak_20261123 에 보관)
+// [관찰 0039111] 2.9.9.0 검출 탭 — 시작일을 이전 날짜로 지정하면 검출이 조회되지 않음 (당일 범위만 조회, 하루 단위 날짜 목록 미표시)
+//   한 달 기간 검색 결과가 0건이면 관찰로 기록하고, 시작일을 오늘로 바꿔 오늘 만든 검출을 확인한다
+//   0039111 이 고쳐지면(한 달 기간에서 바로 조회되면) 로그에 「0039111 해결 확인 필요」가 남음 → 그때 아래 오늘 전환을 지우고 확인 조건으로 바꾼다
+const pickStartToday = () => {
+    const now = new Date();
+    cy.get('#item_dateRange .v-menu__activator').filter(':visible').first()
+        .find('i.material-icons').filter((i, el) => el.textContent.trim() === 'event').scrollIntoView().realClick();
+    cy.wait(1000);
+    cy.get('body').then(($body) => {
+        if ($body.find('.v-date-picker-header__value:visible').length === 0) {
+            cy.get('#item_dateRange .v-menu__activator').filter(':visible').first().trigger('click');
+            cy.wait(1000);
         }
     });
-};
-
-// 🌟 3. 하루씩 과거로 탐색 (오늘 → 27일 전)
-// [2026-11-17] 오늘 날짜는 방금 만든 검출 데이터(dlp_tester.jsp)가 화면에 반영될 때까지 30초 간격으로 다시 검색 (최대 10회 · 약 5분)
-//   검출 반영은 몇 분 늦게 됨 (전송 1 ～ 2분 뒤 조회에서는 0건, 몇 분 뒤 화면 확인에서는 조회됨 — 2026-11-17)
-const TODAY_TRIES = 10;
-const retryToday = (todayTry) => {
-    cy.log(`⏳ 오늘(${targetDates[0]}) 검출 반영 대기 — 30초 후 다시 검색 (${todayTry + 1}/${TODAY_TRIES})`);
-    cy.get('body').type('{esc}');
-    cy.wait(30000);
-    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-    cy.wait(3000);
-    cy.get('.v-select__selection').filter(':visible')
-        .filter((i, e) => /^\d{4}-\d{2}-\d{2}$/.test((e.innerText || '').trim())).first()
-        .invoke('text').then((txt) => searchSequential(0, txt.trim(), todayTry + 1));
-};
-const searchSequential = (dateIndex, currentUIText, todayTry = 0) => {
-    if (dateIndex >= targetDates.length) {
-        cy.log('❌ 최근 28일(오늘 ~ 27일 전) 안에 검출 데이터가 없습니다. (CRM dlp_tester.jsp 로 데이터 생성 필요)');
-        cy.get('tbody:visible a:contains("검출")').should('be.visible'); // 의도적 실패
-        return;
-    }
-    const dateToFind = targetDates[dateIndex];
-    cy.log(`▶️ [탐색 ${dateIndex + 1}/${targetDates.length}] ${dateToFind} 날짜 조회 시작`);
-
-    cy.contains('.v-select__selection', currentUIText).filter(':visible').click({ force: true });
+    cy.get('.v-date-picker-header__value').filter(':visible').should('have.length', 1).invoke('text').then((headerText) => {
+        const m = headerText.match(/(\d{4})년\s*(\d{1,2})월/);
+        if (!m) throw new Error(`달력 헤더 형식을 읽지 못했습니다: "${headerText.trim()}"`);
+        const diff = (now.getFullYear() - Number(m[1])) * 12 + (now.getMonth() + 1 - Number(m[2]));
+        for (let i = 0; i < Math.abs(diff); i++) {
+            cy.get('.v-date-picker-header').filter(':visible').find('i.material-icons').contains(diff < 0 ? 'chevron_left' : 'chevron_right').click({ force: true });
+            cy.wait(300);
+        }
+    });
+    cy.get('.v-date-picker-table--date').filter(':visible').find('button')
+        .filter((i, el) => el.textContent.replace(/\D/g, '') === String(now.getDate())).not('.v-btn--disabled').first().click({ force: true });
     cy.wait(1000);
-    scrollAndFindDate(
-        dateToFind,
-        () => {
-            cy.contains('.v-select__selection', dateToFind).should('be.visible');
-            cy.wait(2000);
-            cy.get('body').then(($body) => {
-                const hasDetection = $body.find('tbody:visible a:contains("검출"):visible').length > 0;
-                if (hasDetection) {
-                    cy.log(`✅ [${dateToFind}] 날짜에서 검색 결과(검출)를 찾았습니다!`);
-                    // 클릭 없이 화면 표시까지만 검증 (서버 이슈로 팝업 클릭 검증은 생략)
-                    cy.get('tbody').filter(':visible').contains('a', '검출').should('be.visible');
-                    cy.log('✅ 이력 - 검출 데이터 조회 성공!');
-                } else {
-                    cy.log(`⚠️ [${dateToFind}] 검색 결과 없음. 다음 날짜로 재검색합니다.`);
-                    if (dateIndex === 0 && todayTry < TODAY_TRIES) retryToday(todayTry);
-                    else searchSequential(dateIndex + 1, dateToFind);
-                }
-            });
-        },
-        () => ((dateIndex === 0 && todayTry < TODAY_TRIES) ? retryToday(todayTry) : searchSequential(dateIndex + 1, currentUIText))
-    );
+    cy.get('body').type('{esc}');
+    cy.wait(500);
+    cy.log('📅 [0039111 대응] 시작일을 오늘로 변경');
 };
-
-// 🌟 4. 함수 최초 실행 — 기간 시작일(targetStr)이 드롭다운 기본 표시값
-searchSequential(0, targetStr);
+const monthCheck = () => {
+    cy.wait(3000);
+    cy.get('body').then(($b) => {
+        if ($b.find('tbody:visible a:contains("검출"):visible').length) {
+            cy.log('ℹ️ 한 달 기간 검색에서 검출이 바로 조회됨 — 0039111 해결 확인 필요');
+            findDetection(0);
+            return;
+        }
+        cy.log('⚠️ [관찰 0039111] 한 달 기간 검색 결과 0건 → 시작일을 오늘로 바꿔 다시 검색');
+        cy.writeFile('cypress/probe/검출탭_0039111_관찰.json', { 시각: new Date().toISOString(), 결과: '한 달 기간 검색 0건 → 오늘로 바꿔 확인' }, { log: false });
+        pickStartToday();
+        cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+        findDetection(0);
+    });
+};
+const DET_TRIES = 10;
+const findDetection = (n) => {
+    cy.wait(2000);
+    cy.get('body').then(($b) => {
+        if ($b.find('tbody:visible a:contains("검출"):visible').length) {
+            cy.log(`✅ 기간 안 검출 결과 발견 (${n}회 다시 검색)`);
+            cy.get('tbody').filter(':visible').contains('a', '검출').should('be.visible');
+            cy.log('✅ 이력 - 검출 데이터 조회 성공!');
+            return;
+        }
+        if (n >= DET_TRIES) {
+            cy.log('❌ 기간 안에 검출 데이터가 없습니다 (약 5분 대기 후에도 반영 안 됨)');
+            cy.get('tbody:visible a:contains("검출")').should('be.visible'); // 의도적 실패
+            return;
+        }
+        cy.log(`⏳ 기간 안 검출 결과 없음 — 30초 후 다시 검색 (${n + 1}/${DET_TRIES})`);
+        cy.wait(30000);
+        cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+        findDetection(n + 1);
+    });
+};
+monthCheck();
 
 // (맨 아래에 있던 닫기 로직은 삭제합니다!)
 

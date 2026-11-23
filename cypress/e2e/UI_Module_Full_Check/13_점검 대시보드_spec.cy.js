@@ -105,7 +105,12 @@ describe('로그캐치 사이트 테스트', () => {
 // STEP 12: 점검(대시보드) 서브메뉴
 // ==========================================
 cy.log('🚀 점검 탭 클릭');
+// [2.9.9.0] 관리자 로그인 첫 화면 = 점검 > 이상행위 대시보드 (!1453)
+cy.url({ timeout: 15000 }).should('include', '/inspection/anomalyMonitoringDashboard');
 cy.contains('button', '점검').click({ force: true });
+// [2.9.9.0] '점검'을 누르면 하위 메뉴(점검 대시보드 / 이상행위 대시보드)가 열림
+cy.contains('.side-sub-menu-title', '점검 대시보드').should('be.visible').click({ force: true });
+cy.url({ timeout: 15000 }).should('include', '/inspection/inspectionDashboard');
 cy.wait(2000);
 cy.log('--- 화면 검증 시작 ---');
 
@@ -227,6 +232,35 @@ cy.log('✅ 점검 대시보드 출력 및 차트 타이틀 확인 완료 ');
 
 
     
+    // ==========================================
+    // [2.9.9.0 신규] 점검 > 이상행위 대시보드 (!1453) — 화면 구조 기준 cypress/probe/P299B_관찰.json
+    // ==========================================
+    {
+      const _t = (e) => (e.innerText || e.textContent || '').replace(/\s+/g, ' ').trim();
+      const _crumb = (text) => cy.get('.v-breadcrumbs').filter(':visible').should('contain.text', text);
+      // 대시보드 데이터 API 오류는 실패로 보지 않고 기록만 (period-trend/details 500 — .71 관찰, 확인 중)
+      const apiErr = [];
+      cy.intercept({ url: /\/logcatch\/api\/v1\/(statistics|anomaly)\// }, (req) => {
+        req.continue((res) => { if (res.statusCode >= 500) apiErr.push(`${res.statusCode} ${req.url.replace(/^https?:\/\/[^/]+/, '').split('?')[0]}`); });
+      });
+      cy.log('🚀 점검 > 이상행위 대시보드');
+      cy.contains('button', '점검').click({ force: true });
+      cy.contains('.side-sub-menu-title', '점검 대시보드').should('be.visible');
+      cy.contains('.side-sub-menu-title', '이상행위 대시보드').should('be.visible').click({ force: true });
+      cy.wait(5000);
+      cy.url().should('include', '/inspection/anomalyMonitoringDashboard');
+      _crumb('이상행위 대시보드');
+      // 켜진 이상행위 정책이 없으면 「접속기록 모니터링 대시보드」 — 어느 쪽이든 「모니터링 대시보드」
+      cy.contains(/모니터링 대시보드/).should('be.visible');
+      ['사용자별 개인정보 사용량 TOP 10', '부서별 개인정보 사용량 TOP 10', '업무시스템별 개인정보 사용량 TOP 10']
+        .forEach((p) => cy.contains(p).scrollIntoView().should('be.visible'));
+      cy.then(() => {
+        if (apiErr.length) cy.log(`⚠️ 대시보드 API 오류 ${apiErr.length}건 (관찰) : ${[...new Set(apiErr)].join(' / ')}`);
+        else cy.log('✅ 대시보드 API 오류 없음');
+      });
+      cy.log('✅ 이상행위 대시보드 확인 완료');
+    }
+
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================

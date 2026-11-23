@@ -188,6 +188,8 @@ describe('10_Basic_검출_URI 관리 룰_일괄 등록', () => {
       // [2026-11-13 첫 실행] 선택 뒤에도 「리눅스_배송관리 {0} 메뉴 복합 일괄 등록」 — 자리표시자 그대로 → 기록만 (Mantis 0038678 — 고쳐지면 확인 조건으로 바꿈)
       const h = t($c.find('h2')[0]);
       note('B10M_관찰_일괄_제목', h.includes('{0}') ? `자리표시자 그대로 (0038678) : 「${h}」` : h);
+      // [2.9.9.0 해결 반영] Mantis 0038678 (!1450) — 관찰 → 확인 조건
+      expect(h, '일괄 등록 제목에 자리표시자 ｛0｝ 없음 (0038678)').to.not.include('{0}');
     });
     cy.get('@sysList').then((sys) => cy.get('@cfgList').then((cfg) => {
       const s = sys.find((x) => x.nm === SYS);
@@ -214,6 +216,8 @@ describe('10_Basic_검출_URI 관리 룰_일괄 등록', () => {
       const hs = $th.toArray().map(t).filter(Boolean);
       note('B10M_일괄_목록머리', hs);
       if (hs.some((x) => x.includes('(('))) note('B10M_관찰_일괄_목록머리', `괄호 겹침 : ${hs.filter((x) => x.includes('((')).join(', ')}`);
+      // [2.9.9.0 해결 반영] Mantis 0038678 (!1450 표 머리 괄호 겹침) — 관찰 → 확인 조건
+      expect(hs.filter((x) => x.includes('((')), '등록된 메뉴 목록 머리 괄호 겹침 없음 (0038678)').to.have.length(0);
     });
 
     // ---------- 표준 템플릿 다운로드 ----------

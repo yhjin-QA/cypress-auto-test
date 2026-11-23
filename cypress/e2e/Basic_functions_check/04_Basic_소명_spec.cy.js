@@ -68,12 +68,12 @@ describe('04_Basic_소명', () => {
     // 소명 > 신청 > 이상행위 경보
     go('submit');
     ['이상행위 경보', '소명 요청 자동화'].forEach((t) => cy.contains('.v-btn__content, button', t).should('exist'));
-    ['전체', '심각', '경계', '주의', '오늘', '1주일', '1개월', '3개월', '1년'].forEach((t) =>
+    ['전체', '심각', '경계', '주의', '오늘', '최근 7일', '최근 30일', '3개월', '1년'] /* [2.9.9.0] 1주일·1개월 → 최근 7일·최근 30일 */.forEach((t) =>
       cy.contains('button.sev-filter-btn', new RegExp(`^\\s*${t}\\s*$`)).should('exist'));
     // 기간 필터 : 기간이 길수록 건수가 같거나 많아야 함 (건수 자체에는 의존하지 않음)
     period('오늘');
     alertCount().then((today) => {
-      period('1개월');
+      period('최근 30일'); // [2.9.9.0] 1개월 → 최근 30일
       alertCount().then((month) => {
         period('1년');
         alertCount().then((year) => {

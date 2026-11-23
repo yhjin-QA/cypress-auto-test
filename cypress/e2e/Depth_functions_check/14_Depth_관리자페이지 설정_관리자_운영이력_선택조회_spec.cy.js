@@ -17,7 +17,8 @@ const note = (k, v) => {
   cy.log(`📝 ${k}: ${typeof v === 'string' ? v : JSON.stringify(v).slice(0, 300)}`);
   cy.writeFile('cypress/probe/D14S_관찰.json', obs, { log: false });
 };
-const TARGET = '[Anomaly Result] : 경보 목록 조회';
+// [2026-11-23] 2.9.9.0: 대상명이 영문 「[Anomaly Result] : alert list」로 바뀜 (9999 없이 정상 조회 → 0039022 해결)
+const TARGET = '[Anomaly Result] : alert list';
 
 describe('14_Depth_관리자페이지 설정_관리자_운영이력_선택조회', () => {
   A.ignoreErrors();
@@ -52,11 +53,11 @@ describe('14_Depth_관리자페이지 설정_관리자_운영이력_선택조회
       const body = x.response && x.response.body;
       const code = body && typeof body === 'object' ? String(body.code) : null;
       // 오류 메시지에도 대상 글자가 들어 있으므로, 결과 데이터(data · list)만 보고 판단
-      const raw = JSON.stringify((body && (body.data || body.list || body.result)) || '');
+      const raw = JSON.stringify((body && (body.resultObject || body.data || body.list || body.result)) || ''); // 2.9.9.0 응답 목록 키 = resultObject
       cy.wait(1500);
       cy.get('body').then(($b) => {
         const rows = $b.find('tbody tr').filter((i, e) => shown(e) && e.querySelectorAll('td').length > 1).toArray().map(t);
-        const r = { 요청본문: x.request.body, 상태: x.response && x.response.statusCode, code, message: body && body.message, 화면행: rows.length, 대상행: rows.filter((s) => s.includes(TARGET)).length, 응답에대상: raw.includes('Anomaly Result') };
+        const r = { 요청본문: x.request.body, 상태: x.response && x.response.statusCode, code, message: body && body.message, 화면행: rows.length, 대상행: rows.filter((s) => s.includes(TARGET)).length, 응답에대상: raw.includes(TARGET) };
         note('D14S_선택검색', r);
         A.dumpScreen('D14S_1_선택검색');
         if (code === '9999') {
@@ -64,8 +65,12 @@ describe('14_Depth_관리자페이지 설정_관리자_운영이력_선택조회
           cy.log('⚠️ [관찰 0039022] 이벤트 「선택」 검색이 9999 로 실패 — 해결되면 아래 확인으로 통과');
           return;
         }
-        expect(r.상태, '운영 이력 검색 응답').to.be.within(200, 299);
-        expect(r.응답에대상 || r.대상행 > 0, `검색 결과에 「${TARGET}」 행`).to.eq(true);
+        // [2026-11-23] 판정 전에 기록(note)이 파일에 남도록 cy.then 안에서 판정 — 2.9.9.0 에서 9999 가 아닌데 대상 행이 없어 원인 확인용
+        note('D14S_응답앞', JSON.stringify(body || '').slice(0, 1500));
+        cy.then(() => {
+          expect(r.상태, '운영 이력 검색 응답').to.be.within(200, 299);
+          expect(r.응답에대상 || r.대상행 > 0, `검색 결과에 「${TARGET}」 행`).to.eq(true);
+        });
       });
     });
   });

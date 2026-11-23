@@ -215,15 +215,21 @@ describe('16_추가화면_UI', () => {
     });
   });
 
-  it('관리자 설정 > 커넥터 — 화면 이동 안 되면 관찰 0038675', () => {
-    // Mantis 0038675 : v2.9.4 에서 [설정 > 커넥터] 메뉴 접속 불가 — 2.9.7 (2026-11-16 .21) 에서도 같음
-    //   해결되어 화면이 열리면 구조를 기록하고 공통 점검 → 그 기록으로 확인 항목을 구체화
+  it('관리자 설정 > 플로우 시스템 > 커넥터 (0038675 해결 확인)', () => {
+    // Mantis 0038675 : v2.9.4 ~ 2.9.7 [설정 > 커넥터] 메뉴 접속 불가
+    // [2.9.9.0] 커넥터는 「설정 > 플로우 시스템」의 탭으로 옮겨졌고 접속됨 (2026-11-20 .71 확인) → 관찰 → 확인 조건
     netCount().then((n) => {
-      openSetting('커넥터', '커넥터', '0038675').then((moved) => {
-        if (!moved) { cy.log('⏭️ 커넥터 화면이 열리지 않음 — 관찰 0038675'); return; }
-        structure('커넥터_구조');
-        screenOk('커넥터', n);
+      openSetting('플로우 시스템', '플로우시스템');
+      cy.get('.tab-btn, .v-tabs__div').filter((i, e) => shown(e) && t(e) === '커넥터').first().click({ force: true });
+      cy.wait(3000);
+      cy.location('pathname').should('include', '/settings/connector/outboundConnector');
+      cy.contains('커넥터 설정 목록').should('be.visible');
+      cy.get('th').filter(':visible').should(($th) => {
+        const h = $th.toArray().map((e) => t(e).replace(/arrow_upward|arrow_downward/g, '').trim());
+        expect(h, '커넥터 표 머리').to.include.members(['이름', '프로토콜', '대상', '상태', '생성일']);
       });
+      structure('커넥터_구조');
+      screenOk('커넥터', n);
     });
   });
 

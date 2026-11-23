@@ -59,12 +59,31 @@ const setStatPeriodYesterday = () => {
   });
 
 /**코드 시작  */
+// [2026-11-23] Mantis 0038964 확인 — 저장 후 보고서를 다시 열었을 때 대상기간이 저장한 값(어제 하루) 그대로인지
+//   저장할 때마다 하루씩 앞당겨지면 실패 (재현 시 cypress/probe/D06X_0038964_관찰.json 에 기록)
+const checkPeriodKept = (when) => {
+  if (Cypress.env('STAT_PERIOD') === 'default') return;
+  const _t = new Date();
+  const _y = new Date(_t.getFullYear(), _t.getMonth(), _t.getDate() - 1);
+  const ymd = `${_y.getFullYear()}-${String(_y.getMonth() + 1).padStart(2, '0')}-${String(_y.getDate()).padStart(2, '0')}`;
+  cy.wait(1500);
+  dateInputs().then(($d) => {
+    const v = $d.toArray().slice(0, 2).map((e) => (e.querySelector('input') || {}).value);
+    if (v[0] !== ymd || v[1] !== ymd) {
+      cy.writeFile('cypress/probe/D06X_0038964_관찰.json', { 시각: new Date().toISOString(), 시점: when, 저장한값: [ymd, ymd], 다시연값: v });
+    }
+    // 기록 파일이 먼저 써지도록 판정은 다음 명령으로
+    cy.then(() => expect(v, `[0038964] ${when} — 저장 후 다시 연 대상기간 (저장값 ${ymd} ~ ${ymd})`).to.deep.equal([ymd, ymd]));
+  });
+};
+
 describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
   
   // [2.9.7 보류] Mantis 0038964 — 보고서를 저장할 때마다 대상기간이 하루씩 앞당겨짐 (11-09 저장 → 11-08 → 11-07)
   //   확장자별 저장/재오픈을 반복하는 이 시나리오는 통계 없는 날짜로 밀려 내보내기 실패 → 이슈 해결 전까지 전체 skip
   //   해결 후 it.skip → it 로 복원 (setStatPeriodYesterday 는 0038958 대응으로 유지)
-  it.skip('06_Depth_보고_확장자약식 자동화 시나리오', () => {
+  // [2026-11-23] skip 해제 — 저장 후 다시 열 때마다 대상기간을 확인(checkPeriodKept)해서 0038964 가 재현되면 실패로 드러나게 함
+  it('06_Depth_보고_확장자약식 자동화 시나리오', () => {
 
     // ==========================================
     // [신규] 콤보박스 항목 선택 공통 헬퍼 (보고서 종류 / 확장자)
@@ -500,6 +519,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
       // 보고서 목록에서 열기
       cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
       cy.wait(1000);
+      checkPeriodKept(`${reportType} 종류 변경 저장 후`);
 
 
       // 3. [안쪽 루프] 선택된 보고서에 대해 15개 확장자를 순회합니다.
@@ -594,9 +614,10 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
 
           //맨티스 버그 : 37402
           // 🚨 [Known Bug 우회 처리]  확장자 [docx, xls]로 선택하고 내보내기시 로컬에는 확장자 [doc, xlsx]로 다운로드 저장되는 문제
+          // [2026-11-23] 2.9.9.0 에서 docx 가 .docx 로 저장됨 (37402 해결) → .docx 기본, 예전 .doc 도 허용
           if (ext === 'docx') {
-            expectedExtension = '.doc';
-            cy.log('⚠️ [Known Bug 우회] docx 선택 시 .doc 파일로 검증합니다.');
+            expectedExtension = files.some((f) => f.includes('Depth검증용') && f.endsWith('.docx')) ? '.docx' : '.doc';
+            cy.log(`docx 내보내기 저장 확장자: ${expectedExtension}`);
           }// 🚨 [Known Bug 우회 처리 2] xls 선택 시 실제로는 xlsx로 다운로드됨
            else if (ext === 'xls') {
            expectedExtension = '.xlsx';
@@ -625,6 +646,7 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
         cy.wait(3000);
         cy.contains('a', 'Depth검증용 보고서_auto').click({ force: true });
         cy.wait(3000); // 폼이 렌더링될 시간 부여
+        checkPeriodKept(`${reportType} · ${ext} 저장 · 내보내기 후`);
 
 
       }); // 확장자 안쪽 루프 끝

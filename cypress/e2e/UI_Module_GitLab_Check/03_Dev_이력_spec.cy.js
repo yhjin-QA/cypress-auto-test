@@ -2533,8 +2533,11 @@ describe('로그캐치 사이트 테스트', () => {
       cy.log('🚀 이력 > 접속기록 이력 > 이상행위 탭');
       cy.visit('https://10.10.54.71:18443/logcatch/record/accessLog/fileDownloadLog');
       cy.wait(4000);
+      // 「그룹」 탭은 설정 > 이력 그룹화를 켠 서버에만 보임(.21 켜짐 · .71 꺼짐) → 있으면 기록만 하고 나머지 순서를 비교
       cy.get('.tab-btn').filter(':visible').then(($b) => {
-        expect($b.toArray().map(_t), '접속기록 이력 탭').to.deep.equal(['통합', '파일 다운로드', '검출', '이상행위']);
+        const tabs = $b.toArray().map(_t);
+        if (tabs.includes('그룹')) cy.log('ℹ️ 「그룹」 탭 있음 (이력 그룹화 사용 서버)');
+        expect(tabs.filter((x) => x !== '그룹'), '접속기록 이력 탭').to.deep.equal(['통합', '파일 다운로드', '검출', '이상행위']);
       });
       cy.get('.tab-btn').contains('이상행위').click({ force: true });
       cy.wait(4000);

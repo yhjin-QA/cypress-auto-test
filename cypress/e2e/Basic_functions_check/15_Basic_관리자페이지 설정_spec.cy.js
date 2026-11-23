@@ -31,7 +31,8 @@ describe('로그캐치 사이트 테스트', () => {
       'e is not defined',
       'Script error',
       'not valid JSON',
-      'ChunkLoadError'
+      'ChunkLoadError',
+      'ResizeObserver loop' // [2.9.9.0] 플로우 시스템 화면 크기 변경 시 브라우저 경고 (기능 영향 없음)
     ];
 
     // 위 목록 중 하나라도 포함되면 에러를 무시함
@@ -597,7 +598,7 @@ describe('로그캐치 사이트 테스트', () => {
      //검색결과 검증코드 
      // 시스템 경보가 없는 가정하에 검증코드
      // 수많은 td 중에서 '현재 화면에 보이는(visible)' td만 걸러낸 뒤 텍스트를 찾습니다.
-     cy.get('td').filter(':visible').contains('No data available').should('be.visible');
+     cy.get('td').filter(':visible').contains(/No data available|데이터가 없습니다/).should('be.visible'); // [2.9.9.0] 빈 목록 문구 한글화
 
 
      //검색조건에서  Administrators IP 검색고정하고 검색대상: 파일 내려받기 검색조회 ---------------------------
@@ -628,7 +629,7 @@ describe('로그캐치 사이트 테스트', () => {
      //검색결과 검증코드 
      // 시스템 경보가 없는 가정하에 검증코드
      // 수많은 td 중에서 '현재 화면에 보이는(visible)' td만 걸러낸 뒤 텍스트를 찾습니다.
-     cy.get('td').filter(':visible').contains('No data available').should('be.visible');
+     cy.get('td').filter(':visible').contains(/No data available|데이터가 없습니다/).should('be.visible'); // [2.9.9.0] 빈 목록 문구 한글화
 
      cy.log('✅ 설정 - 관리자 - [운영 이력] 출력 확인 완료');
 
@@ -723,6 +724,79 @@ describe('로그캐치 사이트 테스트', () => {
     cy.log('✅ 일반 점검페이지지 모드 복귀 완료');
 */
  
+
+    // ==========================================
+    // [2.9.9.0 Basic] 설정 > 플로우 시스템 — 6개 탭 목록 = API, 추가 창 열기 · 취소 (저장 안 함)
+    //   취소 후 POST/PUT/DELETE 가 한 건도 없어야 함 (운영 데이터 보호)
+    // ==========================================
+    {
+      const vis = (e) => !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
+      const tx = (e) => (e.innerText || e.textContent || '').replace(/\s+/g, ' ').trim();
+      const writes = [];
+      cy.intercept({ url: /\/logcatch\/api\/v1\/(flows|connectors|flow-schedules|retry-policies|monitors|flow-execution)/ }, (req) => {
+        if (req.method !== 'GET') writes.push(`${req.method} ${req.url}`);
+      });
+      const TABS = [
+        { tab: '플로우', url: '/settings/connector/channelPolicy', api: /\/api\/v1\/flows\/policies\?limit=(5|10|25)&/, labels: ['이름', '설명', '이력기록', '상태', '필요 권한(authority)'], edit: false },
+        { tab: '커넥터', url: '/settings/connector/outboundConnector', api: /\/api\/v1\/connectors\/policies\?limit=(5|10|25)&/, labels: ['프로토콜', '이름', '설명', '상태', '요청 시간 제한 (ms)'], edit: true },
+        { tab: '스케줄', url: '/settings/connector/flowSchedule', api: /\/api\/v1\/flow-schedules/, labels: ['스케줄 이름', '사용', '실행 시점(cron)', '시간대', '실행할 플로우'], edit: false },
+        { tab: '재시도 정책', url: '/settings/connector/dispatchSchedule', api: /\/api\/v1\/retry-policies/, labels: ['이름', '최대 시도 횟수', '상태', '예외 플로우'], edit: true },
+        { tab: '실행 이력', url: '/settings/connector/outboundConnectorInstance', api: /\/api\/v1\/flow-execution-history/, labels: null },
+        { tab: '폴링 어댑터', url: '/dataWatch/watchPolicy', api: /\/api\/v1\/monitors\?/, labels: ['이름', '설명', '수집 방식', '최초 조회 범위'], edit: true },
+      ];
+      cy.get('body').then(($b) => { if (!$b.find('button.side-menu:contains("설정")').filter((i, e) => vis(e)).length) cy.get('.g-IConfig').click({ force: true }); });
+      cy.wait(1500);
+      TABS.forEach((T, i) => {
+        cy.intercept('GET', T.api).as(`B15F_${i}`);
+        if (i === 0) {
+          cy.contains('button.side-menu', '설정').should('be.visible').click({ force: true });
+          cy.wait(1000);
+          cy.get('.v-list__tile__title').filter(':contains("플로우 시스템")').filter(':visible').click({ force: true });
+          cy.url({ timeout: 15000 }).should('include', T.url);
+          // 화면이 바뀔 때까지 재시도 (바로 읽으면 이전 화면의 관리자 탭이 잡힘)
+          cy.get('button.tab-btn', { timeout: 15000 }).should(($t) => expect($t.filter((j, e) => vis(e)).toArray().map(tx), '플로우 시스템 탭').to.deep.equal(TABS.map((x) => x.tab)));
+        } else {
+          cy.get('button.tab-btn').filter((j, e) => vis(e) && tx(e) === T.tab).click({ force: true });
+        }
+        cy.url({ timeout: 15000 }).should('include', T.url);
+        cy.wait(`@B15F_${i}`, { timeout: 30000 }).then((x) => {
+          expect(x.response.statusCode, `${T.tab} 목록 API`).to.eq(200);
+          const list = x.response.body.resultObject || [];
+          const n = Array.isArray(list) ? list.length : 0;
+          cy.wait(800);
+          cy.get('tbody').filter(':visible').first().find('tr').filter(':visible').then(($r) => {
+            if (n === 0) expect(tx($r[0] || {}), `${T.tab} 빈 목록 문구`).to.match(/없습니다/);
+            else {
+              expect($r.length, `${T.tab} 화면 행 수 = API 건수`).to.eq(n);
+              const first = list[0].name || list[0].scheduleName || '';
+              if (first) expect(tx($r[0]), `${T.tab} 첫 행 이름`).to.include(first);
+            }
+          });
+        });
+        if (!T.labels) {
+          // 실행 이력 : 검색 조건 · 검색 요청
+          ['플로우', '개시 경로', '실행 상태'].forEach((l) => cy.get(`input[aria-label="${l}"]`).filter(':visible').should('have.length', 1));
+          cy.intercept('GET', /\/api\/v1\/flow-execution-history/).as('B15F_hist');
+          cy.get('.v-btn').filter((j, e) => vis(e) && tx(e) === '검색').click({ force: true });
+          cy.wait('@B15F_hist', { timeout: 30000 }).its('response.statusCode').should('eq', 200);
+          return;
+        }
+        // 추가 창 열기 → 항목 확인 → 취소
+        cy.get('.v-btn').filter((j, e) => vis(e) && tx(e) === 'add').first().click({ force: true });
+        cy.wait(1500);
+        if (T.edit) cy.url().should('include', 'edit=new');
+        // 숨은 다른 창의 같은 이름 라벨이 먼저 잡히지 않게, 보이는 라벨 중에서 글자로 찾음
+        T.labels.forEach((l) => cy.get('body').should(($b) => expect($b.find('label, .v-label').filter((j, e) => vis(e) && tx(e).startsWith(l)).length, `${T.tab} 추가 화면 「${l}」 항목`).to.be.at.least(1)));
+        if (T.tab === '스케줄') cy.contains('Asia/Seoul').should('be.visible');
+        if (T.tab === '재시도 정책') cy.contains('label', '최대 시도 횟수').closest('.v-input').find('input').should('have.value', '3');
+        cy.get('.v-btn').filter((j, e) => vis(e) && tx(e) === '취소').last().click({ force: true });
+        cy.wait(1200);
+        cy.url().should('not.include', 'edit=new');
+        cy.get('.v-btn').filter((j, e) => vis(e) && tx(e) === 'add').should('have.length.at.least', 1);
+      });
+      cy.then(() => expect(writes, '플로우 시스템 확인 중 저장 · 변경 요청').to.have.length(0));
+      cy.log('✅ [2.9.9.0] 설정 > 플로우 시스템 기능 확인 완료');
+    }
 
     // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기

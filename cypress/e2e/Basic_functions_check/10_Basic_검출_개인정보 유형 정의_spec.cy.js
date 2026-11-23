@@ -216,6 +216,8 @@ describe('10_Basic_검출_개인정보 유형 정의', () => {
     cy.get('body').then(($b) => {
       const v = $b.find('.privacy-keyword-tree-root .vue-treeselect__single-value').filter((i, e) => shown(e)).toArray().map(t);
       note('B10P_관찰_트리검색칸', v.length ? `${v.join(', ')} (0039003)` : '(안 보임)');
+      // [2.9.9.0 해결 반영] Mantis 0039003 (!1486) — 관찰 → 확인 조건
+      expect(v.join(' '), '트리 검색칸에 「(unknown)」 없음 (0039003)').to.not.include('(unknown)');
     });
 
     // ---------- 트리 : 묶음 숫자 = 항목 수 ----------
@@ -292,6 +294,8 @@ describe('10_Basic_검출_개인정보 유형 정의', () => {
               칩: chips,
               벗어남: chips.some((c) => c.out.left > 0 || c.out.top > 0 || c.out.bottom > 0 || c.out.right > 0)
             });
+            // [2.9.9.0 해결 반영] Mantis 0039004 (!1450 칩 입력칸 높이 자동) — 관찰 → 확인 조건 (2px 오차 허용)
+            chips.forEach((c) => expect(Math.max(c.out.left, c.out.top, c.out.bottom, c.out.right), `키워드 값 칩 「${c.text}」이 입력칸 안 (0039004)`).to.be.at.most(2));
           });
           cy.get('.privacy-keyword-tree-root .vue-treeselect__single-value').first().then(($v) => {
             note('B10P_키워드_선택', { 항목: kid, 폴더: folder, 업무시스템: sys, ContentType: cts, 트리검색칸: t($v[0]) });

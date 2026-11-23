@@ -396,9 +396,9 @@ cy.get('input[placeholder="메시지 + 정책명 검색"]').should('be.visible')
   .closest('.v-input__slot').find('.material-icons').should('contain.text', 'search');
 
 // From / To 날짜
-cy.get('.date-range-picker input[type="date"]').should('have.length', 2);
-cy.get('.date-range-picker input[type="date"]').eq(0).should('be.visible'); // From
-cy.get('.date-range-picker input[type="date"]').eq(1).should('be.visible'); // To
+cy.get('.date-range-picker input[placeholder="YYYY-MM-DD"] /* [2.9.9.0] type=date → 달력 입력 */').should('have.length', 2);
+cy.get('.date-range-picker input[placeholder="YYYY-MM-DD"] /* [2.9.9.0] type=date → 달력 입력 */').eq(0).should('be.visible'); // From
+cy.get('.date-range-picker input[placeholder="YYYY-MM-DD"] /* [2.9.9.0] type=date → 달력 입력 */').eq(1).should('be.visible'); // To
 cy.get('.date-range-sep').filter(':visible').should('have.text', '~');
 
 // 검색 버튼
@@ -414,7 +414,7 @@ cy.contains('.filter-label', '위험도').parent().within(() => {
 
 // 기간 필터
 cy.contains('.filter-label', '기간').parent().within(() => {
-  ['오늘', '1주일', '1개월', '3개월', '1년'].forEach((label, i) => {
+  ['오늘', '최근 7일', '최근 30일', '3개월', '1년'] /* [2.9.9.0] 1주일·1개월 → 최근 7일·최근 30일 */.forEach((label, i) => {
     cy.get('button.sev-filter-btn').eq(i).should('have.text', label);
   });
 });
@@ -430,8 +430,8 @@ cy.get('.appr-main-card .v-toolbar__title').filter(':visible')
 cy.get('.appr-main-card .table-footer').should('be.visible').within(() => {
   //(.51) 데이터가 있으면 '1-4 / 전체 4건', 없으면 '0건'
   cy.get('.table-footer-info').invoke('text').should('match', /^\s*(\d+건|\d+-\d+ \/ 전체 \d+건)\s*$/);
-  cy.get('.table-footer-size .v-select__selection').should('have.text', '20');
-  cy.contains('.caption.grey--text', '건').should('be.visible');
+  cy.get('.table-footer-size .v-select__selection').should('have.text', '25'); // [2.9.9.0] 기본 행 수 20 → 25
+  cy.contains('.caption.grey--text, .caption.muted--text', '건').should('be.visible');
 });
 
 // ==========================================
@@ -465,7 +465,7 @@ cy.get('body').then(($body) => {
   } else {
     // [B] 데이터가 0건인 경우 (Empty State)
     cy.get('.appr-main-card').within(() => {
-      cy.contains('.text-xs-center.grey--text', '소명할 이상행위 경보가 없습니다.').should('be.visible');
+      cy.contains('.text-xs-center.grey--text, .text-xs-center.muted--text', '소명할 이상행위 경보가 없습니다.').should('be.visible');
       cy.get('.v-toolbar__title').should('have.text', '경보 (사용자별 0건)');
       cy.get('.table-footer-info').should('have.text', '0건');
       // 0건이면 이전/다음 페이지 버튼 비활성

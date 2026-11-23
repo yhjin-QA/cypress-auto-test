@@ -103,9 +103,13 @@ describe('11_2_Depth_운영_태스크_로그다운로드', () => {
         const kind = head[0] === 0x50 && head[1] === 0x4b ? 'zip' : head[0] === 0x1f && head[1] === 0x8b ? 'gzip' : 'text';
         note('D11L_내려받은파일', { 이름: name, 크기: size, 형식: kind });
         cy.get('@cells').then((cells) => {
-          const listSize = Number(String(cells[4] || '').replace(/[^\d]/g, ''));
-          note('D11L_목록크기', listSize);
-          if (kind === 'text' && listSize) expect(size, '내려받은 파일 크기 = 목록 「파일 크기」').to.eq(listSize);
+          // [2.9.9.0] 목록 「파일 크기」가 「108」(바이트) → 「10.8 KB」 처럼 단위가 붙어 표시됨 → 단위를 바이트로 바꿔 반올림 오차 안에서 비교
+          const m = String(cells[4] || '').replace(/,/g, '').match(/([\d.]+)\s*(B|KB|MB|GB)?/i);
+          const unit = { B: 1, KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3 }[((m && m[2]) || 'B').toUpperCase()];
+          const listSize = m ? Math.round(parseFloat(m[1]) * unit) : 0;
+          const tol = unit === 1 ? 0 : Math.ceil(unit * 0.05) + 1; // 소수 첫째 자리 표시 → 0.05 단위 오차
+          note('D11L_목록크기', { 표시: cells[4], 바이트: listSize, 허용오차: tol });
+          if (kind === 'text' && listSize) expect(Math.abs(size - listSize), `내려받은 파일 크기 ${size} ≈ 목록 「${cells[4]}」`).to.be.at.most(tol);
         });
         expect(size, '내려받은 파일 크기 > 0').to.be.greaterThan(0);
         ssh(`find /home/logcatch -name '${FILE}' -printf '%s %p\\n' 2>/dev/null | head -n 3`).then((o) => {

@@ -76,8 +76,8 @@ const tables = ($b) => [...content($b).querySelectorAll('table')].filter(shown).
   const trs = body ? [...body.querySelectorAll('tr')].filter(shown) : [];
   return {
     th: [...tb.querySelectorAll('thead th')].map(cleanTh).filter(Boolean),
-    rows: trs.filter((tr) => !/No data available|항목이 없습니다/.test(t(tr))).length,
-    empty: trs.some((tr) => /No data available/.test(t(tr)))
+    rows: trs.filter((tr) => !/No data available|데이터가 없습니다|항목이 없습니다/.test(t(tr))).length, // [2.9.9.0] 빈 목록 문구 한글화
+    empty: trs.some((tr) => /No data available|데이터가 없습니다/.test(t(tr)))
   };
 });
 const tableWith = ($b, th) => tables($b).find((v) => th.every((h) => v.th.includes(h)));
@@ -127,7 +127,7 @@ const checkList = (name, apiRe, th) => waitApi(apiRe, `${name} 목록`, 0).then(
   cy.get('body', { timeout: 15000 }).should(($b) => {
     const tb = tableWith($b, th);
     expect(tb, `${name} 표 머리 ${th.join(' · ')}`).to.exist;
-    if (total === 0) expect(tb.empty && tb.rows === 0, `${name} 목록 0건 = No data available`).to.eq(true);
+    if (total === 0) expect(tb.empty && tb.rows === 0, `${name} 목록 0건 = 「데이터가 없습니다」(2.9.9.0 이전 No data available)`).to.eq(true);
     else expect(tb.rows > 0 && tb.rows <= total, `${name} 목록 행 수(${tb.rows}) ≤ API ${total}`).to.eq(true);
   });
   note(`${name}_목록`, { API: `${x.m} ${x.url.split('?')[0]}`, 상태: x.st, code: x.code, 건수: total });
