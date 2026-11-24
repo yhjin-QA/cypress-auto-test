@@ -1316,6 +1316,67 @@ cy.get('.v-dialog--active').within(() => {
 
 
     // ==========================================
+    // [2.9.9.0 Depth] !1495 — 미등록 사용자 처리창 표시 (조회 전용)
+    //   인사정보에 없는 계정(예: 리눅스_배송관리 loginid246)의 처리창 : 접속 아이디 「미등록 사용자(계정)」 · 행위 유형 「조회」
+    //   (수정 전 : 계정(undefined) · 선택 — 위 HTTP REQUEST 검증의 Case A 「(undefined)」 분기는 수정 전 화면 대응)
+    //   비로그인 기록(계정 없음)은 「미등록 사용자()」로 괄호가 비는 것이 정상. 이번 달에 미등록 사용자(계정) 기록이 없으면 기록만 남기고 생략
+    // ==========================================
+    {
+      const vis = (e) => !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
+      const tx = (e) => (e.innerText || e.textContent || '').replace(/\s+/g, ' ').trim();
+      const H = 'https://10.10.54.21:18443';
+      const openDlg = ($b) => $b.find('.v-dialog--active').filter((i, e) => vis(e));
+      const closeDlgs = () => {
+        cy.get('body').then(($b) => {
+          const d = openDlg($b);
+          if (!d.length) return;
+          const cand = d.last().find('button, .v-btn, i, .v-icon, svg, [class*="close"]').filter((i, e) => vis(e) && (
+            /^(닫기|close|×|✕)$/.test(tx(e)) || /close/i.test(String(e.className && e.className.baseVal !== undefined ? e.className.baseVal : e.className)) || /닫기|close/i.test(e.getAttribute('aria-label') || '')));
+          const x = cand.filter((i, e) => /^닫기$/.test(tx(e)))[0] || cand.closest('button, .v-btn')[0] || cand[0];
+          if (x) cy.wrap(x).click({ force: true }); else cy.get('body').type('{esc}', { force: true });
+        });
+        cy.wait(1000);
+        cy.get('body').should(($b) => expect(openDlg($b).length, '팝업 닫힘').to.eq(0));
+      };
+      const dateIn = () => cy.get('.v-input__icon--prepend-inner i.material-icons').filter(':visible').filter((i, el) => el.innerText.trim() === 'event').closest('.v-input');
+      cy.visit(`${H}/logcatch/record/accessLog/comprehensiveLog`);
+      cy.wait(4000);
+      closeDlgs();
+      dateIn().eq(0).find('.material-icons').contains('event').click({ force: true });
+      cy.wait(1000);
+      cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
+      cy.wait(800);
+      cy.get('body').type('{esc}');
+      cy.get('input[aria-label="사용자 상태"]').filter(':visible').first().click({ force: true });
+      cy.wait(800);
+      cy.get('.v-menu__content').filter(':visible').contains('.v-list__tile__title', /^\s*미등록\s*$/).click({ force: true });
+      cy.wait(500);
+      cy.get('body').type('{esc}');
+      cy.intercept('GET', /\/api\/v1\/access-log\?/).as('D02U_list');
+      cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+      cy.wait('@D02U_list', { timeout: 30000 });
+      cy.wait(3000);
+      cy.get('table').filter((i, e) => vis(e) && !e.closest('.v-dialog') && e.querySelectorAll('thead th').length > 5).first().then(($tbl) => {
+        const row = $tbl.find('tbody tr').toArray().find((r) => /미등록 사용자\([^)]+\)/.test(tx(r)));
+        if (!row) { cy.writeFile('cypress/probe/D02U_미등록사용자_관찰.json', { 시각: new Date().toISOString(), 결과: '이번 달 미등록 사용자(계정) 기록 없음 — !1495 확인 생략' }); return; }
+        const acct = (tx(row).match(/미등록 사용자\([^)]+\)/) || [])[0];
+        cy.log(`미등록 사용자 행: ${acct}`);
+        const gear = [...row.lastElementChild.querySelectorAll('button, .v-btn, i')].filter(vis).pop();
+        cy.wrap(gear).click({ force: true });
+        // 처리창 위쪽 정보 표 : 「… 접속 아이디 미등록 사용자(계정) … 행위 유형 조회」 순서로 이어짐
+        const esc = (v) => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        cy.get('.v-dialog--active', { timeout: 10000 }).filter(':visible').last().should(($d) => {
+          const all = tx($d[0]);
+          expect(all, '!1495 처리창 접속 아이디 = 「미등록 사용자(계정)」').to.match(new RegExp(`접속 아이디\\s*${esc(acct)}`));
+          expect(all, '!1495 처리창 행위 유형 = 「조회」').to.match(/행위 유형\s*조회/);
+          expect(all, '!1495 수정 전 표시 「(undefined)」 없음').not.to.include('(undefined)');
+        });
+        closeDlgs();
+      });
+      cy.log('✅ [2.9.9.0] !1495 미등록 사용자 처리창 확인 완료');
+    }
+
+    // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
     cy.log('🎉 이력 - 접속기록 이력 - 통합 검출팝업 테스트 시나리오 성공적으로 완료!');
@@ -1323,6 +1384,239 @@ cy.get('.v-dialog--active').within(() => {
     cy.get('body').click('center', { force: true });
 
   });
+
+  // ==========================================
+  // [2.9.9.0 Depth] !1441 요청별 행위 구분 규칙 (메뉴 설정 「행위구분 추출」 · 「행위구분 맵핑」)
+  //   대상 : URI 메뉴 VIP_실시간DLP테스트 (/crm/dlp_tester.jsp, 리눅스_VIP고객) — 규칙을 잠깐 걸고 화면에서 되돌림 (사용자 승인 11-24)
+  //   1. CRM dlp_tester.jsp 요청 → 통합 목록 그 행의 처리(⚙) → 메뉴 설정
+  //      행위구분 추출 = 직접 입력 · 요청 파라미터 · 키 act / 맵핑 view → 검색(6) · save → 수정(2) → 저장
+  //   2. 요청 3건 : act 없음 → 조회(1) · act=view → 검색(6) · act=save → 수정(2) (접속기록 API 행위 코드 + 통합 목록 행위 글자)
+  //   3. 화면 복원 : 처리창 → 추출칸 X · 맵핑 행 삭제 → 저장 → 메뉴 정보(GET doubt-menus/425)에 규칙 없음
+  //   판정은 복원 뒤에 함 (중간 확인이 틀려도 규칙이 남지 않게). 화면 복원이 안 되면 after 에서 메뉴 정보만 기록 → 직접 복원 필요
+  //   참고 (probe_299h) : 「URI 관리 룰」 업무시스템 단위 행위구분 추출·맵핑은 요청 행위를 바꾸지 않음 (복합 메뉴 등록용 · 엑셀 양식 변환)
+  //   관찰 기록 : cypress/probe/D02R_관찰.json
+  // ==========================================
+  {
+    const A = require('../../support/anomaly');
+    const URI = '/crm/dlp_tester.jsp';
+    const MENU_NAME = 'VIP_실시간DLP테스트';
+    const RULE_EXP = "#RequestParam['act']";
+    const RULE_MAP = '{"view":6,"save":2}';
+    const EXPECT = [['', 1, '조회'], ['view', 6, '검색'], ['save', 2, '수정']];
+    const EXT_SEL = 'input[aria-label="행위구분 추출:"]';
+    const vis = (e) => !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
+    const tx = (e) => (e.innerText || e.textContent || '').replace(/\s+/g, ' ').trim();
+    const uniq = (a) => [...new Set(a.filter(Boolean))];
+    const p2 = (n) => String(n).padStart(2, '0');
+    const kst = (ms) => { const d = new Date(ms + 9 * 3600e3); return `${d.getUTCFullYear()}-${p2(d.getUTCMonth() + 1)}-${p2(d.getUTCDate())} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}:${p2(d.getUTCSeconds())}`; };
+    const TODAY = kst(Date.now()).slice(0, 10);
+    const logQ = `/logcatch/api/v1/access-log?startDate=${TODAY}%2000%3A00%3A00&endDate=${TODAY}%2023%3A59%3A59&hasParseError=false&logcatchMenuId=210508&page=0&privacyChk=false&returnRowCountType=1&size=1000&sort&totalCount=0`;
+    const obs = {};
+    const note = (k, v) => { obs[k] = v; cy.writeFile('cypress/probe/D02R_관찰.json', obs, { log: false }); };
+    let AUTH = {};
+    const authFrom = (h) => { const o = {}; Object.keys(h || {}).forEach((k) => { if (!/^(host|content-length|content-type|cookie|connection|origin|referer|user-agent|accept.*|sec-.*)$/i.test(k)) o[k] = h[k]; }); return o; };
+    let MENU_ID = null;
+    let ORIG = null;
+    let REVERTED = false;
+    const isOn = (m) => !!m && m.actionTypeExpression === RULE_EXP && m.actionTypeCodeMap === RULE_MAP;
+    const isOff = (m) => !!m && !m.actionTypeExpression && (!m.actionTypeCodeMap || /^\{\s*\}$/.test(m.actionTypeCodeMap));
+    const baseDiff = (m) => Object.keys({ ...(m || {}), ...(ORIG || {}) })
+      .filter((k) => !['actionTypeExpression', 'actionTypeCodeMap'].includes(k) && JSON.stringify((m || {})[k]) !== JSON.stringify((ORIG || {})[k]));
+    const menuReq = () => cy.request({ url: `/logcatch/api/v1/doubt-menus/${MENU_ID}?bsnId=5`, headers: AUTH, failOnStatusCode: false }).then((r) => (r.body && r.body.etcData) || null);
+    const topDlg = () => cy.get('.v-dialog--active').filter(':visible').last();
+    const dlgCount = ($b) => $b.find('.v-dialog--active').filter((i, e) => vis(e)).length;
+    const pickMenu = (re) => cy.get('.v-menu__content, .menuable__content__active').filter(':visible').last()
+      .find('.v-list__tile__title, .v-list__tile__content').filter((i, e) => re.test(tx(e))).first().click({ force: true });
+    // 메뉴 설정 카드 = 행위구분 추출 칸과 저장 버튼을 함께 가진 가장 가까운 상위
+    const settingBox = ($d) => Cypress.$($d.find(EXT_SEL)[0]).parents().filter((i, e) => Cypress.$(e).find('button, .v-btn').filter((j, b) => vis(b) && tx(b) === '저장').length > 0).first();
+    const boxText = (key) => topDlg().then(($d) => { const b = settingBox($d)[0]; note(key, b ? uniq(b.innerText.split('\n').map((x) => x.trim())).slice(0, 40) : '없음'); });
+    const saveMenu = () => {
+      let before = 0;
+      cy.get('body').then(($b) => { before = dlgCount($b); });
+      topDlg().then(($d) => cy.wrap(settingBox($d).find('button, .v-btn').filter((j, b) => vis(b) && tx(b) === '저장').first()[0]).click({ force: true }));
+      cy.wait(1500);
+      // 「메뉴를 저장하시겠습니까?」 확인
+      cy.get('body').then(($b) => {
+        if (dlgCount($b) <= before) return;
+        const ok = $b.find('.v-dialog--active').filter((i, e) => vis(e)).last().find('button, .v-btn').filter((i, e) => vis(e) && /^(확인|예)$/.test(tx(e)))[0];
+        if (ok) cy.wrap(ok).click({ force: true });
+      });
+      cy.wait(3000);
+    };
+    const closeTop = () => cy.get('body').then(($b) => {
+      const d = $b.find('.v-dialog--active').filter((i, e) => vis(e)).last();
+      if (!d.length) return;
+      const x = d.find('i.v-icon').filter((i, e) => vis(e) && tx(e) === 'close')[0] || d.find('button, .v-btn').filter((i, e) => vis(e) && tx(e) === '닫기')[0];
+      if (x) cy.wrap(x).click({ force: true });
+      cy.wait(1000);
+    });
+    // 통합 목록에서 대상 행 (목록 API 행 → 화면 표에서 같은 접속 일시 · user001) → 처리창 → 메뉴 설정 펼침
+    let LST = 0;
+    const openRow = (pred, left, done) => {
+      LST += 1;
+      const al = `D02R_lst${LST}`;
+      cy.intercept('GET', /\/api\/v1\/access-log\?/, (req) => { req.url = req.url.replace('privacyChk=true', 'privacyChk=false'); }).as(al);
+      cy.visit('/logcatch/record/accessLog/comprehensiveLog');
+      cy.wait(`@${al}`, { timeout: 40000 }).then((x) => {
+        const list = (x.response && x.response.body && x.response.body.resultObject) || [];
+        const target = list.filter(pred).sort((a, b) => (a.accessDate < b.accessDate ? 1 : -1))[0];
+        cy.get('tbody tr', { timeout: 30000 }).filter(':visible').should('have.length.greaterThan', 0);
+        cy.wait(1500);
+        cy.get('body').then(($b) => {
+          const row = target ? $b.find('tbody tr').filter((i, e) => vis(e) && !e.closest('.v-dialog') && tx(e).includes(target.accessDate) && tx(e).includes('user001') && e.querySelector('i.g.g-IConfig'))[0] : null;
+          if (!row && left > 0) { cy.wait(20000, { log: false }); openRow(pred, left - 1, done); return; }
+          note(`행_${LST}`, target ? { 시각: target.accessDate, menuId: target.menuId, actionType: target.actionType, 화면행: row ? tx(row).slice(0, 160) : '없음' } : '목록 API 에 대상 없음');
+          expect(row, `통합 목록에 ${URI} 행 (처리 ⚙)`).to.not.eq(undefined);
+          cy.wrap(row.querySelector('i.g.g-IConfig')).click({ force: true });
+          cy.wait(4500);
+          topDlg().then(($d) => {
+            if ($d.find(EXT_SEL).filter((i, e) => vis(e)).length) return;
+            cy.wrap($d.find('span.sub-title-title').filter((i, e) => /메뉴 설정/.test(tx(e)))[0]).click({ force: true });
+            cy.wait(2500);
+          });
+          if (done) done();
+        });
+      });
+    };
+    // 요청 1건 → 접속기록 API 에 새로 생긴 행 (요청 전에 있던 행 id 는 제외)
+    const sendAndRead = (act, out) => {
+      const seen = new Set();
+      cy.request({ url: logQ, headers: AUTH, failOnStatusCode: false }).then((r) => { ((r.body && r.body.resultObject) || []).filter((x) => x.uri === URI).forEach((x) => seen.add(x.id)); });
+      cy.task('crmFetch', { userId: 'user001', path: act ? `${URI}?act=${act}` : URI, method: 'GET', maxBody: 0 }, { timeout: 90000, log: false })
+        .then((r) => { out.요청상태 = r.status; out.요청오류 = r.error; });
+      const poll = (left) => cy.request({ url: logQ, headers: AUTH, failOnStatusCode: false }).then((r) => {
+        const fresh = ((r.body && r.body.resultObject) || []).filter((x) => x.uri === URI && x.userAccount === 'user001' && !seen.has(x.id))
+          .sort((a, b) => (a.accessDate < b.accessDate ? 1 : -1));
+        if (fresh.length || left <= 0) { out.새행수 = fresh.length; out.행 = fresh[0] ? { id: fresh[0].id, 시각: fresh[0].accessDate, actionType: fresh[0].actionType, userActionType: fresh[0].userActionType } : null; return; }
+        cy.wait(10000, { log: false });
+        poll(left - 1);
+      });
+      cy.wait(8000, { log: false });
+      poll(15);
+    };
+
+    after(() => {
+      if (REVERTED || !MENU_ID) return;
+      menuReq().then((m) => {
+        note('9_복원필요', { 규칙걸림: isOn(m), 규칙꺼짐: isOff(m), 지금: m });
+        if (!isOff(m)) cy.log(`🔴 ${MENU_NAME} 메뉴 설정에 행위 규칙이 남아 있음 — 처리창 메뉴 설정에서 행위구분 추출 X · 맵핑 삭제 후 저장 필요`);
+      });
+    });
+
+    it('[2.9.9.0] !1441 요청별 행위 구분 규칙 — 메뉴 설정 저장 → act 값별 행위 → 화면 복원', { retries: 0 }, () => {
+      A.ignoreErrors();
+      cy.intercept({ url: /\/logcatch\/api\/v1\// }, (req) => {
+        if (req.headers.authorization) AUTH = authFrom(req.headers);
+        const mm = req.url.match(/doubt-menus\/(\d+)\?/);
+        if (mm && req.method === 'GET' && !ORIG) req.on('after:response', (res) => { if (res.body && res.body.etcData && res.body.etcData.name === MENU_NAME) { MENU_ID = Number(mm[1]); ORIG = res.body.etcData; } });
+      });
+      A.loginAdmin();
+
+      // ---------- 0. 요청 → 처리창 · 처음 메뉴 정보 ----------
+      let since = '';
+      cy.then(() => { since = kst(Date.now() - 90000); });
+      cy.task('crmFetch', { userId: 'user001', path: URI, method: 'GET', maxBody: 0 }, { timeout: 90000, log: false });
+      cy.wait(15000, { log: false });
+      openRow((x) => x.uri === URI && x.userAccount === 'user001' && x.accessDate >= since, 6);
+      let PRE = false;
+      cy.then(() => {
+        note('0_처음메뉴정보', ORIG);
+        expect(ORIG, `처음 메뉴 정보 (${MENU_NAME})`).to.be.an('object');
+        PRE = isOn(ORIG); // 이전 실행이 복원 전에 멈춰 규칙이 남은 경우 → 저장 단계 건너뜀
+        expect(PRE || isOff(ORIG), `처음 행위 규칙 — 비어 있거나 이 시나리오 규칙이어야 함 (지금 ${ORIG.actionTypeExpression} / ${ORIG.actionTypeCodeMap})`).to.eq(true);
+      });
+      boxText('0_처음_설정영역');
+
+      // ---------- 1. 규칙 저장 ----------
+      cy.then(() => {
+        if (PRE) { note('1_건너뜀', '이미 규칙이 걸려 있음'); return; }
+        topDlg().find(EXT_SEL).first().click({ force: true });
+        cy.wait(1200);
+        pickMenu(/^직접 입력$/);
+        cy.wait(1200);
+        topDlg().find('.v-select').filter((i, e) => vis(e) && /^요청 본문|^요청 (헤더|파라미터)|^응답/.test(tx(e)) && !e.querySelector(EXT_SEL)).first().find('.v-select__slot').click({ force: true });
+        cy.wait(1000);
+        pickMenu(/요청 파라미터/);
+        cy.wait(800);
+        topDlg().find('input').filter((i, e) => vis(e) && /키 이름/.test(e.placeholder || '')).first().clear({ force: true }).type('act', { force: true });
+        topDlg().then(($d) => cy.wrap(settingBox($d).find('button, .v-btn').filter((i, e) => vis(e) && tx(e) === '편집').first()[0]).click({ force: true }));
+        cy.wait(1500);
+        [['view', '검색'], ['save', '수정']].forEach(([val, act], i) => {
+          if (i > 0) { topDlg().find('button, .v-btn').filter((j, e) => vis(e) && tx(e) === '행 추가').first().click({ force: true }); cy.wait(600); }
+          topDlg().find('.action-map-body input[type="text"]').filter((j, e) => vis(e) && !e.readOnly && !e.closest('.v-select')).eq(i).clear({ force: true }).type(val, { force: true });
+          topDlg().find('.action-map-body .v-select').filter((j, e) => vis(e)).eq(i).find('.v-select__slot').click({ force: true });
+          cy.wait(800);
+          pickMenu(new RegExp(`^${act}\\s*(\\(\\d+\\))?$`));
+          cy.wait(600);
+        });
+        topDlg().find('button, .v-btn').filter((i, e) => vis(e) && tx(e) === '확인').first().click({ force: true });
+        cy.wait(1200);
+        boxText('1_저장전_설정영역');
+        saveMenu();
+      });
+      cy.then(() => menuReq().then((m) => note('1_저장뒤_메뉴정보', { 규칙걸림: isOn(m), 지금: m })));
+      closeTop();
+
+      // ---------- 2. act 값별 행위 (판정은 복원 뒤) ----------
+      const RES = {};
+      cy.wait(15000, { log: false });
+      EXPECT.forEach(([act]) => { RES[act || '없음'] = {}; sendAndRead(act, RES[act || '없음']); });
+      cy.then(() => note('2_act별_행위', RES));
+
+      // ---------- 3. 화면 복원 (방금 행 처리창) ----------
+      const UI = {};
+      cy.then(() => openRow((x) => x.uri === URI && x.userAccount === 'user001' && x.accessDate >= since, 2, () => {
+        // 통합 목록 행위 글자 (방금 세 행)
+        cy.get('body').then(($b) => {
+          Object.keys(RES).forEach((k) => {
+            const h = RES[k].행;
+            const tr = h ? $b.find('tbody tr').filter((i, e) => vis(e) && !e.closest('.v-dialog') && tx(e).includes(h.시각) && tx(e).includes('user001'))[0] : null;
+            UI[k] = tr ? tx(tr).slice(0, 160) : '화면에 없음';
+          });
+        });
+      }));
+      cy.then(() => note('2_목록_행위글자', UI));
+      boxText('3_복원전_설정영역');
+      topDlg().find(EXT_SEL).first().closest('.v-input').then(($v) => {
+        const x = $v.find('i.v-icon').filter((i, e) => vis(e) && /^(clear|close)$/.test(tx(e)))[0];
+        if (x) cy.wrap(x).click({ force: true });
+      });
+      cy.wait(1000);
+      topDlg().then(($d) => cy.wrap(settingBox($d).find('button, .v-btn').filter((i, e) => vis(e) && tx(e) === '편집').first()[0]).click({ force: true }));
+      cy.wait(1500);
+      const delAll = (left) => topDlg().then(($d) => {
+        const filled = $d.find('.action-map-body input[type="text"]').filter((i, e) => vis(e) && !e.closest('.v-select') && e.value).length;
+        const del = $d.find('.action-map-body button, .action-map-body .v-btn').filter((i, e) => vis(e) && (e.title === '삭제' || tx(e) === 'delete'))[0];
+        if (!filled || !del || left <= 0) return;
+        cy.wrap(del).click({ force: true });
+        cy.wait(500);
+        delAll(left - 1);
+      });
+      delAll(6);
+      topDlg().find('button, .v-btn').filter((i, e) => vis(e) && tx(e) === '확인').first().click({ force: true });
+      cy.wait(1200);
+      boxText('3_복원_저장전_설정영역');
+      saveMenu();
+      cy.then(() => menuReq().then((m) => {
+        REVERTED = isOff(m) && baseDiff(m).length === 0;
+        note('3_복원뒤_메뉴정보', { 복원됨: REVERTED, 규칙외_다른키: baseDiff(m), 지금: m });
+      }));
+      closeTop();
+
+      // ---------- 판정 ----------
+      cy.then(() => {
+        expect(REVERTED, `${MENU_NAME} 메뉴 설정 복원 (행위 규칙 없음 · 나머지 처음과 같음)`).to.eq(true);
+        EXPECT.forEach(([act, code, label]) => {
+          const k = act || '없음';
+          const r = RES[k];
+          expect(r.행, `act=${k} 요청의 접속 기록 행`).to.not.eq(null);
+          expect(r.행.actionType, `!1441 act=${k} → 행위 코드 ${code}(${label})`).to.eq(code);
+          expect(UI[k], `!1441 통합 목록 act=${k} 행 행위 「${label}」`).to.match(new RegExp(`${MENU_NAME}\\s+${label}(\\s|$)`)); // 한글 뒤 \b 는 동작하지 않음
+        });
+      });
+      cy.log('✅ [2.9.9.0] !1441 요청별 행위 구분 규칙 확인 · 복원 완료');
+    });
+  }
 });  
 
 //코드마지막

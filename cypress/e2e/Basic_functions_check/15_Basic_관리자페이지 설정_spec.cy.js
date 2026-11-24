@@ -751,6 +751,13 @@ describe('로그캐치 사이트 테스트', () => {
         if (i === 0) {
           cy.contains('button.side-menu', '설정').should('be.visible').click({ force: true });
           cy.wait(1000);
+          // [2.9.9.0 !1394] 2차 인증 설정 메뉴는 기본 숨김 (기존 설치는 표시 상태 유지 — .21 은 숨김). 로그인 흐름은 건드리지 않고 메뉴 표시만 확인
+          cy.get('.v-menu__content, .v-list').filter(':visible').find('.v-list__tile__title').filter(':visible').then(($m) => {
+            const names = $m.toArray().map(tx);
+            cy.log(`설정 하위 메뉴: ${names.join(', ')}`);
+            expect(names, '설정 하위 메뉴 (플로우 시스템 포함)').to.include('플로우 시스템');
+            expect(names.filter((n) => /2차\s*인증/.test(n)), '!1394 2차 인증 설정 메뉴 숨김').to.have.length(0);
+          });
           cy.get('.v-list__tile__title').filter(':contains("플로우 시스템")').filter(':visible').click({ force: true });
           cy.url({ timeout: 15000 }).should('include', T.url);
           // 화면이 바뀔 때까지 재시도 (바로 읽으면 이전 화면의 관리자 탭이 잡힘)

@@ -978,6 +978,189 @@ cy.get('tbody tr')
     }
 
     // ==========================================
+    // [2.9.9.0 Basic] 이력 릴리즈노트 확인 (조회 전용)
+    //   !1479 상세 접속기록 정보 열 · 상세 팝업 이동 버튼에 이상행위 없음 (통합 · 그룹)
+    //   !1491 통합 — 접속 일시 내림차순 후 다음 페이지에서도 sort=accessDate,desc 유지
+    //   !1446 전체 건수 조회 전에도 다음 페이지 이동(1-25 → 26-50) · 「전체 건수」 → 「전체: N」 (통합 · 사용자 추적)
+    //   !1477 검출 탭 — 행(링크 아닌 칸) · 개인정보 유형 아이콘을 눌러도 검출 팝업이 한 번만 열림
+    // ==========================================
+    {
+      const vis = (e) => !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
+      const tx = (e) => (e.innerText || e.textContent || '').replace(/\s+/g, ' ').trim();
+      const H = 'https://10.10.54.21:18443';
+      const openDlg = ($b) => $b.find('.v-dialog--active').filter((i, e) => vis(e));
+      const closeDlgs = () => {
+        cy.get('body').then(($b) => {
+          const d = openDlg($b);
+          if (!d.length) return;
+          // 「개인정보 사용 내역」 팝업은 Esc 로 닫히지 않고 머리 오른쪽 X(아이콘)로만 닫힘
+          const cand = d.last().find('button, .v-btn, i, .v-icon, svg, [class*="close"]').filter((i, e) => vis(e) && (
+            /^(닫기|close|×|✕)$/.test(tx(e)) || /close/i.test(String(e.className && e.className.baseVal !== undefined ? e.className.baseVal : e.className)) || /닫기|close/i.test(e.getAttribute('aria-label') || '')));
+          const x = cand.filter((i, e) => /^닫기$/.test(tx(e)))[0] || cand.closest('button, .v-btn')[0] || cand[0];
+          if (x) cy.wrap(x).click({ force: true }); else cy.get('body').type('{esc}', { force: true });
+        });
+        cy.wait(1000);
+        cy.get('body').should(($b) => expect(openDlg($b).length, '팝업 닫힘').to.eq(0));
+      };
+      const pickDay1 = () => {
+        dateInputs().eq(0).find('.material-icons').contains('event').click({ force: true });
+        cy.wait(1000);
+        cy.get('.v-date-picker-table').filter(':visible').contains('.v-btn__content', '1일').click({ force: true });
+        cy.wait(800);
+        cy.get('body').type('{esc}');
+        cy.wait(500);
+      };
+      // 검색 한 번에 조회가 2번 나갈 때가 있어, 동작마다 새 별칭을 등록해 그 동작 뒤의 요청만 기다림
+      let reqN = 0;
+      const listReq = () => { reqN += 1; const a = `B02R_l${reqN}`; cy.intercept('GET', /\/api\/v1\/access-log\?/).as(a); return `@${a}`; };
+      const doSearch = () => cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+      const mainTable = () => cy.get('table').filter((i, e) => vis(e) && !e.closest('.v-dialog') && e.querySelectorAll('thead th').length > 5).first();
+      const detailCol = ($tbl) => $tbl.find('thead th').toArray().map(tx).findIndex((h) => /상세 접속기록/.test(h));
+      const checkDetailCol = (label) => mainTable().then(($tbl) => {
+        const di = detailCol($tbl);
+        expect(di, `${label} 「상세 접속기록 정보」 열`).to.be.at.least(0);
+        const names = [...new Set($tbl.find('tbody tr').toArray().flatMap((r) => [...(r.children[di] ? r.children[di].querySelectorAll('button, .v-btn') : [])].map(tx)).filter(Boolean))];
+        cy.log(`${label} 상세 열 버튼: ${names.join(', ')}`);
+        expect(names.length, `${label} 상세 열 버튼`).to.be.greaterThan(0);
+        expect(names.filter((n) => /이상행위/.test(n)), `!1479 ${label} 상세 열에 이상행위 버튼 없음`).to.have.length(0);
+      });
+      // 페이지 이동은 표 아래 v-pagination 의 chevron_right 버튼, 표시는 「25 ▾ 26-50」 칸 (2.9.9.0)
+      const nextPage = () => cy.get('button.v-pagination__navigation').filter((i, e) => vis(e) && !e.closest('.v-dialog') && /chevron_right/.test(tx(e))).last().click({ force: true });
+      const pageLabel = (re, label) => cy.get('body').should(($b) => {
+        const txt = $b.find('*').filter((i, e) => vis(e) && !e.closest('.v-dialog') && e.children.length === 0 && /^\d+\s*-\s*\d+/.test(tx(e))).toArray().map(tx);
+        expect(txt.join(' | '), label).to.match(re);
+      });
+
+      // ---- 1) 통합 : 상세 열 · 상세 팝업 (!1479) ----
+      cy.visit(`${H}/logcatch/record/accessLog/comprehensiveLog`);
+      cy.wait(4000);
+      closeDlgs();
+      // 화면을 열 때 나가는 기본 조회는 빼고, 이후 요청만 기다리도록 화면을 연 뒤 등록
+      cy.intercept('GET', /\/api\/v1\/access-log\?/).as('B02R_list');
+      pickDay1();
+      doSearch();
+      cy.wait('@B02R_list', { timeout: 30000 });
+      cy.wait(3000);
+      checkDetailCol('통합');
+      mainTable().then(($tbl) => {
+        const di = detailCol($tbl);
+        const btn = $tbl.find('tbody tr').toArray().map((r) => r.children[di]).flatMap((c) => (c ? [...c.querySelectorAll('button, .v-btn')] : []))
+          .find((b) => vis(b) && /개인정보|HTTP/.test(tx(b)));
+        expect(btn, '상세 열 개인정보 · HTTP 버튼').to.exist;
+        cy.wrap(btn).click({ force: true });
+      });
+      cy.get('.v-dialog--active', { timeout: 10000 }).filter(':visible').last().then(($d) => {
+        const names = [...new Set($d.find('button, .v-btn').filter((i, e) => vis(e)).toArray().map(tx).filter(Boolean))];
+        cy.log(`상세 팝업 버튼: ${names.join(', ')}`);
+        expect(names.filter((n) => /이상행위/.test(n)), '!1479 상세 팝업 이동 버튼에 이상행위 없음').to.have.length(0);
+      });
+      closeDlgs();
+
+      // ---- 2) 통합 : 정렬 방향 유지 (!1491) · 조회 전 페이지 이동 (!1446) ----
+      const sortClick = () => cy.get('thead th').filter((i, e) => vis(e) && !e.closest('.v-dialog') && /접속 일시/.test(tx(e))).first().click({ force: true });
+      cy.wait(2000);
+      const s1 = listReq();
+      sortClick();
+      cy.wait(s1, { timeout: 30000 }).its('request.url').then((u) => expect(decodeURIComponent(u), '첫 정렬 클릭').to.include('sort=accessDate,asc'));
+      cy.wait(2000);
+      const s2 = listReq();
+      sortClick();
+      cy.wait(s2, { timeout: 30000 }).then((x) => {
+        expect(decodeURIComponent(x.request.url), '두 번째 정렬 클릭').to.include('sort=accessDate,desc');
+        const n = (x.response.body && x.response.body.resultObject || []).length;
+        if (n < 25) { cy.log(`ℹ️ 1쪽 ${n}건 — 다음 페이지 확인 생략`); return; }
+        const next = nextPage;
+        const p2 = listReq();
+        next();
+        cy.wait(p2, { timeout: 30000 }).its('request.url').then((u) => {
+          const d = decodeURIComponent(u);
+          expect(d, '!1491 2쪽 요청 정렬 방향 유지').to.include('sort=accessDate,desc');
+          expect(d, '!1446 전체 건수 조회 전 2쪽 이동').to.include('page=1&');
+        });
+        pageLabel(/26\s*-\s*50/, '!1446 2쪽 표시 26-50');
+        cy.wait(1500);
+        const p3 = listReq();
+        next();
+        cy.wait(p3, { timeout: 30000 }).its('request.url').then((u) => {
+          const d = decodeURIComponent(u);
+          expect(d, '!1491 3쪽 요청 정렬 방향 유지').to.include('sort=accessDate,desc');
+          expect(d, '3쪽 요청').to.include('page=2&');
+        });
+      });
+
+      // ---- 3) 통합 : 전체 건수 → 「전체: N」 (!1446) ----
+      cy.get('button, .v-btn').filter((i, e) => vis(e) && !e.closest('.v-dialog') && /^전체 건수$/.test(tx(e))).first().click({ force: true });
+      // 확인창 「조회에 많은 시간이 소요될 수 있습니다. 진행 하시겠습니까?」 → 확인
+      cy.get('.v-dialog--active', { timeout: 10000 }).filter(':visible').last().should('contain.text', '조회에 많은 시간이 소요될 수 있습니다')
+        .find('button, .v-btn').filter((i, e) => vis(e) && tx(e) === '확인').first().click({ force: true });
+      cy.wait(4000);
+      cy.get('body').should(($b) => expect(openDlg($b).length, '전체 건수 확인창 닫힘').to.eq(0));
+      cy.get('body').should(($b) => {
+        const lbl = $b.find('button, .v-btn').filter((i, e) => vis(e) && !e.closest('.v-dialog') && /^전체/.test(tx(e)) && !/전체 선택/.test(tx(e))).toArray().map(tx);
+        expect(lbl.join(' | '), '!1446 전체 건수 버튼 라벨 「전체: N」').to.match(/전체\s*[:：]\s*[\d,]+/);
+      });
+
+      // ---- 4) 그룹 : 상세 열 (!1479) ----
+      cy.get('.tab-btn').then(($t) => {
+        const g = $t.filter((i, e) => tx(e) === '그룹')[0];
+        if (!g) { cy.log('ℹ️ 그룹 탭 없음(이력 그룹화 OFF 서버) — 생략'); return; }
+        cy.wrap(g).click({ force: true });
+        cy.wait(3000);
+        pickDay1();
+        const g1 = listReq();
+        doSearch();
+        cy.wait(g1, { timeout: 30000 });
+        cy.wait(3000);
+        checkDetailCol('그룹');
+      });
+
+      // ---- 5) 사용자 추적 : 조회 전 다음 페이지 (!1446) ----
+      cy.visit(`${H}/logcatch/record/privacy/privacyAccessLog`);
+      cy.wait(4000);
+      pickDay1();
+      cy.wait(1500);
+      cy.intercept('POST', /\/api\/v1\/privacy-access-log/).as('B02R_priv');
+      doSearch();
+      cy.wait('@B02R_priv', { timeout: 30000 }).then((x) => {
+        const n = (x.response.body && x.response.body.resultObject || []).length;
+        if (n < 25) { cy.log(`ℹ️ 사용자 추적 1쪽 ${n}건 — 다음 페이지 확인 생략`); return; }
+        cy.wait(1500);
+        cy.intercept('POST', /\/api\/v1\/privacy-access-log/).as('B02R_priv2');
+        nextPage();
+        cy.wait('@B02R_priv2', { timeout: 30000 }).its('request.body.offset').should('eq', 25);
+        pageLabel(/26\s*-\s*50/, '!1446 사용자 추적 2쪽 표시 26-50');
+      });
+
+      // ---- 6) 검출 탭 : 행 · 아이콘 클릭 → 검출 팝업 한 번 (!1477) ----
+      cy.visit(`${H}/logcatch/record/accessLog/fileDownloadLog`);
+      cy.wait(4000);
+      cy.get('.tab-btn').contains('검출').click({ force: true });
+      cy.wait(3000);
+      doSearch();
+      cy.wait(5000);
+      cy.get('body').then(($b) => {
+        const rows = $b.find('tbody tr').filter((i, e) => vis(e) && !e.closest('.v-dialog') && e.children.length > 3 && /검출/.test(tx(e)));
+        if (!rows.length) { cy.writeFile('cypress/probe/B02R_검출_관찰.json', { 시각: new Date().toISOString(), 결과: '오늘 검출 행 없음 — !1477 확인 생략' }); return; }
+        const TABS = ['오탐/확정', '키워드', '불용 데이터 - 키워드', '불용 데이터 - 값'];
+        const expectOne = (label) => cy.get('body').should(($x) => {
+          const d = openDlg($x);
+          expect(d.length, `!1477 ${label} — 검출 팝업 1개`).to.eq(1);
+          TABS.forEach((tb) => expect(tx(d[0]), `${label} 팝업 「${tb}」 탭`).to.include(tb));
+        });
+        cy.wrap(rows[0].children[0]).click({ force: true });
+        cy.wait(2500);
+        expectOne('행(접속 일시 칸) 클릭');
+        closeDlgs();
+        cy.get('tbody tr').filter((i, e) => vis(e) && !e.closest('.v-dialog') && e.children.length > 3 && /검출/.test(tx(e))).first()
+          .find('.c-data-grid-icons-icon-big-siz, i.v-icon.g').filter(':visible').first().click({ force: true });
+        cy.wait(2500);
+        expectOne('개인정보 유형 아이콘 클릭');
+        closeDlgs();
+      });
+      cy.log('✅ [2.9.9.0] 이력 릴리즈노트(!1479 · !1491 · !1446 · !1477) 확인 완료');
+    }
+
+    // ==========================================
     // [FINAL] 테스트 종료 및 메뉴 닫기
     // ==========================================
     cy.log('🎉 이력 테스트 시나리오 성공적으로 완료!');
