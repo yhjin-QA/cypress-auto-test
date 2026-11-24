@@ -41,6 +41,21 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
   
   it('02_Depth_이력_접속기록이력_통합 자동화 시나리오', () => {
 
+    // [2026-11-24] 대상 업무시스템 .22 리눅스_배송관리(웹 접속 불안정 · 최근 기록 11-20) → .27 리눅스_VIP고객
+    //   검색 첫 행(최신)이 방금 만든 검출 기록이 되도록 CRM .27 user001(사원_1 · AI개발2팀) dlp_tester.jsp 에 개인정보 메시지 1건 (Referer 포함)
+    //   (probe_299m · 299n 11-24 확인 : 첫 행 처리창 오탐/확정 · 불용 데이터 탭(비어 있음) · HTTP REQUEST host 10.10.54.27 · referer …/crm/dlp_tester.jsp · SQL 탭 있음)
+    //   이전 .22 기준 파일 : cypress/probe/bak/02_Depth_이력_접속기록이력_통합_spec.bak_20261124q
+    let D02_SENT = '';
+    cy.then(() => { const d = new Date(Date.now() + 9 * 3600e3 - 5000); D02_SENT = d.toISOString().slice(0, 19).replace('T', ' '); });
+    cy.task('crmFetch', {
+      userId: 'user001', path: '/crm/dlp_tester.jsp', method: 'POST', maxBody: 0,
+      headers: { Referer: 'http://10.10.54.27/crm/dlp_tester.jsp' },
+      form: { action: 'send', chatMsg: `[자동화 통합 검출 ${new Date().toISOString()}] 주민번호 900101-1234568 / 휴대폰 010-1234-5678 / 이메일 auto.dlp@test.co.kr / 카드 4111-1111-1111-1111` },
+    }, { timeout: 90000, log: false }).then((r) => {
+      cy.log(`🧪 통합 검출 데이터 생성 (.27 dlp_tester.jsp) : 로그인 ${r.login} · 전송 ${r.status} ${r.error || ''}`);
+      expect(r.status, 'dlp_tester.jsp 전송 응답 (200)').to.eq(200);
+    });
+
 
     // ==========================================
     // STEP 1: 로그인
@@ -304,7 +319,7 @@ cy.log('✅ 시작 날짜 지정 성공');
     cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
     cy.wait(1000);
     // 업무시스템 종류 클릭하는 코드
-    cy.get('.v-list__tile__title').contains('리눅스_배송관리').scrollIntoView().should('be.visible').closest('.v-list__tile').click({ force: true });
+    cy.get('.v-list__tile__title').contains('리눅스_VIP고객').scrollIntoView() /* [11-24] 이전 리눅스_배송관리 */.should('be.visible').closest('.v-list__tile').click({ force: true });
     // 선택 후 메뉴 닫기
     cy.get('body').type('{esc}');
 
@@ -422,6 +437,17 @@ cy.log('✅ 이력 - 통합 탭 진입 및 데이터 출력 확인 완료!');
   
 ////////////////////////////////////////
 // [이력 > 통합 > 검출 팝업 > 오탐/확정 탭]
+// [11-24] 첫 행이 시작할 때 보낸 .27 기록(그 시각 이후)이 될 때까지 다시 검색 (수집 지연 10~50초 · 15초 간격 최대 6번)
+const waitFreshRow = (left) => cy.get('tbody tr').filter(':visible').first().then(($r) => {
+  const at = ((($r[0].innerText || '').match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/)) || [''])[0];
+  if (at >= D02_SENT) { cy.log(`🟢 첫 행 = 방금 기록 (${at})`); return; }
+  expect(left, `통합 첫 행에 시작 때 보낸 .27 기록 (${D02_SENT} 이후 · 지금 첫 행 ${at})`).to.be.greaterThan(0);
+  cy.wait(15000, { log: false });
+  cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+  cy.wait(2000);
+  waitFreshRow(left - 1);
+});
+waitFreshRow(6);
 ////////////////////////////////////////
 // //업무시스템 초기화 x버튼 클릭하기
 //cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__icon--clear').find('.v-icon').click({ force: true });
@@ -473,6 +499,8 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
     // 이후 Case 1~3 로직 (기존과 동일)
     // ==========================================
     cy.get('.v-dialog--active').then(($innerBody) => {
+        // [11-24] .27 첫 행은 등록된 메뉴(VIP_실시간DLP테스트 · B1/B2 사용) → 메뉴명 덮어쓰기 · 등록 분기를 타지 않음 (미등록 메뉴일 때만)
+        if (!isUnregisteredMenu) { cy.log('🔒 등록된 메뉴 — 메뉴명 덮어쓰기 · 등록 건너뜀'); return; }
         const autoRegLabel = $innerBody.find('label:contains("메뉴명 자동 등록")');
         const menuNameInput = $innerBody.find('input[aria-label="메뉴명"]');
 
@@ -1146,7 +1174,7 @@ cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.
     .scrollIntoView()
     .should('exist')          // be.visible 대신 exist로 완화
     .then(($tr) => {
-      cy.wrap($tr).contains('10.10.54.22:8080').should('exist');
+      cy.wrap($tr).contains('10.10.54.27').should('exist'); // [11-24] 이전 10.10.54.22:8080
     });
 });
 
@@ -1184,7 +1212,7 @@ cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.
 
             // 추가로 'host' 정보도 함께 검증해주면 더욱 안전합니다.
             cy.contains('tr', 'host').within(() => {
-                  cy.contains('10.10.54.22:8080').should('be.visible');
+                  cy.contains('10.10.54.27').should('be.visible');
             });
 
         } else {
@@ -1200,17 +1228,17 @@ cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.
               const hasRef = $d.find('tr').toArray().some((tr) => /(^|\s)referer(\s|$)/i.test(tr.innerText));
               if (!hasRef) {
                 cy.log('ℹ️ referer 헤더 없는 접속(첫 진입) — host 로 확인');
-                cy.contains('tr', 'host').within(() => { cy.contains('10.10.54.22:8080').should('exist'); });
+                cy.contains('tr', 'host').within(() => { cy.contains('10.10.54.27').should('exist'); });
                 return;
               }
-            cy.contains('tr', 'referer', { timeout: 10000 }).should('be.visible')
+            cy.contains('tr', 'referer', { timeout: 10000 }).scrollIntoView().should('be.visible') /* [11-24] .27 은 헤더 9줄이라 referer 줄이 표 위쪽으로 밀려 있음 → 스크롤 */
               .within(() => {
                   // 1. IP 주소는 고정이므로 반드시 확인
-                  cy.contains('10.10.54.22:8080').should('be.visible');
+                  cy.contains('10.10.54.27').should('be.visible');
                   
                   // 2. 중간 경로는 제외하고, 마지막이 .do로 끝나는지만 유연하게 확인
                   cy.get('td').invoke('text').then((text) => {
-                      expect(text).to.match(/\.do/); 
+                      expect(text).to.match(/\.jsp/); /* [11-24] .27 CRM (이전 .22 .do) */ 
                   });
               });
             });
@@ -1226,10 +1254,10 @@ cy.contains('button.v-btn', '전체 확정 선택').scrollIntoView().should('be.
      cy.wait(1000);
 
      // 'Connection'라는 텍스트를 가진 행(tr)을 찾아서 검증합니다.
-     cy.contains('tr', 'Connection').should('be.visible')
+     cy.contains('tr', 'Connection').scrollIntoView().should('be.visible')
      .within(() => {
        // 그 행 안에서 URL 값이 포함되어 있는지 확인
-       cy.contains('keep-alive').should('exist');
+       cy.contains(/keep-alive|close/).should('exist'); // [11-24] .27 은 Nginx 경유라 close (이전 .22 keep-alive)
        
       });
       cy.log('✅ HTTP Response 검증 성공!');

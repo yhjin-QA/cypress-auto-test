@@ -391,124 +391,23 @@ processList.forEach((process) => {
 
 //------------프로세스 재기동 끝 ----------------------------------------
 
-// was 이력 행위 
-
 // ----------------------------------------------------------
-// [STEP 1] WAS 시스템 로그인 및 고객관리 > 특정 계좌조회 타격 (식별자패턴 추가 검출조회)
+// [STEP 1] 검출 데이터 생성 — 계좌번호가 든 요청 (식별 정규식 Auto_계좌번호 확인용)
+//   [2026-11-24] .22 WAS(리눅스_배송관리 · 접속 불안정) 대신 .27 CRM(리눅스_VIP고객) dlp_tester.jsp 사용
+//   user001(사원_1 · AI개발2팀)로 계좌번호가 든 채팅 메시지 전송 (02_Depth_이력_접속기록이력_검출 과 같은 방식 · 비밀번호는 Node 가 직접 읽음)
+//   이전 .22 코드 : cypress/probe/bak/10_Depth_검출_식별정규식_spec.bak_20261124o
 // ----------------------------------------------------------
-cy.log('🚀 WAS 사이트로 이동하여 새 세션을 발급받습니다.');
-
-// 세션 이동 방어 코드 
-
-// 🚨 [핵심 방어 1] Cypress 프록시가 도메인 전환을 준비할 수 있도록 2초간 숨을 고릅니다.
-cy.wait(2000);
-
-// 🌟 [추가] 서버 접속 상태를 기억할 변수(플래그)를 선언합니다.
-let isWasSiteDown = false;
-
-// 🌟 [핵심 예외 처리] 페이지 로드 실패 시 에러를 낚아채서 테스트 중단(Fail)을 막습니다.
-Cypress.once('fail', (error) => {
-  // 에러 메시지에 'could not load' 또는 타겟 서버 IP가 포함되어 있는지 확인
-  if (error.message.includes('could not load') || error.message.includes('10.10.54.22')) {
-    cy.log('⚠️ [경고] WAS 서버(10.10.54.22)에 접속할 수 없거나 응답이 지연되었습니다!');
-    isWasSiteDown = true; // 플래그를 true로 변경하여 접속 실패를 기록합니다.
-    
-    // 💡 핵심: false를 반환하면 Cypress가 에러를 뱉지 않고(초록불 유지) 다음 코드로 넘어갑니다.
-    return false; 
-  }
-  // 우리가 예상한 에러가 아니면 원래대로 빨간불을 띄우고 테스트를 실패시킵니다.
-  throw error; 
+const ACCT_NO = '475-6025314-6-985';
+let ACCT_SENT = 0;
+cy.task('crmFetch', {
+  userId: 'user001', path: '/crm/dlp_tester.jsp', method: 'POST', maxBody: 0,
+  form: { action: 'send', chatMsg: `[자동화 식별 정규식 검출 ${new Date().toISOString()}] 계좌 ${ACCT_NO}` },
+}, { timeout: 90000, log: false }).then((r) => {
+  ACCT_SENT = Date.now();
+  cy.log(`🧪 계좌번호 검출 데이터 생성 (.27 dlp_tester.jsp) : 로그인 ${r.login} · 전송 ${r.status} ${r.error || ''}`);
+  cy.writeFile('cypress/probe/D10_계좌검출생성.json', { at: new Date().toISOString(), 계좌: ACCT_NO, login: r.login, status: r.status, error: r.error }, { log: false });
+  expect(r.status, 'dlp_tester.jsp 전송 응답 (200)').to.eq(200);
 });
-
-// 🚨 1. 커스텀(command) 명령어 적용 (타임아웃 및 재시도 포함)
-cy.visitWithRetry('http://10.10.54.22:8080/uat/uia/egovLoginUsr.do', {
-  timeout: 60000,
-  onBeforeLoad(win) {
-    delete win.fetch; // fetch 삭제가 필요한 경우 유지
-  }
-});
-
-// 🚨 [핵심 방어 2] 페이지 진입 직후 DOM 렌더링이 안정화될 때까지 잠시 대기합니다.
-cy.wait(2000);
-
-// 🌟 [분기 처리] 접속에 성공했을 때만 cy.origin(로그인 및 API 타격) 로직을 실행합니다.
-// cy.then()으로 감싸주어야 변수(isWasSiteDown) 상태를 올바르게 평가할 수 있습니다.
-cy.then(() => {
-  if (isWasSiteDown) {
-    // ❌ 접속 실패 시
-    cy.log('⏩ [Skip] WAS 서버 접속 실패로 인해 이상행위 발생 스텝을 안전하게 건너뜁니다.');
-  } else {
-//-----------------------------------------------
-cy.origin('http://10.10.54.22:8080', { args: { targetName: '475-6025314-6-985' } }, ({ targetName }) => {
-  Cypress.on('uncaught:exception', () => false);
-
-  // 2. WAS 화면 UI 로그인 진행 (yunho 계정)
-  cy.log('1️⃣ UI를 통해 완벽하게 로그인을 수행합니다.');
-  cy.visit('/uat/uia/egovLoginUsr.do');
-  cy.get('#id').should('be.visible').clear().type('loginid246');
-  cy.get('#password').should('be.visible').clear().type('Manager1{enter}');
-
-  // 3. 로그인 성공 검증 (로그아웃 버튼 렌더링 대기)
-  cy.contains('a', '로그아웃', { timeout: 15000 }).should('be.visible');
-  cy.log('✅ 로그인 성공! 방금 생성된 싱싱한 세션 확보 완료!');
-
-  // 4. ✨ 핵심 로직: 쿠키 또는 URL에서 JSESSIONID를 안전하게 추출합니다.
-  cy.url().then((currentUrl) => {
-    cy.getCookie('JSESSIONID').then((cookie) => {
-      let freshSessionId = '';
-
-      // ① 먼저 쿠키에 JSESSIONID가 있는지 확인
-      if (cookie && cookie.value) {
-        freshSessionId = cookie.value;
-        cy.log(`🔑 쿠키에서 세션 ID 추출 완료`);
-      } 
-      // ② 쿠키가 없다면, URL에 jsessionid가 붙어있는지 확인 (URL Rewriting 대응)
-      else if (currentUrl.toLowerCase().includes('jsessionid=')) {
-        // 정규식을 사용해 URL에서 jsessionid 값만 쏙 뽑아냅니다.
-        const match = currentUrl.match(/jsessionid=([^?&#]+)/i);
-        if (match && match[1]) {
-          freshSessionId = match[1];
-          cy.log(`🔑 URL에서 세션 ID 추출 완료`);
-        }
-      }
-
-      // 방어 코드: 둘 다 실패했을 경우
-      if (!freshSessionId) {
-        throw new Error('❌ JSESSIONID를 쿠키와 URL 모두에서 찾을 수 없습니다.');
-      }
-
-      cy.log(`✅ 최종 사용될 세션 ID: ${freshSessionId}`);
-
-      // 5. 추출한 새 세션 ID를 헤더에 꽂아서 API 타격!
-      // 고객관리 계좌번호 조회 
-      cy.request({
-        method: 'POST',
-        url: 'cop/logcatch/searchUserInfoList.do',
-        form: true,
-        headers: {
-          'Cookie': `JSESSIONID=${freshSessionId}`, 
-          'X-Requested-With': 'XMLHttpRequest',
-          'Referer': 'http://10.10.54.22:8080/uat/uia/actionMain.do'
-        },
-        body: { 
-          menuNo: '21',
-          pageIndex: 1,  // 🔍 수정: pageindex -> pageIndex (대문자 I)
-          searchCnd: '3', // 🔍 추가 권장: 이미지에 포함된 기본 파라미터들
-          searchWrd: targetName
-    
-        }
-      }).then((response) => {
-        // 6. 정상 응답 검증 (200 OK)
-        expect(response.status).to.eq(200);
-        cy.log('🎉 매번 새로운 세션으로 고객관리 계좌번호 조회 자동 타격 성공!');
-        cy.log(`🎯 특정계좌 [${targetName}]로 계좌 조회 타격 완료!`);
-      }); // cy.request 닫기
-    }); // cy.getCookie 닫기
-  }); // cy.url 닫기
-}); // cy.origin 닫기
-
-} // 🌟 여기에 else 블록을 닫는 중괄호 추가!
-}); // 🌟 여기에 cy.then() 블록을 닫는 괄호 추가!
 
 
 // ----------------------------------------------------------
@@ -679,7 +578,7 @@ cy.log('✅ 검출 탭 진입 성공');
       .filter(':visible')
       .closest('.v-input')
       .find('input')
-      .type('loginid246', { force: true, delay: 50 });
+      .type('user001', { force: true, delay: 50 }); // [11-24] .27 CRM user001 (이전 .22 loginid246)
 
     cy.wait(1000); // 자동완성 또는 검색 결과 갱신 대기
     
@@ -687,6 +586,48 @@ cy.log('✅ 검출 탭 진입 성공');
 cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
 cy.wait(1000);
 
+
+// [11-24] 37548 재현 여부 기록만 (판정 없음) : 방금 보낸 기록 행(같은 분 · 검출 N)을 최대 60초 (10초마다 다시 검색) 찾아
+//   처리창을 열어 계좌번호 문구가 검출 항목에 있는지 기록 → 닫기 (오탐/확정 · 저장 누르지 않음)
+//   (1차 11-24 : 「… VIP_실시간DLP테스트 / 조회 검출 2」 행 확인 — 목록 줄에는 개인정보 유형 글자가 없어 처리창으로 확인)
+{
+  const seen = { 계좌: ACCT_NO, 시도: [] };
+  const tx2 = (e) => (e ? (e.innerText || e.textContent || '') : '').replace(/\s+/g, ' ').trim();
+  const kmin = (ms) => { const d = new Date(ms + 9 * 3600e3); return d.toISOString().slice(0, 16).replace('T', ' '); };
+  const look = (left) => cy.get('body').then(($b) => {
+    const trs = $b.find('tbody tr').filter(':visible').toArray().filter((e) => !e.closest('.v-dialog'));
+    const mins = [kmin(ACCT_SENT - 30e3), kmin(ACCT_SENT), kmin(ACCT_SENT + 60e3)];
+    const row = trs.find((e) => mins.some((m) => tx2(e).includes(m)) && /검출\s*\d+/.test(tx2(e)));
+    seen.시도.push({ 남은: left, 행: trs.slice(0, 3).map((e) => tx2(e).slice(0, 200)), 방금행: row ? tx2(row).slice(0, 200) : null });
+    cy.writeFile('cypress/probe/D10_계좌검출_관찰.json', seen, { log: false });
+    if (row) {
+      cy.wrap(row.querySelector('i.g.g-IConfig') || row).click({ force: true });
+      cy.wait(4500);
+      cy.get('body').then(($b2) => {
+        const d = $b2.find('.v-dialog--active').filter(':visible').last()[0];
+        const lines = d ? [...new Set((d.innerText || '').split('\n').map((x) => x.trim()).filter(Boolean))] : [];
+        seen.처리창_계좌문구 = lines.filter((x) => /계좌|475-6025314/.test(x)).slice(0, 20);
+        seen.처리창_앞부분 = lines.slice(0, 80);
+        seen.계좌검출 = lines.some((x) => x.includes(ACCT_NO) || /계좌/.test(x));
+        cy.writeFile('cypress/probe/D10_계좌검출_관찰.json', seen, { log: false });
+        cy.log(seen.계좌검출 ? '✅ 처리창에 계좌번호 검출 보임 (37548 해결 가능성 — D10_계좌검출_관찰.json 확인)' : '⚠️ 처리창에 계좌번호 검출 안 보임 (37548 재현 가능성)');
+      });
+      cy.get('body').then(($b3) => {
+        const d = $b3.find('.v-dialog--active').filter(':visible').last();
+        const x = d.find('button, .v-btn').filter(':visible').filter((i, e) => tx2(e) === '닫기')[0] || d.find('i.v-icon').filter(':visible').filter((i, e) => tx2(e) === 'close')[0];
+        if (x) cy.wrap(x).click({ force: true }); else cy.get('body').type('{esc}', { force: true });
+        cy.wait(1500);
+      });
+      return;
+    }
+    if (left <= 0) { cy.log('⚠️ 60초 안에 방금 보낸 기록 행 없음'); return; }
+    cy.wait(10000, { log: false });
+    cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+    cy.wait(1500, { log: false });
+    look(left - 1);
+  });
+  look(6);
+}
 
 // 맨티스 이슈 : http://bug.warevalley.com/view.php?id=37548
 // 계좌번호로 식별자 검출이력에 잡히지 않는 문제 
@@ -696,15 +637,15 @@ cy.wait(1000);
 // cy.log('🧐 생성된 최신 이상행위 로그를 정밀 검증합니다.');
 // // [개선 코드]
 // // 1. 먼저 테이블 내에 내가 원하는 데이터가 나타날 때까지 기다립니다 (최대 15초)
-// cy.get('tbody', { timeout: 15000 }).contains('tr', 'yunho(진윤호)').should('be.visible');
+// cy.get('tbody', { timeout: 15000 }).contains('tr', 'user001') /* [11-24] .27 기준 (이전 yunho(진윤호)) — 해제 전 실제 행 글자 확인 */.should('be.visible');
 
 
 // // 1. 첫 번째 행을 잡고 그 안으로(within) 쏙 들어갑니다. ($row 변수 생략 가능!)
 // cy.get('tbody tr').filter(':visible').first().within(() => {
   
 //   // 2. 텍스트 검증
-//   cy.contains('리눅스_배송관리').should('be.visible');
-//   cy.contains('품질관리팀').should('be.visible');
+//   cy.contains('리눅스_VIP고객').should('be.visible'); // [11-24] 이전 리눅스_배송관리
+//   cy.contains('AI개발2팀').should('be.visible'); // [11-24] 이전 품질관리팀
 //   cy.contains('검출').should('be.visible');
   
 
@@ -721,6 +662,266 @@ cy.wait(1000);
     
    
   });
+
+  // ==========================================
+  // [2.9.9.0 Depth] 식별 키워드 정의 — 테스트 키워드 만들기 · 확인 · 설명 수정 · 삭제 (B3)
+  //   사용자 승인(11-24) : JEUS_CRM고객관리 · text/html 묶음에 테스트 키워드를 만들고 같은 실행에서 삭제 (기존 키워드는 건드리지 않음)
+  //   키워드 : 이름 zz_auto_kw_<YYYYMMDD> · 값 zzautokw<YYYYMMDD> · 이메일 · 일치 · 확정 아님
+  //   (probe_299l 11-24 확인)
+  //   - 저장 : POST pams/unconfirmed/privacy-keyword-config → 「저장했습니다.」 · 이어서 POST pams/unconfirmed/reload
+  //   - 수정 : POST pams/unconfirmed/privacy-keyword-config/{id} → 「수정했습니다.」 (수정하면 키워드 id 가 새 번호로 바뀜 — 기록만)
+  //   - 삭제 : 항목에 마우스 → 줄 오른쪽 i.fa-trash → POST pams/unconfirmedconfig/privacy-identifier-group-detail/de (확인 창 없이 바로 삭제 — 기록만)
+  //   - 검출 반영은 웹 매니저 재기동 안내가 있어 보지 않음
+  //   이전 실행이 지우지 못한 같은 이름 키워드는 시작할 때 · 끝날 때(after) 지움
+  //   관찰 기록 : cypress/probe/D10K_관찰.json
+  // ==========================================
+  {
+    const A = require('../../support/anomaly');
+    const p2 = (n) => String(n).padStart(2, '0');
+    const d0 = new Date(Date.now() + 9 * 3600e3);
+    const YMD = `${d0.getUTCFullYear()}${p2(d0.getUTCMonth() + 1)}${p2(d0.getUTCDate())}`;
+    const NAME = `zz_auto_kw_${YMD}`;
+    const VALUE = `zzautokw${YMD}`;
+    const SYS = 'JEUS_CRM고객관리';
+    const CT = 'text/html';
+    const GROUP = `${SYS}_${CT}`;
+    const PAGE = '/logcatch/detect/privacyTypeDefinition/detectionKeywords';
+    const vis = (e) => !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
+    const tx = (e) => (e ? (e.innerText || e.textContent || '') : '').replace(/\s+/g, ' ').trim();
+    const cls = (e) => String(e.className && e.className.baseVal !== undefined ? e.className.baseVal : e.className);
+    const obs = {};
+    const note = (k, v) => { obs[k] = v; cy.writeFile('cypress/probe/D10K_관찰.json', obs, { log: false }); };
+    let AUTH = {};
+    const authFrom = (h) => { const o = {}; Object.keys(h || {}).forEach((k) => { if (!/^(host|content-length|content-type|cookie|connection|origin|referer|user-agent|accept.*|sec-.*)$/i.test(k)) o[k] = h[k]; }); return o; };
+    // 키워드 목록 API (실행 시점 AUTH)
+    const kwList = () => cy.then(() => cy.request({ method: 'POST', url: '/logcatch/pams/unconfirmed/privacy-keyword-config/search', body: {}, headers: AUTH, failOnStatusCode: false }))
+      .then((r) => {
+        const flat = [];
+        ((r.body && r.body.etcData) || []).forEach((g) => (g.detail || []).forEach((k) => flat.push({ id: k.id, name: k.name, type: k.privacy_type_cd, group: g.groupName })));
+        return { 상태: r.status, flat, mine: flat.filter((k) => k.name === NAME) };
+      });
+    const card = ($b) => {
+      const cb = $b.find('input[aria-label="확정 키워드"]')[0];
+      return cb ? Cypress.$(cb).parents().filter((i, e) => Cypress.$(e).find('button, .v-btn').filter((j, b) => vis(b) && tx(b) === '저장').length > 0).first() : Cypress.$();
+    };
+    const openPage = () => {
+      cy.visit(PAGE);
+      cy.get('.privacy-keyword-tree-root', { timeout: 30000 }).should('be.visible');
+      cy.wait(2500);
+    };
+    const leafByName = ($b) => $b.find('.privacy-keyword-tree-root .vue-treeselect__list-item').filter((i, e) => vis(e) && tx(e.querySelector('label.text-label')) === NAME).toArray();
+    const alertText = () => cy.get('body').then(($b) => {
+      const d = $b.find('.v-dialog--active').filter((i, e) => vis(e)).last();
+      const s = d.length ? tx(d[0]) : '';
+      const ok = d.find('button, .v-btn').filter((i, e) => vis(e) && /^(확인|예)$/.test(tx(e)))[0];
+      if (ok) cy.wrap(ok).click({ force: true });
+      cy.wait(800);
+      return cy.wrap(s, { log: false });
+    });
+    const pick = (label, re) => cy.get('body').then(($b) => {
+      const i = card($b).find(`input[aria-label="${label}"]`).filter((j, e) => vis(e))[0];
+      expect(i, `설정 칸 「${label}」`).to.not.eq(undefined);
+      cy.wrap(Cypress.$(i).closest('.v-select').find('.v-select__slot')[0] || i).click({ force: true });
+      cy.wait(1000);
+      cy.get('.v-menu__content').filter(':visible').last().find('.v-list__tile__title').filter((j, e) => re.test(tx(e))).first().click({ force: true });
+      cy.wait(600);
+      cy.get('body').type('{esc}', { force: true });
+      cy.wait(400);
+    });
+    // Content Type 은 여러 개 선택 · 처음에 전부 선택 → text/html 하나만 남김
+    const pickOnlyCT = () => cy.get('body').then(($b) => {
+      const i = card($b).find('input[aria-label="Content Type"]').filter((j, e) => vis(e))[0];
+      cy.wrap(Cypress.$(i).closest('.v-select').find('.v-select__slot')[0] || i).click({ force: true });
+      cy.wait(1000);
+      const fix = (left) => cy.get('body').then(($b2) => {
+        const tiles = $b2.find('.v-menu__content').filter((j, e) => vis(e)).last().find('.v-list__tile').filter((j, e) => vis(e)).toArray();
+        const st = tiles.map((tl) => ({ name: tx(tl.querySelector('.v-list__tile__title')), on: /check_box(?!_outline)/.test(tx(tl)) || tl.classList.contains('v-list__tile--active') }));
+        const wrong = tiles.find((tl, k) => st[k].name !== '전체 선택' && st[k].on !== (st[k].name === CT));
+        if (!wrong || left <= 0) return;
+        cy.wrap(wrong).click({ force: true });
+        cy.wait(500);
+        fix(left - 1);
+      });
+      fix(8);
+      cy.get('body').type('{esc}', { force: true });
+      cy.wait(500);
+    });
+    const fillAndSave = (desc) => {
+      cy.get('body').then(($b) => { const r = card($b).find('input[aria-label="업무시스템 지정"]')[0]; cy.wrap(Cypress.$(r).closest('.v-radio').find('label')[0] || r).click({ force: true }); });
+      cy.wait(1200);
+      pick('개인정보 유형', /^이메일$/);
+      pick('유형', /^일치$/);
+      pick('업무 시스템', new RegExp(`^${SYS}$`));
+      pickOnlyCT();
+      cy.get('body').then(($b) => {
+        const c = card($b).find('input[aria-label="키워드명 자동 등록"]')[0];
+        if (c && String(c.getAttribute('aria-checked')) === 'true') cy.wrap(Cypress.$(c).closest('.v-input').find('label')[0] || c).click({ force: true });
+      });
+      cy.wait(800);
+      cy.get('body').then(($b) => cy.wrap(card($b).find('input[aria-label="이름"], input[aria-label="키워드명"]').filter((i, e) => vis(e))[0]).clear({ force: true }).type(NAME, { force: true }));
+      cy.get('body').then(($b) => cy.wrap(card($b).find('input[placeholder^="항목을 입력하고"]').filter((i, e) => vis(e))[0]).click({ force: true }).type(`${VALUE}{enter}`, { force: true }));
+      cy.wait(600);
+      cy.get('body').then(($b) => cy.wrap(card($b).find('input[aria-label="설명"], textarea[aria-label="설명"]').filter((i, e) => vis(e))[0]).clear({ force: true }).type(desc, { force: true }));
+      cy.get('body').then(($b) => cy.wrap(card($b).find('button, .v-btn').filter((i, e) => vis(e) && tx(e) === '저장').first()[0]).click({ force: true }));
+      cy.wait(1500);
+      return alertText();
+    };
+    const selectLeaf = () => {
+      cy.get('body').then(($b) => { const lf = leafByName($b)[0]; expect(lf, `트리 항목 「${NAME}」`).to.not.eq(undefined); cy.wrap(lf.querySelector('label.text-label')).realClick({ scrollBehavior: false }); });
+      cy.wait(2500);
+    };
+    const cardValues = () => cy.get('body').then(($b) => {
+      const c = card($b);
+      const sel = (label) => { const i = c.find(`input[aria-label="${label}"]`)[0]; return i ? tx(Cypress.$(i).closest('.v-select').find('.v-select__selections')[0]).replace(/\s*(cancel|close|clear)\s*/g, ' ').trim() : ''; };
+      const v = {
+        개인정보유형: sel('개인정보 유형'),
+        유형: sel('유형'),
+        업무시스템지정: String((c.find('input[aria-label="업무시스템 지정"]')[0] || {}).getAttribute && c.find('input[aria-label="업무시스템 지정"]')[0].getAttribute('aria-checked')),
+        업무시스템: sel('업무 시스템'),
+        ContentType: sel('Content Type'),
+        이름: (c.find('input[aria-label="이름"], input[aria-label="키워드명"]')[0] || {}).value,
+        설명: (c.find('input[aria-label="설명"], textarea[aria-label="설명"]')[0] || {}).value,
+        확정: String((c.find('input[aria-label="확정 키워드"]')[0] || { getAttribute: () => '' }).getAttribute('aria-checked')),
+        글자: tx(c[0]),
+      };
+      return cy.wrap(v, { log: false });
+    });
+    // 이 시나리오 키워드(NAME)만 화면에서 지움 (줄에 마우스 → 맨 오른쪽 i.fa-trash)
+    //   [11-24 1차 실행] 마우스만 올렸을 때 i.fa-trash 를 못 찾음 → probe_299l 처럼 항목을 먼저 눌러(선택) 둔 뒤 마우스를 올림
+    const deleteMine = (left) => cy.get('body').then(($b) => {
+      const lf = leafByName($b)[0];
+      if (!lf || left <= 0) return;
+      cy.wrap(lf.querySelector('label.text-label')).realClick({ scrollBehavior: false });
+      cy.wait(2500);
+      cy.get('body').then(($b1) => {
+        const lf1 = leafByName($b1)[0] || lf;
+        cy.wrap(lf1.querySelector('.vue-treeselect__option') || lf1).realHover({ scrollBehavior: false });
+      });
+      cy.wait(1000);
+      cy.get('body').then(($b2) => {
+        const lf2 = leafByName($b2)[0] || lf;
+        const o = lf2.querySelector('.vue-treeselect__option') || lf2;
+        const icons = [...o.querySelectorAll('*')].filter((e) => /fa-|trash|delete|edit/i.test(cls(e)));
+        const trash = icons.filter((e) => /fa-trash/.test(cls(e))).sort((x, y) => Number(vis(y)) - Number(vis(x)))[0];
+        if (!trash) note(`삭제아이콘_못찾음_${left}`, { 아이콘: icons.map((e) => `${e.tagName}.${cls(e).slice(0, 60)} vis=${vis(e)}`), 줄: o.outerHTML.slice(0, 1500) });
+        expect(trash, `「${NAME}」 줄 삭제 아이콘(i.fa-trash)`).to.not.eq(undefined);
+        cy.wrap(trash).click({ force: true });
+      });
+      cy.wait(2500);
+      cy.get('body').then(($b3) => { const d = $b3.find('.v-dialog--active').filter((i, e) => vis(e)).last(); const ok = d.find('button, .v-btn').filter((i, e) => vis(e) && /^(확인|예|삭제)$/.test(tx(e)))[0]; if (ok) cy.wrap(ok).click({ force: true }); });
+      cy.wait(1000);
+      deleteMine(left - 1);
+    });
+
+    after(() => {
+      // 남은 테스트 키워드 정리 (이 시나리오 이름만)
+      kwList().then((l) => {
+        if (!l.mine.length) return;
+        note('9_after_정리전', l.mine);
+        openPage();
+        deleteMine(5);
+        kwList().then((l2) => note('9_after_정리뒤', l2.mine.length ? { 결과: '남음 — 직접 삭제 필요', 키워드: l2.mine } : '정리됨'));
+      });
+    });
+
+    it('[2.9.9.0] 식별 키워드 — 만들기 · 트리 · 설정 칸 · 설명 수정 · 삭제 (JEUS_CRM고객관리 · text/html)', { retries: 0 }, () => {
+      A.ignoreErrors();
+      const writes = [];
+      cy.intercept({ url: /\/logcatch\/(api|pams)\// }, (req) => {
+        if (req.headers.authorization) AUTH = authFrom(req.headers);
+        if (req.method === 'GET' || /search|list|tree|count/.test(req.url)) return;
+        req.on('after:response', (res) => writes.push({ u: req.url.replace(/^https?:\/\/[^/]+/, ''), st: res.statusCode, req: req.body, res: res.body }));
+      });
+      A.loginAdmin();
+      openPage();
+
+      // ---------- 0. 처음 · 남은 테스트 키워드 정리 ----------
+      let BASE = 0;
+      kwList().then((l) => {
+        expect(l.상태, '키워드 목록 API').to.eq(200);
+        if (l.mine.length) { note('0_남은키워드_정리', l.mine); deleteMine(5); }
+      });
+      kwList().then((l) => { BASE = l.flat.length; note('0_처음', { 전체: BASE, 묶음: [...new Set(l.flat.map((k) => k.group))] }); expect(l.mine.length, '시작 전 테스트 키워드 없음').to.eq(0); });
+      cy.get('body').then(($b) => note('0_트리위검색칸', tx($b.find('.privacy-keyword-tree-root .vue-treeselect__single-value, .privacy-keyword-tree-root .vue-treeselect__placeholder').filter((i, e) => vis(e))[0])));
+
+      // ---------- 1. 만들기 ----------
+      fillAndSave('자동화 B3 테스트 키워드 (같은 실행에서 삭제)').then((msg) => {
+        note('1_저장알림', msg);
+        expect(msg, '저장 알림').to.include('저장했습니다');
+      });
+      cy.then(() => {
+        const w = writes.find((x) => /\/privacy-keyword-config$/.test(x.u));
+        note('1_저장요청', w ? w.req : '없음');
+        expect(w, '저장 요청 POST pams/unconfirmed/privacy-keyword-config').to.not.eq(undefined);
+        expect(w.st, '저장 응답').to.eq(200);
+        const b = typeof w.req === 'string' ? JSON.parse(w.req) : w.req;
+        expect(b.name, '요청 이름').to.eq(NAME);
+        expect(b.privacyIdentifierGroupDetailTextList, '요청 키워드 값').to.deep.eq([VALUE]);
+        expect(b.groupType, '요청 대상 = 업무시스템 지정(1)').to.eq(1);
+        expect(b.isCertain, '요청 확정 아님(0)').to.eq(0);
+        expect(b.contentTypeList, '요청 Content Type 1개 (text/html)').to.have.length(1);
+      });
+      kwList().then((l) => {
+        note('1_저장뒤', l.mine);
+        expect(l.mine.length, '목록 API 에 새 키워드 1건').to.eq(1);
+        expect(l.mine[0].group, '묶음').to.eq(GROUP);
+        expect(l.flat.length, '전체 키워드 수 +1').to.eq(BASE + 1);
+      });
+
+      // ---------- 2. 트리 · 설정 칸 ----------
+      openPage();
+      cy.get('body').should(($b) => {
+        const f = $b.find('.privacy-keyword-tree-root .vue-treeselect__indent-level-1').filter((i, e) => vis(e) && tx(e.querySelector('.vue-treeselect__label')).replace(/^folder\s*/, '').startsWith(`${GROUP} (`))[0];
+        expect(f, `트리 폴더 「${GROUP} (N)」`).to.not.eq(undefined);
+        expect(leafByName($b).length, `트리 항목 「${NAME}」`).to.eq(1);
+      });
+      selectLeaf();
+      cardValues().then((v) => {
+        note('2_설정칸', v);
+        expect(v.이름, '이름').to.eq(NAME);
+        expect(v.개인정보유형, '개인정보 유형').to.include('이메일');
+        expect(v.유형, '유형').to.include('일치');
+        expect(v.업무시스템지정, '대상 업무시스템 지정').to.eq('true');
+        expect(v.업무시스템, '업무 시스템').to.include(SYS);
+        expect(v.ContentType, 'Content Type').to.eq(CT);
+        expect(v.글자, '키워드 값 칩').to.match(new RegExp(`\\(1\\)\\s*${VALUE}`));
+        expect(v.설명, '설명').to.eq('자동화 B3 테스트 키워드 (같은 실행에서 삭제)');
+        expect(v.확정, '확정 키워드 아님').to.not.eq('true');
+      });
+
+      // ---------- 3. 설명 수정 ----------
+      openPage();
+      selectLeaf();
+      let ID0 = null;
+      kwList().then((l) => { ID0 = l.mine[0] && l.mine[0].id; });
+      cy.get('body').then(($b) => cy.wrap(card($b).find('input[aria-label="설명"], textarea[aria-label="설명"]').filter((i, e) => vis(e))[0]).clear({ force: true }).type('자동화 B3 수정됨', { force: true }));
+      cy.get('body').then(($b) => cy.wrap(card($b).find('button, .v-btn').filter((i, e) => vis(e) && tx(e) === '저장').first()[0]).click({ force: true }));
+      cy.wait(1500);
+      alertText().then((msg) => { note('3_수정알림', msg); expect(msg, '수정 알림').to.include('수정했습니다'); });
+      kwList().then((l) => {
+        note('3_수정뒤', { 전: ID0, 후: l.mine });
+        expect(l.mine.length, '수정 후에도 1건').to.eq(1);
+        if (l.mine[0].id !== ID0) cy.log(`ℹ️ 수정 후 키워드 id 변경 ${ID0} → ${l.mine[0].id} (기록만)`);
+      });
+      openPage();
+      selectLeaf();
+      cardValues().then((v) => { note('3_수정뒤_설정칸', { 설명: v.설명, 이름: v.이름 }); expect(v.설명, '수정한 설명').to.eq('자동화 B3 수정됨'); expect(v.이름, '이름 그대로').to.eq(NAME); });
+
+      // ---------- 4. 삭제 ----------
+      openPage();
+      deleteMine(3);
+      cy.then(() => note('4_삭제요청', writes.filter((x) => /group-detail\/de/.test(x.u)).map((x) => ({ u: x.u, st: x.st, req: x.req }))));
+      kwList().then((l) => {
+        note('4_삭제뒤', { 전체: l.flat.length, 남음: l.mine });
+        expect(l.mine.length, '삭제 후 목록 API 에 테스트 키워드 없음').to.eq(0);
+        expect(l.flat.length, '전체 키워드 수 = 처음').to.eq(BASE);
+      });
+      openPage();
+      cy.get('body').should(($b) => expect(leafByName($b).length, `삭제 후 트리에 「${NAME}」 없음`).to.eq(0));
+      cy.log('✅ [2.9.9.0] 식별 키워드 만들기 · 수정 · 삭제 완료');
+    });
+  }
+
 });  
 
 //코드마지막

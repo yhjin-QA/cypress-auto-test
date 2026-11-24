@@ -582,6 +582,155 @@ cy.log('🎉 점검 대시보드 모든 차트 팝업 검증 완료!');
 
 
   });
+
+  // ==========================================
+  // [2.9.9.0 Depth] !1453 점검 > 이상행위 대시보드 — 접속기록 보기 카드 · 접속 내용 · 평소 사용 현황
+  //   .21 은 활성 이상행위 정책이 없어 「접속기록 모니터링 대시보드」(정책이 켜져 있으면 「접속기록」 보기로 바꿈)
+  //   1. 대시보드를 열어 둔 채 CRM user001(사원_1) dlp_tester.jsp 요청 2건 → 「사원_1 … 접속기록 N건 · 리눅스_VIP · 신규 기록」 카드가 흐름
+  //   2. 일시정지 → 카드 클릭 → 열린 창 기록 → 닫기 → 재개
+  //   3. 카드가 원판을 지나면 「접속 내용」 패널 : /crm/dlp_tester.jsp · 사원_1 · AI개발2팀 · 리눅스_VIP고객 · VIP_실시간DLP테스트 · [평소 사용 보기]
+  //   4. [평소 사용 보기] → 「사원_1 · AI개발2팀 · 평소 사용 현황」 창 (최근 90일 · 오늘 제외 · 합계 4칸 · 표 9종)
+  //   5. 판정(마지막) : 카드 클릭 창 = 그 사용자의 그날 접속기록 (릴리즈노트 !1453)
+  //      ※ Mantis 0039151 (2026-11-24) : 카드를 누르면 접속기록이 아닌 「평소 사용 현황」 창이 열림
+  //        → 사용자 결정 : 해결 전까지 이 판정은 주석(경고 로그 · D13B_0039151_관찰.json 기록만). 해결 빌드에서 주석 해제
+  //   관찰 기록 : cypress/probe/D13B_관찰.json
+  // ==========================================
+  {
+    const A = require('../../support/anomaly');
+    const vis = (e) => !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
+    const tx = (e) => (e.innerText || e.textContent || '').replace(/\s+/g, ' ').trim();
+    const uniq = (a) => [...new Set(a.filter(Boolean))];
+    const p2 = (n) => String(n).padStart(2, '0');
+    const kst = (ms) => { const d = new Date(ms + 9 * 3600e3); return `${d.getUTCFullYear()}-${p2(d.getUTCMonth() + 1)}-${p2(d.getUTCDate())} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}:${p2(d.getUTCSeconds())}`; };
+    const obs = {};
+    const note = (k, v) => { obs[k] = v; cy.writeFile('cypress/probe/D13B_관찰.json', obs, { log: false }); };
+    const ME = /사원_1(?!\d)/;
+    const dlgs = ($b) => $b.find('.v-dialog--active, [role=dialog]').filter((i, e) => vis(e));
+    const dlgInfo = ($b) => {
+      const d = dlgs($b).last()[0];
+      if (!d) return null;
+      const lines = uniq((d.innerText || '').split('\n').map((x) => x.trim()));
+      // 첫 줄이 닫기 아이콘 글자(close)라 아이콘 글자를 건너뛴 첫 줄을 제목으로 (11-24 3차 실행)
+      const title = lines.find((x) => !/^(close|fullscreen|bookmark|notifications\w*|search)$/.test(x)) || '';
+      return { 제목: title, 문구: lines.slice(0, 300), th: uniq([...d.querySelectorAll('th')].filter(vis).map(tx)), 행: [...d.querySelectorAll('tbody tr')].filter(vis).slice(0, 10).map((r) => tx(r).slice(0, 200)) };
+    };
+    const closeDlg = () => cy.get('body').then(($b) => {
+      const d = dlgs($b).last();
+      if (!d.length) return;
+      const x = d.find('button, .v-btn, i.v-icon').filter((i, e) => vis(e) && (/^(close|닫기)$/.test(tx(e)) || /닫기|close/i.test(e.getAttribute('aria-label') || '')))[0];
+      if (x) cy.wrap(x).click({ force: true }); else cy.get('body').type('{esc}', { force: true });
+      cy.wait(1200);
+    });
+    const btn = (re) => cy.get('button').filter((i, e) => vis(e) && re.test(tx(e)));
+    // 흐르는 카드 = .flow-card-name(사원_1) 을 품은 카드 (probe_299k 11-24 : B.flow-card-name · 카드 글자 「사원_1 AI개발2팀 15:23:25 접속기록 2건 · 리눅스_VIP고객 신규 기록」)
+    //   ※ 접속기록이 조회 API 에 잡히기까지 요청 후 10~50초 걸림 · 카드는 약 8초 동안 보인 뒤 원판으로 들어감
+    const findCards = ($b) => $b.find('.flow-card-name').filter((i, e) => vis(e) && ME.test(tx(e))).toArray()
+      .map((e) => { let c = e; for (let i = 0; i < 6 && c && !/접속기록\s*\d+\s*건/.test(tx(c)); i += 1) c = c.parentElement; return c; })
+      .filter((c) => c && /접속기록\s*\d+\s*건/.test(tx(c)) && tx(c).length < 200);
+    // 접속 내용 패널 = .insight (probe_299k : SPAN.insight-subject 「사원_1 · AI개발2팀」 의 상위 DIV.insight)
+    const panel = ($b) => $b.find('.insight').filter((i, e) => vis(e)).first();
+    const SEEN = [];
+
+    it('[2.9.9.0] !1453 이상행위 대시보드 — 신규 기록 카드 · 접속 내용 · 평소 사용 현황 · 카드 클릭 접속기록 (0039151)', { retries: 0 }, () => {
+      A.ignoreErrors();
+      A.loginAdmin();
+      cy.visit('/logcatch/inspection/anomalyMonitoringDashboard');
+      cy.contains(/모니터링 대시보드/, { timeout: 30000 }).should('be.visible');
+      cy.wait(3000);
+      // 정책이 켜져 「이상행위」 보기라면 「접속기록」 보기로 바꿈
+      cy.get('body').then(($b) => {
+        const title = uniq($b.find('*').filter((i, e) => vis(e) && e.children.length === 0 && /모니터링 대시보드/.test(tx(e))).toArray().map(tx));
+        note('0_제목', title);
+        const sw = $b.find('button').filter((i, e) => vis(e) && tx(e) === '접속기록')[0];
+        if (!title.includes('접속기록 모니터링 대시보드') && sw) { cy.wrap(sw).click({ force: true }); cy.wait(3000); }
+      });
+      cy.contains('실시간 접속기록').should('be.visible');
+
+      // ---------- 1. 요청 2건 → 신규 기록 카드 ----------
+      let SENT = '';
+      cy.then(() => { SENT = kst(Date.now() - 5000).slice(11, 19); });
+      [1, 2].forEach(() => cy.task('crmFetch', { userId: 'user001', path: '/crm/dlp_tester.jsp', method: 'GET', maxBody: 0 }, { timeout: 90000, log: false }));
+      const CARD = { 글자: null, 창: null };
+      const hunt = (left) => cy.get('body').then(($b) => {
+        $b.find('.flow-card-name').filter((i, e) => vis(e)).each((i, e) => { const k = tx(e); if (!SEEN.includes(k)) SEEN.push(k); });
+        const cs = findCards($b).filter((c) => /신규 기록/.test(tx(c)));
+        if (cs.length) {
+          CARD.글자 = tx(cs[0]);
+          note('1_카드', CARD.글자);
+          // 2. 일시정지 → 카드 클릭
+          btn(/일시정지$/).first().click({ force: true });
+          cy.wait(800);
+          cy.get('body').then(($b2) => {
+            const c2 = findCards($b2).find((c) => tx(c) === CARD.글자) || findCards($b2)[0];
+            if (c2) cy.wrap(c2).click({ force: true });
+          });
+          cy.wait(3000);
+          cy.get('body').then(($b3) => { CARD.창 = dlgInfo($b3); note('2_카드클릭_창', CARD.창); });
+          cy.screenshot('D13B_2_카드클릭', { capture: 'viewport', overwrite: true });
+          closeDlg();
+          cy.get('body').then(($b4) => { const r = $b4.find('button').filter((i, e) => vis(e) && /재개$/.test(tx(e)))[0]; if (r) cy.wrap(r).click({ force: true }); });
+          return;
+        }
+        if (left <= 0) { note('1_카드', { 결과: '150초 안에 사원_1 신규 기록 카드 없음', 본카드이름: SEEN }); return; }
+        cy.wait(1000, { log: false });
+        hunt(left - 1);
+      });
+      hunt(150);
+
+      // ---------- 3. 접속 내용 패널 (카드가 원판을 지난 뒤) ----------
+      const PANEL = { 글자: null };
+      const waitPanel = (left) => cy.get('body').then(($b) => {
+        const p = panel($b);
+        const s = p.length ? tx(p[0]) : '';
+        // 이번 카드의 시각(예 15:36:42)이 패널에 나올 때까지 (이전 실행의 기록이 남아 있을 수 있음 · 11-24 4차)
+        const at = ((CARD.글자 || '').match(/\d{2}:\d{2}:\d{2}/) || [''])[0];
+        if ((/dlp_tester\.jsp/.test(s) && ME.test(s) && (!at || s.includes(at))) || left <= 0) { PANEL.글자 = s; note('3_접속내용', { 카드시각: at, 패널: s }); return; }
+        cy.wait(1000, { log: false });
+        waitPanel(left - 1);
+      });
+      waitPanel(60);
+
+      // ---------- 4. 평소 사용 보기 ----------
+      const PROF = { 창: null };
+      cy.get('body').then(($b) => {
+        const b = panel($b).find('button, .v-btn, a').filter((i, e) => vis(e) && /평소 사용 보기/.test(tx(e)))[0];
+        if (b) cy.wrap(b).click({ force: true });
+      });
+      cy.wait(4000);
+      cy.get('body').then(($b) => { PROF.창 = dlgInfo($b); note('4_평소사용_창', PROF.창); });
+      cy.screenshot('D13B_4_평소사용', { capture: 'viewport', overwrite: true });
+      closeDlg();
+
+      // ---------- 판정 ----------
+      cy.then(() => {
+        expect(CARD.글자, '!1453 화면을 연 뒤 보낸 요청이 「사원_1 … 신규 기록」 카드로 흐름').to.be.a('string');
+        expect(CARD.글자, '카드 내용 (사용자 · 부서 · 건수 · 업무시스템)').to.match(/사원_1\s*AI개발2팀.*접속기록\s*\d+\s*건.*리눅스_VIP/);
+        const at = ((CARD.글자 || '').match(/\d{2}:\d{2}:\d{2}/) || [''])[0];
+        expect(PANEL.글자, `「접속 내용」 패널 = 방금 카드의 기록 (${at})`).to.include(at);
+        expect(PANEL.글자, '「접속 내용」 패널 = 방금 기록 (URI · 사용자 · 메뉴 · 접속 IP)').to.match(/\/crm\/dlp_tester\.jsp\s*사원_1\s*·\s*AI개발2팀/);
+        expect(PANEL.글자, '「접속 내용」 패널 업무시스템 · 메뉴').to.include('리눅스_VIP고객 · VIP_실시간DLP테스트');
+        expect(PANEL.글자, '「접속 내용」 패널 접속 IP · 평소 사용 보기').to.match(/접속 IP\s*10\.10\.0\.72.*평소 사용 보기/);
+        expect(PROF.창, '[평소 사용 보기] 창 열림').to.not.eq(null);
+        expect(PROF.창.제목, '[평소 사용 보기] 창 제목').to.match(/사원_1\s*·\s*AI개발2팀\s*·\s*평소 사용 현황/);
+        const all = PROF.창.문구.join(' ');
+        expect(all, '평소 사용 현황 기간 안내').to.include('최근 90일 동안의 합계입니다. 오늘은 빼고 셉니다.');
+        ['사용자 계정 합계', '접속 기록', '개인정보 건수', '정보주체 수', '파일 다운로드', '시간대', '접속 요일', '사용자 IP', '등록된 메뉴', '정규화 URI', '업무시스템', '개인정보 유형', '행위 유형']
+          .forEach((s) => expect(all, `평소 사용 현황 「${s}」`).to.include(s));
+        // 마지막 : 카드 클릭 → 그날 접속기록
+        //   [2026-11-24 사용자 결정] Mantis 0039151 이 고쳐질 때까지 판정은 주석 처리(전체 실행 빨간불 방지) — 열린 창 제목만 기록 · 경고 로그
+        //   0039151 해결 빌드에서 아래 /* … */ 주석을 풀어 판정
+        expect(CARD.창, '카드 클릭 후 창 열림').to.not.eq(null);
+        cy.writeFile('cypress/probe/D13B_0039151_관찰.json', { 시각: new Date().toISOString(), 카드: CARD.글자, 카드클릭창제목: CARD.창.제목, 재현: /평소 사용 현황/.test(CARD.창.제목) }, { log: false });
+        if (/평소 사용 현황/.test(CARD.창.제목)) cy.log(`⚠️ Mantis 0039151 재현 — 카드 클릭 창 「${CARD.창.제목}」 (기대: 그날 접속기록)`);
+        /* [0039151 해결 후 주석 해제]
+        expect(CARD.창.제목, '!1453 카드 클릭 창 — 「평소 사용 현황」이 아닌 그 사용자의 그날 접속기록이어야 함 (Mantis 0039151)').to.not.match(/평소 사용 현황/);
+        const today = kst(Date.now()).slice(0, 10);
+        expect(CARD.창.문구.join(' ') + CARD.창.행.join(' '), `카드 클릭 창에 오늘(${today}) 사원_1 dlp_tester 접속기록`).to.match(new RegExp(`${today}[\\s\\S]*dlp_tester|dlp_tester[\\s\\S]*${today}`));
+        */
+      });
+      cy.log(`요청 기준 시각 ${SENT}`);
+    });
+  }
 });  
 
 //코드마지막
