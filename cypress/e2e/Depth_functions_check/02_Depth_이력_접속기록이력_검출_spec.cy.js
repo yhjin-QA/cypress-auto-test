@@ -469,6 +469,127 @@ cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
     cy.get('body').click('center', { force: true });
 
   });
+
+  // ==========================================
+  // [2.9.9.0 Depth] !1480 사업자등록번호 검출 — HTTP 본문 경로 (.27 CRM) (B4)
+  //   !1480 은 SQL 컬럼 값 경로의 사업자등록번호 체크섬을 표준 검증식으로 고친 건. .27 기록은 SQL 수집이 없어 HTTP 본문 경로로 확인 (11-24 사용자 결정)
+  //   .27 user001(사원_1) dlp_tester.jsp 메시지 3건 (3초 간격 · 다른 개인정보 없이 번호만) → 이력 > 접속기록 이력 > 통합 (리눅스_VIP고객 · 오늘) 각 행 처리창 오탐/확정 표
+  //     A 124-81-00998 (올바른 번호 · 릴리즈노트 예시) → 「사업자등록번호 124-81-00998」 검출 (판정)
+  //     B 124-81-00999 (체크섬 틀림) → 기록만 (probe_299o 11-24 : 검출됨 — HTTP 본문 경로가 체크섬을 보는지 개발팀 문의 중)
+  //     C 1248100998   (A 와 같은 번호 · 하이픈 없음) → 「사업자등록번호 124-81-00998」 검출 (판정)
+  //   같은 숫자 일부가 「군번」으로도 표에 나옴 (81-00998 등) — 기록만
+  //   처리창은 열고 닫기만 (오탐/확정 · 저장 누르지 않음) · 관찰 기록 : cypress/probe/D02B_관찰.json
+  // ==========================================
+  {
+    const A = require('../../support/anomaly');
+    const tx = (e) => (e ? (e.innerText || e.textContent || '') : '').replace(/\s+/g, ' ').trim();
+    const vis = (e) => !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
+    const p2 = (n) => String(n).padStart(2, '0');
+    const kst = (ms) => { const d = new Date(ms + 9 * 3600e3); return `${d.getUTCFullYear()}-${p2(d.getUTCMonth() + 1)}-${p2(d.getUTCDate())} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}:${p2(d.getUTCSeconds())}`; };
+    const obs = {};
+    const note = (k, v) => { obs[k] = v; cy.writeFile('cypress/probe/D02B_관찰.json', obs, { log: false }); };
+    const MSGS = [
+      { 키: 'A', 값: '124-81-00998', 설명: '올바른 번호' },
+      { 키: 'B', 값: '124-81-00999', 설명: '체크섬 틀림' },
+      { 키: 'C', 값: '1248100998', 설명: '올바른 번호 · 하이픈 없음' },
+    ];
+
+    it('[2.9.9.0] !1480 사업자등록번호 검출 — 올바른 번호 · 하이픈 없는 번호 · 체크섬 틀린 번호 (.27 HTTP 본문)', { retries: 0 }, () => {
+      A.ignoreErrors();
+      const apiRows = {};
+      cy.intercept('GET', /\/api\/v1\/access-log\?/, (req) => {
+        req.on('after:response', (res) => ((res.body && res.body.resultObject) || []).forEach((x) => { apiRows[x.accessDate] = { 유형: x.privacyTypes, 건수: x.privacyTotalCount }; }));
+      });
+
+      // ---------- 1. 메시지 3건 ----------
+      const START = { at: '' };
+      cy.then(() => { START.at = kst(Date.now() - 5000); });
+      const sent = [];
+      MSGS.forEach((m) => {
+        cy.task('crmFetch', {
+          userId: 'user001', path: '/crm/dlp_tester.jsp', method: 'POST', maxBody: 0,
+          headers: { Referer: 'http://10.10.54.27/crm/dlp_tester.jsp' },
+          form: { action: 'send', chatMsg: `[자동화 사업자번호 ${m.키}] 거래처 사업자번호 ${m.값} 확인 부탁드립니다` },
+        }, { timeout: 90000, log: false }).then((r) => {
+          sent.push({ 키: m.키, 값: m.값, 보낸시각: kst(Date.now()), 상태: r.status, 오류: r.error });
+          note('1_보냄', sent);
+          expect(r.status, `dlp_tester.jsp 전송 응답 (${m.키})`).to.eq(200);
+        });
+        cy.wait(3000, { log: false });
+      });
+
+      // ---------- 2. 통합 검색 (3건이 올라올 때까지) ----------
+      A.loginAdmin();
+      cy.visit('/logcatch/record/accessLog/comprehensiveLog');
+      cy.get('input[aria-label="업무시스템"]', { timeout: 30000 }).filter(':visible').should('exist');
+      cy.wait(2500);
+      cy.get('input[aria-label="업무시스템"]').filter(':visible').closest('.v-input').find('.v-input__slot').click({ force: true });
+      cy.wait(1000);
+      cy.get('.v-list__tile__title').contains('리눅스_VIP고객').scrollIntoView().closest('.v-list__tile').click({ force: true });
+      cy.get('body').type('{esc}');
+      const fresh = ($b) => $b.find('tbody tr').filter((i, e) => vis(e) && !e.closest('.v-dialog')).toArray()
+        .filter((r) => { const at = (tx(r).match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/) || [''])[0]; return at >= START.at && /VIP_실시간DLP테스트/.test(tx(r)); });
+      const search = (left) => {
+        cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+        cy.wait(3000);
+        cy.get('body').then(($b) => {
+          const n = fresh($b).length;
+          note('2_새행수', { 남은: left, 새행: n });
+          if (n >= 3) return;
+          expect(left, `통합 목록에 방금 보낸 3건 (${START.at} 이후 · 지금 ${n}건)`).to.be.greaterThan(0);
+          cy.wait(15000, { log: false });
+          search(left - 1);
+        });
+      };
+      search(6);
+
+      // ---------- 3. 각 행 처리창 (오래된 것부터 = A · B · C) ----------
+      const R = {};
+      [2, 1, 0].forEach((idx, k) => {
+        const key = MSGS[k].키;
+        cy.get('body').then(($b) => {
+          const r = fresh($b)[idx];
+          R[key] = { 행: tx(r).slice(0, 200) };
+          cy.wrap(r.querySelector('i.g.g-IConfig') || r).click({ force: true });
+          cy.wait(4500);
+          cy.get('body').then(($b2) => {
+            const d = $b2.find('.v-dialog--active').filter((i, e) => vis(e)).last();
+            const w = d.find('.v-window-item').filter((i, e) => vis(e)).first();
+            R[key].접속일시 = (tx(d[0]).match(/접속 일시\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/) || [])[1] || '';
+            R[key].검출표 = w.find('tbody tr').filter((i, e) => vis(e)).toArray().map((x) => tx(x).slice(0, 200)).slice(0, 10);
+            R[key].목록API = apiRows[R[key].접속일시] || null;
+            note('3_처리창', R);
+          });
+          cy.get('body').then(($b3) => {
+            const d = $b3.find('.v-dialog--active').filter((i, e) => vis(e)).last();
+            const x = d.find('button, .v-btn').filter((i, e) => vis(e) && tx(e) === '닫기')[0] || d.find('i.v-icon').filter((i, e) => vis(e) && tx(e) === 'close')[0];
+            if (x) cy.wrap(x).click({ force: true }); else cy.get('body').type('{esc}', { force: true });
+            cy.wait(1500);
+          });
+        });
+      });
+
+      // ---------- 판정 ----------
+      cy.then(() => {
+        const bizRow = (key) => (R[key].검출표 || []).find((t) => /^사업자등록번호\s/.test(t)) || '';
+        note('4_정리', {
+          A: bizRow('A') || '사업자등록번호 없음',
+          B: bizRow('B') || '사업자등록번호 없음',
+          C: bizRow('C') || '사업자등록번호 없음',
+          군번: MSGS.map((m) => (R[m.키].검출표 || []).filter((t) => /^군번\s/.test(t))),
+        });
+        // 접속 일시 순서 = 보낸 순서 (A < B < C)
+        expect(R.A.접속일시 < R.B.접속일시 && R.B.접속일시 < R.C.접속일시, `처리창 접속 일시 순서 A ${R.A.접속일시} · B ${R.B.접속일시} · C ${R.C.접속일시}`).to.eq(true);
+        expect(bizRow('A'), '!1480 올바른 사업자등록번호 124-81-00998 검출').to.match(/^사업자등록번호\s.*124-81-00998/);
+        expect(bizRow('C'), '!1480 하이픈 없는 올바른 번호 1248100998 → 사업자등록번호 124-81-00998 검출').to.match(/^사업자등록번호\s.*124-81-00998/);
+        // B (체크섬 틀림) — 기록만 · HTTP 본문 경로가 체크섬을 보는지 개발팀 문의 중 (답 받으면 판정 추가)
+        if (bizRow('B')) cy.log(`ℹ️ 체크섬 틀린 124-81-00999 도 사업자등록번호로 검출됨 (기록만) — ${bizRow('B')}`);
+        else cy.log('ℹ️ 체크섬 틀린 124-81-00999 는 검출 안 됨 (기록만)');
+      });
+      cy.log('✅ [2.9.9.0] !1480 사업자등록번호 검출 확인 완료');
+    });
+  }
+
 });  
 
 //코드마지막
