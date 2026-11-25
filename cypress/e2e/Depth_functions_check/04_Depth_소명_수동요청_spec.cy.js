@@ -35,9 +35,16 @@ const go = () => {
 };
 const group = () => cy.get('.incident-header').filter((i, e) => shown(e) && t(e).includes(`(${USER_ID})`));
 const dialog = () => cy.get('.v-dialog--active').filter(':visible').last();
-const mailIds = (alias) => cy.request({ url: `${MAILPIT}/messages?limit=200`, failOnStatusCode: false })
+// [2026-11-25] Mailpit 조회는 cy.task('mailpitGet') — 접속이 순간 끊겨도 5초 간격 최대 4번 다시 시도 (11-24 GitHub 실행 ETIMEDOUT 대응)
+//   4번 모두 실패하면 「Mailpit 접속 실패」로 분명히 실패 (메일 확인 없이 통과시키지 않음)
+const mailGet = (path) => cy.task('mailpitGet', { path }, { timeout: 120000, log: false }).then((r) => {
+  if (!r.ok) throw new Error(`Mailpit(10.10.54.26:8025${path}) 접속 실패 — ${r.시도}번 시도 · ${r.error || r.status}`);
+  if (r.시도 > 1) return cy.log(`📧 Mailpit ${r.시도}번째 시도에서 응답`).then(() => r);
+  return r;
+});
+const mailIds = (alias) => mailGet('/messages?limit=200')
   .then((res) => cy.wrap(((res.body && res.body.messages) || []).map((m) => m.ID)).as(alias));
-const newMails = (alias) => cy.get(`@${alias}`).then((before) => cy.request({ url: `${MAILPIT}/messages?limit=200`, failOnStatusCode: false })
+const newMails = (alias) => cy.get(`@${alias}`).then((before) => mailGet('/messages?limit=200')
   .then((res) => ((res.body && res.body.messages) || []).filter((m) => !before.includes(m.ID) && /소명/.test(m.Subject || ''))));
 
 describe('04_Depth_소명_수동요청', () => {
@@ -121,7 +128,7 @@ describe('04_Depth_소명_수동요청', () => {
         const m = fresh[0];
         expect(m.Subject, '제목').to.include('소명을 요청드립니다');
         expect((m.To || []).map((x) => x.Address), '받는 사람').to.include(`${USER_ID}@logcatch.com`);
-        cy.request({ url: `${MAILPIT}/message/${m.ID}`, failOnStatusCode: false }).then((r) => {
+        mailGet(`/message/${m.ID}`).then((r) => {
           const body = String((r.body && (r.body.Text || r.body.HTML)) || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
           const files = ((r.body && r.body.Attachments) || []).map((a) => a.FileName);
           const sev = ['심각', '경계', '주의'].map((k) => parseInt((body.match(new RegExp(`\\[\\s*${k}\\s*\\]\\s*[:：∶]?\\s*(\\d+)\\s*건`)) || [])[1] || '0', 10));

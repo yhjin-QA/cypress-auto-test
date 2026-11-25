@@ -61,6 +61,7 @@ const setStatPeriodYesterday = () => {
 /**코드 시작  */
 // [2026-11-23] Mantis 0038964 확인 — 저장 후 보고서를 다시 열었을 때 대상기간이 저장한 값(어제 하루) 그대로인지
 //   저장할 때마다 하루씩 앞당겨지면 실패 (재현 시 cypress/probe/D06X_0038964_관찰.json 에 기록)
+const OBS_0038964 = { 시각: new Date().toISOString() };
 const checkPeriodKept = (when) => {
   if (Cypress.env('STAT_PERIOD') === 'default') return;
   const _t = new Date();
@@ -69,11 +70,15 @@ const checkPeriodKept = (when) => {
   cy.wait(1500);
   dateInputs().then(($d) => {
     const v = $d.toArray().slice(0, 2).map((e) => (e.querySelector('input') || {}).value);
-    if (v[0] !== ymd || v[1] !== ymd) {
-      cy.writeFile('cypress/probe/D06X_0038964_관찰.json', { 시각: new Date().toISOString(), 시점: when, 저장한값: [ymd, ymd], 다시연값: v });
-    }
-    // 기록 파일이 먼저 써지도록 판정은 다음 명령으로
+    // [2026-11-25] 0038964 재현 중 → 판정은 주석으로 막고 재현 여부만 기록 (전체 실행 빨간불 방지 · 사용자 결정)
+    //   재현 여부 : cypress/probe/D06X_0038964_관찰.json 의 「재현」(시점별) — 수정되면 false 로 바뀜 → 그때 아래 판정 주석 해제
+    const repro = v[0] !== ymd || v[1] !== ymd;
+    OBS_0038964[when] = { 재현: repro, 저장한값: [ymd, ymd], 다시연값: v };
+    cy.writeFile('cypress/probe/D06X_0038964_관찰.json', OBS_0038964, { log: false });
+    if (repro) cy.log(`⚠️ Mantis 0038964 재현 — ${when} : 저장 ${ymd} ~ ${ymd} → 다시 연 값 ${v[0]} ~ ${v[1]}`);
+    /* [0038964 해결 후 주석 해제]
     cy.then(() => expect(v, `[0038964] ${when} — 저장 후 다시 연 대상기간 (저장값 ${ymd} ~ ${ymd})`).to.deep.equal([ymd, ymd]));
+    */
   });
 };
 

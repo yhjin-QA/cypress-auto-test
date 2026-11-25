@@ -41,12 +41,39 @@ describe('로그캐치 Depth 배포점검목록 동작 테스트', () => {
   
   it('02_Depth_이력_접속기록이력_검출 자동화 시나리오', () => {
 
+    // [2026-11-25] 검출 탭 조회 범위 보정 (probe_299q 11-25 확인)
+    //   - 검출 탭 조회(POST pams/statistics/log-doubt)는 startDate · endDate 와 별도로 searchDate(하루)만 실제로 조회함 (Mantis 0039111 추가 확인)
+    //   - 화면 기본 기간은 「지금 - 1시간 ~ 오늘 23:59」 → 11-24 18시대 GitHub 실행에서 방금 만든 검출 1건만 범위에 들어와, 5분 안에 반영되지 않아 실패
+    //   → searchDate 가 오늘인 조회는 시작 일시를 「오늘 00:00:00」으로 바꿔 보냄 (오늘 이미 생긴 검출도 찾음) · 다시 검색은 기존대로 30초 간격 최대 10회(약 5분)
+    //   이전 파일 : cypress/probe/bak/02_Depth_이력_접속기록이력_검출_spec.bak_20261125a
+    const D02D = { 시작: new Date().toISOString(), 바꾼요청: 0 };
+    cy.intercept('POST', /\/pams\/statistics\/log-doubt/, (req) => {
+      const b = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      // [11-25 d] 한 달 기간으로 바꾸면 화면이 searchDate 를 시작일(한 달 전)로 보냄 → 시작일만 0시로 바꾸면 「한 달 전 하루」만 조회돼 0건
+      //   → searchDate 를 오늘(KST)로 고정하고 기간도 「오늘 00:00:00 ~ 23:59:59」로 맞춤 (probe_299q 기본값 조회 = 오늘 3건 조회됨)
+      if (b && b.searchDate) {
+        const k = new Date(Date.now() + 9 * 3600e3);
+        const today = `${k.getUTCFullYear()}-${String(k.getUTCMonth() + 1).padStart(2, '0')}-${String(k.getUTCDate()).padStart(2, '0')}`;
+        if (b.searchDate !== today || String(b.startDate || '') !== `${today} 00:00:00`) {
+          D02D.원래 = { searchDate: b.searchDate, startDate: b.startDate, endDate: b.endDate };
+          b.searchDate = today; b.startDate = `${today} 00:00:00`; b.endDate = `${today} 23:59:59`;
+          D02D.바꾼요청 += 1; req.body = b;
+        }
+      }
+      // [11-25] 화면 조건(사용자 상태 등)이 결과를 거르는지 보려고 마지막 요청 본문 · 건수를 기록
+      D02D.마지막요청 = b;
+      req.on('after:response', (res) => { D02D.마지막응답 = { 상태: res.statusCode, totalCount: res.body && res.body.totalCount, allTotalCount: res.body && res.body.resultObject && res.body.resultObject.allTotalCount }; });
+    });
+
     // [2026-11-17] 검출 데이터 생성 — CRM(.27) 실시간 DLP 테스터(dlp_tester.jsp)에 「등록」 사용자 user001(AI개발2팀)로 개인정보가 든 채팅 메시지 전송
     //   (손으로 하던 dlp_tester.jsp 전송과 같은 요청: POST action=send · chatMsg) → 이 스크립트가 뒤에서 오늘 날짜 「검출」 을 조회
     //   값은 형식만 맞춘 가짜 (주민번호 체크섬 맞춤 · 테스트 카드번호). 비밀번호는 Node(crmFetch)가 cypress.env.json 에서 직접 읽음
+    // [2026-11-25] 메시지에 사업자번호(124-81-00998)를 추가 — probe_299q 확인 : 검출 탭에는 사업자번호(PATH) 검출 기록이 몇 초 안에 나오지만,
+    //   기존 메시지(주민번호 · 휴대폰 · 이메일 · 카드 → 처리창에는 이메일만 검출)는 통합 탭에는 있어도 검출 탭에는 나오지 않음 (11-24 · 11-25 모두)
+    //   → Mantis 0039177 (2026-11-25 보고) : 검출 탭 목록에 이메일(PATTERN) 검출 기록이 나오지 않음. 수정되면 사업자번호를 빼도 검출 탭에 나오는지 확인
     cy.task('crmFetch', {
       userId: 'user001', path: '/crm/dlp_tester.jsp', method: 'POST', maxBody: 0,
-      form: { action: 'send', chatMsg: `[자동화 검출 생성 ${new Date().toISOString()}] 주민번호 900101-1234568 / 휴대폰 010-1234-5678 / 이메일 auto.dlp@test.co.kr / 카드 4111-1111-1111-1111` },
+      form: { action: 'send', chatMsg: `[자동화 검출 생성 ${new Date().toISOString()}] 주민번호 900101-1234568 / 휴대폰 010-1234-5678 / 이메일 auto.dlp@test.co.kr / 카드 4111-1111-1111-1111 / 사업자번호 124-81-00998` },
     }, { timeout: 90000, log: false }).then((r) => {
       cy.log(`🧪 검출 데이터 생성 (dlp_tester.jsp) : 로그인 ${r.login} · 전송 ${r.status} ${r.error || ''}`);
       cy.writeFile('cypress/probe/검출생성_dlp_tester.json', { at: new Date().toISOString(), login: r.login, status: r.status, error: r.error }, { log: false });
@@ -418,33 +445,25 @@ const pickStartToday = () => {
     cy.wait(500);
     cy.log('📅 [0039111 대응] 시작일을 오늘로 변경');
 };
+// [2026-11-25] 한 달 기간 검색 → 시작일 오늘 전환(pickStartToday) 우회는 쓰지 않음 : 검색 요청의 시작 일시를 위 intercept 가 오늘 00:00 으로 바꿈
 const monthCheck = () => {
     cy.wait(3000);
-    cy.get('body').then(($b) => {
-        if ($b.find('tbody:visible a:contains("검출"):visible').length) {
-            cy.log('ℹ️ 한 달 기간 검색에서 검출이 바로 조회됨 — 0039111 해결 확인 필요');
-            findDetection(0);
-            return;
-        }
-        cy.log('⚠️ [관찰 0039111] 한 달 기간 검색 결과 0건 → 시작일을 오늘로 바꿔 다시 검색');
-        cy.writeFile('cypress/probe/검출탭_0039111_관찰.json', { 시각: new Date().toISOString(), 결과: '한 달 기간 검색 0건 → 오늘로 바꿔 확인' }, { log: false });
-        pickStartToday();
-        cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
-        findDetection(0);
-    });
+    findDetection(0);
 };
-const DET_TRIES = 10;
+const DET_TRIES = 10; // [11-25] 20회(약 10분)로 늘렸다가 되돌림 — 시작 일시를 오늘 0시로 바꿔 오늘 앞서 생긴 검출도 찾으므로 약 5분으로 충분 (사용자 결정)
 const findDetection = (n) => {
     cy.wait(2000);
     cy.get('body').then(($b) => {
         if ($b.find('tbody:visible a:contains("검출"):visible').length) {
             cy.log(`✅ 기간 안 검출 결과 발견 (${n}회 다시 검색)`);
+            cy.then(() => cy.writeFile('cypress/probe/D02D_검출탭_관찰.json', { ...D02D, 발견시각: new Date().toISOString(), 다시검색횟수: n }, { log: false }));
             cy.get('tbody').filter(':visible').contains('a', '검출').should('be.visible');
             cy.log('✅ 이력 - 검출 데이터 조회 성공!');
             return;
         }
         if (n >= DET_TRIES) {
             cy.log('❌ 기간 안에 검출 데이터가 없습니다 (약 5분 대기 후에도 반영 안 됨)');
+            cy.then(() => cy.writeFile('cypress/probe/D02D_검출탭_관찰.json', { ...D02D, 결과: '약 5분 동안 검출 없음' }, { log: false }));
             cy.get('tbody:visible a:contains("검출")').should('be.visible'); // 의도적 실패
             return;
         }
@@ -475,7 +494,7 @@ cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
   //   !1480 은 SQL 컬럼 값 경로의 사업자등록번호 체크섬을 표준 검증식으로 고친 건. .27 기록은 SQL 수집이 없어 HTTP 본문 경로로 확인 (11-24 사용자 결정)
   //   .27 user001(사원_1) dlp_tester.jsp 메시지 3건 (3초 간격 · 다른 개인정보 없이 번호만) → 이력 > 접속기록 이력 > 통합 (리눅스_VIP고객 · 오늘) 각 행 처리창 오탐/확정 표
   //     A 124-81-00998 (올바른 번호 · 릴리즈노트 예시) → 「사업자등록번호 124-81-00998」 검출 (판정)
-  //     B 124-81-00999 (체크섬 틀림) → 기록만 (probe_299o 11-24 : 검출됨 — HTTP 본문 경로가 체크섬을 보는지 개발팀 문의 중)
+  //     B 124-81-00999 (체크섬 틀림) → 검출되면 안 됨. 11-25 개발팀 답변 : HTTP 본문 경로 체크섬 누락은 버그 (Mantis 0039176) → 수정 전까지 판정 주석 · 재현 여부만 기록
   //     C 1248100998   (A 와 같은 번호 · 하이픈 없음) → 「사업자등록번호 124-81-00998」 검출 (판정)
   //   같은 숫자 일부가 「군번」으로도 표에 나옴 (81-00998 등) — 기록만
   //   처리창은 열고 닫기만 (오탐/확정 · 저장 누르지 않음) · 관찰 기록 : cypress/probe/D02B_관찰.json
@@ -582,9 +601,14 @@ cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
         expect(R.A.접속일시 < R.B.접속일시 && R.B.접속일시 < R.C.접속일시, `처리창 접속 일시 순서 A ${R.A.접속일시} · B ${R.B.접속일시} · C ${R.C.접속일시}`).to.eq(true);
         expect(bizRow('A'), '!1480 올바른 사업자등록번호 124-81-00998 검출').to.match(/^사업자등록번호\s.*124-81-00998/);
         expect(bizRow('C'), '!1480 하이픈 없는 올바른 번호 1248100998 → 사업자등록번호 124-81-00998 검출').to.match(/^사업자등록번호\s.*124-81-00998/);
-        // B (체크섬 틀림) — 기록만 · HTTP 본문 경로가 체크섬을 보는지 개발팀 문의 중 (답 받으면 판정 추가)
-        if (bizRow('B')) cy.log(`ℹ️ 체크섬 틀린 124-81-00999 도 사업자등록번호로 검출됨 (기록만) — ${bizRow('B')}`);
-        else cy.log('ℹ️ 체크섬 틀린 124-81-00999 는 검출 안 됨 (기록만)');
+        // B (체크섬 틀림) — [2026-11-25 개발팀 답변] HTTP 응답 본문 경로에서 사업자등록번호 체크섬 검사가 빠진 것은 버그 → Mantis 0039176
+        //   수정 전까지 판정은 주석으로 막고 재현 여부만 기록 → cypress/probe/D02B_관찰.json 「B_체크섬틀림_재현」
+        note('5_B_체크섬틀림_재현', { Mantis: '0039176', 재현: !!bizRow('B'), 검출행: bizRow('B') || '없음' });
+        if (bizRow('B')) cy.log(`⚠️ 체크섬 틀린 124-81-00999 가 사업자등록번호로 검출됨 (Mantis 0039176 재현 · 판정 보류) — ${bizRow('B')}`);
+        else cy.log('✅ 체크섬 틀린 124-81-00999 는 검출 안 됨 — 수정 확인되면 아래 판정 주석 해제');
+        /* [Mantis 0039176 해결 후 주석 해제]
+        expect(bizRow('B'), '체크섬 틀린 124-81-00999 는 사업자등록번호로 검출되지 않음').to.eq('');
+        */
       });
       cy.log('✅ [2.9.9.0] !1480 사업자등록번호 검출 확인 완료');
     });

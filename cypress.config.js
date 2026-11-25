@@ -359,6 +359,39 @@ module.exports = defineConfig({
                   })();
                 },
                 // ==========================================
+                // [2026-11-25] Mailpit(.26:8025) 조회 — 순간 접속 끊김(ETIMEDOUT 등)에 대비해 최대 tries 번 다시 시도
+                //   (11-24 GitHub 실행 : 04_소명_수동요청에서 cy.request 가 ETIMEDOUT 으로 바로 실패 — 같은 실행의 뒤 spec 은 정상 접속)
+                //   인자 : { path('/messages?limit=200' 처럼 /api/v1 뒤 경로), tries=4, timeout=15000(ms), gap=5000(ms) }
+                //   반환 : { ok, status, body(JSON), error, 시도 }
+                // ==========================================
+                mailpitGet({ path, tries = 4, timeout = 15000, gap = 5000 }) {
+                  const http = require('http');
+                  const once = () => new Promise((resolve) => {
+                    const r = http.get({ host: '10.10.54.26', port: 8025, path: `/api/v1${path}`, timeout }, (res) => {
+                      const chunks = [];
+                      res.on('data', (d) => chunks.push(d));
+                      res.on('end', () => {
+                        const text = Buffer.concat(chunks).toString('utf8');
+                        let body = null;
+                        try { body = JSON.parse(text); } catch (e) { body = null; }
+                        resolve({ ok: res.statusCode === 200 && body !== null, status: res.statusCode, body, error: body === null ? 'JSON 아님' : null });
+                      });
+                    });
+                    r.on('timeout', () => r.destroy(new Error(`응답 없음 (${timeout}ms)`)));
+                    r.on('error', (e) => resolve({ ok: false, status: null, body: null, error: `${e.code || ''} ${e.message}`.trim() }));
+                  });
+                  return (async () => {
+                    let last = null;
+                    for (let i = 1; i <= tries; i += 1) {
+                      last = await once();
+                      last.시도 = i;
+                      if (last.ok) return last;
+                      if (i < tries) await new Promise((r) => setTimeout(r, gap));
+                    }
+                    return last;
+                  })();
+                },
+                // ==========================================
                 // [2026-11-17] CRM(.27) 페이지 요청 — 로그인(선택) 후 path 를 GET/POST 하고 상태 · 본문 일부를 돌려줌
                 //   검출 데이터 생성(dlp_tester.jsp) 확인 · 자동화용. 비밀번호는 config.env.CRM27_PW 에서 직접 읽음 (로그 · 반환값에 넣지 않음)
                 //   인자 : { userId(없으면 로그인 안 함), path, method='GET', form(객체, POST 본문), maxBody=200000, headers(추가 요청 헤더 — 2026-11-19 복합 메뉴 키 확인용) }

@@ -709,7 +709,7 @@ cy.log('🎉 점검 대시보드 모든 차트 팝업 검증 완료!');
         expect(PANEL.글자, `「접속 내용」 패널 = 방금 카드의 기록 (${at})`).to.include(at);
         expect(PANEL.글자, '「접속 내용」 패널 = 방금 기록 (URI · 사용자 · 메뉴 · 접속 IP)').to.match(/\/crm\/dlp_tester\.jsp\s*사원_1\s*·\s*AI개발2팀/);
         expect(PANEL.글자, '「접속 내용」 패널 업무시스템 · 메뉴').to.include('리눅스_VIP고객 · VIP_실시간DLP테스트');
-        expect(PANEL.글자, '「접속 내용」 패널 접속 IP · 평소 사용 보기').to.match(/접속 IP\s*10\.10\.0\.72.*평소 사용 보기/);
+        expect(PANEL.글자, '「접속 내용」 패널 접속 IP · 평소 사용 보기').to.match(/접속 IP\s*\d{1,3}(\.\d{1,3}){3}.*평소 사용 보기/); // [11-25] 접속 IP = 실행 PC 주소 (작업 PC 10.10.0.72 · GitHub 러너 10.10.54.5) → 형식만 확인
         expect(PROF.창, '[평소 사용 보기] 창 열림').to.not.eq(null);
         expect(PROF.창.제목, '[평소 사용 보기] 창 제목').to.match(/사원_1\s*·\s*AI개발2팀\s*·\s*평소 사용 현황/);
         const all = PROF.창.문구.join(' ');
