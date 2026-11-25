@@ -472,6 +472,44 @@ describe('로그캐치 사이트 테스트', () => {
 
      cy.log('✅ 관리 - 정보사용자/그룹 관리 - [관리]탭 출력 확인 완료 ');
 
+    // ------------------------------------------------------------------
+    // [2.9.8.0 !1310] 「조건」(사용자 상태) 검색 — 상태값을 사용자 기준으로 조회 (Mantis 0037171 회귀 · 조회만)
+    //   상태별로 검색해 화면 하단 전체 건수 = 응답 totalCount 인지, 결과가 오는지 확인
+    // ------------------------------------------------------------------
+    const ST_1310 = ['사용자', '퇴직자', '퇴직 예정자', '휴가자', '기타 휴직 상태'];
+    const tx1310 = (e) => (e ? (e.innerText || '') : '').replace(/\s+/g, ' ').trim();
+    const byStatus1310 = (page, apiRe, obsKey, check) => {
+      const got = {};
+      cy.intercept(apiRe, (req) => { req.on('after:response', (res) => { got.last = { url: req.url, body: req.body, total: res.body && res.body.totalCount, list: (res.body && res.body.resultObject) || [] }; }); });
+      ST_1310.forEach((st, k) => {
+        cy.get('input[aria-label="조건"]').filter(':visible').first().click({ force: true });
+        cy.wait(700);
+        cy.get('.v-menu__content:visible').last().find('.v-list__tile__title').filter((i, e) => tx1310(e) === st).first().click({ force: true });
+        cy.wait(700);
+        cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+        cy.wait(3000);
+        cy.get('body').then(($b) => {
+          const r = got.last || {};
+          const q = JSON.stringify(r.body || '') + (r.url || '');
+          const foot = tx1310($b.find('.v-datatable__actions__pagination').filter(':visible')[0]);
+          const shown = $b.find('table tbody tr').filter((i, e) => Cypress.$(e).is(':visible') && !e.closest('.v-dialog')).length;
+          const ids = r.list.map((x) => x.userLoginId || x.userAccountStr || x.userId);
+          got[st] = { 요청상태: (q.match(/searchStatus\D{0,3}(\d)/) || [])[1], totalCount: r.total, 응답행: r.list.length, 고유계정: new Set(ids).size, 화면행: shown, 하단: foot };
+          cy.writeFile(`cypress/probe/${obsKey}.json`, got, { log: false });
+          expect(Number(got[st].요청상태), `${page} 「${st}」 검색 요청 searchStatus`).to.eq(k + 1);
+          expect(foot.replace(/,/g, ''), `${page} 「${st}」 하단 전체 건수 = 응답 totalCount(${r.total})`).to.match(new RegExp(`of ${r.total}\\s*$`));
+          check(st, got[st]);
+        });
+      });
+    };
+    // 정보 사용자 / 그룹 관리 : 상태별 결과가 화면에 그대로 (probe_298b : 사용자 167 · 퇴직자 5 · 퇴직 예정자 2 · 휴가자 3 · 기타 휴직 5)
+    cy.get('input[aria-label="값"]').filter(':visible').clear({ force: true });
+    byStatus1310('정보 사용자 / 그룹 관리', /\/common\/com09\/user\/list\?/, 'B14_1310_정보사용자', (st, g) => {
+      expect(g.화면행, `정보 사용자 「${st}」 화면 행 = 응답 행`).to.eq(g.응답행);
+      expect(g.고유계정, `정보 사용자 「${st}」 같은 계정 중복 없음`).to.eq(g.응답행);
+    });
+    cy.log('✅ [2.9.8.0 !1310] 정보 사용자 / 그룹 관리 — 조건(사용자 상태)별 검색');
+
 
   /*
     cy.wait(2000);
@@ -633,6 +671,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.get('.text-label').filter(':visible').contains('root').should('be.visible');
     cy.log('✅ 관리 - 메뉴 관리 출력 확인 완료 ');
 
+*/
+    // [2026-11-25] 메니저 메뉴 코드 관리는 개발이 끝나 주석에서 꺼냄 (메뉴 관리 · 데이터 시각화 관리는 그대로 막아 둠)
     // 관리 > 메니저 메뉴 코드 관리 서브메뉴 선택
     cy.contains('button.side-menu', '관리').click({ force: true });
     cy.wait(1000);
@@ -647,7 +687,8 @@ describe('로그캐치 사이트 테스트', () => {
     cy.contains('.c-headline', '소속 (전체)').should('exist');
     // 검색 조건 입력란 
     cy.get('input[aria-label="이름"]').filter(':visible').should('be.visible');
-    cy.get('input[aria-label="상태"]').filter(':visible').should('be.visible');
+    // [2.9.9.0] 「상태」 칸 이름이 「조건」으로 바뀜 (probe_298b 11-25)
+    cy.get('input[aria-label="조건"]').filter(':visible').should('be.visible');
     // 검색 버튼 확인
     cy.get('.v-btn__content').filter(':visible').contains('검색').should('be.visible');
     // 동기화 버튼 확인 
@@ -660,8 +701,31 @@ describe('로그캐치 사이트 테스트', () => {
      cy.get('th').filter(':visible').contains('조회가능 업무시스템').should('be.visible');
      cy.get('th').filter(':visible').contains('조회가능 그룹').should('be.visible');
      cy.get('th').filter(':visible').contains('저장').should('be.visible');
+     cy.get('th').filter(':visible').contains('개인정보 열람 권한').should('be.visible');
+     // 이름 검색 → 사원_160(user160) 1건 · 편집(연필) → 「조회가능 그룹 지정」 창 확인 후 취소 (저장 안 함 · 저장 확인은 14_Depth_관리자페이지 관리_메니저메뉴코드관리)
+     cy.get('input[aria-label="이름"]').filter(':visible').first().clear({ force: true }).type('사원_160', { force: true });
+     cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
+     cy.wait(3000);
+     cy.contains('table tbody tr', 'user160').should('be.visible').find('i.fa-edit').first().click({ force: true });
+     cy.wait(2000);
+     cy.get('.v-dialog--active').filter(':visible').last().within(() => {
+       cy.contains('조회가능 그룹 지정').should('exist'); // 제목 span 이 ellipsis 라 visible 판정이 안 됨
+       cy.get('input[aria-label="업무시스템"]').should('exist');
+       cy.get('input[aria-label="그룹"]').should('exist');
+       cy.get('input[aria-label="개인정보 열람 권한"]').should('exist');
+       cy.get('input').filter((i, e) => e.value === '사원_160').should('have.length.at.least', 1);
+       cy.contains('button', '취소').click({ force: true });
+     });
+     cy.wait(1000);
+     cy.get('input[aria-label="이름"]').filter(':visible').first().clear({ force: true });
      cy.log('✅ 관리 > 메니저 메뉴 코드 관리 출력 확인 완료');
+    // [2.9.8.0 !1310] 메니저 메뉴 코드 관리 : 조건(사용자 상태)별 검색
+    //   Mantis 0039239 · probe_298b (11-25) : 같은 계정이 여러 줄로 나와 하단 건수와 화면 행이 어긋남 (퇴직 예정자 「1-1 of 1」에 6줄 · 기타 휴직 「1-4 of 4」에 10줄) — 기록만
+    byStatus1310('메니저 메뉴 코드 관리', /\/common\/com42\/searchUserAccountRule/, 'B14_1310_메뉴코드', (st, g) => {
+      if (g.고유계정 < g.응답행) cy.log(`⚠️ [관찰 !1310 · Mantis 0039239] 메니저 메뉴 코드 관리 「${st}」 같은 계정 중복 줄 — 응답 ${g.응답행}줄 · 고유 계정 ${g.고유계정} · 하단 ${g.하단}`);
+    });
    
+/*
     // 관리 > 데이터 시각화 관리 서브메뉴 선택
     cy.contains('button.side-menu', '관리').click({ force: true });
     cy.wait(1000);

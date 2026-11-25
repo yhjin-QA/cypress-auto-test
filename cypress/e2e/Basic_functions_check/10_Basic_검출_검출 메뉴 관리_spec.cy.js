@@ -472,7 +472,68 @@ describe('로그캐치 사이트 테스트', () => {
 
 
   });
-});  
+
+  // ==========================================
+  // [2.9.8.0 !1285] 검출 메뉴 관리 > 메뉴 관리 — 페이지당 개수 100 을 고른 뒤 「메뉴 등록 필요」 토글을 바꿔도
+  //   하단 페이지당 드롭다운 · 표시 행 · 목록 요청 size 가 100 으로 맞는지 (Mantis 0037233 회귀 · 조회만)
+  //   probe_298a (11-25) : 100 선택 → 토글 OFF 후 드롭다운 100 · 행 100 · size=100 (1-100 of 3,624)
+  // ==========================================
+  it('[2.9.8.0 !1285] 검출 메뉴 관리 — 페이지당 100 선택 후 메뉴 등록 필요 토글 변경 시 페이지당 개수 유지', () => {
+    const A = require('../../support/anomaly');
+    const tx = (e) => (e ? (e.innerText || '') : '').replace(/\s+/g, ' ').trim();
+    const reqs = [];
+    cy.intercept('GET', /\/api\/v1\/detect-menu-management\?/, (req) => {
+      req.on('after:response', (res) => reqs.push({
+        size: Number((req.url.match(/[?&]size=(\d+)/) || [])[1]),
+        필요: (req.url.match(/requireMenuRegistration=(true|false)/) || [])[1],
+        total: res.body && res.body.totalCount,
+      }));
+    });
+    A.loginAdmin();
+    cy.contains('button', '검출').click({ force: true });
+    cy.wait(1500);
+    cy.get('.v-list__tile__title').filter(':contains("검출 메뉴 관리")').filter(':visible').first().click({ force: true });
+    cy.wait(3000);
+    cy.contains('.v-btn__content', '메뉴 관리').click({ force: true });
+    cy.wait(4000);
+
+    const footSel = () => cy.get('.v-datatable__actions').filter(':visible').first().find('.v-select__slot').first();
+    const pageSize = () => footSel().then(($s) => tx($s[0]).replace(/arrow_drop_down/g, '').trim());
+    const rows = () => cy.get('table tbody tr').filter((i, e) => Cypress.$(e).is(':visible') && !e.closest('.v-dialog'));
+    const toggle = () => cy.contains('label', '메뉴 등록 필요').closest('.v-input').find('input[type="checkbox"]');
+    const lastReq = (want) => cy.then(() => {
+      const r = reqs[reqs.length - 1];
+      expect(r && r.필요, `메뉴 등록 필요 ${want} 목록 요청`).to.eq(want);
+      expect(r.size, `메뉴 등록 필요 ${want} 목록 요청 size`).to.eq(100);
+    });
+
+    // 1. 페이지당 100
+    footSel().click({ force: true });
+    cy.wait(800);
+    cy.get('.v-menu__content:visible').last().find('.v-list__tile__title').filter((i, e) => tx(e) === '100').first().click({ force: true });
+    cy.wait(3000);
+    pageSize().should('eq', '100');
+    rows().its('length').should('be.gt', 25).and('be.lte', 100);
+
+    // 2. 토글 OFF → 드롭다운 · 행 · 요청 모두 100
+    toggle().uncheck({ force: true });
+    cy.wait(3000);
+    toggle().should('not.be.checked');
+    pageSize().should('eq', '100');
+    rows().its('length').should('be.gt', 25).and('be.lte', 100);
+    lastReq('false');
+    cy.get('.v-datatable__actions__pagination').filter(':visible').first().invoke('text').should('match', /^\s*1-100 of/);
+
+    // 3. 토글 다시 ON → 그대로 100
+    toggle().check({ force: true });
+    cy.wait(3000);
+    toggle().should('be.checked');
+    pageSize().should('eq', '100');
+    rows().its('length').should('be.gt', 25).and('be.lte', 100);
+    lastReq('true');
+    cy.log('✅ [2.9.8.0 !1285] 토글을 바꿔도 페이지당 100 유지 (드롭다운 · 행 · 요청 size)');
+  });
+});
 
 
  })()

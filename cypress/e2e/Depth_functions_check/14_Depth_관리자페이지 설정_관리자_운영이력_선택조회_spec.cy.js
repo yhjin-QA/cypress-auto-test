@@ -74,4 +74,34 @@ describe('14_Depth_관리자페이지 설정_관리자_운영이력_선택조회
       });
     });
   });
+
+  // [2.9.8.0 !1290] 운영 이력 — 검색 대상을 바꾸면 고른 이벤트가 초기화되는지 (Mantis 0037325 회귀 · 조회만)
+  //   probe_298b (11-25) : 시스템 이벤트 「로그인」 → 변경 이력 · 시스템 경보 · 파일 다운로드 → 이벤트 비어 있음, 시스템 이벤트로 되돌려도 비어 있음
+  it('[2.9.8.0 !1290] 운영 이력 — 검색 대상을 바꾸면 고른 이벤트가 초기화됨', { retries: 0 }, () => {
+    cy.visit('/logcatch/settings/admin/operatingLogs');
+    cy.wait(4000);
+    cy.contains('.c-headline', '검색 조건', { timeout: 15000 }).should('exist');
+    const target = (label) => {
+      cy.get('input[aria-label="검색 대상"]').filter(':visible').click({ force: true });
+      cy.wait(800);
+      cy.get('.v-menu__content:visible').last().find('.v-list__tile__title').filter((i, e) => t(e) === label).first().click({ force: true });
+      cy.wait(1200);
+    };
+    const chosen = (msg, want) => cy.get('input[aria-label="이벤트"]', { timeout: 10000 }).filter(':visible').first().closest('.v-input')
+      .then(($v) => expect($v.find('.v-select__selection, .v-chip__content').toArray().map(t), msg).to.deep.eq(want));
+
+    target('시스템 이벤트');
+    cy.get('input[aria-label="이벤트"]', { timeout: 10000 }).filter(':visible').click({ force: true });
+    cy.wait(800);
+    cy.get('.v-menu__content:visible').last().find('.v-list__tile__title').filter((i, e) => t(e) === '로그인').first().click({ force: true });
+    cy.wait(800);
+    cy.get('body').type('{esc}');
+    chosen('시스템 이벤트 · 이벤트 「로그인」 선택', ['로그인']);
+
+    target('변경 이력');
+    chosen('검색 대상 「변경 이력」으로 바꾼 뒤 이벤트 (초기화)', []);
+    target('시스템 이벤트');
+    chosen('검색 대상 「시스템 이벤트」로 되돌린 뒤 이벤트 (초기화 유지)', []);
+    cy.log('✅ [2.9.8.0 !1290] 검색 대상 변경 시 이벤트 초기화');
+  });
 });
