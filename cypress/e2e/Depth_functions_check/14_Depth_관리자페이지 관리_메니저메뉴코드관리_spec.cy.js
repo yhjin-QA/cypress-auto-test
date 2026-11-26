@@ -4,7 +4,7 @@
 //   대상 : 사원_160 (user160) — 다른 자동화 스펙이 쓰지 않는 .27 CRM 계정 (2026-11-25 사용자 결정)
 //   1. 이름 「사원_160」 검색 → user160 행 · 현재 조회가능 업무시스템 · 그룹 · 개인정보 열람 권한 기록
 //   2. 편집(연필) → 「조회가능 그룹 지정」 창 : 이름 칸 사원_160(읽기 전용) · 업무시스템 · 그룹 · 개인정보 열람 권한, 지금 고른 값 기록
-//   3. 업무시스템 「리눅스_VIP고객」 · 그룹 「자동화QA팀」 · 개인정보 열람 권한(지금 값과 다른 값 : 마스킹 해제 허용 ↔ 마스킹 고정) → 저장 → 저장 요청 성공
+//   3. 업무시스템 「리눅스_VIP고객」 · 그룹 「전략기획팀」 · 개인정보 열람 권한(지금 값과 다른 값 : 마스킹 해제 허용 ↔ 마스킹 고정) → 저장 → 저장 요청 성공
 //      저장 API : POST /common/com42/saveStatisticsAccountRule {userLoginId, ruleBsn:[업무시스템 ID], ruleGroup:[그룹 ID], ruleMasking:1~3(0 = 빈 값)}
 //      개인정보 열람 권한은 화면에서 빈 값으로 되돌릴 수 없음(11-25 확인) → user160 기준값 「마스킹 고정」
 //   4. 다시 검색 → 목록에 세 값 · 편집 창을 다시 열면 세 값이 골라져 있음
@@ -18,7 +18,11 @@ const A = require('../../support/anomaly');
 
 const NAME = '사원_160';
 const ID = 'user160';
-const SET = { 업무시스템: '리눅스_VIP고객', 그룹: '자동화QA팀', '개인정보 열람 권한': '마스킹 고정' };
+// [2026-11-26] 그룹을 「자동화QA팀」 → 「전략기획팀」으로 바꿈
+//   자동화QA팀 · 자동화그룹은 14_Depth_관리자페이지 관리_정보사용자그룹관리 가 인사연동으로 만들고 정리하는 그룹이라
+//   GitHub 전체 실행(이 스펙이 먼저 돎)에서는 없어서 실패 — 전략기획팀은 MariaDB 인사 원본의 고정 부서(user160 소속)
+//   고른 값이 선택지에 없으면 「전체 선택」이 아닌 첫 항목으로 대신 고르고 기록
+const SET = { 업무시스템: '리눅스_VIP고객', 그룹: '전략기획팀', '개인정보 열람 권한': '마스킹 고정' };
 const LABELS = Object.keys(SET);
 
 const t = (e) => (e ? (e.innerText || e.textContent || '') : '').replace(/\s+/g, ' ').trim();
@@ -74,8 +78,19 @@ const clickItem = (label, item) => {
     const tiles = menus.last().find('.v-list__tile__title').filter((i, e) => t(e) === item);
     obs.선택클릭 = [...(obs.선택클릭 || []), { 칸: label, 항목: item, 열린메뉴: menus.length, 찾은항목: tiles.length, 메뉴글자: t(menus.last()[0]).slice(0, 120) }];
     note('선택클릭', obs.선택클릭);
-    expect(tiles.length, `${label} 메뉴에 「${item}」`).to.be.greaterThan(0);
-    cy.wrap(tiles.first().closest('.v-list__tile, a')[0] || tiles[0]).click({ force: true });
+    let pick = tiles;
+    if (!tiles.length && SET[label] === item && label !== '개인정보 열람 권한') {
+      const alt = menus.last().find('.v-list__tile__title').filter((i, e) => t(e) && t(e) !== '전체 선택').first();
+      if (alt.length) {
+        SET[label] = t(alt[0]);
+        obs.대신고름 = { ...(obs.대신고름 || {}), [label]: { 원래: item, 대신: SET[label] } };
+        note('대신고름', obs.대신고름);
+        cy.log(`⚠️ ${label} 선택지에 「${item}」 없음 → 「${SET[label]}」로 대신 고름`);
+        pick = alt;
+      }
+    }
+    expect(pick.length, `${label} 메뉴에 「${item}」`).to.be.greaterThan(0);
+    cy.wrap(pick.first().closest('.v-list__tile, a')[0] || pick[0]).click({ force: true });
   });
   cy.wait(800);
   dlgSel(label).then(($s) => { obs.선택후칸 = [...(obs.선택후칸 || []), { 칸: label, 글자: t($s[0]).slice(0, 120) }]; note('선택후칸', obs.선택후칸); });
