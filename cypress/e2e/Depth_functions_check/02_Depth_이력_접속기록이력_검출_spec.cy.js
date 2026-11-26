@@ -521,21 +521,26 @@ cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
       });
 
       // ---------- 1. 메시지 3건 ----------
+      // Mantis 0039279 : Auto-PC 에서 연속 요청 3건 중 1건이 접속기록에 안 남는 경우 있음 (11-26 2회)
+      //   → 2분 넘게 기다려도 3건이 안 모이면 3건을 1번만 다시 보내고 그 3건으로 판정 (⚠️ 로그 · 2_재전송 기록)
       const START = { at: '' };
-      cy.then(() => { START.at = kst(Date.now() - 5000); });
       const sent = [];
+      const sendAll = (round) => {
+      cy.then(() => { START.at = kst(Date.now() - 5000); });
       MSGS.forEach((m) => {
         cy.task('crmFetch', {
           userId: 'user001', path: '/crm/dlp_tester.jsp', method: 'POST', maxBody: 0,
           headers: { Referer: 'http://10.10.54.27/crm/dlp_tester.jsp' },
           form: { action: 'send', chatMsg: `[자동화 사업자번호 ${m.키}] 거래처 사업자번호 ${m.값} 확인 부탁드립니다` },
         }, { timeout: 90000, log: false }).then((r) => {
-          sent.push({ 키: m.키, 값: m.값, 보낸시각: kst(Date.now()), 상태: r.status, 오류: r.error });
+          sent.push({ 회차: round, 키: m.키, 값: m.값, 보낸시각: kst(Date.now()), 상태: r.status, 오류: r.error });
           note('1_보냄', sent);
           expect(r.status, `dlp_tester.jsp 전송 응답 (${m.키})`).to.eq(200);
         });
         cy.wait(3000, { log: false });
       });
+      };
+      sendAll(1);
 
       // ---------- 2. 통합 검색 (3건이 올라올 때까지) ----------
       A.loginAdmin();
@@ -548,16 +553,23 @@ cy.log('✅ 이력 - 검출 탭 진입 및 데이터 출력 확인 완료!');
       cy.get('body').type('{esc}');
       const fresh = ($b) => $b.find('tbody tr').filter((i, e) => vis(e) && !e.closest('.v-dialog')).toArray()
         .filter((r) => { const at = (tx(r).match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/) || [''])[0]; return at >= START.at && /VIP_실시간DLP테스트/.test(tx(r)); });
-      const search = (left) => {
+      const search = (left, round = 1) => {
         cy.get('.v-btn__content').filter(':visible').contains('검색').click({ force: true });
         cy.wait(3000);
         cy.get('body').then(($b) => {
           const n = fresh($b).length;
           note('2_새행수', { 남은: left, 새행: n });
           if (n >= 3) return;
-          expect(left, `통합 목록에 방금 보낸 3건 (${START.at} 이후 · 지금 ${n}건)`).to.be.greaterThan(0);
+          if (left <= 0 && round === 1) {
+            note('2_재전송', { 첫시작: START.at, 새행: n, 보냄: sent.slice() });
+            cy.log(`⚠️ [Mantis 0039279 재현] 방금 보낸 3건 중 ${3 - n}건이 접속기록에 없음 → 3건 다시 보냄`);
+            sendAll(2);
+            search(6, 2);
+            return;
+          }
+          expect(left, `통합 목록에 방금 보낸 3건 (${round}회차 · ${START.at} 이후 · 지금 ${n}건${round === 2 ? ' · 다시 보내도 안 모임 — Mantis 0039279' : ''})`).to.be.greaterThan(0);
           cy.wait(15000, { log: false });
-          search(left - 1);
+          search(left - 1, round);
         });
       };
       search(6);

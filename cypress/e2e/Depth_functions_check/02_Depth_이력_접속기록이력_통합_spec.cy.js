@@ -1507,7 +1507,7 @@ cy.get('.v-dialog--active').within(() => {
       });
     };
     // 요청 1건 → 접속기록 API 에 새로 생긴 행 (요청 전에 있던 행 id 는 제외)
-    //   11-26 GitHub 전체 실행 : act=view 요청 뒤 158초 동안 새 행 0 (없음 · save 는 정상) → 요청이 안 갔는지 · 수집이 빠졌는지 알 수 없었음
+    //   Mantis 0039279 · 11-26 GitHub 전체 실행 : act=view 요청 뒤 158초 동안 새 행 0 (없음 · save 는 정상) → 요청이 안 갔는지 · 수집이 빠졌는지 알 수 없었음
     //   → 요청 결과(로그인 · 상태 · 오류)를 판정 메시지에 넣고, 새 행이 없으면 1번만 다시 요청 (다시 요청한 사실은 ⚠️ 로그 · 관찰 기록에 남김)
     const sendAndRead = (act, out, tryNo = 1) => {
       const seen = new Set();
@@ -1529,7 +1529,7 @@ cy.get('.v-dialog--active').within(() => {
             out.첫시도 = { 요청시각: out.요청시각, 로그인: out.로그인, 요청상태: out.요청상태, 요청오류: out.요청오류, 새행수: 0 };
             out.재요청 = true;
             note(`2_재요청_${act || '없음'}`, out.첫시도);
-            cy.log(`⚠️ act=${act || '없음'} 요청 뒤 새 행 없음 (로그인 ${out.로그인} · 상태 ${out.요청상태} · 오류 ${out.요청오류}) → 1번 다시 요청`);
+            cy.log(`⚠️ [Mantis 0039279 재현] act=${act || '없음'} 요청 뒤 새 행 없음 (로그인 ${out.로그인} · 상태 ${out.요청상태} · 오류 ${out.요청오류}) → 1번 다시 요청`);
             sendAndRead(act, out, 2);
           }
           return;

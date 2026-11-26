@@ -880,7 +880,15 @@ cy.get('tbody tr').filter(':visible').first().then(($row) => {
  
     // [수정 3] snackbar 나타남 → 사라짐 순서로 대기 (기존 코드는 순서 오류)
     cy.get('.v-snack__content', { timeout: 10000 }).should('be.visible');
-    cy.get('.v-snack__content', { timeout: 30000 }).should('not.exist');
+    // 11-26 GitHub 전체 실행 : 진행 창(log-excel-….zip 0%)이 30초 넘게 남아 3회 모두 실패 (같은 날 14:48 실행도 1회 실패 후 재시도 통과)
+    //   → 기다림 120초 · 걸린 시간 기록 (30초 넘으면 ⚠️ 로그)
+    let excelT0 = 0;
+    cy.then(() => { excelT0 = Date.now(); }); // 명령이 실제로 도는 시점
+    cy.get('.v-snack__content', { timeout: 120000 }).should('not.exist').then(() => {
+      const sec = Math.round((Date.now() - excelT0) / 1000);
+      cy.log(`${sec > 30 ? '⚠️' : '✅'} 엑셀 다운로드 진행 창 사라짐 : ${sec}초`);
+      cy.writeFile('cypress/probe/D02U_엑셀시간.json', { 시각: new Date().toISOString(), 초: sec }, { log: false });
+    });
  
     // [수정 4] 새 파일이 생길 때까지 폴링 검증 (고정 cy.wait 대체)
     cy.get('@filesBefore').then((filesBefore) => {
