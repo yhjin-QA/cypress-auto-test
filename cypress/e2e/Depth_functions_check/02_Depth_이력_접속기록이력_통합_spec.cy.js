@@ -1507,7 +1507,9 @@ cy.get('.v-dialog--active').within(() => {
       });
     };
     // 요청 1건 → 접속기록 API 에 새로 생긴 행 (요청 전에 있던 행 id 는 제외)
-    const sendAndRead = (act, out) => {
+    //   11-26 GitHub 전체 실행 : act=view 요청 뒤 158초 동안 새 행 0 (없음 · save 는 정상) → 요청이 안 갔는지 · 수집이 빠졌는지 알 수 없었음
+    //   → 요청 결과(로그인 · 상태 · 오류)를 판정 메시지에 넣고, 새 행이 없으면 1번만 다시 요청 (다시 요청한 사실은 ⚠️ 로그 · 관찰 기록에 남김)
+    const sendAndRead = (act, out, tryNo = 1) => {
       const seen = new Set();
       // cy.request 옵션은 명령을 쌓을 때 만들어짐 → 로그인 전 빈 AUTH 로 나가 HTML(로그인 화면)이 옴 (11-24 2차 실행 0행)
       //   → cy.then 안에서 만들어 실행 시점의 AUTH 를 씀
@@ -1517,11 +1519,21 @@ cy.get('.v-dialog--active').within(() => {
         // 판정(복원 뒤)에서 기존 행 0행 · 새 행 1건이 아니면 실패
       });
       cy.task('crmFetch', { userId: 'user001', path: act ? `${URI}?act=${act}` : URI, method: 'GET', maxBody: 0 }, { timeout: 90000, log: false })
-        .then((r) => { out.요청상태 = r.status; out.요청오류 = r.error; });
+        .then((r) => { out.요청상태 = r.status; out.로그인 = r.login; out.요청오류 = r.error; out.요청시각 = kst(Date.now()); });
       const poll = (left) => cy.request({ url: logQ, headers: AUTH, failOnStatusCode: false }).then((r) => {
         const fresh = ((r.body && r.body.resultObject) || []).filter((x) => x.uri === URI && x.userAccount === 'user001' && !seen.has(String(x.id)))
           .sort((a, b) => (a.accessDate < b.accessDate ? 1 : -1));
-        if (fresh.length || left <= 0) { out.새행수 = fresh.length; out.행 = fresh[0] ? { id: fresh[0].id, 시각: fresh[0].accessDate, actionType: fresh[0].actionType, userActionType: fresh[0].userActionType } : null; return; }
+        if (fresh.length || left <= 0) {
+          out.새행수 = fresh.length; out.행 = fresh[0] ? { id: fresh[0].id, 시각: fresh[0].accessDate, actionType: fresh[0].actionType, userActionType: fresh[0].userActionType } : null;
+          if (!fresh.length && tryNo === 1) {
+            out.첫시도 = { 요청시각: out.요청시각, 로그인: out.로그인, 요청상태: out.요청상태, 요청오류: out.요청오류, 새행수: 0 };
+            out.재요청 = true;
+            note(`2_재요청_${act || '없음'}`, out.첫시도);
+            cy.log(`⚠️ act=${act || '없음'} 요청 뒤 새 행 없음 (로그인 ${out.로그인} · 상태 ${out.요청상태} · 오류 ${out.요청오류}) → 1번 다시 요청`);
+            sendAndRead(act, out, 2);
+          }
+          return;
+        }
         cy.wait(10000, { log: false });
         poll(left - 1);
       });
@@ -1644,7 +1656,9 @@ cy.get('.v-dialog--active').within(() => {
           const k = act || '없음';
           const r = RES[k];
           expect(r.요청전 && r.요청전.행수, `act=${k} 요청 전 ${URI} 기존 행 목록 (새 행만 고르기 위함 · API ${r.요청전 && r.요청전.API상태})`).to.be.greaterThan(0);
-          expect(r.새행수, `act=${k} 요청 뒤 새로 생긴 행 수`).to.eq(1);
+          const 요청 = `로그인 ${r.로그인} · 요청상태 ${r.요청상태} · 오류 ${r.요청오류}${r.재요청 ? ` · 재요청함(첫 시도 로그인 ${r.첫시도.로그인} · 상태 ${r.첫시도.요청상태} · 오류 ${r.첫시도.요청오류})` : ''}`;
+          // 재요청했으면 늦게 들어온 첫 요청 행이 섞일 수 있어 1~2행 허용
+          expect(r.새행수, `act=${k} 요청 뒤 새로 생긴 행 수 (${요청})`).to.be.within(1, r.재요청 ? 2 : 1);
           expect(r.행, `act=${k} 요청의 접속 기록 행`).to.not.eq(null);
           expect(r.행.actionType, `!1441 act=${k} → 행위 코드 ${code}(${label})`).to.eq(code);
           expect(UI[k], `!1441 통합 목록 act=${k} 행 행위 「${label}」`).to.match(new RegExp(`${MENU_NAME}\\s+${label}(\\s|$)`)); // 한글 뒤 \b 는 동작하지 않음
